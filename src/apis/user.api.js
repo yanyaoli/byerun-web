@@ -1,13 +1,13 @@
 import request from '@/services/request';
-import address from '@/services/address';
+import api from '@/services/address';
 import { genTrackPoints, getDate } from '@/utils/track';
 import { APPVERSION, BRAND, MOBILETYPE, SYSVERSION } from '@/utils/appConfig';
 
 // 获取用户信息
-export const getUserInfo = () => request.get(address.user);
+export const getUserInfo = () => request.get(api.user);
 
 // 获取用户活动信息
-export const getActivityInfo = (schoolId, studentId) => request.get(address.activity, {
+export const getActivityInfo = (schoolId, studentId) => request.get(api.activity, {
   params: {
     schoolId,
     studentId
@@ -15,7 +15,7 @@ export const getActivityInfo = (schoolId, studentId) => request.get(address.acti
 });
 
 // 获取学期年份
-export const getSemesterYear = (schoolId) => request.get(address.runStandard, {
+export const getSemesterYear = (schoolId) => request.get(api.runStandard, {
   params: {
     schoolId
   }
@@ -41,5 +41,5 @@ export const submitActivityInfo = (data) => {
     yearSemester: semesterYear,
     recordDate: getDate()
   };
-  return request.post(address.newActivity, body);
+  return request.post(api.newActivity, body);
 };

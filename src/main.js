@@ -15,8 +15,8 @@ const router = createRouter({
     { path: '/user', component: UserInfo },
     { path: '/club', component: ClubInfo },
     { path: '/myclub', component: ClubInfo },
-    { path: '/:pathMatch(.*)*', component: UserLogin},
-    { path: '/:pathMatch(.*)*', redirect: '/login'}
+    { path: '/:pathMatch(.*)*', component: UserInfo},
+    { path: '/', redirect: '/user'}
   ]
 });
 

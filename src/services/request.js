@@ -1,10 +1,10 @@
 import axios from 'axios';
-import address from './address';
+// import address from './address';
 import generateSign from '@/utils/sign';
 import { APPKEY } from '@/utils/appConfig';
 
 const instance = axios.create({
-  baseURL: address.baseURL,
+  baseURL: '/',
   timeout: 10000
 });
 

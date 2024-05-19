@@ -1,5 +1,4 @@
-// 请求地址配置文件
-const baseURL = 'https://run-lb.tanmasports.com/v1';
+const baseURL = '/api';
 
 export default {
     baseURL,
