@@ -1,15 +1,15 @@
-import { createApp } from 'vue';
 import App from './App.vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
-import { createRouter, createWebHistory } from 'vue-router';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+import { createApp } from 'vue';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import UserLogin from './components/UserLogin.vue';
 import UserInfo from './components/UserInfo.vue';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import ClubInfo from './components/ClubInfo.vue';
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [
     { path: '/login', component: UserLogin },
     { path: '/user', component: UserInfo },
