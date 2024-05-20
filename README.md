@@ -43,3 +43,42 @@ npm run build
 | 俱乐部参与记录 | `${baseURL}/clubactivity/queryMyActivityList` |
 | 待签到俱乐部 | `${baseURL}/clubactivity/queryMySemesterClubActivity` |
 | 俱乐部加入退出状态 | `${baseURL}/clubactivity/joinOrCancelSchoolSemesterActivity` |
+
+> Workerjs
+
+```
+addEventListener('fetch', event => {
+  event.respondWith(handleRequest(event.request))
+})
+
+async function handleRequest(request) {
+  const url = new URL(request.url)
+  const backendUrl = 'https://run-lb.tanmasports.com/v1' + url.pathname + url.search
+
+  // 克隆请求的头部
+  const newHeaders = new Headers(request.headers)
+
+  // 删除可能影响签名的头部
+  newHeaders.delete('Host')
+
+  const init = {
+    method: request.method,
+    headers: newHeaders,
+    // 获取并克隆请求体，以确保传递原始的内容
+    body: request.method === 'GET' ? null : await request.clone().text()
+  }
+
+  const response = await fetch(backendUrl, init)
+
+  const responseHeaders = new Headers(response.headers)
+  responseHeaders.set('Access-Control-Allow-Origin', '*')
+  responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  responseHeaders.set('Access-Control-Allow-Headers', '*')
+
+  const body = await response.text()
+  return new Response(body, {
+    status: response.status,
+    headers: responseHeaders
+  })
+}
+```

@@ -40,10 +40,7 @@ const contactUrl = ref('https://qm.qq.com/q/s80hGTQMNi');
 const doLogin = async () => {
 
     if (!/^1[3-9]\d{9}$/.test(phone.value)) {
-        ElMessage({
-            message: '请输入有效的手机号码',
-            type: 'error'
-        });
+        ElMessage.error('请输入正确的手机号');
         return;
     }
     isLoading.value = true;

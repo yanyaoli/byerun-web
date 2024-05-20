@@ -1,3 +1,4 @@
+// const baseURL = process.env.VUE_APP_BASE_API || '';
 const baseURL = '';
 
 export default {
