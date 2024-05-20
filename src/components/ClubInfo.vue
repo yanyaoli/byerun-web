@@ -1,9 +1,8 @@
 <template>
     <div class="app">
-        <el-button type="primary" @click="goBack">返回</el-button>
-
         <el-main>
             <el-menu :default-active="activeName" class="week-menu" mode="horizontal" @select="handleSelect">
+                <el-menu-item index="0"><el-icon><ArrowLeft /></el-icon></el-menu-item>
                 <el-menu-item index="1">周一</el-menu-item>
                 <el-menu-item index="2">周二</el-menu-item>
                 <el-menu-item index="3">周三</el-menu-item>
@@ -125,7 +124,10 @@ const goBack = () => {
 };
 
 const handleSelect = (index) => {
-    if (index === '6') {
+    if (index === '0') {
+        goBack();
+        return;
+    } if (index === '6') {
         fetchMyClubs();
     } else {
         fetchClubInfo(index);
@@ -234,7 +236,23 @@ onMounted(() => {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 20px 0 20px 0;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #fff;
+    z-index: 1000;
+}
+
+.navbar > el-button {
+    margin-left: 10px;
 }
 
 .el-main {
@@ -258,5 +276,11 @@ onMounted(() => {
     color: #6b778c;
     font-size: 15px;
     font-weight: 500;
+}
+
+.cell-item {
+    display: flex;
+    align-items: center;
+    min-width: 50px;
 }
 </style>

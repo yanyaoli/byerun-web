@@ -49,7 +49,7 @@
 
             <el-button type="primary" @click="getClub" round>俱乐部</el-button>
 
-            <el-button type="primary" @click="submit" round>立即提交</el-button>
+            <el-button type="primary" :loading="isLoading" @click="submit" round>立即提交</el-button>
         </div>
     </div>
 </template>
@@ -63,7 +63,7 @@ import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } fro
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
 const activity = ref(null);
-const loading = ref(true);
+const isLoading = ref(false);
 const router = useRouter();
 const runDistance = ref(null);
 const runTime = ref(null);
@@ -81,12 +81,10 @@ const fetchActivity = async () => {
             const club_completion_rate = `${joinNum}/${totalNum}`
             const running_completion_rate = `${runJoinNum}/${runTotalNum}`
             activity.value = { 'club_completion_rate': club_completion_rate, 'running_completion_rate': running_completion_rate }
-            loading.value = false;
             ElMessage.success('刷新成功');
         }
         else {
             activity.value = null;
-            loading.value = false;
             localStorage.clear();
             ElMessage.error('获取活动信息失败: ' + response.data.msg);
         }
@@ -97,7 +95,6 @@ const fetchUser = () => {
     getUserInfo().then(response => {
         if (response.data.code === 10000) {
             user.value = response.data.response;
-            loading.value = false;
             const token = response.data.response.oauthToken.token;
             const userData = response.data.response;
             localStorage.setItem('token', token);
@@ -105,7 +102,6 @@ const fetchUser = () => {
         }
         else {
             user.value = null;
-            loading.value = false;
             localStorage.clear();
             ElMessage.error('获取用户信息失败: ' + response.data.msg);
             router.push('/login');
@@ -121,10 +117,12 @@ const logout = () => {
 
 // 提交
 const submit = async () => {
+    isLoading.value = true;
     try {
         // 验证用户输入
         if (!runDistance.value || !runTime.value || !mapChoice.value) {
             ElMessage.error('参数不完整，请检查后重新提交');
+            isLoading.value = false;
             return;
         }
         const schoolId = user.value.schoolId;
@@ -132,6 +130,7 @@ const submit = async () => {
         const response = await getSemesterYear(schoolId);
         if (response.data.code !== 10000) {
             ElMessage.error('获取学年学期失败: ' + response.data.msg);
+            isLoading.value = false;
             return;
         }
         const semesterYear = response.data.response.semesterYear;
@@ -145,12 +144,15 @@ const submit = async () => {
         const submitResponse = await submitActivityInfo(data);
         if (submitResponse.data.code !== 10000) {
             ElMessage.error('提交失败: ' + submitResponse.data.msg);
+            isLoading.value = false;
             return;
         }
         ElMessage.success('提交成功,' + submitResponse.data.response.resultDesc);
+        isLoading.value = false;
         await fetchActivity();
     } catch (error) {
         ElMessage.error('提交失败: ' + error.message);
+        isLoading.value = false;
     }
 };
 
