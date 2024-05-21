@@ -3,7 +3,7 @@ import generateSign from '@/utils/sign'
 import { APPKEY } from '@/utils/appConfig'
 
 const instance = axios.create({
-  baseURL: 'https://unirun.cuit.workers.dev/', //workerjs代理
+  baseURL: 'https://worker.unirun.gouninghong.com/', //workerjs代理,自定义域名解除污染
   timeout: 10000
 })
 
