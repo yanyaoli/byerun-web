@@ -10,19 +10,15 @@
                         </el-icon>
                     </el-button>
                 </el-tooltip>
-
-                <el-popconfirm title="确定要退出账号吗？" content="退出" placement="top" open-delay="500">
+                <el-popconfirm width="220" confirm-button-text="确定" cancel-button-text="取消" :icon="InfoFilled"
+                    icon-color="#626AEF" title="确定要退出账号吗？" @confirm="logout">
                     <template #reference>
-                        <el-button class="icon-button" type="danger" @click="logout">
+                        <el-button class="icon-button" type="danger">
                             <el-icon>
                                 <CloseBold />
                             </el-icon>
                         </el-button>
                     </template>
-                    <el-popconfirm />
-                    <el-icon>
-                        <CloseBold />
-                    </el-icon>
                 </el-popconfirm>
             </div>
             <h1>{{ user ? user.studentName : '加载中...' }}</h1>
@@ -105,6 +101,7 @@ const fetchUser = () => {
             localStorage.clear();
             ElMessage.error('获取用户信息失败: ' + response.data.msg);
             router.push('/login');
+            return;
         }
     })
 };
@@ -125,6 +122,24 @@ const submit = async () => {
             isLoading.value = false;
             return;
         }
+
+        // 新增：验证输入的有效性
+        if (runDistance.value < 1 || runDistance.value > 6000) {
+            ElMessage.error('跑步里程必须在1到6000之间');
+            isLoading.value = false;
+            return;
+        }
+        if (runTime.value < 30 || runTime.value > 1000) {
+            ElMessage.error('跑步时长必须在30到1000之间');
+            isLoading.value = false;
+            return;
+        }
+        if (!['cuit_lqy', 'cuit_hkg', 'cdutcm_wj'].includes(mapChoice.value)) {
+            ElMessage.error('请选择有效的地图');
+            isLoading.value = false;
+            return;
+        }
+
         const schoolId = user.value.schoolId;
 
         const response = await getSemesterYear(schoolId);
@@ -145,6 +160,11 @@ const submit = async () => {
         if (submitResponse.data.code !== 10000) {
             ElMessage.error('提交失败: ' + submitResponse.data.msg);
             isLoading.value = false;
+
+            runDistance.value = null;
+            runTime.value = null;
+            mapChoice.value = null;
+
             return;
         }
         ElMessage.success('提交成功,' + submitResponse.data.response.resultDesc);
