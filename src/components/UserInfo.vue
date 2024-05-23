@@ -27,11 +27,11 @@
             <p>校园跑完成率：{{ activity ? activity.running_completion_rate : '加载中...' }}</p>
             <el-divider />
             <div class="input-group">
-                <el-input-number for="runDistance" id="distance" v-model="runDistance" :min="1" :max="6000"
+                <el-input-number for="runDistance" id="distance" v-model="runDistance" :min="1000" :max="6000" step="100"
                     style="width: 200px;" placeholder="跑步里程（米）"></el-input-number>
             </div>
             <div class="input-group">
-                <el-input-number for="runTime" id="time" v-model="runTime" :min="30" :max="1000" style="width: 200px;"
+                <el-input-number for="runTime" id="time" v-model="runTime" :min="30" :max="1000" step="5" style="width: 200px;"
                     placeholder="跑步时长（分钟）"></el-input-number>
             </div>
             <div class="input-group">

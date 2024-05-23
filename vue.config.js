@@ -59,6 +59,18 @@ module.exports = defineConfig({
         secure: true,
         // pathRewrite: { '^/clubactivity/joinOrCancelSchoolSemesterActivity': '' },
       },
+      '/auth/sendSmsForPassWord': {
+        target: 'https://run-lb.tanmasports.com/v1',
+        changeOrigin: true,
+        secure: true,
+        // pathRewrite: { '^/auth/sendSmsForPassWord': '' },
+      },
+      '/auth/updateUserPassWord': {
+        target: 'https://run-lb.tanmasports.com/v1',
+        changeOrigin: true,
+        secure: true,
+        // pathRewrite: { '^/auth/updateUserPassWord': '' },
+      }
     },
   },
 })

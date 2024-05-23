@@ -1,5 +1,5 @@
 // const baseURL = process.env.VUE_APP_BASE_API || '';
-const baseURL = '';
+const baseURL = 'https://worker.unirun.gouninghong.com';    //workerjs代理,自定义域名解除污染
 
 export default {
     baseURL,
@@ -12,4 +12,6 @@ export default {
     myClub: `${baseURL}/clubactivity/queryMyActivityList`,
     myTask: `${baseURL}/clubactivity/queryMySemesterClubActivity`,
     joinClub: `${baseURL}/clubactivity/joinOrCancelSchoolSemesterActivity`,
+    sendSms: `${baseURL}/auth/sendSmsForPassWord`,
+    updatePassword: `${baseURL}/auth/updateUserPassWord`,
 };

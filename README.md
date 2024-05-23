@@ -1,6 +1,13 @@
-# unirun-web
+# UNIRUN校园跑助手网页版
 
-校园跑助手网页版，欢迎加入维护~
+UNIRUN校园跑助手网页版，自动规划跑步路径，生成跑步记录。
+
+| 地图支持                    |
+| --------------------------- |
+| 成都信息工程大学（航空港校区） |
+| 成都信息工程大学（龙泉校区） |
+| 成都中医药大学（温江校区） |
+| ...                         |
 
 ## 使用
 
@@ -8,7 +15,7 @@
 
 - [Vercel](https://unirun.vercel.app)
 
-<img src="./file/login.jpg" width="200"> <img src="./file/dashboard.jpg" width="200"> <img src="./file/clubinfo.jpg" width="200"> <img src="./file/clubstatus.jpg" width="200">
+<img src="./file/login.png" width="200"> <img src="./file/dashboard.jpg" width="200"> <img src="./file/clubinfo.jpg" width="200"> <img src="./file/clubstatus.jpg" width="200">
 
 ## 运行
 
@@ -83,3 +90,9 @@ async function handleRequest(request) {
   })
 }
 ```
+
+# 免责声明
+
+使用本工具所产生的任何后果，用户需自行承担。
+
+本工具仅供学习交流使用，不得用于任何商业用途。

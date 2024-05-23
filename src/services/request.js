@@ -1,10 +1,10 @@
 import axios from 'axios'
 import generateSign from '@/utils/sign'
 import { APPKEY } from '@/utils/appConfig'
-
+import address from '@/services/address'
 const instance = axios.create({
-  baseURL: 'https://worker.unirun.gouninghong.com/', //workerjs代理,自定义域名解除污染
-  timeout: 10000
+  baseURL: address.baseURL,
+  timeout: 30000
 })
 
 instance.interceptors.request.use(config => {
@@ -14,6 +14,7 @@ instance.interceptors.request.use(config => {
   }
 
   config.headers.appKey = APPKEY
+  config.headers['Content-Type'] = 'application/json'
 
   if (config.method === 'post') {
     config.headers.sign = generateSign(null, config.data || {})
