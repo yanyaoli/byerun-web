@@ -41,10 +41,11 @@
                     <el-option label="成都中医药大学温江校区" value="cdutcm_wj"></el-option>
                 </el-select>
             </div>
+
             <el-divider />
 
             <el-button type="primary" @click="getClub" round>俱乐部</el-button>
-
+            <el-button type="primary" @click="randomizeInputs" round>随机填充</el-button>
             <el-button type="primary" :loading="isLoading" @click="submit" round>立即提交</el-button>
         </div>
     </div>
@@ -55,7 +56,17 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';  // 导入 ElMessage
 import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user.api';
+import { ElLoading } from 'element-plus';
 
+let loadingInstance = null;
+
+const startLoading = () => {
+    loadingInstance = ElLoading.service({ fullscreen: true });
+};
+
+const stopLoading = () => {
+    loadingInstance.close();
+};
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
 const activity = ref(null);
@@ -67,34 +78,38 @@ const mapChoice = ref(null);
 
 // 获取用户活动信息
 const fetchActivity = async () => {
+    startLoading();
+    user.value = null;
     await fetchUser();
-    getActivityInfo(user.value.schoolId, user.value.studentId).then(response => {
-        if (response.data.code === 10000) {
-            const totalNum = response.data.response.totalNum
-            const joinNum = response.data.response.joinNum
-            const runTotalNum = response.data.response.runTotalNum
-            const runJoinNum = response.data.response.runJoinNum
-            const club_completion_rate = `${joinNum}/${totalNum}`
-            const running_completion_rate = `${runJoinNum}/${runTotalNum}`
-            activity.value = { 'club_completion_rate': club_completion_rate, 'running_completion_rate': running_completion_rate }
-            ElMessage.success('刷新成功');
-        }
-        else {
-            activity.value = null;
-            localStorage.clear();
-            ElMessage.error('获取活动信息失败: ' + response.data.msg);
-        }
-    })
 };
 
 const fetchUser = () => {
+    startLoading();
     getUserInfo().then(response => {
+        stopLoading();
         if (response.data.code === 10000) {
             user.value = response.data.response;
             const token = response.data.response.oauthToken.token;
             const userData = response.data.response;
             localStorage.setItem('token', token);
             localStorage.setItem('userData', JSON.stringify(userData));
+            getActivityInfo(user.value.schoolId, user.value.studentId).then(response => {
+                if (response.data.code === 10000) {
+                    const totalNum = response.data.response.totalNum
+                    const joinNum = response.data.response.joinNum
+                    const runTotalNum = response.data.response.runTotalNum
+                    const runJoinNum = response.data.response.runJoinNum
+                    const club_completion_rate = `${joinNum}/${totalNum}`
+                    const running_completion_rate = `${runJoinNum}/${runTotalNum}`
+                    activity.value = { 'club_completion_rate': club_completion_rate, 'running_completion_rate': running_completion_rate }
+                    ElMessage.success('刷新成功');
+                }
+                else {
+                    activity.value = null;
+                    localStorage.clear();
+                    ElMessage.error('获取活动信息失败: ' + response.data.msg);
+                }
+            })
         }
         else {
             user.value = null;
@@ -179,6 +194,13 @@ const submit = async () => {
 const getClub = () => {
     router.push('/club');
 }
+
+const randomizeInputs = () => {
+    const maps = ['cuit_lqy', 'cuit_hkg', 'cdutcm_wj'];
+    runDistance.value = Math.floor(Math.random() * (6000 - 1000 + 1)) + 1000;
+    runTime.value = Math.floor(Math.random() * (100 - 30 + 1)) + 30;
+    mapChoice.value = maps[Math.floor(Math.random() * maps.length)];
+};
 
 onMounted(() => {
     if (!user.value) {

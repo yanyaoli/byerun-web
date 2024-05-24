@@ -146,7 +146,7 @@ const SendSMS = async () => {
         });
 
     } catch (error) {
-        ElMessage.error(error.message)// 这里可以替换为更好的错误提示方式
+        ElMessage.error(error.message)
         codeText.value = '获取验证码';
         codeDisabled.value = false;
     }
@@ -163,6 +163,9 @@ const ResetPassword = async () => {
     if (response.data.code === 10000) {
         ElMessage.success('密码重置成功');
         ResetLoading.value = false;
+        phone.value = phoneNum.value;
+        password.value = newpPssword.value;
+        ForgotPasswordDialogVisible.value = false;
     } else {
         ElMessage.error('密码重置失败: ' + response.data.msg);
         ResetLoading.value = false;

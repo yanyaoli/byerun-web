@@ -1,5 +1,5 @@
 <template>
-    <div class="app">
+    <el-container>
         <el-main>
             <el-menu :default-active="activeName" class="week-menu" mode="horizontal" @select="handleSelect">
                 <el-menu-item index="0"><el-icon><ArrowLeft /></el-icon></el-menu-item>
@@ -11,7 +11,7 @@
                 <el-menu-item index="6">我的俱乐部</el-menu-item>
             </el-menu>
 
-            <el-scrollbar height="70vh">
+            <el-scrollbar height="70vh" v-if="clubs.length > 0">
                 <div v-for="club in clubs" :key="club.configurationId">
                     <el-descriptions class="margin-top" :title="club.activityName" :key="club.configurationId"
                         :column="1" border>
@@ -81,8 +81,18 @@
                     </el-descriptions>
                 </div>
             </el-scrollbar>
+            <el-result
+                v-else
+                icon="success"
+                title="UNIRUN HELPER"
+                sub-title="暂无俱乐部活动或俱乐部活动已达标"
+            >
+                <template #extra>
+                <el-button type="primary" @click="goBack">Back</el-button>
+                </template>
+            </el-result>
         </el-main>
-    </div>
+    </el-container>
 
 </template>
 
@@ -92,6 +102,17 @@ import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { queryClubInfo, queryMyTask, queryMyClub, joinClub } from '@/apis/club.api';
 import { useRouter } from 'vue-router';
+import { ElLoading } from 'element-plus';
+
+let loadingInstance = null;
+
+const startLoading = () => {
+    loadingInstance = ElLoading.service({ fullscreen: true });
+};
+
+const stopLoading = () => {
+    loadingInstance.close();
+};
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
 const clubs = ref([]);
@@ -137,10 +158,11 @@ const handleSelect = (index) => {
 };
 
 const fetchClubInfo = (weekDay) => {
+    startLoading();
     queryClubInfo(weekDay).then(response => {
+        stopLoading();
         if (response.data.code === 10000) {
             if (response.data.response.length === 0) {
-                ElMessage.success('暂无俱乐部活动或俱乐部活动已达标');
                 clubs.value = [];
             } else {
                 clubs.value = response.data.response.map(club => ({
@@ -151,7 +173,6 @@ const fetchClubInfo = (weekDay) => {
             }
         } else {
             clubs.value = [];
-            ElMessage.error('获取俱乐部信息失败: ' + response.data.msg);
             router.push('/user');
         }
     });
@@ -161,7 +182,6 @@ const fetchMyTask = () => {
     return queryMyTask().then(response => {
         if (response.data.code === 10000) {
             if (response.data.response.length === 0) {
-                ElMessage.success('暂无需要参加的俱乐部活动');
                 return [];
             } else {
                 return response.data.response.map(task => ({
@@ -170,7 +190,6 @@ const fetchMyTask = () => {
                 }));
             }
         } else {
-            ElMessage.error('获取任务信息失败: ' + response.data.msg);
             return [];
         }
     });
@@ -181,7 +200,6 @@ const fetchMyClub = () => {
     return queryMyClub(studentId).then(response => {
         if (response.data.code === 10000) {
             if (response.data.response.length === 0) {
-                ElMessage.success('无俱乐部活动记录');
                 return [];
             } else {
                 return response.data.response.map(club => ({
@@ -190,14 +208,15 @@ const fetchMyClub = () => {
                 }));
             }
         } else {
-            ElMessage.error('获取俱乐部信息失败: ' + response.data.msg);
             return [];
         }
     });
 };
 
 const fetchMyClubs = () => {
+    startLoading();
     Promise.all([fetchMyTask(), fetchMyClub()]).then(responses => {
+        stopLoading();
         const [taskData, clubData] = responses;
         clubs.value = [...taskData, ...clubData];
         if (clubs.value.length === 0) {
@@ -239,12 +258,17 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.app {
+.el-container {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    padding: 20px;
+    margin: 30px auto;
+    font-family: Arial, sans-serif;
     align-items: center;
-    padding: 10px;
+    max-width: 600px;
 }
 
 .navbar {
@@ -259,9 +283,9 @@ onMounted(() => {
     z-index: 1000;
 }
 
-.navbar > el-button {
+/* .navbar > el-button {
     margin-left: 10px;
-}
+} */
 
 .el-main {
     width: 100%;
