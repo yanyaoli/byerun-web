@@ -5,7 +5,7 @@
             <el-text>欢迎使用UNIRUN校园跑助手</el-text>
         </el-header>
         <el-main>
-            <el-form>
+            <el-form v-if="showLoginForm">
                 <el-form-item>
                     <el-input v-model="phone" placeholder="请输入手机号"></el-input>
                 </el-form-item>
@@ -16,67 +16,42 @@
                     <el-button type="primary" @click="Login" :loading="LoginLoading">立即登录</el-button>
                 </el-form-item>
             </el-form>
-            <div class="footer-links">
-                <el-link type="primary" target="_blank" @click="DisclaimerDialogVisible = true">免责声明</el-link>
-                <el-link type="primary" @click="ForgotPasswordDialogVisible = true">忘记密码</el-link>
+            <el-form v-else>
+                <el-form-item>
+                    <el-input v-model="phoneNum" placeholder="请输入手机号" class="phone-input"></el-input>
+                    <el-button type="primary" @click="SendSMS" :disabled="codeDisabled" :loading="SmsLoading" block class="sms-button">{{ codeText }}</el-button>
+                </el-form-item>
+                <el-form-item>
+                    <el-input v-model="smsCode" placeholder="请输入验证码"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-input v-model="newPassword" type="password" placeholder="请输入新密码"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="ResetPassword" :loading="ResetLoading">提交</el-button>
+                </el-form-item>
+                <el-button type="text" @click="showLoginForm = true">返回登录</el-button>
+            </el-form>
+            <div class="footer-links" v-if="showLoginForm">
+                <el-link type="primary" target="_blank" @click="showDisclaimer">免责声明</el-link>
+                <el-link type="primary" @click="showLoginForm = false">忘记密码</el-link>
             </div>
         </el-main>
     </el-container>
-    <div class="DisclaimerDialog">
-        <el-dialog v-model="DisclaimerDialogVisible" title="免责声明">
-            <el-space direction="vertical">
-                <el-row>
-                    <el-text>为了您的健康，不提倡长期使用。</el-text>
-                </el-row>
-                <el-row>
-                    <el-text>使用本工具所产生的任何后果，用户需自行承担。</el-text>
-                </el-row>
-                <el-row>
-                    <el-text>本工具仅供学习交流使用，不得用于任何商业用途。</el-text>
-                </el-row>
-            </el-space>
-            <template #footer>
-                <div class="dialog-footer">
-                    <el-button type="primary" @click="DisclaimerDialogVisible = false" width="30%">确定</el-button>
-                </div>
-            </template>
-        </el-dialog>
-    </div>
-
-    <el-dialog v-model="ForgotPasswordDialogVisible" title="重置密码" width="50%">
-        <el-form>
-            <el-form-item>
-                <el-input v-model="phoneNum" placeholder="请输入手机号" class="phone-input"></el-input>
-                <el-button type="primary" @click="SendSMS" :disabled="codeDisabled" :loading="SmsLoading" block
-                    class="sms-button">{{
-                    codeText }}</el-button>
-            </el-form-item>
-            <el-form-item>
-                <el-input v-model="smsCode" placeholder="请输入验证码"></el-input>
-            </el-form-item>
-            <el-form-item>
-                <el-input v-model="newpPssword" type="password" placeholder="请输入新密码"></el-input>
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="ResetPassword" :loading="ResetLoading">提交</el-button>
-            </el-form-item>
-        </el-form>
-    </el-dialog>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 import { login, sendSms, updatePassword } from '@/apis/login.api';
 
-const DisclaimerDialogVisible = ref(false);
-const ForgotPasswordDialogVisible = ref(false);
+const showLoginForm = ref(true);
 
 const phone = ref('');
 const password = ref('');
 const phoneNum = ref('');
-const newpPssword = ref('')
+const newPassword = ref('');
 const smsCode = ref('');
 const codeDisabled = ref(false);
 const codeText = ref('获取验证码');
@@ -108,11 +83,14 @@ const Login = async () => {
     const response = await login(phone.value, password.value);
 
     if (response.data.code === 10000) {
+        const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
+        accounts.push({ phone: phone.value, password: password.value });
+        localStorage.setItem('accounts', JSON.stringify(accounts));
         const token = response.data.response.oauthToken.token;
         const userData = response.data.response;
         localStorage.setItem('token', token);
         localStorage.setItem('userData', JSON.stringify(userData));
-        ElMessage.success('登录成功')
+        ElMessage.success('登录成功');
         LoginLoading.value = false;
         router.push('/user');
     } else {
@@ -146,7 +124,7 @@ const SendSMS = async () => {
         });
 
     } catch (error) {
-        ElMessage.error(error.message)
+        ElMessage.error(error.message);
         codeText.value = '获取验证码';
         codeDisabled.value = false;
     }
@@ -159,17 +137,34 @@ const ResetPassword = async () => {
         ResetLoading.value = false;
         return;
     }
-    const response = await updatePassword(phoneNum.value, newpPssword.value, smsCode.value);
+    const response = await updatePassword(phoneNum.value, newPassword.value, smsCode.value);
     if (response.data.code === 10000) {
         ElMessage.success('密码重置成功');
         ResetLoading.value = false;
         phone.value = phoneNum.value;
-        password.value = newpPssword.value;
-        ForgotPasswordDialogVisible.value = false;
+        password.value = newPassword.value;
+        showLoginForm.value = true;
     } else {
         ElMessage.error('密码重置失败: ' + response.data.msg);
         ResetLoading.value = false;
     }
+}
+
+const showDisclaimer = () => {
+    ElMessageBox.alert(
+        `
+        <div>
+            <p>为了您的健康，不提倡长期使用。</p>
+            <p>使用本工具所产生的任何后果，用户需自行承担。</p>
+            <p>本工具仅供学习交流使用，不得用于任何商业用途。</p>
+        </div>
+        `,
+        '免责声明',
+        {
+            confirmButtonText: '确定',
+            dangerouslyUseHTMLString: true,
+        }
+    );
 }
 </script>
 
@@ -212,13 +207,9 @@ const ResetPassword = async () => {
     display: inline-block;
 }
 
-.DisclaimerDialog {
+.footer-links {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 20px;
-    width: 10px
+    justify-content: space-between;
 }
 
 .phone-input {
@@ -227,14 +218,9 @@ const ResetPassword = async () => {
 
 .sms-button {
     position: absolute;
-    width:100px;
+    width: 100px;
     right: 0;
     top: 0;
     border-radius: 0;
-}
-
-.footer-links {
-    display: flex;
-    justify-content: space-between;
 }
 </style>

@@ -1,12 +1,27 @@
 <template>
-    <div class="user-info">
-        <div v-if="loading" class="loading">加载中...</div>
-        <div v-else class="card">
-            <div class="operation-buttons">
+    <div class="container">
+        <div class="card">
+            <div class="operation-buttons-left">
+                <el-tooltip content="赞赏码" placement="top" open-delay="500">
+                    <el-button plain class="icon-button" type="primary" @click="showRewardDialog = true">
+                        <el-icon>
+                            <Present />
+                        </el-icon>
+                    </el-button>
+                </el-tooltip>
+            </div>
+            <div class="operation-buttons-right">
                 <el-tooltip content="刷新" placement="top" open-delay="500">
                     <el-button class="icon-button" type="primary" @click="fetchActivity">
                         <el-icon>
                             <Refresh />
+                        </el-icon>
+                    </el-button>
+                </el-tooltip>
+                <el-tooltip content="切换用户" placement="top" open-delay="500">
+                    <el-button class="icon-button" type="primary" @click="switchUser">
+                        <el-icon>
+                            <Switch />
                         </el-icon>
                     </el-button>
                 </el-tooltip>
@@ -22,17 +37,30 @@
                 </el-popconfirm>
             </div>
             <h1>{{ user ? user.studentName : '加载中...' }}</h1>
-            <p>{{ user ? user.registerCode : '加载中' }}</p>
-            <p>俱乐部完成率：{{ activity ? activity.club_completion_rate : '加载中...' }}</p>
-            <p>校园跑完成率：{{ activity ? activity.running_completion_rate : '加载中...' }}</p>
+            <p>{{ user ? user.registerCode : '加载中...' }}</p>
+            <div v-if="activity">
+                <el-progress :text-inside="true" :stroke-width="20" :percentage=activity.club_completion_percentage>
+                    <span>俱乐部完成率：{{ activity ? activity.club_completion_rate : '加载中...' }}</span>
+                </el-progress>
+                <el-progress :text-inside="true" :stroke-width="20" :percentage=activity.running_completion_percentage>
+                    <span>校园跑完成率：{{ activity ? activity.running_completion_rate : '加载中...' }}</span>
+                </el-progress>
+            </div>
+            <div v-else>
+                <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true"
+                    :duration="1"><span></span></el-progress>
+                <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true"
+                    :duration="1"><span></span></el-progress>
+            </div>
+
             <el-divider />
             <div class="input-group">
-                <el-input-number for="runDistance" id="distance" v-model="runDistance" :min="1000" :max="6000" step="100"
-                    style="width: 200px;" placeholder="跑步里程（米）"></el-input-number>
+                <el-input-number for="runDistance" id="distance" v-model="runDistance" :min="1000" :max="5000"
+                    :step="100" style="width: 200px;" placeholder="跑步里程（米）"></el-input-number>
             </div>
             <div class="input-group">
-                <el-input-number for="runTime" id="time" v-model="runTime" :min="30" :max="1000" step="5" style="width: 200px;"
-                    placeholder="跑步时长（分钟）"></el-input-number>
+                <el-input-number for="runTime" id="time" v-model="runTime" :min="30" :max="100" :step="5"
+                    style="width: 200px;" placeholder="跑步时长（分钟）"></el-input-number>
             </div>
             <div class="input-group">
                 <el-select id="map" v-model="mapChoice" placeholder="请选择地图">
@@ -41,22 +69,40 @@
                     <el-option label="成都中医药大学温江校区" value="cdutcm_wj"></el-option>
                 </el-select>
             </div>
-
+            <el-tooltip content="随机填充" placement="top" open-delay="500">
+                <el-button class="icon-button" @click="randomizeInputs">
+                    <el-icon>
+                        <RefreshRight />
+                    </el-icon>
+                </el-button>
+            </el-tooltip>
             <el-divider />
-
             <el-button type="primary" @click="getClub" round>俱乐部</el-button>
-            <el-button type="primary" @click="randomizeInputs" round>随机填充</el-button>
             <el-button type="primary" :loading="isLoading" @click="submit" round>立即提交</el-button>
         </div>
     </div>
+    <el-dialog v-model="showRewardDialog" title="感谢你的支持" width="90%" center :show-close="false">
+    <img src="../../file/qr.jpg" alt="赞赏码" class="reward-image" />
+    <template #footer>
+        <div class="dialog-footer">
+            <el-button @click="showRewardDialog = false">白嫖</el-button>
+            <el-button type="primary" @click="showRewardDialog = false">
+                白嫖
+            </el-button>
+        </div>
+    </template>
+</el-dialog>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';  // 导入 ElMessage
+import { ElMessage, } from 'element-plus';  // 导入 ElMessage
 import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user.api';
 import { ElLoading } from 'element-plus';
+import { InfoFilled } from '@element-plus/icons-vue'
+
+const showRewardDialog = ref(false)
 
 let loadingInstance = null;
 
@@ -78,9 +124,8 @@ const mapChoice = ref(null);
 
 // 获取用户活动信息
 const fetchActivity = async () => {
-    startLoading();
+    activity.value = null;
     getActivityInfo(user.value.schoolId, user.value.studentId).then(response => {
-        stopLoading();
         if (response.data.code === 10000) {
             const totalNum = response.data.response.totalNum
             const joinNum = response.data.response.joinNum
@@ -88,7 +133,14 @@ const fetchActivity = async () => {
             const runJoinNum = response.data.response.runJoinNum
             const club_completion_rate = `${joinNum}/${totalNum}`
             const running_completion_rate = `${runJoinNum}/${runTotalNum}`
-            activity.value = { 'club_completion_rate': club_completion_rate, 'running_completion_rate': running_completion_rate }
+            const club_completion_percentage = Math.min((joinNum / totalNum) * 100, 100);
+            const running_completion_percentage = Math.min((runJoinNum / runTotalNum) * 100, 100);
+            activity.value = {
+                'club_completion_rate': club_completion_rate,
+                'running_completion_rate': running_completion_rate,
+                'club_completion_percentage': club_completion_percentage,
+                'running_completion_percentage': running_completion_percentage
+            }
             ElMessage.success('刷新成功');
         }
         else {
@@ -104,13 +156,13 @@ const fetchUser = () => {
     startLoading();
     user.value = null;
     getUserInfo().then(response => {
+        stopLoading();
         if (response.data.code === 10000) {
             user.value = response.data.response;
             const token = response.data.response.oauthToken.token;
             const userData = response.data.response;
             localStorage.setItem('token', token);
             localStorage.setItem('userData', JSON.stringify(userData));
-            randomizeInputs();
             fetchActivity();
         }
         else {
@@ -136,23 +188,6 @@ const submit = async () => {
         // 验证用户输入
         if (!runDistance.value || !runTime.value || !mapChoice.value) {
             ElMessage.error('参数不完整，请检查后重新提交');
-            isLoading.value = false;
-            return;
-        }
-
-        // 新增：验证输入的有效性
-        if (runDistance.value < 1 || runDistance.value > 6000) {
-            ElMessage.error('跑步里程必须在1到6000之间');
-            isLoading.value = false;
-            return;
-        }
-        if (runTime.value < 30 || runTime.value > 1000) {
-            ElMessage.error('跑步时长必须在30到1000之间');
-            isLoading.value = false;
-            return;
-        }
-        if (!['cuit_lqy', 'cuit_hkg', 'cdutcm_wj'].includes(mapChoice.value)) {
-            ElMessage.error('请选择有效的地图');
             isLoading.value = false;
             return;
         }
@@ -207,6 +242,10 @@ const randomizeInputs = () => {
     mapChoice.value = maps[Math.floor(Math.random() * maps.length)];
 };
 
+const switchUser = () => {
+    ElMessage.info('还没有实现该功能')
+}
+
 onMounted(() => {
     if (!user.value) {
         router.push('/login');
@@ -218,7 +257,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.user-info {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -236,11 +275,23 @@ onMounted(() => {
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
+.el-progress--line {
+    margin-bottom: 15px;
+    max-width: 600px;
+    text-align: center;
+}
+
 .input-group {
     margin: 10px 0;
 }
 
-.operation-buttons {
+.operation-buttons-right {
+    display: flex;
+    justify-content: end;
+}
+
+.operation-buttons-left {
+    float: left;
     display: flex;
     justify-content: end;
 }
@@ -256,5 +307,14 @@ onMounted(() => {
 
 .icon-button:hover {
     color: red;
+}
+
+.reward-image {
+    display: block;
+    margin: auto;
+    width: auto;
+    height: auto;
+    max-width: 200px;
+    max-height: 200px;
 }
 </style>
