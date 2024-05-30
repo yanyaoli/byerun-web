@@ -1,5 +1,5 @@
 // const baseURL = process.env.VUE_APP_BASE_API || '';
-const baseURL = 'https://worker.unirun.gouninghong.com';    //workerjs代理,自定义域名解除污染
+const baseURL = 'https://worker.run.ohnnn.com';    //workerjs代理,自定义域名解除污染
 
 export default {
     baseURL,

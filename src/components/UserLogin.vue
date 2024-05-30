@@ -2,7 +2,7 @@
     <el-container>
         <el-header>
             <h1>UNIRUN HELPER</h1>
-            <el-text>欢迎使用UNIRUN校园跑助手</el-text>
+            <el-text tag="p">欢迎使用UNIRUN校园跑助手</el-text>
         </el-header>
         <el-main>
             <el-form v-if="showLoginForm">
@@ -22,7 +22,7 @@
                     <el-text>为了您的健康，不提倡长期使用。</el-text>
                     <el-text>使用本工具所产生的任何后果，用户需自行承担。</el-text>
                     <el-text>本工具仅供学习交流使用，不得用于任何商业用途。</el-text>
-                    <a href="https://github.com/yanyaoli/unirun-web" target="_blank">开源地址</a>
+                    <el-link type="primary" href="https://github.com/yanyaoli/unirun-web" target="_blank">开源地址</el-link>
                 </el-space>
                 <el-button type="primary" @click="showLoginForm = true; showDisclaimerForm = false">返回登录</el-button>
             </el-form>
@@ -46,6 +46,11 @@
 
             <div class="footer-links" v-if="showLoginForm">
                 <el-link type="primary" target="_blank" @click="showDisclaimer">免责声明</el-link>
+                <el-tooltip content="主页" placement="top" open-delay="300">
+                    <el-link type="primary" href="https://ohnnn.com" target="_blank">
+                        <el-icon><HomeFilled /></el-icon>
+                    </el-link>
+                </el-tooltip>
                 <el-link type="primary" @click="showLoginForm = false">忘记密码</el-link>
             </div>
         </el-main>
@@ -182,6 +187,8 @@ const ResetPassword = async () => {
 
 .el-header {
     height: 100px;
+    justify-content: space-between;
+    width: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -240,4 +247,5 @@ const ResetPassword = async () => {
     text-align: center !important;
     line-height: 1.5 !important;
 }
+
 </style>

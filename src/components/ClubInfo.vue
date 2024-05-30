@@ -1,8 +1,11 @@
 <template>
     <el-container>
         <el-header>
-            <el-menu :default-active="activeName" class="week-menu" mode="horizontal" collapse-transition="false" @select="handleSelect">
-                <el-menu-item index="0"><el-icon><ArrowLeft /></el-icon></el-menu-item>
+            <el-menu :default-active="activeName" class="week-menu" mode="horizontal" collapse-transition="false"
+                @select="handleSelect">
+                <el-menu-item index="0"><el-icon>
+                        <ArrowLeft />
+                    </el-icon></el-menu-item>
                 <el-menu-item index="1">周一</el-menu-item>
                 <el-menu-item index="2">周二</el-menu-item>
                 <el-menu-item index="3">周三</el-menu-item>
@@ -11,17 +14,28 @@
                 <el-menu-item index="6">我的俱乐部</el-menu-item>
             </el-menu>
         </el-header>
-        <el-main>
+        <el-main v-if="isLoading">
+
+            <el-result title="UNIRUN HELPER">
+                <template #extra>
+                    <el-icon class="is-loading">
+                        <Loading />
+                    </el-icon>
+                </template>
+            </el-result>
+        </el-main>
+        <el-main v-else>
             <el-scrollbar height="70vh" v-if="clubs.length > 0">
                 <div v-for="club in clubs" :key="club.configurationId">
                     <el-descriptions class="margin-top" :title="club.activityName" :key="club.configurationId"
                         :column="1" border>
                         <template #extra>
-                        <el-button v-if="buttonTypes[club.joinStatus]" :loading="isLoading" :type="buttonTypes[club.joinStatus].type"
-                            @click="handleJoin(club)" :disabled="buttonTypes[club.joinStatus].disabled">
-                            {{ buttonTypes[club.joinStatus].label }}
-                        </el-button>
-                    </template>
+                            <el-button v-if="buttonTypes[club.joinStatus]" :loading="isLoading"
+                                :type="buttonTypes[club.joinStatus].type" @click="handleJoin(club)"
+                                :disabled="buttonTypes[club.joinStatus].disabled">
+                                {{ buttonTypes[club.joinStatus].label }}
+                            </el-button>
+                        </template>
                         <el-descriptions-item>
                             <template #label>
                                 <div class="cell-item">
@@ -82,17 +96,13 @@
                     </el-descriptions>
                 </div>
             </el-scrollbar>
-            <el-result
-                v-else
-                icon="success"
-                title="UNIRUN HELPER"
-                sub-title="暂无俱乐部活动或俱乐部活动已达标"
-            >
+            <el-result v-else icon="success" title="UNIRUN HELPER" sub-title="暂无俱乐部活动或俱乐部活动已达标">
                 <template #extra>
-                <el-button type="primary" @click="goBack">Back</el-button>
+                    <el-button type="primary" @click="goBack">返回</el-button>
                 </template>
             </el-result>
         </el-main>
+
     </el-container>
 </template>
 
@@ -102,17 +112,6 @@ import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { queryClubInfo, queryMyTask, queryMyClub, joinClub } from '@/apis/club.api';
 import { useRouter } from 'vue-router';
-import { ElLoading } from 'element-plus';
-
-let loadingInstance = null;
-
-const startLoading = () => {
-    loadingInstance = ElLoading.service({ fullscreen: true });
-};
-
-const stopLoading = () => {
-    loadingInstance.close();
-};
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
 const clubs = ref([]);
@@ -158,9 +157,9 @@ const handleSelect = (index) => {
 };
 
 const fetchClubInfo = (weekDay) => {
-    startLoading();
+    isLoading.value = true;
     queryClubInfo(weekDay).then(response => {
-        stopLoading();
+        isLoading.value = false;
         if (response.data.code === 10000) {
             if (response.data.response.length === 0) {
                 clubs.value = [];
@@ -214,9 +213,9 @@ const fetchMyClub = () => {
 };
 
 const fetchMyClubs = () => {
-    startLoading();
+    isLoading.value = true;
     Promise.all([fetchMyTask(), fetchMyClub()]).then(responses => {
-        stopLoading();
+        isLoading.value = false;
         const [taskData, clubData] = responses;
         clubs.value = [...taskData, ...clubData];
         if (clubs.value.length === 0) {

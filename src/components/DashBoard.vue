@@ -13,8 +13,8 @@
             <div class="operation-buttons-right">
                 <el-tooltip content="刷新" placement="top" open-delay="500">
                     <el-button class="icon-button" type="primary" @click="fetchActivity">
-                        <el-icon>
-                            <Refresh />
+                        <el-icon class="is-loading">
+                            <Loading />
                         </el-icon>
                     </el-button>
                 </el-tooltip>
@@ -38,21 +38,34 @@
             </div>
         </el-header>
         <el-main v-if="showMainBoard">
-            <h1>{{ user ? user.studentName : '加载中...' }}</h1>
-            <p>{{ user ? user.registerCode : '加载中...' }}</p>
+            <div v-if="isLoading">
+                <h1> <el-icon class="is-loading">
+                        <Loading />
+                    </el-icon></h1>
+                <p>
+                    <el-icon class="is-loading">
+                        <Loading />
+                    </el-icon>
+                </p>
+            </div>
+            <div v-else>
+                <h1>{{ user.studentName }}</h1>
+                <p>{{ user.registerCode }}</p>
+            </div>
+
             <div v-if="activity">
                 <el-progress :text-inside="true" :stroke-width="20" :percentage=activity.club_completion_percentage>
-                    <span>俱乐部完成率：{{ activity ? activity.club_completion_rate : '加载中...' }}</span>
+                    <span>俱乐部完成率：{{ activity.club_completion_rate }}</span>
                 </el-progress>
                 <el-progress :text-inside="true" :stroke-width="20" :percentage=activity.running_completion_percentage>
-                    <span>校园跑完成率：{{ activity ? activity.running_completion_rate : '加载中...' }}</span>
+                    <span>校园跑完成率：{{ activity.running_completion_rate }}</span>
                 </el-progress>
             </div>
             <div v-else>
                 <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true"
-                    :duration="1"><span></span></el-progress>
+                    :duration="0.5" striped striped-flow><span></span></el-progress>
                 <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true"
-                    :duration="1"><span></span></el-progress>
+                    :duration="0.5" striped striped-flow><span></span></el-progress>
             </div>
 
             <el-divider />
@@ -80,11 +93,12 @@
             </el-tooltip>
             <el-divider />
             <el-button type="primary" @click="getClub" round>俱乐部</el-button>
-            <el-button type="primary" :loading="isLoading" @click="submit" round>立即提交</el-button>
+            <el-button type="primary" :loading="isSumbiting" @click="submit" round>立即提交</el-button>
         </el-main>
         <el-main v-else-if="showRewardInfo" class="reward">
             <img src="../../file/qr.jpg" alt="赞赏码" class="reward-image" />
-            <el-button type="primary" @click="showMainBoard = true; showRewardBoard = false">白嫖</el-button>
+            <el-button><el-link type="primary" href="https://ohnnn.com" target="_blank" />联系我们</el-button>
+            <el-button @click="showMainBoard = true; showRewardBoard = false">返回白嫖</el-button>
         </el-main>
     </el-container>
 </template>
@@ -92,7 +106,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage, ElLoading } from 'element-plus';  // 导入 ElMessage
+import { ElMessage } from 'element-plus';  // 导入 ElMessage
 import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user.api';
 import { InfoFilled } from '@element-plus/icons-vue'
 
@@ -102,19 +116,11 @@ const showRewardInfo = () => {
     showMainBoard.value = false;
     showRewardBoard.value = true;
 }
-let loadingInstance = null;
-
-const startLoading = () => {
-    loadingInstance = ElLoading.service({ fullscreen: true });
-};
-
-const stopLoading = () => {
-    loadingInstance.close();
-};
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
 const activity = ref(null);
 const isLoading = ref(false);
+const isSumbiting = ref(false)
 const router = useRouter();
 const runDistance = ref(null);
 const runTime = ref(null);
@@ -139,7 +145,6 @@ const fetchActivity = async () => {
                 'club_completion_percentage': club_completion_percentage,
                 'running_completion_percentage': running_completion_percentage
             }
-            ElMessage.success('刷新成功');
         }
         else {
             activity.value = null;
@@ -151,10 +156,10 @@ const fetchActivity = async () => {
 
 // 获取用户信息
 const fetchUser = () => {
-    startLoading();
+    isLoading.value = true;
     user.value = null;
     getUserInfo().then(response => {
-        stopLoading();
+        isLoading.value = false;
         if (response.data.code === 10000) {
             user.value = response.data.response;
             const token = response.data.response.oauthToken.token;
@@ -181,12 +186,12 @@ const logout = () => {
 
 // 提交
 const submit = async () => {
-    isLoading.value = true;
+    isSumbiting.value = true;
     try {
         // 验证用户输入
         if (!runDistance.value || !runTime.value || !mapChoice.value) {
             ElMessage.error('参数不完整，请检查后重新提交');
-            isLoading.value = false;
+            isSumbiting.value = false;
             return;
         }
 
@@ -195,7 +200,7 @@ const submit = async () => {
         const response = await getSemesterYear(schoolId);
         if (response.data.code !== 10000) {
             ElMessage.error('获取学年学期失败: ' + response.data.msg);
-            isLoading.value = false;
+            isSumbiting.value = false;
             return;
         }
         const semesterYear = response.data.response.semesterYear;
@@ -209,7 +214,7 @@ const submit = async () => {
         const submitResponse = await submitActivityInfo(data);
         if (submitResponse.data.code !== 10000) {
             ElMessage.error('提交失败: ' + submitResponse.data.msg);
-            isLoading.value = false;
+            isSumbiting.value = false;
 
             runDistance.value = null;
             runTime.value = null;
@@ -218,14 +223,14 @@ const submit = async () => {
             return;
         }
         ElMessage.success('提交成功,' + submitResponse.data.response.resultDesc);
-        isLoading.value = false;
+        isSumbiting.value = false;
         runDistance.value = null;
         runTime.value = null;
         mapChoice.value = null;
         await fetchActivity();
     } catch (error) {
         ElMessage.error('提交失败: ' + error.message);
-        isLoading.value = false;
+        isSumbiting.value = false;
     }
 };
 
