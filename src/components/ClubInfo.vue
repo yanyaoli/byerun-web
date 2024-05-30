@@ -1,7 +1,7 @@
 <template>
     <el-container>
-        <el-main>
-            <el-menu :default-active="activeName" class="week-menu" mode="horizontal" @select="handleSelect">
+        <el-header>
+            <el-menu :default-active="activeName" class="week-menu" mode="horizontal" collapse-transition="false" @select="handleSelect">
                 <el-menu-item index="0"><el-icon><ArrowLeft /></el-icon></el-menu-item>
                 <el-menu-item index="1">周一</el-menu-item>
                 <el-menu-item index="2">周二</el-menu-item>
@@ -10,7 +10,8 @@
                 <el-menu-item index="5">周五</el-menu-item>
                 <el-menu-item index="6">我的俱乐部</el-menu-item>
             </el-menu>
-
+        </el-header>
+        <el-main>
             <el-scrollbar height="70vh" v-if="clubs.length > 0">
                 <div v-for="club in clubs" :key="club.configurationId">
                     <el-descriptions class="margin-top" :title="club.activityName" :key="club.configurationId"
@@ -93,7 +94,6 @@
             </el-result>
         </el-main>
     </el-container>
-
 </template>
 
 
@@ -259,28 +259,21 @@ onMounted(() => {
 
 <style scoped>
 .el-container {
+    max-width: 500px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: 20px;
-    margin: 30px auto;
-    font-family: Arial, sans-serif;
-    align-items: center;
-    max-width: 600px;
+    margin: 0 auto;
 }
 
-.navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
+.el-header {
+    /* display: flex;
+    justify-content: space-between; */
     width: 100%;
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background-color: #fff;
-    z-index: 1000;
+
 }
 
 /* .navbar > el-button {

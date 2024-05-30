@@ -15,8 +15,6 @@ UNIRUN校园跑助手网页版，自动规划跑步路径，生成跑步记录�
 
 - [Vercel](https://unirun.vercel.app)
 
-<img src="./file/login.png" width="200"> <img src="./file/dashboard.jpg" width="200"> <img src="./file/clubinfo.jpg" width="200"> <img src="./file/clubstatus.jpg" width="200">
-
 ## 运行
 
 安装依赖：
@@ -51,43 +49,60 @@ npm run build
 | 俱乐部参与记录 | `${baseURL}/clubactivity/queryMyActivityList` |
 | 待签到俱乐部 | `${baseURL}/clubactivity/queryMySemesterClubActivity` |
 | 俱乐部加入退出状态 | `${baseURL}/clubactivity/joinOrCancelSchoolSemesterActivity` |
+| 验证码| `${baseURL}/auth/sendSmsForPassWord` |
+| 重置密码 | `${baseURL}/auth/updateUserPassWord` |
 
-> Workerjs
+
+
+### Workerjs
 
 ```
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request))
-})
+export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': '*'
+        }
+      });
+    } else {
+      return handleRequest(request, env);
+    }
+  }
+};
 
-async function handleRequest(request) {
-  const url = new URL(request.url)
-  const backendUrl = 'https://run-lb.tanmasports.com/v1' + url.pathname + url.search
+async function handleRequest(request, env) {
+  const url = new URL(request.url);
+  const backendUrl = 'https://run-lb.tanmasports.com/v1' + url.pathname + url.search;
 
   // 克隆请求的头部
-  const newHeaders = new Headers(request.headers)
-
+  const newHeaders = new Headers(request.headers);
   // 删除可能影响签名的头部
-  newHeaders.delete('Host')
+  newHeaders.delete('Host');
 
   const init = {
     method: request.method,
     headers: newHeaders,
-    // 获取并克隆请求体，以确保传递原始的内容
     body: request.method === 'GET' ? null : await request.clone().text()
-  }
+  };
 
-  const response = await fetch(backendUrl, init)
+  const response = await fetch(backendUrl, init);
 
-  const responseHeaders = new Headers(response.headers)
-  responseHeaders.set('Access-Control-Allow-Origin', '*')
-  responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  responseHeaders.set('Access-Control-Allow-Headers', '*')
+  const responseHeaders = new Headers(response.headers);
+  // 设置跨域相关头部
+  responseHeaders.set('Access-Control-Allow-Origin', '*');
+  responseHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  responseHeaders.set('Access-Control-Allow-Headers', '*');
 
-  const body = await response.text()
+  const body = await response.text();
+
   return new Response(body, {
     status: response.status,
     headers: responseHeaders
-  })
+  });
 }
 ```
 

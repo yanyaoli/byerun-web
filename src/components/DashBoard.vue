@@ -1,9 +1,9 @@
 <template>
-    <div class="container">
-        <div class="card">
+    <el-container>
+        <el-header>
             <div class="operation-buttons-left">
                 <el-tooltip content="赞赏码" placement="top" open-delay="500">
-                    <el-button plain class="icon-button" type="primary" @click="showRewardDialog = true">
+                    <el-button plain class="icon-button" type="primary" @click="showRewardInfo">
                         <el-icon>
                             <Present />
                         </el-icon>
@@ -36,6 +36,8 @@
                     </template>
                 </el-popconfirm>
             </div>
+        </el-header>
+        <el-main v-if="showMainBoard">
             <h1>{{ user ? user.studentName : '加载中...' }}</h1>
             <p>{{ user ? user.registerCode : '加载中...' }}</p>
             <div v-if="activity">
@@ -79,31 +81,27 @@
             <el-divider />
             <el-button type="primary" @click="getClub" round>俱乐部</el-button>
             <el-button type="primary" :loading="isLoading" @click="submit" round>立即提交</el-button>
-        </div>
-    </div>
-    <el-dialog v-model="showRewardDialog" title="感谢你的支持" width="90%" center :show-close="false">
-    <img src="../../file/qr.jpg" alt="赞赏码" class="reward-image" />
-    <template #footer>
-        <div class="dialog-footer">
-            <el-button @click="showRewardDialog = false">白嫖</el-button>
-            <el-button type="primary" @click="showRewardDialog = false">
-                白嫖
-            </el-button>
-        </div>
-    </template>
-</el-dialog>
+        </el-main>
+        <el-main v-else-if="showRewardInfo" class="reward">
+            <img src="../../file/qr.jpg" alt="赞赏码" class="reward-image" />
+            <el-button type="primary" @click="showMainBoard = true; showRewardBoard = false">白嫖</el-button>
+        </el-main>
+    </el-container>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage, } from 'element-plus';  // 导入 ElMessage
+import { ElMessage, ElLoading } from 'element-plus';  // 导入 ElMessage
 import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user.api';
-import { ElLoading } from 'element-plus';
 import { InfoFilled } from '@element-plus/icons-vue'
 
-const showRewardDialog = ref(false)
-
+const showMainBoard = ref(true)
+const showRewardBoard = ref(false)
+const showRewardInfo = () => {
+    showMainBoard.value = false;
+    showRewardBoard.value = true;
+}
 let loadingInstance = null;
 
 const startLoading = () => {
@@ -257,22 +255,29 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.container {
+.el-container {
+    max-width: 500px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
     padding: 20px;
-    font-family: Arial, sans-serif;
+    margin: 0 auto;
 }
 
-.card {
+.el-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+
+}
+
+.el-main {
     position: relative;
-    border-radius: 10px;
-    padding: 20px;
-    width: 300px;
+    width: 100%;
     text-align: center;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    margin-top: -20px;
 }
 
 .el-progress--line {
@@ -286,6 +291,7 @@ onMounted(() => {
 }
 
 .operation-buttons-right {
+    float: right;
     display: flex;
     justify-content: end;
 }
@@ -302,7 +308,6 @@ onMounted(() => {
     background-color: transparent;
     font-size: 20px;
     padding: 0;
-    margin-left: 5px;
 }
 
 .icon-button:hover {
@@ -316,5 +321,6 @@ onMounted(() => {
     height: auto;
     max-width: 200px;
     max-height: 200px;
+    margin-bottom: 20px;
 }
 </style>
