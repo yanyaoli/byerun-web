@@ -107,7 +107,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';  // 导入 ElMessage
-import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user.api';
+import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user';
 import { InfoFilled } from '@element-plus/icons-vue'
 
 const showMainBoard = ref(true)

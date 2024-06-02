@@ -61,7 +61,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { login, sendSms, updatePassword } from '@/apis/login.api';
+import { login, sendSms, updatePassword } from '@/apis/login';
+
 
 const showLoginForm = ref(true);
 const showDisclaimerForm = ref(false);

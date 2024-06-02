@@ -110,7 +110,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { queryClubInfo, queryMyTask, queryMyClub, joinClub } from '@/apis/club.api';
+import { queryClubInfo, queryMyTask, queryMyClub, joinClub } from '@/apis/club';
 import { useRouter } from 'vue-router';
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);

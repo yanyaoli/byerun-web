@@ -1,20 +1,24 @@
 import { getDistance } from 'geolib';
-import { getMapData } from '@/maps/map';
+import { getMapData } from '@/static/maps/map';
 
 class Location {
-    constructor(id, location, edge) {
+    id: number;
+    location: string;
+    edge: number[];
+
+    constructor(id: number, location: string, edge: number[]) {
         this.id = id;
         this.location = location;
         this.edge = edge;
     }
 }
 
-const calculateDistance = (start, end) => getDistance(
+const calculateDistance = (start: number[], end: number[]) => getDistance(
     { latitude: start[1], longitude: start[0] },
     { latitude: end[1], longitude: end[0] }
 );
 
-const randPos = (start, end) => {
+const randPos = (start: number[], end: number[]) => {
     const random = Math.random();
     const dy = end[1] - start[1];
     const dx = end[0] - start[0];
@@ -26,7 +30,7 @@ const randPos = (start, end) => {
 
 const randAccuracy = () => 10 * Math.random();
 
-const randInt = (start, end) => {
+const randInt = (start: number, end: number) => {
     if (start === end) {
         console.log("范围空!");
     }
@@ -34,7 +38,7 @@ const randInt = (start, end) => {
     return Math.floor(start + len * Math.random());
 };
 
-const gen = (distance, locations) => {
+const gen = (distance: number, locations: Location[]) => {
     let currentDistance = 0;
     const startIndex = Math.floor(Math.random() * locations.length);
     let currentLocation = locations[startIndex];
@@ -54,7 +58,7 @@ const gen = (distance, locations) => {
         if (!edge) {
             console.log("edge为空");
         }
-        let randIndex = randInt(0, edge.length);
+        const randIndex = randInt(0, edge.length);
         let edgeIndex = edge[randIndex];
         if (edgeIndex === lastIndex) {
             edgeIndex = edge[(randIndex + 1) % edge.length];
@@ -95,7 +99,7 @@ const getDate = () => {
     return now.toISOString().replace('T', ' ').substring(0, 19);
 };
 
-const genTrackPoints = (distance, mapChoice) => {
+const genTrackPoints = (distance: number, mapChoice: string) => {
     const data = getMapData(mapChoice);
     const locations = data.map(d => new Location(d.id, d.location, d.edge));
 

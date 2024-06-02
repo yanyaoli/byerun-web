@@ -4,7 +4,7 @@ import address from '@/services/address';
 import { APPVERSION, BRAND, DEVICETOKEN, DEVICETYPE, MOBILETYPE, SYSVERSION } from '@/utils/appConfig';
 
 // 登录
-export const login = (userPhone, password) => {
+export const login = (userPhone:number, password:string) => {
   const hashedPassword = stringToMd5(password);
   const body = {
     'appVersion': APPVERSION,
@@ -21,14 +21,14 @@ export const login = (userPhone, password) => {
 };
 
 // 获取验证码
-export const sendSms = (phoneNum) => request.get(address.sendSms, {
+export const sendSms = (phoneNum:number) => request.get(address.sendSms, {
   params: {
     phoneNum
   }
 });
 
 // 更新密码
-export const updatePassword = (phoneNum, newPassword, smsCode) => {
+export const updatePassword = (phoneNum:number, newPassword:string, smsCode:string) => {
   const hashedPassword = stringToMd5(newPassword);
   const body = {
     'password': hashedPassword,

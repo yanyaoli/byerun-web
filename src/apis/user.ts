@@ -3,11 +3,19 @@ import address from '@/services/address';
 import { genTrackPoints, getDate } from '@/utils/track';
 import { APPVERSION, BRAND, MOBILETYPE, SYSVERSION } from '@/utils/appConfig';
 
+interface ActivityData {
+  runDistance: number;
+  mapChoice: string;
+  runTime: number;
+  userId: number;
+  semesterYear: number;
+}
+
 // 获取用户信息
 export const getUserInfo = () => request.get(address.user);
 
 // 获取用户活动信息
-export const getActivityInfo = (schoolId, studentId) => request.get(address.activity, {
+export const getActivityInfo = (schoolId:number, studentId:number) => request.get(address.activity, {
   params: {
     schoolId,
     studentId
@@ -15,14 +23,14 @@ export const getActivityInfo = (schoolId, studentId) => request.get(address.acti
 });
 
 // 获取学期年份
-export const getSemesterYear = (schoolId) => request.get(address.runStandard, {
+export const getSemesterYear = (schoolId:number) => request.get(address.runStandard, {
   params: {
     schoolId
   }
 });
 
 // 提交活动信息
-export const submitActivityInfo = (data) => {
+export const submitActivityInfo = (data: ActivityData) => {
   const { runDistance, mapChoice, runTime, userId, semesterYear } = data;
   const body = {
     againRunStatus: "0",
