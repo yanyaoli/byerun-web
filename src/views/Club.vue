@@ -1,11 +1,12 @@
 <template>
     <el-container>
         <el-header>
-            <el-menu :default-active="activeName" class="week-menu" mode="horizontal" collapse-transition="false"
-                @select="handleSelect">
-                <el-menu-item index="0"><el-icon>
+            <el-menu :default-active="activeName" class="week-menu" mode="horizontal" :collapse-transition="false" @select="handleSelect">
+                <el-menu-item index="0">
+                    <el-icon>
                         <ArrowLeft />
-                    </el-icon></el-menu-item>
+                    </el-icon>
+                </el-menu-item>
                 <el-menu-item index="1">周一</el-menu-item>
                 <el-menu-item index="2">周二</el-menu-item>
                 <el-menu-item index="3">周三</el-menu-item>
@@ -15,7 +16,6 @@
             </el-menu>
         </el-header>
         <el-main v-if="isLoading">
-
             <el-result title="UNIRUN HELPER">
                 <template #extra>
                     <el-icon class="is-loading">
@@ -27,12 +27,9 @@
         <el-main v-else>
             <el-scrollbar height="70vh" v-if="clubs.length > 0">
                 <div v-for="club in clubs" :key="club.configurationId">
-                    <el-descriptions class="margin-top" :title="club.activityName" :key="club.configurationId"
-                        :column="1" border>
+                    <el-descriptions class="margin-top" :title="club.activityName" :key="club.configurationId" :column="1" border>
                         <template #extra>
-                            <el-button v-if="buttonTypes[club.joinStatus]" :loading="isLoading"
-                                :type="buttonTypes[club.joinStatus].type" @click="handleJoin(club)"
-                                :disabled="buttonTypes[club.joinStatus].disabled">
+                            <el-button v-if="buttonTypes[club.joinStatus]" :loading="JoinLoading" :type="buttonTypes[club.joinStatus].type" @click="handleJoin(club)" :disabled="buttonTypes[club.joinStatus].disabled">
                                 {{ buttonTypes[club.joinStatus].label }}
                             </el-button>
                         </template>
@@ -56,8 +53,7 @@
                                     人数
                                 </div>
                             </template>
-                            {{ club.joinStudentNum }} / {{ club.studentNum
-                            }}人
+                            {{ club.joinStudentNum }} / {{ club.studentNum }}人
                         </el-descriptions-item>
                         <el-descriptions-item>
                             <template #label>
@@ -68,8 +64,7 @@
                                     时间
                                 </div>
                             </template>
-                            周{{ weekDayMap[club.weekDay] }} {{ club.startTime }} - {{
-                                club.endTime }}
+                            周{{ weekDayMap[club.weekDay] }} {{ club.startTime }} - {{ club.endTime }}
                         </el-descriptions-item>
                         <el-descriptions-item>
                             <template #label>
@@ -102,31 +97,38 @@
                 </template>
             </el-result>
         </el-main>
-
     </el-container>
 </template>
+
 
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { queryClubInfo, queryMyTask, queryMyClub, joinClub } from '@/apis/club';
 import { useRouter } from 'vue-router';
+
+import { useWeeklyClub, useClubTask, useClubHistory, useJoinClub } from '@/hooks/club';
+
+const { clubTask, fetchClubTask } = useClubTask();
+const { ClubHistory, fetchClubHistory } = useClubHistory();
+const { weeklyClubs, fetchWeeklyClub } = useWeeklyClub();
+const { JoinLoading, fetchJoinClub } = useJoinClub();
 
 const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
 const clubs = ref([]);
 const isLoading = ref(false);
 const router = useRouter();
 const activeName = ref('1');
+
 const weekDayMap = reactive({
     1: '一',
     2: '二',
     3: '三',
     4: '四',
     5: '五',
-    6: '六',
-    7: '日'
+    6: '俱乐部记录',
 });
+
 const buttonTypes = reactive({
     0: { type: 'primary', label: '报名', disabled: false },
     1: { type: 'danger', label: '取消报名', disabled: false },
@@ -142,7 +144,7 @@ const iconStyle = {
 };
 
 const goBack = () => {
-    router.push('/user');
+    router.push('/dashboard');
 };
 
 const handleSelect = (index) => {
@@ -150,82 +152,35 @@ const handleSelect = (index) => {
         goBack();
         return;
     } if (index === '6') {
-        fetchMyClubs();
+        getClubs();
     } else {
-        fetchClubInfo(index);
+        getWeeklyClub(index);
     }
 };
 
-const fetchClubInfo = (weekDay) => {
+// 获取周俱乐部
+const getWeeklyClub = async (weekDay) => {
     isLoading.value = true;
-    queryClubInfo(weekDay).then(response => {
-        isLoading.value = false;
-        if (response.data.code === 10000) {
-            if (response.data.response.length === 0) {
-                clubs.value = [];
-            } else {
-                clubs.value = response.data.response.map(club => ({
-                    ...club,
-                    weekDay: Number(club.weekDay),
-                    joinStatus: Number(club.joinStatus)
-                }));
-            }
-        } else {
-            clubs.value = [];
-            router.push('/user');
-        }
-    });
+    await fetchWeeklyClub(weekDay);
+    isLoading.value = false;
+    clubs.value = weeklyClubs.value;
 };
 
-const fetchMyTask = () => {
-    return queryMyTask().then(response => {
-        if (response.data.code === 10000) {
-            if (response.data.response.length === 0) {
-                return [];
-            } else {
-                return response.data.response.map(task => ({
-                    ...task,
-                    joinStatus: task.joinStatus !== undefined ? task.joinStatus : 3
-                }));
-            }
-        } else {
-            return [];
-        }
-    });
-};
-
-const fetchMyClub = () => {
+// 获取我的俱乐部
+const getClubs = async () => {
+    isLoading.value = true;
     const studentId = user.value.studentId;
-    return queryMyClub(studentId).then(response => {
-        if (response.data.code === 10000) {
-            if (response.data.response.length === 0) {
-                return [];
-            } else {
-                return response.data.response.map(club => ({
-                    ...club,
-                    joinStatus: club.joinStatus !== undefined ? club.joinStatus : 4
-                }));
-            }
-        } else {
-            return [];
-        }
-    });
+    await fetchClubHistory(studentId);
+    await fetchClubTask();
+    isLoading.value = false;
+    clubs.value = [...clubTask.value, ...ClubHistory.value];
+    if (clubs.value.length === 0) {
+        ElMessage.success('暂无需要参加的俱乐部活动');
+    }
 };
 
-const fetchMyClubs = () => {
-    isLoading.value = true;
-    Promise.all([fetchMyTask(), fetchMyClub()]).then(responses => {
-        isLoading.value = false;
-        const [taskData, clubData] = responses;
-        clubs.value = [...taskData, ...clubData];
-        if (clubs.value.length === 0) {
-            ElMessage.success('暂无需要参加的俱乐部活动');
-        }
-    });
-};
-
-const handleJoin = (club) => {
-    isLoading.value = true;
+const handleJoin = async (club) => {
+    JoinLoading.value = true;
 
     let type;
     if (club.joinStatus === 0 || club.joinStatus === 2) {
@@ -233,28 +188,26 @@ const handleJoin = (club) => {
     } else if (club.joinStatus === 1 || club.joinStatus === 3) {
         type = 2;
     } else {
+        JoinLoading.value = false;
         return;
     }
-    joinClub(club.configurationId, type).then(response => {
-        if (response.data.code === 10000) {
-            ElMessage.success(response.data.response.message);
-            isLoading.value = false;
-        } else {
-            ElMessage.error(response.data.msg);
-            isLoading.value = false;
-        }
-    });
+
+    const success = await fetchJoinClub(club.configurationId, type);
+    JoinLoading.value = false;
+    if (!success) {
+        getClubs();
+    }
 };
 
 onMounted(() => {
     if (!user.value) {
-        router.push('/login');
+        router.push('/home');
     } else {
-        fetchClubInfo('1');
+        getWeeklyClub(1);
     }
 });
-
 </script>
+
 
 <style scoped>
 .el-container {

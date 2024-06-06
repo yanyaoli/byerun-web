@@ -13,7 +13,7 @@
                     <el-input v-model="password" type="password" placeholder="请输入密码"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="Login" :loading="LoginLoading">立即登录</el-button>
+                    <el-button type="primary" @click="Login" :loading="loginStore.loginLoading">立即登录</el-button>
                 </el-form-item>
             </el-form>
             <el-form v-else-if="showDisclaimerForm" class="DisclaimerForm">
@@ -29,7 +29,7 @@
             <el-form v-else>
                 <el-form-item>
                     <el-input v-model="phoneNum" placeholder="请输入手机号" class="phone-input"></el-input>
-                    <el-button type="primary" @click="SendSMS" :disabled="codeDisabled" :loading="SmsLoading" block
+                    <el-button type="primary" @click="SendSMS" :disabled="codeDisabled" :loading="loginStore.smsLoading" block
                         class="sms-button">{{ codeText }}</el-button>
                 </el-form-item>
                 <el-form-item>
@@ -39,18 +39,13 @@
                     <el-input v-model="newPassword" type="password" placeholder="请输入新密码"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="ResetPassword" :loading="ResetLoading">提交</el-button>
+                    <el-button type="primary" @click="ResetPassword" :loading="loginStore.resetLoading">提交</el-button>
                 </el-form-item>
                 <el-button type="text" @click="showLoginForm = true">返回登录</el-button>
             </el-form>
 
             <div class="footer-links" v-if="showLoginForm">
                 <el-link type="primary" target="_blank" @click="showDisclaimer">免责声明</el-link>
-                <el-tooltip content="主页" placement="top" open-delay="300">
-                    <el-link type="primary" href="https://ohnnn.com" target="_blank">
-                        <el-icon><HomeFilled /></el-icon>
-                    </el-link>
-                </el-tooltip>
                 <el-link type="primary" @click="showLoginForm = false">忘记密码</el-link>
             </div>
         </el-main>
@@ -58,120 +53,74 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watchEffect, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { login, sendSms, updatePassword } from '@/apis/login';
+import stores from '@/hooks/login/index';
 
+// 使用 Pinia stores
+const loginStore = stores.useLoginStore();
+const smsStore = stores.useSmsStore();
+const resetPasswordStore = stores.useResetPasswordStore();
+const router = useRouter();
 
+// 组件内部状态
 const showLoginForm = ref(true);
 const showDisclaimerForm = ref(false);
-const showDisclaimer = () => {
-    showLoginForm.value = false;
-    showDisclaimerForm.value = true;
-}
-
 const phone = ref('');
 const password = ref('');
 const phoneNum = ref('');
 const newPassword = ref('');
 const smsCode = ref('');
-const codeDisabled = ref(false);
-const codeText = ref('获取验证码');
-const LoginLoading = ref(false);
-const SmsLoading = ref(false);
-const ResetLoading = ref(false);
-const router = useRouter();
 
-const startTimer = (duration, onTick, onComplete) => {
-    let seconds = duration;
-    const intervalId = setInterval(() => {
-        if (seconds <= 0) {
-            clearInterval(intervalId);
-            onComplete();
-        } else {
-            seconds -= 1;
-            onTick(seconds);
-        }
-    }, 1000);
-}
+// 显示免责声明表单
+const showDisclaimer = () => {
+    showLoginForm.value = false;
+    showDisclaimerForm.value = true;
+};
 
-const Login = async () => {
+const PhoneValid = () => {
     if (!/^1[3-9]\d{9}$/.test(phone.value)) {
         ElMessage.error('请输入正确的手机号');
         return;
     }
-    LoginLoading.value = true;
+};
+// 登录方法
+const Login = async () => {
+    PhoneValid();
+    await loginStore.login(phone.value, password.value);
+};
 
-    const response = await login(phone.value, password.value);
-
-    if (response.data.code === 10000) {
-        const accounts = JSON.parse(localStorage.getItem('accounts') || '[]');
-        accounts.push({ phone: phone.value, password: password.value });
-        localStorage.setItem('accounts', JSON.stringify(accounts));
-        const token = response.data.response.oauthToken.token;
-        const userData = response.data.response;
-        localStorage.setItem('token', token);
-        localStorage.setItem('userData', JSON.stringify(userData));
-        ElMessage.success('登录成功');
-        LoginLoading.value = false;
-        router.push('/user');
-    } else {
-        ElMessage.error('登录失败: ' + response.data.msg);
-        LoginLoading.value = false;
-    }
-}
-
+// 发送短信验证码方法
 const SendSMS = async () => {
-    SmsLoading.value = true;
-    if (!/^1[3-9]\d{9}$/.test(phoneNum.value)) {
-        ElMessage.error('请输入正确的手机号');
-        SmsLoading.value = false;
-        return;
-    }
-    try {
-        codeText.value = '正在发送';
-        const response = await sendSms(phoneNum.value);
-        if (response.data.code === 10000) {
-            ElMessage.success('验证码发送成功');
-            SmsLoading.value = false;
-        } else {
-            ElMessage.error('验证码发送失败: ' + response.data.msg);
-            SmsLoading.value = false;
-        }
-        startTimer(10, (seconds) => {
-            codeText.value = `${seconds} 秒后重新获取`;
-        }, () => {
-            codeText.value = '获取验证码';
-            codeDisabled.value = false;
-        });
+    PhoneValid();
+    smsStore.sendSms(phoneNum.value);
+};
 
-    } catch (error) {
-        ElMessage.error(error.message);
-        codeText.value = '获取验证码';
-        codeDisabled.value = false;
-    }
-}
-
+// 重置密码方法
 const ResetPassword = async () => {
-    ResetLoading.value = true;
-    if (!/^1[3-9]\d{9}$/.test(phoneNum.value)) {
-        ElMessage.error('请输入正确的手机号');
-        ResetLoading.value = false;
-        return;
+    PhoneValid();
+    await resetPasswordStore.resetPassword(phoneNum.value, newPassword.value, smsCode.value);
+};
+
+// 路由跳转
+const goToDashboard = () => {
+    router.push('/dashboard');
+};
+
+// 监听登录状态变化，自动跳转
+watchEffect(() => {
+    if (loginStore.isLoggedIn) {
+        goToDashboard();
     }
-    const response = await updatePassword(phoneNum.value, newPassword.value, smsCode.value);
-    if (response.data.code === 10000) {
-        ElMessage.success('密码重置成功');
-        ResetLoading.value = false;
-        phone.value = phoneNum.value;
-        password.value = newPassword.value;
-        showLoginForm.value = true;
-    } else {
-        ElMessage.error('密码重置失败: ' + response.data.msg);
-        ResetLoading.value = false;
+});
+
+// 页面加载完成后检查 token 和 userData
+onMounted(() => {
+    if (loginStore.token && loginStore.userData) {
+        goToDashboard();
     }
-}
+});
 </script>
 
 <style scoped>

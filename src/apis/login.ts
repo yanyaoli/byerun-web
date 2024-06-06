@@ -3,6 +3,46 @@ import stringToMd5 from '@/utils/md5';
 import address from '@/services/address';
 import { APPVERSION, BRAND, DEVICETOKEN, DEVICETYPE, MOBILETYPE, SYSVERSION } from '@/utils/appConfig';
 
+interface OauthToken {
+  token: string;
+  refreshToken: string;
+}
+
+interface LoginSuccessRes {
+  code: number;
+  msg: string;
+  response: {
+    oauthToken: OauthToken;
+    userId: number;
+    studentId: number;
+    registerCode: string;
+    studentName: string;
+    gender: string;
+    schoolId: number;
+    schoolName: string;
+    classId: number;
+    studentClass: number;
+    className: string;
+    startSchool: number;
+    collegeCode: string;
+    collegeName: string;
+    majorCode: string;
+    majorName: string;
+    nationCode: string;
+    birthday: string;
+    idCardNo: string;
+    addrDetail: string;
+    studentSource: string;
+    userVerifyStatus: string;
+  };
+}
+
+interface LoginErrorRes {
+  code: number;
+  msg: string;
+  response: null;
+}
+
 // 登录
 export const login = (userPhone:number, password:string) => {
   const hashedPassword = stringToMd5(password);

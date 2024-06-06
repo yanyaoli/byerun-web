@@ -2,6 +2,8 @@ import axios from 'axios'
 import generateSign from '@/utils/sign'
 import { APPKEY } from '@/utils/appConfig'
 import address from '@/services/address'
+import { ElMessage } from "element-plus";
+
 const instance = axios.create({
   baseURL: address.baseURL,
   timeout: 30000
@@ -26,7 +28,11 @@ instance.interceptors.request.use(config => {
 
   return config
 }, error => {
-  return Promise.reject(error)
+  ElMessage({
+    type: "warning",
+    message: "请求失败" + error.message,
+  });
+  return Promise.resolve();
 })
 
 instance.interceptors.response.use(
@@ -34,7 +40,11 @@ instance.interceptors.response.use(
     return response
   },
   error => {
-    return Promise.reject(error)
+    ElMessage({
+      type: "warning",
+      message: "请求失败" + error.message,
+    });
+    return Promise.resolve();
   }
 )
 

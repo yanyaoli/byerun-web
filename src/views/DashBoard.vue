@@ -12,7 +12,7 @@
             </div>
             <div class="operation-buttons-right">
                 <el-tooltip content="刷新" placement="top" open-delay="500">
-                    <el-button class="icon-button" type="primary" @click="fetchActivity">
+                    <el-button class="icon-button" type="primary" @click="getActivity">
                         <el-icon class="is-loading">
                             <Loading />
                         </el-icon>
@@ -38,7 +38,12 @@
             </div>
         </el-header>
         <el-main v-if="showMainBoard">
-            <div v-if="isLoading">
+            <div v-if="user">
+                <h1>{{ user.studentName }}</h1>
+                <p>{{ user.registerCode }}</p>
+
+            </div>
+            <div v-else>
                 <h1> <el-icon class="is-loading">
                         <Loading />
                     </el-icon></h1>
@@ -47,10 +52,6 @@
                         <Loading />
                     </el-icon>
                 </p>
-            </div>
-            <div v-else>
-                <h1>{{ user.studentName }}</h1>
-                <p>{{ user.registerCode }}</p>
             </div>
 
             <div v-if="activity">
@@ -92,13 +93,12 @@
                 </el-button>
             </el-tooltip>
             <el-divider />
-            <el-button type="primary" @click="getClub" round>俱乐部</el-button>
-            <el-button type="primary" :loading="isSumbiting" @click="submit" round>立即提交</el-button>
+            <el-button type="primary" @click="goClub" round>俱乐部</el-button>
+            <el-button type="primary" :loading="isSubmitting" @click="submitActivityData" round>立即提交</el-button>
         </el-main>
         <el-main v-else-if="showRewardInfo" class="reward">
             <img src="../../file/qr.jpg" alt="赞赏码" class="reward-image" />
-            <el-button><el-link type="primary" href="https://ohnnn.com" target="_blank" />联系我们</el-button>
-            <el-button @click="showMainBoard = true; showRewardBoard = false">返回白嫖</el-button>
+            <el-button @click="showMainBoard = true; showRewardBoard = false">返回</el-button>
         </el-main>
     </el-container>
 </template>
@@ -107,8 +107,15 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';  // 导入 ElMessage
-import { getUserInfo, getActivityInfo, getSemesterYear, submitActivityInfo } from '@/apis/user';
 import { InfoFilled } from '@element-plus/icons-vue'
+import { useUser, useActivity, useSubmitActivity } from '@/hooks/dashboard/index'
+
+const { user, fetchUser } = useUser();
+const { activity, fetchActivity } = useActivity();
+const { isSubmitting, submit } = useSubmitActivity();
+
+const userData = JSON.parse(localStorage.getItem('userData')) || null;
+const token = localStorage.getItem('token') || null;
 
 const showMainBoard = ref(true)
 const showRewardBoard = ref(false)
@@ -117,124 +124,33 @@ const showRewardInfo = () => {
     showRewardBoard.value = true;
 }
 
-const user = ref(JSON.parse(localStorage.getItem('userData')) || null);
-const activity = ref(null);
-const isLoading = ref(false);
-const isSumbiting = ref(false)
 const router = useRouter();
 const runDistance = ref(null);
 const runTime = ref(null);
 const mapChoice = ref(null);
 
-// 获取用户活动信息
-const fetchActivity = async () => {
+// 获取活动信息
+const getActivity = async () => {
     activity.value = null;
-    getActivityInfo(user.value.schoolId, user.value.studentId).then(response => {
-        if (response.data.code === 10000) {
-            const totalNum = response.data.response.totalNum
-            const joinNum = response.data.response.joinNum
-            const runTotalNum = response.data.response.runTotalNum
-            const runJoinNum = response.data.response.runJoinNum
-            const club_completion_rate = `${joinNum}/${totalNum}`
-            const running_completion_rate = `${runJoinNum}/${runTotalNum}`
-            const club_completion_percentage = Math.min((joinNum / totalNum) * 100, 100);
-            const running_completion_percentage = Math.min((runJoinNum / runTotalNum) * 100, 100);
-            activity.value = {
-                'club_completion_rate': club_completion_rate,
-                'running_completion_rate': running_completion_rate,
-                'club_completion_percentage': club_completion_percentage,
-                'running_completion_percentage': running_completion_percentage
-            }
-        }
-        else {
-            activity.value = null;
-            localStorage.clear();
-            ElMessage.error('获取活动信息失败: ' + response.data.msg);
-        }
-    })
+    await fetchActivity(user.value.schoolId, user.value.studentId);
 };
 
-// 获取用户信息
-const fetchUser = () => {
-    isLoading.value = true;
-    user.value = null;
-    getUserInfo().then(response => {
-        isLoading.value = false;
-        if (response.data.code === 10000) {
-            user.value = response.data.response;
-            const token = response.data.response.oauthToken.token;
-            const userData = response.data.response;
-            localStorage.setItem('token', token);
-            localStorage.setItem('userData', JSON.stringify(userData));
-            fetchActivity();
-        }
-        else {
-            user.value = null;
-            localStorage.clear();
-            ElMessage.error('获取用户信息失败: ' + response.data.msg);
-            router.push('/login');
-            return;
-        }
-    })
-};
-
-const logout = () => {
-    localStorage.clear();
-    router.push('/login');
-    ElMessage.info('账号已退出');
-};
 
 // 提交
-const submit = async () => {
-    isSumbiting.value = true;
-    try {
-        // 验证用户输入
-        if (!runDistance.value || !runTime.value || !mapChoice.value) {
-            ElMessage.error('参数不完整，请检查后重新提交');
-            isSumbiting.value = false;
-            return;
-        }
-
-        const schoolId = user.value.schoolId;
-
-        const response = await getSemesterYear(schoolId);
-        if (response.data.code !== 10000) {
-            ElMessage.error('获取学年学期失败: ' + response.data.msg);
-            isSumbiting.value = false;
-            return;
-        }
-        const semesterYear = response.data.response.semesterYear;
-        const data = {
-            runDistance: runDistance.value,
-            runTime: runTime.value,
-            mapChoice: mapChoice.value,
-            userId: user.value.userId,
-            semesterYear: semesterYear
-        };
-        const submitResponse = await submitActivityInfo(data);
-        if (submitResponse.data.code !== 10000) {
-            ElMessage.error('提交失败: ' + submitResponse.data.msg);
-            isSumbiting.value = false;
-
-            runDistance.value = null;
-            runTime.value = null;
-            mapChoice.value = null;
-
-            return;
-        }
-        ElMessage.success('提交成功,' + submitResponse.data.response.resultDesc);
-        isSumbiting.value = false;
-        runDistance.value = null;
-        runTime.value = null;
-        mapChoice.value = null;
-        await fetchActivity();
-    } catch (error) {
-        ElMessage.error('提交失败: ' + error.message);
-        isSumbiting.value = false;
+const submitActivityData = async () => {
+    if (!runDistance.value || !runTime.value || !mapChoice.value) {
+        ElMessage.error('参数不完整，请检查后重新提交');
+        return;
+    }
+    const schoolId = userData.schoolId;
+    const userId = userData.userId;
+    const result = await submit(runDistance.value, runTime.value, mapChoice.value, schoolId, userId);
+    if (result) {
+        await fetchActivity(user.value.schoolId, user.value.studentId);
     }
 };
 
-const getClub = () => {
+const goClub = () => {
     router.push('/club');
 }
 
@@ -249,13 +165,24 @@ const switchUser = () => {
     ElMessage.info('还没有实现该功能')
 }
 
-onMounted(() => {
-    if (!user.value) {
-        router.push('/login');
+onMounted(async () => {
+
+    if (!userData || !token) {
+        router.push('/home');
     } else {
-        fetchUser();
+        const result = await fetchUser(); // 获取用户信息
+        if (result) {
+            await fetchActivity(user.value.schoolId, user.value.studentId);
+        }
     }
 });
+
+// 退出账号
+const logout = () => {
+    localStorage.clear();
+    router.push('/login');
+    ElMessage.info('账号已退出');
+};
 
 </script>
 
