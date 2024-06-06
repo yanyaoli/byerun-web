@@ -13,7 +13,7 @@
                     <el-input v-model="password" type="password" placeholder="请输入密码"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="Login" :loading="loginStore.loginLoading">立即登录</el-button>
+                    <el-button type="primary" @click="LoginHandler" :loading="LoginLoading">立即登录</el-button>
                 </el-form-item>
             </el-form>
             <el-form v-else-if="showDisclaimerForm" class="DisclaimerForm">
@@ -29,8 +29,7 @@
             <el-form v-else>
                 <el-form-item>
                     <el-input v-model="phoneNum" placeholder="请输入手机号" class="phone-input"></el-input>
-                    <el-button type="primary" @click="SendSMS" :disabled="codeDisabled" :loading="loginStore.smsLoading" block
-                        class="sms-button">{{ codeText }}</el-button>
+                    <el-button type="primary" @click="SendSMSHandler" :disabled="codeDisabled" :loading="SmsLoading" block class="sms-button">{{ codeText }}</el-button>
                 </el-form-item>
                 <el-form-item>
                     <el-input v-model="smsCode" placeholder="请输入验证码"></el-input>
@@ -39,7 +38,7 @@
                     <el-input v-model="newPassword" type="password" placeholder="请输入新密码"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="ResetPassword" :loading="loginStore.resetLoading">提交</el-button>
+                    <el-button type="primary" @click="ResetPasswordHandler" :loading="ResetLoading">提交</el-button>
                 </el-form-item>
                 <el-button type="text" @click="showLoginForm = true">返回登录</el-button>
             </el-form>
@@ -56,15 +55,11 @@
 import { ref, watchEffect, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import stores from '@/hooks/login/index';
+import { useLogin,  useSms, useResetPassword } from '@/hooks/login/';
 
-// 使用 Pinia stores
-const loginStore = stores.useLoginStore();
-const smsStore = stores.useSmsStore();
-const resetPasswordStore = stores.useResetPasswordStore();
+
 const router = useRouter();
 
-// 组件内部状态
 const showLoginForm = ref(true);
 const showDisclaimerForm = ref(false);
 const phone = ref('');
@@ -73,6 +68,10 @@ const phoneNum = ref('');
 const newPassword = ref('');
 const smsCode = ref('');
 
+const { LoginLoading, isLoggedIn, fetchLogin, LoginState } = useLogin();
+const { SmsLoading, codeText, codeDisabled, fetchSendSMS } = useSms();
+const { ResetLoading, fetchResetPassword } = useResetPassword();
+
 // 显示免责声明表单
 const showDisclaimer = () => {
     showLoginForm.value = false;
@@ -80,27 +79,35 @@ const showDisclaimer = () => {
 };
 
 const PhoneValid = () => {
-    if (!/^1[3-9]\d{9}$/.test(phone.value)) {
+    if (!/^1[3-9]\d{9}$/.test(phone.value || phoneNum.value)) {
         ElMessage.error('请输入正确的手机号');
-        return;
+        return false;
+    } else {
+        return true;
     }
 };
-// 登录方法
-const Login = async () => {
-    PhoneValid();
-    await loginStore.login(phone.value, password.value);
+
+const LoginHandler = () => {
+    if (PhoneValid()) {
+        fetchLogin(phone.value, password.value);
+    }
 };
 
-// 发送短信验证码方法
-const SendSMS = async () => {
-    PhoneValid();
-    smsStore.sendSms(phoneNum.value);
+const SendSMSHandler = () => {
+    if (PhoneValid()) {
+        fetchSendSMS(phoneNum.value);
+    }
 };
 
-// 重置密码方法
-const ResetPassword = async () => {
-    PhoneValid();
-    await resetPasswordStore.resetPassword(phoneNum.value, newPassword.value, smsCode.value);
+const ResetPasswordHandler = async () => {
+    if (PhoneValid()) {
+        const success = await fetchResetPassword(phoneNum.value, newPassword.value, smsCode.value);
+        if (success) {
+            phone.value = phoneNum.value;
+            password.value = newPassword.value;
+            showLoginForm.value = true;
+        }
+    }
 };
 
 // 路由跳转
@@ -108,16 +115,18 @@ const goToDashboard = () => {
     router.push('/dashboard');
 };
 
+
 // 监听登录状态变化，自动跳转
 watchEffect(() => {
-    if (loginStore.isLoggedIn) {
+    if (isLoggedIn.value) {
         goToDashboard();
     }
 });
 
 // 页面加载完成后检查 token 和 userData
-onMounted(() => {
-    if (loginStore.token && loginStore.userData) {
+onMounted( async() => {
+    const loginState = await LoginState();
+    if (loginState) {
         goToDashboard();
     }
 });

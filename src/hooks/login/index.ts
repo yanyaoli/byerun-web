@@ -1,6 +1,5 @@
-import { useLoginStore } from './login'
-import { useSmsStore } from './sms'
-import { useResetPasswordStore } from './reset'
-import { useUserStore } from './user'
+import useLogin from './useLogin'
+import useSms from './useSms'
+import useResetPassword from './useReset'
 
-export default { useLoginStore, useSmsStore, useResetPasswordStore, useUserStore }
+export { useLogin, useSms, useResetPassword }

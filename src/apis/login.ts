@@ -68,7 +68,7 @@ export const sendSms = (phoneNum:number) => request.get(address.sendSms, {
 });
 
 // 更新密码
-export const updatePassword = (phoneNum:number, newPassword:string, smsCode:string) => {
+export const updatePassword = (phoneNum:number, newPassword:string, smsCode:number) => {
   const hashedPassword = stringToMd5(newPassword);
   const body = {
     'password': hashedPassword,

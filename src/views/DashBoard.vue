@@ -106,10 +106,12 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';  // 导入 ElMessage
+import { ElMessage, ElNotification } from 'element-plus';  // 导入 ElMessage
 import { InfoFilled } from '@element-plus/icons-vue'
 import { useUser, useActivity, useSubmitActivity } from '@/hooks/dashboard/index'
+import useNotice from '@/hooks/notice/'
 
+const { fetchNotice } = useNotice()
 const { user, fetchUser } = useUser();
 const { activity, fetchActivity } = useActivity();
 const { isSubmitting, submit } = useSubmitActivity();
@@ -165,8 +167,26 @@ const switchUser = () => {
     ElMessage.info('还没有实现该功能')
 }
 
-onMounted(async () => {
+const getNotice = async () => {
+    try {
+        const { title, message } = await fetchNotice()
+        ElNotification({
+            title,
+            message,
+            duration: 0,
+            dangerouslyUseHTMLString: true
+        })
+    } catch (error) {
+        ElNotification({
+            title: '错误',
+            message: error.message,
+            type: 'error',
+        })
+    }
+}
 
+onMounted(async () => {
+    getNotice();
     if (!userData || !token) {
         router.push('/home');
     } else {
@@ -183,6 +203,9 @@ const logout = () => {
     router.push('/login');
     ElMessage.info('账号已退出');
 };
+
+
+
 
 </script>
 
