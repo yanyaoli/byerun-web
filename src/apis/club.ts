@@ -1,5 +1,5 @@
-import request from '@/services/request';
-import address from '@/services/address';
+import request from "@/services/request";
+import address from "@/services/address";
 
 // interface ClubInfoResponse {
 //   configurationId: number;
@@ -48,8 +48,8 @@ export const queryWeeklyClub = (weekDay: number) => {
     params: {
       pageNo: 1,
       pageSize: 15,
-      weekDay
-    }
+      weekDay,
+    },
   });
 };
 
@@ -64,8 +64,8 @@ export const queryClubHistory = (studentId: number) => {
     params: {
       pageNo: 1,
       pageSize: 15,
-      studentId
-    }
+      studentId,
+    },
   });
 };
 
@@ -74,7 +74,7 @@ export const joinClub = (configurationId: number, type: number) => {
   return request.get(address.joinClub, {
     params: {
       configurationId,
-      type
-    }
+      type,
+    },
   });
 };

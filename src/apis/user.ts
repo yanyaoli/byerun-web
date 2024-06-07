@@ -1,7 +1,7 @@
-import request from '@/services/request';
-import address from '@/services/address';
-import { genTrackPoints, getDate } from '@/utils/track';
-import { APPVERSION, BRAND, MOBILETYPE, SYSVERSION } from '@/utils/appConfig';
+import request from "@/services/request";
+import address from "@/services/address";
+import { genTrackPoints, getDate } from "@/utils/track";
+import { APPVERSION, BRAND, MOBILETYPE, SYSVERSION } from "@/utils/appConfig";
 
 interface ActivityData {
   runDistance: number;
@@ -15,19 +15,21 @@ interface ActivityData {
 export const getUserInfo = () => request.get(address.user);
 
 // 获取用户活动信息
-export const getActivityInfo = (schoolId:number, studentId:number) => request.get(address.activity, {
-  params: {
-    schoolId,
-    studentId
-  }
-});
+export const getActivityInfo = (schoolId: number, studentId: number) =>
+  request.get(address.activity, {
+    params: {
+      schoolId,
+      studentId,
+    },
+  });
 
 // 获取学期年份
-export const getSemesterYear = (schoolId:number) => request.get(address.runStandard, {
-  params: {
-    schoolId
-  }
-});
+export const getSemesterYear = (schoolId: number) =>
+  request.get(address.runStandard, {
+    params: {
+      schoolId,
+    },
+  });
 
 // 提交活动信息
 export const submitActivityInfo = (data: ActivityData) => {
@@ -47,7 +49,7 @@ export const submitActivityInfo = (data: ActivityData) => {
     userId,
     vocalStatus: "1",
     yearSemester: semesterYear,
-    recordDate: getDate()
+    recordDate: getDate(),
   };
   return request.post(address.newActivity, body);
 };

@@ -1,17 +1,22 @@
-import { APPKEY, APPSECRET } from './appConfig';
-import CryptoJS from 'crypto-js';
+import { APPKEY, APPSECRET } from "./appConfig";
+import CryptoJS from "crypto-js";
 
 interface QueryBody {
   [key: string]: string | number | null;
 }
 
-function generateSign(query: QueryBody | null = null, body: QueryBody | null = null): string {
+function generateSign(
+  query: QueryBody | null = null,
+  body: QueryBody | null = null
+): string {
   let signStr = "";
   if (query !== null) {
-    const sortedQuery = Object.keys(query).sort().reduce((result: QueryBody, key) => {
-      result[key] = query[key];
-      return result;
-    }, {} as QueryBody);
+    const sortedQuery = Object.keys(query)
+      .sort()
+      .reduce((result: QueryBody, key) => {
+        result[key] = query[key];
+        return result;
+      }, {} as QueryBody);
     for (const key in sortedQuery) {
       if (sortedQuery[key] !== null) {
         signStr += key + sortedQuery[key];
@@ -27,7 +32,7 @@ function generateSign(query: QueryBody | null = null, body: QueryBody | null = n
   let replaced = false;
   for (const ch of [" ", "~", "!", "(", ")", "'"]) {
     if (signStr.includes(ch)) {
-      signStr = signStr.replace(new RegExp(ch, 'g'), "");
+      signStr = signStr.replace(new RegExp(ch, "g"), "");
       replaced = true;
     }
   }
