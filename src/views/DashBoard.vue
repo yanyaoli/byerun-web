@@ -2,6 +2,11 @@
     <el-container>
         <el-header>
             <div class="operation-buttons-left">
+                <el-tooltip content="消息通知" placement="top" open-delay="500">
+                    <el-button plain class="icon-button" type="primary" @click="getNotice">
+                        <el-icon><Bell /></el-icon>
+                    </el-button>
+                </el-tooltip>
                 <el-tooltip content="赞赏码" placement="top" open-delay="500">
                     <el-button plain class="icon-button" type="primary" @click="showRewardInfo">
                         <el-icon>
@@ -12,9 +17,9 @@
             </div>
             <div class="operation-buttons-right">
                 <el-tooltip content="刷新" placement="top" open-delay="500">
-                    <el-button class="icon-button" type="primary" @click="getActivity">
+                    <el-button class="icon-button" type="primary" @click="getActivity" :disabled="LoginState">
                         <el-icon class="is-loading">
-                            <Loading />
+                            <Refresh />
                         </el-icon>
                     </el-button>
                 </el-tooltip>
@@ -64,9 +69,9 @@
             </div>
             <div v-else>
                 <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true"
-                    :duration="0.5" striped striped-flow><span></span></el-progress>
+                    :duration="1" striped striped-flow><span></span></el-progress>
                 <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true"
-                    :duration="0.5" striped striped-flow><span></span></el-progress>
+                    :duration="1" striped striped-flow><span></span></el-progress>
             </div>
 
             <el-divider />
@@ -87,14 +92,14 @@
             </div>
             <el-tooltip content="随机填充" placement="top" open-delay="500">
                 <el-button class="icon-button" @click="randomizeInputs">
-                    <el-icon>
+                    <el-icon class="is-loading">
                         <RefreshRight />
                     </el-icon>
                 </el-button>
             </el-tooltip>
             <el-divider />
-            <el-button type="primary" @click="goClub" round>俱乐部</el-button>
-            <el-button type="primary" :loading="isSubmitting" @click="submitActivityData" round>立即提交</el-button>
+            <el-button type="primary" @click="goClub" :disabled="LoginState" round>俱乐部</el-button>
+            <el-button type="primary" :loading="isSubmitting" @click="submitActivityData" :disabled="LoginState" round>立即提交</el-button>
         </el-main>
         <el-main v-else-if="showRewardInfo" class="reward">
             <img src="../../file/qr.jpg" alt="赞赏码" class="reward-image" />
@@ -106,12 +111,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage, ElNotification } from 'element-plus';  // 导入 ElMessage
+import { ElMessage } from 'element-plus';  // 导入 ElMessage
 import { InfoFilled } from '@element-plus/icons-vue'
 import { useUser, useActivity, useSubmitActivity } from '@/hooks/dashboard/index'
 import useNotice from '@/hooks/notice/'
 
-const { fetchNotice } = useNotice()
+const { getNotice } = useNotice()
+
 const { user, fetchUser } = useUser();
 const { activity, fetchActivity } = useActivity();
 const { isSubmitting, submit } = useSubmitActivity();
@@ -130,13 +136,13 @@ const router = useRouter();
 const runDistance = ref(null);
 const runTime = ref(null);
 const mapChoice = ref(null);
+const LoginState = ref(true);
 
 // 获取活动信息
 const getActivity = async () => {
     activity.value = null;
     await fetchActivity(user.value.schoolId, user.value.studentId);
 };
-
 
 // 提交
 const submitActivityData = async () => {
@@ -152,10 +158,12 @@ const submitActivityData = async () => {
     }
 };
 
+// 俱乐部活动
 const goClub = () => {
     router.push('/club');
 }
 
+// 随机填充
 const randomizeInputs = () => {
     const maps = ['cuit_lqy', 'cuit_hkg', 'cdutcm_wj'];
     runDistance.value = Math.floor(Math.random() * (6000 - 1000 + 1)) + 1000;
@@ -163,35 +171,20 @@ const randomizeInputs = () => {
     mapChoice.value = maps[Math.floor(Math.random() * maps.length)];
 };
 
+// 切换用户
 const switchUser = () => {
     ElMessage.info('还没有实现该功能')
 }
 
-const getNotice = async () => {
-    try {
-        const { title, message } = await fetchNotice()
-        ElNotification({
-            title,
-            message,
-            duration: 0,
-            dangerouslyUseHTMLString: true
-        })
-    } catch (error) {
-        ElNotification({
-            title: '错误',
-            message: error.message,
-            type: 'error',
-        })
-    }
-}
 
 onMounted(async () => {
     getNotice();
     if (!userData || !token) {
         router.push('/home');
     } else {
-        const result = await fetchUser(); // 获取用户信息
+        const result = await fetchUser();
         if (result) {
+            LoginState.value = false;
             await fetchActivity(user.value.schoolId, user.value.studentId);
         }
     }
@@ -200,12 +193,9 @@ onMounted(async () => {
 // 退出账号
 const logout = () => {
     localStorage.clear();
-    router.push('/login');
+    router.push('/home');
     ElMessage.info('账号已退出');
 };
-
-
-
 
 </script>
 
