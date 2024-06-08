@@ -20,7 +20,7 @@
           <el-button plain
                      class="icon-button"
                      type="primary"
-                     @click="showRewardInfo">
+                     @click="goDonate">
             <el-icon>
               <Present />
             </el-icon>
@@ -170,16 +170,6 @@
                  :disabled="LoginState"
                  round>立即提交</el-button>
     </el-main>
-    <el-main v-else-if="showRewardInfo"
-             class="reward">
-      <img src="../../file/qr.jpg"
-           alt="赞赏码"
-           class="reward-image" />
-      <el-button @click="
-          showMainBoard = true;
-          showRewardBoard = false;
-        ">返回</el-button>
-    </el-main>
   </el-container>
 </template>
 
@@ -194,7 +184,9 @@ import {
   useSubmitActivity,
 } from "@/hooks/dashboard/index";
 import useNotice from "@/hooks/notice/";
+import address from "@/services/address";
 
+const donateURL = ref(address.donateURL);
 const { getNotice } = useNotice();
 
 const { user, fetchUser } = useUser();
@@ -205,11 +197,10 @@ const userData = JSON.parse(localStorage.getItem("userData")) || null;
 const token = localStorage.getItem("token") || null;
 
 const showMainBoard = ref(true);
-const showRewardBoard = ref(false);
-const showRewardInfo = () => {
-  showMainBoard.value = false;
-  showRewardBoard.value = true;
-};
+
+const goDonate = () => {
+  window.open(donateURL.value, '_blank');
+}
 
 const router = useRouter();
 const runDistance = ref(null);
@@ -219,7 +210,6 @@ const LoginState = ref(true);
 
 // 获取活动信息
 const getActivity = async () => {
-  activity.value = null;
   await fetchActivity(user.value.schoolId, user.value.studentId);
 };
 

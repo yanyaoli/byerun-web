@@ -20,6 +20,10 @@
                      @click="LoginHandler"
                      :loading="LoginLoading">立即登录</el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button type="default"
+                     @click="goToHome">返回主页</el-button>
+        </el-form-item>
       </el-form>
       <el-form v-else-if="showDisclaimerForm"
                class="DisclaimerForm">
@@ -141,6 +145,10 @@ const ResetPasswordHandler = async () => {
       showLoginForm.value = true;
     }
   }
+};
+
+const goToHome = () => {
+  router.push("/");
 };
 
 // 路由跳转

@@ -1,18 +1,22 @@
 import axios from "axios";
+import address from "@/services/address";
 import { ElNotification } from "element-plus"; // 导入 ElMessage
 
 export default function useNotice() {
-  const noticeUrl = "https://unirun-notice.ohnnn.com/";
-
   const fetchNotice = async () => {
     try {
-      const response = await axios.get(noticeUrl);
+      const response = await axios.get(address.noticeURL);
       if (response.status !== 200) {
         return null;
       }
       const title = response.data.title;
       const message = response.data.message;
       const type = response.data.type;
+
+      if (!message) {
+        return null;
+      }
+
       return {
         title,
         message,
@@ -30,6 +34,7 @@ export default function useNotice() {
         ElNotification({
           title: notice.title,
           message: notice.message,
+          ...(notice.type ? { type: notice.type } : {}),
           duration: 3000,
           dangerouslyUseHTMLString: true,
           position: "top-left",
