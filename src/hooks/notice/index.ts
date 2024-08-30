@@ -1,6 +1,6 @@
 import axios from "axios";
 import address from "@/services/address";
-import { ElNotification } from "element-plus"; // 导入 ElMessage
+import { ElNotification, ElMessage } from "element-plus"; // 导入 ElMessage
 
 export default function useNotice() {
   const fetchNotice = async () => {
@@ -27,17 +27,38 @@ export default function useNotice() {
       return null;
     }
   };
-  const getNotice = async () => {
+//   const getNotice = async () => {
+//     try {
+//       const notice = await fetchNotice();
+//       if (notice) {
+//         ElNotification({
+//           title: notice.title,
+//           message: notice.message,
+//           ...(notice.type ? { type: notice.type } : {}),
+//           duration: 3000,
+//           dangerouslyUseHTMLString: true,
+//           position: "top-left",
+//         });
+//       } else {
+//         return;
+//       }
+//     } catch (error) {
+//       return;
+//     }
+//   };
+
+const getNotice = async () => {
     try {
       const notice = await fetchNotice();
       if (notice) {
-        ElNotification({
-          title: notice.title,
+        ElMessage({
           message: notice.message,
           ...(notice.type ? { type: notice.type } : {}),
-          duration: 3000,
+          duration: 8000,
+          plain: true,
+          showClose: true,
           dangerouslyUseHTMLString: true,
-          position: "top-left",
+          center: true,
         });
       } else {
         return;
@@ -46,7 +67,6 @@ export default function useNotice() {
       return;
     }
   };
-
   return {
     fetchNotice,
     getNotice,

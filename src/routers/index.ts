@@ -1,8 +1,9 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import Login from "../views/Login.vue";
-import DashBoard from "../views/DashBoard.vue";
-import Club from "../views/Club.vue";
-import Home from "../views/Home.vue";
+
+const Login = () => import(/* webpackChunkName: "login" */ "../views/Login.vue");
+const DashBoard = () => import(/* webpackChunkName: "dashboard" */ "../views/DashBoard.vue");
+const Club = () => import(/* webpackChunkName: "club" */ "../views/Club.vue");
+const Home = () => import(/* webpackChunkName: "home" */ "../views/Home.vue");
 
 const router = createRouter({
   history: createWebHashHistory(),

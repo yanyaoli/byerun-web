@@ -1,10 +1,12 @@
 // const baseURL = process.env.VUE_APP_BASE_API || '';
-const baseURL = "https://worker.run.ohnnn.com"; //workerjs代理,自定义域名解除污染
-const noticeURL = "https://unirun-notice.ohnnn.com/";
-const donateURL = "https://ohnnn.com/donate"
+const baseURL = "https://worker.run.ohnnn.com"; // Worker代理,自定义域名解除污染
+const homeURL = "https://ohnnn.com/"
+const noticeURL = "https://ohnnn.com/unirun/notice"; // 公告通知
+const donateURL = "https://ohnnn.com/donate" // 赞赏页
 
 export default {
   baseURL,
+  homeURL,
   noticeURL,
   donateURL,
   login: `${baseURL}/auth/login/password`,

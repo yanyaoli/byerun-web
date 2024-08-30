@@ -2,65 +2,57 @@
   <el-container>
     <el-header>
       <div class="operation-buttons-left">
-        <el-tooltip content="消息通知"
-                    placement="top"
-                    open-delay="500">
-          <el-button plain
-                     class="icon-button"
-                     type="primary"
-                     @click="getNotice">
+        <el-dropdown trigger="click">
+          <el-button plain class="icon-button" type="primary">
             <el-icon>
-              <Bell />
+              <More />
             </el-icon>
           </el-button>
-        </el-tooltip>
-        <el-tooltip content="赞赏码"
-                    placement="top"
-                    open-delay="500">
-          <el-button plain
-                     class="icon-button"
-                     type="primary"
-                     @click="goDonate">
-            <el-icon>
-              <Present />
-            </el-icon>
-          </el-button>
-        </el-tooltip>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="getNotice">
+                <el-tooltip content="公告" placement="top" open-delay="500">
+                  <el-icon>
+                    <Bell />
+                  </el-icon>
+                </el-tooltip>公告
+              </el-dropdown-item>
+              <el-dropdown-item @click="goDonate">
+                <el-tooltip content="赞赏" placement="top" open-delay="500">
+                  <el-icon>
+                    <Present />
+                  </el-icon>
+                </el-tooltip>赞赏
+              </el-dropdown-item>
+              <el-dropdown-item @click="goHome">
+                <el-tooltip content="主页" placement="top" open-delay="500">
+                  <el-icon>
+                    <House />
+                  </el-icon>
+                </el-tooltip>主页
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="operation-buttons-right">
-        <el-tooltip content="刷新"
-                    placement="top"
-                    open-delay="500">
-          <el-button class="icon-button"
-                     type="primary"
-                     @click="getActivity"
-                     :disabled="LoginState">
+        <el-tooltip content="刷新" placement="top" open-delay="500">
+          <el-button class="icon-button" type="primary" @click="getActivity" :disabled="LoginState">
             <el-icon class="is-loading">
               <Refresh />
             </el-icon>
           </el-button>
         </el-tooltip>
-        <el-tooltip content="切换用户"
-                    placement="top"
-                    open-delay="500">
-          <el-button class="icon-button"
-                     type="primary"
-                     @click="switchUser">
+        <el-tooltip content="切换用户" placement="top" open-delay="500">
+          <el-button class="icon-button" type="primary" @click="switchUser">
             <el-icon>
               <Switch />
             </el-icon>
           </el-button>
         </el-tooltip>
-        <el-popconfirm width="220"
-                       confirm-button-text="确定"
-                       cancel-button-text="取消"
-                       :icon="InfoFilled"
-                       icon-color="#626AEF"
-                       title="确定要退出账号吗？"
-                       @confirm="logout">
+        <el-popconfirm width="220" confirm-button-text="确定" cancel-button-text="取消" :icon="InfoFilled" icon-color="#626AEF" title="确定要退出账号吗？" @confirm="logout">
           <template #reference>
-            <el-button class="icon-button"
-                       type="danger">
+            <el-button class="icon-button" type="danger">
               <el-icon>
                 <CloseBold />
               </el-icon>
@@ -71,8 +63,8 @@
     </el-header>
     <el-main v-if="showMainBoard">
       <div v-if="user">
-        <h1>{{ user.studentName }}</h1>
-        <p>{{ user.registerCode }}</p>
+        <h1 class="stuInfo" @click="toggleMask" :class="{ masked: masked }">{{ user.studentName }}</h1>
+        <p class="stuInfo" @click="toggleMask" :class="{ masked: masked }">{{ user.registerCode }}</p>
       </div>
       <div v-else>
         <h1>
@@ -88,87 +80,42 @@
       </div>
 
       <div v-if="activity">
-        <el-progress :text-inside="true"
-                     :stroke-width="20"
-                     :percentage="activity.club_completion_percentage">
+        <el-progress :text-inside="true" :stroke-width="20" :percentage="activity.club_completion_percentage">
           <span>俱乐部完成率：{{ activity.club_completion_rate }}</span>
         </el-progress>
-        <el-progress :text-inside="true"
-                     :stroke-width="20"
-                     :percentage="activity.running_completion_percentage">
+        <el-progress :text-inside="true" :stroke-width="20" :percentage="activity.running_completion_percentage">
           <span>校园跑完成率：{{ activity.running_completion_rate }}</span>
         </el-progress>
       </div>
       <div v-else>
-        <el-progress :percentage="100"
-                     :text-inside="true"
-                     :stroke-width="20"
-                     :indeterminate="true"
-                     :duration="1"
-                     striped
-                     striped-flow><span></span></el-progress>
-        <el-progress :percentage="100"
-                     :text-inside="true"
-                     :stroke-width="20"
-                     :indeterminate="true"
-                     :duration="1"
-                     striped
-                     striped-flow><span></span></el-progress>
+        <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true" :duration="1" striped striped-flow><span></span></el-progress>
+        <el-progress :percentage="100" :text-inside="true" :stroke-width="20" :indeterminate="true" :duration="1" striped striped-flow><span></span></el-progress>
       </div>
 
       <el-divider />
       <div class="input-group">
-        <el-input-number for="runDistance"
-                         id="distance"
-                         v-model="runDistance"
-                         :min="1000"
-                         :max="5000"
-                         :step="100"
-                         style="width: 200px"
-                         placeholder="跑步里程（米）"></el-input-number>
+        <el-input-number for="runDistance" id="distance" v-model="runDistance" :min="1000" :max="5000" :step="100" style="width: 200px" placeholder="跑步里程（米）"></el-input-number>
       </div>
       <div class="input-group">
-        <el-input-number for="runTime"
-                         id="time"
-                         v-model="runTime"
-                         :min="30"
-                         :max="100"
-                         :step="5"
-                         style="width: 200px"
-                         placeholder="跑步时长（分钟）"></el-input-number>
+        <el-input-number for="runTime" id="time" v-model="runTime" :min="30" :max="100" :step="5" style="width: 200px" placeholder="跑步时长（分钟）"></el-input-number>
       </div>
       <div class="input-group">
-        <el-select id="map"
-                   v-model="mapChoice"
-                   placeholder="请选择地图">
-          <el-option label="成都信息工程大学龙泉校区"
-                     value="cuit_lqy"></el-option>
-          <el-option label="成都信息工程大学航空港校区"
-                     value="cuit_hkg"></el-option>
-          <el-option label="成都中医药大学温江校区"
-                     value="cdutcm_wj"></el-option>
+        <el-select id="map" v-model="mapChoice" placeholder="请选择地图">
+          <el-option label="成都信息工程大学龙泉校区" value="cuit_lqy"></el-option>
+          <el-option label="成都信息工程大学航空港校区" value="cuit_hkg"></el-option>
+          <el-option label="成都中医药大学温江校区" value="cdutcm_wj"></el-option>
         </el-select>
       </div>
-      <el-tooltip content="随机填充"
-                  placement="top"
-                  open-delay="500">
-        <el-button class="icon-button"
-                   @click="randomizeInputs">
+      <el-tooltip content="随机填充" placement="top" open-delay="500">
+        <el-button class="icon-button" @click="randomizeInputs">
           <el-icon class="is-loading">
             <RefreshRight />
           </el-icon>
         </el-button>
       </el-tooltip>
       <el-divider />
-      <el-button type="primary"
-                 @click="goClub"
-                 :disabled="LoginState"
-                 round>俱乐部</el-button>
-      <el-button type="primary"
-                 :loading="isSubmitting"
-                 @click="submitActivityData"
-                 :disabled="LoginState"
-                 round>立即提交</el-button>
+      <el-button type="primary" @click="goClub" :disabled="LoginState" round>俱乐部</el-button>
+      <el-button type="primary" :loading="isSubmitting" @click="submitActivityData" :disabled="LoginState" round>立即提交</el-button>
     </el-main>
   </el-container>
 </template>
@@ -187,6 +134,8 @@ import useNotice from "@/hooks/notice/";
 import address from "@/services/address";
 
 const donateURL = ref(address.donateURL);
+const homeURL = ref(address.homeURL);
+
 const { getNotice } = useNotice();
 
 const { user, fetchUser } = useUser();
@@ -197,9 +146,14 @@ const userData = JSON.parse(localStorage.getItem("userData")) || null;
 const token = localStorage.getItem("token") || null;
 
 const showMainBoard = ref(true);
+const masked = ref(true);
 
 const goDonate = () => {
-  window.open(donateURL.value, '_blank');
+ window.open(donateURL.value, '_blank');
+}
+
+const goHome = () => {
+    window.open(homeURL.value, '_blank');
 }
 
 const router = useRouter();
@@ -270,6 +224,11 @@ const logout = () => {
   router.push("/home");
   ElMessage.info("账号已退出");
 };
+
+// 切换蒙版显示
+const toggleMask = () => {
+  masked.value = !masked.value;
+};
 </script>
 
 <style scoped>
@@ -295,6 +254,10 @@ const logout = () => {
   width: 100%;
   text-align: center;
   margin-top: -20px;
+}
+
+.stuInfo {
+  letter-spacing: 2px;
 }
 
 .el-progress--line {
@@ -329,6 +292,26 @@ const logout = () => {
 
 .icon-button:hover {
   color: red;
+}
+
+.custom-dropdown-menu {
+  padding: 0;
+}
+
+.custom-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+}
+
+.masked {
+  filter: blur(5px);
+  cursor: pointer;
+}
+
+.masked:hover {
+  filter: blur(2px);
 }
 
 .reward-image {

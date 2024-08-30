@@ -5,11 +5,11 @@ import address from "@/services/address";
 
 const instance = axios.create({
   baseURL: address.baseURL,
-  timeout: 10000,
+  timeout: 15000,
 });
 
 instance.interceptors.request.use(
-  (config) => {
+  (config: any) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.token = `${token}`;
@@ -28,16 +28,16 @@ instance.interceptors.request.use(
 
     return config;
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error);
   }
 );
 
 instance.interceptors.response.use(
-  (response) => {
+  (response: any) => {
     return response;
   },
-  (error) => {
+  (error: any) => {
     return Promise.reject(error);
   }
 );

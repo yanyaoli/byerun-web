@@ -5,8 +5,8 @@
       <h1>{{ title }}</h1>
       <p style="font-weight: 500; font-size: 2.2em">{{ intro }}</p>
       <p>
-        <a :href="contact"
-           target="_blank">联系我们</a> |
+        <!-- <a :href="contact"
+           target="_blank">联系我们</a> | -->
         <router-link to="/login"
                      class="btn">立即登录</router-link>
       </p>
@@ -20,7 +20,7 @@ import { ref } from "vue";
 
 const title = ref("同学 你好");
 const intro = ref("欢迎使用校园跑助手");
-const contact = ref("https://ohnnn.com");
+// const contact = ref("https://ohnnn.com");
 </script>
 
 <style scoped>
