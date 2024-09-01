@@ -5,10 +5,10 @@
       <h1>{{ title }}</h1>
       <p style="font-weight: 500; font-size: 2.2em">{{ intro }}</p>
       <p>
-        <!-- <a :href="contact"
-           target="_blank">联系我们</a> | -->
+        <a :href="downloadURL" class="btn"
+           target="_blank">立即下载</a> |
         <router-link to="/login"
-                     class="btn">立即登录</router-link>
+                     class="btn">开始使用</router-link>
       </p>
       <br />
     </main>
@@ -17,10 +17,11 @@
 
 <script setup>
 import { ref } from "vue";
+import address from "@/services/address";
 
 const title = ref("同学 你好");
 const intro = ref("欢迎使用校园跑助手");
-// const contact = ref("https://ohnnn.com");
+const downloadURL = address.downloadURL;
 </script>
 
 <style scoped>

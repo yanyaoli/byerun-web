@@ -1,6 +1,6 @@
-# UNIRUN校园跑助手网页版
+# Byerun Web
 
-UNIRUN校园跑助手网页版，自动规划跑步路径，生成跑步记录。
+校园跑助手网页版，自动规划跑步路径，生成跑步记录。
 
 | 地图支持                    |
 | --------------------------- |
@@ -11,11 +11,13 @@ UNIRUN校园跑助手网页版，自动规划跑步路径，生成跑步记录�
 
 ## 使用
 
-- [Cloudflare](https://unirun.pages.dev)
+|Cloudflare|Vercel|
+|---|---|
+|[Byerun](https://byerun.pages.dev)|[Byerun](https://byerun.vercel.app)|
+|[Unirun](https://unirun.pages.dev)|[Unirun](https://unirun.vercel.app)|
 
-- [Vercel](https://unirun.vercel.app)
 
-## 运行
+## 编译
 
 安装依赖：
 

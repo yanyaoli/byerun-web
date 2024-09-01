@@ -12,7 +12,7 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
 }
 
-document.title = "UNIRUN HELPER";
+document.title = "Byerun";
 
 app.use(ElementPlus);
 app.use(router);
