@@ -1,5 +1,5 @@
-import { ref, Ref } from "vue";
-import { getSemesterYear, submitActivityInfo } from "@/apis/user";
+import { ref } from "vue";
+import { getRunStandard, submitActivityInfo } from "@/apis/user";
 import { ElMessage } from "element-plus";
 
 interface submitData {
@@ -21,7 +21,7 @@ export default function useSubmitActivity() {
   ) => {
     isSubmitting.value = true;
     try {
-      const response = await getSemesterYear(schoolId);
+      const response = await getRunStandard(schoolId);
       if (response.data.code !== 10000) {
         ElMessage.error("获取学年学期失败: " + response.data.msg);
         return false;

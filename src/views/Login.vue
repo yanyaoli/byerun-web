@@ -2,7 +2,7 @@
   <el-container>
     <el-header>
       <h1>UNIRUN HELPER</h1>
-      <el-text tag="p">欢迎使用UNIRUN校园跑助手</el-text>
+      <el-text tag="p">欢迎使用ByeRun校园跑助手</el-text>
     </el-header>
     <el-main>
       <el-form v-if="showLoginForm">
@@ -34,7 +34,7 @@
           <el-text>使用本工具所产生的任何后果，用户需自行承担。</el-text>
           <el-text>本工具仅供学习交流使用，不得用于任何商业用途。</el-text>
           <el-link type="primary"
-                   href="https://github.com/yanyaoli/unirun-web"
+                   :href="opensrcUrl"
                    target="_blank">开源地址</el-link>
         </el-space>
         <el-button type="primary"
@@ -90,6 +90,9 @@ import { ref, watchEffect, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useLogin, useSms, useResetPassword } from "@/hooks/login/";
+import address from "@/services/address";
+
+const opensrcUrl = address.opensrcURL;
 
 const router = useRouter();
 

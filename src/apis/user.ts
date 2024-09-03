@@ -24,10 +24,19 @@ export const getActivityInfo = (schoolId: number, studentId: number) =>
   });
 
 // 获取学期年份
-export const getSemesterYear = (schoolId: number) =>
+export const getRunStandard = (schoolId: number) =>
   request.get(address.runStandard, {
     params: {
       schoolId,
+    },
+  });
+
+// 获取跑步信息
+export const getRunInfo = (userId: number, yearSemester: number) =>
+  request.get(address.runInfo, {
+    params: {
+      userId,
+      yearSemester,
     },
   });
 
