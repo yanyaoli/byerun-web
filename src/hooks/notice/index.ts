@@ -27,38 +27,18 @@ export default function useNotice() {
       return null;
     }
   };
-//   const getNotice = async () => {
-//     try {
-//       const notice = await fetchNotice();
-//       if (notice) {
-//         ElNotification({
-//           title: notice.title,
-//           message: notice.message,
-//           ...(notice.type ? { type: notice.type } : {}),
-//           duration: 3000,
-//           dangerouslyUseHTMLString: true,
-//           position: "top-left",
-//         });
-//       } else {
-//         return;
-//       }
-//     } catch (error) {
-//       return;
-//     }
-//   };
 
-const getNotice = async () => {
+  const getNotice = async () => {
     try {
       const notice = await fetchNotice();
       if (notice) {
-        ElMessage({
+        ElNotification({
+          title: notice.title,
           message: notice.message,
           ...(notice.type ? { type: notice.type } : {}),
-          duration: 8000,
-          plain: true,
-          showClose: true,
+          duration: 5000,
           dangerouslyUseHTMLString: true,
-          center: true,
+          position: "top-left",
         });
       } else {
         return;
@@ -67,6 +47,7 @@ const getNotice = async () => {
       return;
     }
   };
+
   return {
     fetchNotice,
     getNotice,

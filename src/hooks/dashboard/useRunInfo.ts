@@ -47,7 +47,6 @@ export default function useRunInfo() {
           runDistanceCompletionRate,
           runDistanceCompletionPercentage,
         };
-        console.log(runInfo.value);
       } else {
         ElMessage.error(res.data.msg);
       }

@@ -20,7 +20,7 @@
       </el-menu>
     </el-header>
     <el-main v-if="isLoading">
-      <el-result title="UNIRUN HELPER">
+      <el-result title="Byerun">
         <template #extra>
           <el-icon class="is-loading">
             <Loading />
@@ -108,7 +108,7 @@
       </el-scrollbar>
       <el-result v-else
                  icon="success"
-                 title="UNIRUN HELPER"
+                 title="Byerun"
                  sub-title="暂无俱乐部活动或俱乐部活动已达标">
         <template #extra>
           <el-button type="primary"
@@ -244,23 +244,16 @@ onMounted(() => {
 }
 
 .el-header {
-  /* display: flex;
-    justify-content: space-between; */
   width: 100%;
 }
 
-/* .navbar > el-button {
-    margin-left: 10px;
-} */
 
 .el-main {
   width: 100%;
   max-width: 1200px;
-  /* 设置最大宽度，防止在大屏幕上过宽 */
 }
 
 .el-main .el-descriptions {
-  /* padding: 20px; */
   margin-top: 20px;
 }
 

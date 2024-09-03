@@ -1,7 +1,7 @@
 <template>
   <el-container>
     <el-header>
-      <h1>UNIRUN HELPER</h1>
+      <h1>Byerun</h1>
       <el-text tag="p">欢迎使用ByeRun校园跑助手</el-text>
     </el-header>
     <el-main>

@@ -33,7 +33,6 @@ export default function useActivity() {
           club_completion_percentage: club_completion_percentage,
           running_completion_percentage: running_completion_percentage,
         };
-        console.log(activity.value);
       } else {
         ElMessage.error("获取活动信息失败: " + response.data.msg);
       }
