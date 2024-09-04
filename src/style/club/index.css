@@ -1,0 +1,51 @@
+.el-container {
+  max-width: 1200px;
+  /* box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); */
+  /* border-radius: 10px; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px;
+  margin: 0 auto;
+}
+
+.el-header {
+  width: 100%;
+  padding: 10px 0;
+  background-color: #fff;
+  /* box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1); */
+  border-radius: 25px;
+}
+
+.week-menu {
+  line-height: 50px;
+  height: 50px;
+  background-color: transparent;
+}
+
+.el-main {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.el-main .el-descriptions {
+  margin-top: 20px;
+}
+
+.el-main .el-descriptions-item {
+  word-break: break-word;
+  /* 设置单词过长时自动换行 */
+}
+
+.week-menu > .el-menu-item {
+  padding: 0 20px;
+  color: #6b778c;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.cell-item {
+  display: flex;
+  align-items: center;
+  min-width: 50px;
+}

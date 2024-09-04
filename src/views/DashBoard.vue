@@ -1,88 +1,90 @@
 <template>
   <el-container>
-    <el-header>
-      <div class="operation-buttons-left">
-        <el-dropdown trigger="click">
-          <el-button plain class="icon-button">
-            <el-icon>
-              <Menu />
-            </el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="getNotice">
-                <el-tooltip content="公告" placement="top" open-delay="500">
+    <el-header class="header-container">
+      <el-row>
+        <el-col :span="12" class="operation-buttons-left">
+          <el-dropdown trigger="click">
+            <el-button plain class="icon-button">
+              <el-icon>
+                <Menu />
+              </el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="getNotice">
                   <el-icon>
                     <Bell />
                   </el-icon>
-                </el-tooltip>
-                公告
-              </el-dropdown-item>
-              <el-dropdown-item @click="goHome">
-                <el-tooltip content="主页" placement="top" open-delay="500">
+                  公告
+                </el-dropdown-item>
+                <el-dropdown-item @click="goHome">
                   <el-icon>
                     <House />
                   </el-icon>
-                </el-tooltip>
-                主页
-              </el-dropdown-item>
-              <el-dropdown-item @click="goClub">
-                <el-tooltip content="俱乐部" placement="top" open-delay="500">
+                  主页
+                </el-dropdown-item>
+                <el-dropdown-item @click="goClub">
                   <el-icon>
                     <Basketball />
                   </el-icon>
-                </el-tooltip>
-                俱乐部
-              </el-dropdown-item>
-              <el-dropdown-item>
-                <el-switch
-                  v-model="notificationAvailable"
-                  active-text="公告通知开"
-                  inactive-text="公告通知关"
-                  active-icon="Bell"
-                  inactive-icon="MuteNotification"
-                  @change="toggleNotification"
-                ></el-switch>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
-      <div class="operation-buttons-right">
-        <el-dropdown>
-          <span plain class="icon-button">
-            <el-icon><Setting /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="refresh">
-                <el-tooltip content="刷新" placement="top" open-delay="500">
+                  俱乐部
+                </el-dropdown-item>
+                <el-dropdown-item @click="toggleNotification">
+                  <el-icon>
+                    <component
+                      :is="notificationAvailable ? 'Bell' : 'MuteNotification'"
+                    />
+                  </el-icon>
+                  公告开关
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </el-col>
+
+        <el-col :span="12" class="operation-buttons-right">
+          <el-dropdown trigger="click">
+            <el-button plain class="icon-button">
+              <el-icon><Avatar /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="refresh">
                   <el-icon class="is-loading">
                     <Refresh />
                   </el-icon>
-                </el-tooltip>
-                刷新
-              </el-dropdown-item>
-              <el-dropdown-item @click="switchUser">
-                <el-tooltip content="切换账号" placement="top" open-delay="500">
-                  <el-icon>
-                    <Switch />
-                  </el-icon>
-                </el-tooltip>
-                切换
-              </el-dropdown-item>
-              <el-dropdown-item @click="logout">
-                <el-tooltip content="退出账号" placement="top" open-delay="500">
-                  <el-icon color="red">
-                    <CloseBold />
-                  </el-icon> </el-tooltip
-                >退出
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-      </div>
+                  刷新
+                </el-dropdown-item>
+                <el-dropdown-item @click="switchUser">
+                  <el-tooltip
+                    content="切换账号"
+                    placement="top"
+                    open-delay="500"
+                  >
+                    <el-icon>
+                      <Switch />
+                    </el-icon>
+                  </el-tooltip>
+                  切换
+                </el-dropdown-item>
+                <el-dropdown-item @click="logout">
+                  <el-tooltip
+                    content="退出账号"
+                    placement="top"
+                    open-delay="500"
+                  >
+                    <el-icon color="red">
+                      <CloseBold />
+                    </el-icon> </el-tooltip
+                  >退出
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </el-col>
+      </el-row>
     </el-header>
+
     <el-main v-if="showMainBoard">
       <div v-if="user" class="stuInfo">
         <h1 @click="toggleMask" :class="{ masked: !masked }">
@@ -113,8 +115,6 @@
                 :percentage="activity.club_completion_percentage"
                 :stroke-width="20"
                 :text-inside="true"
-                striped
-                striped-flow
                 @click="refresh"
               >
                 <span>俱乐部完成率 {{ activity.club_completion_rate }}</span>
@@ -123,8 +123,6 @@
                 :percentage="activity.running_completion_percentage"
                 :stroke-width="20"
                 :text-inside="true"
-                striped
-                striped-flow
                 @click="refresh"
               >
                 <span>校园跑完成率 {{ activity.running_completion_rate }}</span>
@@ -133,8 +131,6 @@
                 :percentage="runInfo.runDistanceCompletionPercentage"
                 :stroke-width="20"
                 :text-inside="true"
-                striped
-                striped-flow
                 @click="refresh"
               >
                 <span>里程完成率 {{ runInfo.runDistanceCompletionRate }}</span>
@@ -151,7 +147,7 @@
                 :percentage="100"
                 :stroke-width="20"
                 :text-inside="true"
-                :duration="1"
+                :duration="3"
                 striped
                 striped-flow
               >
@@ -163,7 +159,7 @@
                 :percentage="100"
                 :stroke-width="20"
                 :text-inside="true"
-                :duration="1"
+                :duration="3"
                 striped
                 striped-flow
               >
@@ -175,7 +171,7 @@
                 :percentage="100"
                 :stroke-width="20"
                 :text-inside="true"
-                :duration="1"
+                :duration="3"
                 striped
                 striped-flow
               >
@@ -230,13 +226,11 @@
             ></el-option>
           </el-select>
         </div>
-        <el-tooltip content="随机填充" placement="top" open-delay="500">
-          <el-button @click="randomizeInputs" plain class="icon-button">
-            <el-icon class="is-loading">
-              <RefreshRight />
-            </el-icon>
-          </el-button>
-        </el-tooltip>
+        <el-button @click="randomizeInputs" plain class="icon-button">
+          <el-icon class="is-loading">
+            <RefreshRight />
+          </el-icon>
+        </el-button>
       </div>
 
       <el-divider />
@@ -253,10 +247,10 @@
 </template>
 
 <script setup>
+import "@/style/dashboard/index.css";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import "@/style/dashboard/index.css";
 
 import {
   useUser,
@@ -281,9 +275,6 @@ const token = localStorage.getItem("token") || null;
 
 const showMainBoard = ref(true);
 const masked = ref(true);
-const notificationAvailable = ref(
-  localStorage.getItem("NotificationAvailable") === "true"
-);
 
 const goHome = () => {
   window.open(homeURL.value);
@@ -350,9 +341,14 @@ const switchUser = () => {
   ElMessage.info("还没有实现该功能");
 };
 
-const toggleNotification = (value) => {
-  localStorage.setItem("NotificationAvailable", value);
-  notificationAvailable.value = value;
+const notificationAvailable = ref(
+  localStorage.getItem("NotificationAvailable") !== "false"
+);
+
+const toggleNotification = () => {
+  const newValue = !notificationAvailable.value;
+  localStorage.setItem("NotificationAvailable", newValue);
+  notificationAvailable.value = newValue;
 };
 
 onMounted(async () => {

@@ -1,11 +1,13 @@
 <template>
   <el-container>
-    <el-header>
-      <el-menu :default-active="activeName"
-               class="week-menu"
-               mode="horizontal"
-               :collapse-transition="false"
-               @select="handleSelect">
+    <el-header class="header-container">
+      <el-menu
+        :default-active="activeName"
+        class="week-menu"
+        mode="horizontal"
+        :collapse-transition="false"
+        @select="handleSelect"
+      >
         <el-menu-item index="0">
           <el-icon>
             <ArrowLeft />
@@ -19,6 +21,7 @@
         <el-menu-item index="6">我的俱乐部</el-menu-item>
       </el-menu>
     </el-header>
+
     <el-main v-if="isLoading">
       <el-result title="Byerun">
         <template #extra>
@@ -28,22 +31,25 @@
         </template>
       </el-result>
     </el-main>
+
     <el-main v-else>
-      <el-scrollbar height="70vh"
-                    v-if="clubs.length > 0">
-        <div v-for="club in clubs"
-             :key="club.configurationId">
-          <el-descriptions class="margin-top"
-                           :title="club.activityName"
-                           :key="club.configurationId"
-                           :column="1"
-                           border>
+      <el-scrollbar height="70vh" v-if="clubs.length > 0">
+        <div v-for="club in clubs" :key="club.configurationId">
+          <el-descriptions
+            class="margin-top"
+            :title="club.activityName"
+            :key="club.configurationId"
+            :column="1"
+            border
+          >
             <template #extra>
-              <el-button v-if="buttonTypes[club.joinStatus]"
-                         :loading="JoinLoading"
-                         :type="buttonTypes[club.joinStatus].type"
-                         @click="handleJoin(club)"
-                         :disabled="buttonTypes[club.joinStatus].disabled">
+              <el-button
+                v-if="buttonTypes[club.joinStatus]"
+                :loading="JoinLoading"
+                :type="buttonTypes[club.joinStatus].type"
+                @click="handleJoin(club)"
+                :disabled="buttonTypes[club.joinStatus].disabled"
+              >
                 {{ buttonTypes[club.joinStatus].label }}
               </el-button>
             </template>
@@ -73,7 +79,7 @@
               <template #label>
                 <div class="cell-item">
                   <el-icon :style="iconStyle">
-                    <clock />
+                    <Clock />
                   </el-icon>
                   时间
                 </div>
@@ -85,7 +91,7 @@
               <template #label>
                 <div class="cell-item">
                   <el-icon :style="iconStyle">
-                    <location />
+                    <Location />
                   </el-icon>
                   地点
                 </div>
@@ -106,13 +112,14 @@
           </el-descriptions>
         </div>
       </el-scrollbar>
-      <el-result v-else
-                 icon="success"
-                 title="Byerun"
-                 sub-title="暂无俱乐部活动或俱乐部活动已达标">
+      <el-result
+        v-else
+        icon="success"
+        title="Byerun"
+        sub-title="暂无俱乐部活动或俱乐部活动已达标"
+      >
         <template #extra>
-          <el-button type="primary"
-                     @click="goBack">返回</el-button>
+          <el-button type="primary" @click="goBack">返回</el-button>
         </template>
       </el-result>
     </el-main>
@@ -120,6 +127,7 @@
 </template>
 
 <script setup>
+import "@/style/club/index.css";
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
@@ -231,47 +239,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-.el-container {
-  max-width: 500px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 20px;
-  margin: 0 auto;
-}
-
-.el-header {
-  width: 100%;
-}
-
-
-.el-main {
-  width: 100%;
-  max-width: 1200px;
-}
-
-.el-main .el-descriptions {
-  margin-top: 20px;
-}
-
-.el-main .el-descriptions-item {
-  word-break: break-word;
-  /* 设置单词过长时自动换行 */
-}
-
-.week-menu > .el-menu-item {
-  padding: 10px;
-  color: #6b778c;
-  font-size: 15px;
-  font-weight: 500;
-}
-
-.cell-item {
-  display: flex;
-  align-items: center;
-  min-width: 50px;
-}
-</style>
+<style scoped></style>
