@@ -1,7 +1,6 @@
 <template>
   <el-container>
     <el-header>
-      <el-button icon="ArrowLeftBold" @click="goBack" plain></el-button>
       <el-select
         v-model="activeName"
         placeholder="选择时间"
@@ -18,11 +17,13 @@
       </el-select>
     </el-header>
     <el-main v-if="isLoading">
-      <el-result title="Byerun">
-        <template #extra>
+      <el-result>
+        <template #sub-title>
           <el-icon class="is-loading">
             <Loading />
           </el-icon>
+        </template>
+        <template #extra>
         </template>
       </el-result>
     </el-main>
@@ -109,14 +110,14 @@
       <el-result
         v-else
         icon="success"
-        title="Byerun"
+    
         sub-title="暂无俱乐部活动或俱乐部活动已达标"
       >
         <template #extra>
-          <el-button @click="goBack">返回</el-button>
         </template>
       </el-result>
     </el-main>
+    <el-button @click="goBack">返回</el-button>
   </el-container>
 </template>
 
@@ -152,6 +153,7 @@ const options = ref([
   { id: 5, label: "周五" },
   { id: 6, label: "我的俱乐部" },
 ]);
+
 const weekDayMap = reactive({
   0: "返回",
   1: "周一",
