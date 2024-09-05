@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import "@/style/login/index.css";
+import "@/styles/login/index.css";
 import { ref, watchEffect, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";

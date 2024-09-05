@@ -26,6 +26,7 @@ export default function useRunInfo() {
   const runInfo = ref<RunInfo | null>(null);
 
   const fetchRunInfo = async (userId: number, schoolId: number) => {
+    runInfo.value = null;
     try {
       const runStandardInfo = await getRunStandard(schoolId);
       if (runStandardInfo.data.code !== 10000) {

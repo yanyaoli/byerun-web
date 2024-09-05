@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import "@/style/club/index.css";
+import "@/styles/club/index.css";
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";

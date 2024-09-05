@@ -1,8 +1,8 @@
 <template>
   <el-container>
-    <el-header class="header-container">
-      <el-row>
-        <el-col :span="12" class="operation-buttons-left">
+    <el-header>
+      <div class="header-container">
+        <div class="left-menu">
           <el-dropdown trigger="click">
             <el-button plain class="icon-button">
               <el-icon>
@@ -40,9 +40,13 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-        </el-col>
+        </div>
 
-        <el-col :span="12" class="operation-buttons-right">
+        <div class="center-content">
+          <h2></h2>
+        </div>
+
+        <div class="right-menu">
           <el-dropdown trigger="click">
             <el-button plain class="icon-button">
               <el-icon><Avatar /></el-icon>
@@ -75,14 +79,15 @@
                   >
                     <el-icon color="red">
                       <CloseBold />
-                    </el-icon> </el-tooltip
-                  >退出
+                    </el-icon>
+                  </el-tooltip>
+                  退出
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-        </el-col>
-      </el-row>
+        </div>
+      </div>
     </el-header>
 
     <el-main v-if="showMainBoard">
@@ -107,81 +112,90 @@
         </p>
       </div>
 
-      <div v-if="activity && runInfo" class="runInfo">
-        <el-row :gutter="20" justify="center">
-          <el-col :span="24">
-            <el-card class="no-border-card">
-              <el-progress
-                :percentage="activity.club_completion_percentage"
-                :stroke-width="20"
-                :text-inside="true"
-                @click="refresh"
-              >
-                <span>俱乐部完成率 {{ activity.club_completion_rate }}</span>
-              </el-progress>
-              <el-progress
-                :percentage="activity.running_completion_percentage"
-                :stroke-width="20"
-                :text-inside="true"
-                @click="refresh"
-              >
-                <span>校园跑完成率 {{ activity.running_completion_rate }}</span>
-              </el-progress>
-              <el-progress
-                :percentage="runInfo.runDistanceCompletionPercentage"
-                :stroke-width="20"
-                :text-inside="true"
-                @click="refresh"
-              >
-                <span>里程完成率 {{ runInfo.runDistanceCompletionRate }}</span>
-              </el-progress>
-            </el-card>
-          </el-col>
-        </el-row>
-      </div>
-      <div v-else class="runInfo">
-        <el-row :gutter="20" justify="center">
-          <el-col :span="24">
-            <el-card>
-              <el-progress
-                :percentage="100"
-                :stroke-width="20"
-                :text-inside="true"
-                :duration="3"
-                striped
-                striped-flow
-              >
-                <span
-                  ><el-icon class="is-loading"><Loading /></el-icon
-                ></span>
-              </el-progress>
-              <el-progress
-                :percentage="100"
-                :stroke-width="20"
-                :text-inside="true"
-                :duration="3"
-                striped
-                striped-flow
-              >
-                <span
-                  ><el-icon class="is-loading"><Loading /></el-icon
-                ></span>
-              </el-progress>
-              <el-progress
-                :percentage="100"
-                :stroke-width="20"
-                :text-inside="true"
-                :duration="3"
-                striped
-                striped-flow
-              >
-                <span
-                  ><el-icon class="is-loading"><Loading /></el-icon
-                ></span>
-              </el-progress>
-            </el-card>
-          </el-col>
-        </el-row>
+      <div>
+        <div class="runInfo">
+          <el-row :gutter="20" justify="center">
+            <el-col :span="24">
+              <el-card class="no-border-card">
+                <!-- 俱乐部完成率进度条 -->
+                <el-progress
+                  v-if="activity"
+                  :percentage="activity.club_completion_percentage"
+                  :stroke-width="20"
+                  :text-inside="true"
+                  @click="getActivity"
+                >
+                  <span>俱乐部完成率 {{ activity.club_completion_rate }}</span>
+                </el-progress>
+                <el-progress
+                  v-else
+                  :percentage="100"
+                  :stroke-width="20"
+                  :text-inside="true"
+                  :duration="3"
+                  striped
+                  striped-flow
+                >
+                  <span
+                    ><el-icon class="is-loading"><Loading /></el-icon
+                  ></span>
+                </el-progress>
+
+                <!-- 校园跑完成率进度条 -->
+                <el-progress
+                  v-if="activity"
+                  :percentage="activity.running_completion_percentage"
+                  :stroke-width="20"
+                  :text-inside="true"
+                  @click="getActivity"
+                >
+                  <span
+                    >校园跑完成率 {{ activity.running_completion_rate }}</span
+                  >
+                </el-progress>
+                <el-progress
+                  v-else
+                  :percentage="100"
+                  :stroke-width="20"
+                  :text-inside="true"
+                  :duration="3"
+                  striped
+                  striped-flow
+                >
+                  <span
+                    ><el-icon class="is-loading"><Loading /></el-icon
+                  ></span>
+                </el-progress>
+
+                <!-- 里程完成率进度条 -->
+                <el-progress
+                  v-if="runInfo"
+                  :percentage="runInfo.runDistanceCompletionPercentage"
+                  :stroke-width="20"
+                  :text-inside="true"
+                  @click="getRunInfo"
+                >
+                  <span
+                    >里程完成率 {{ runInfo.runDistanceCompletionRate }}</span
+                  >
+                </el-progress>
+                <el-progress
+                  v-else
+                  :percentage="100"
+                  :stroke-width="20"
+                  :text-inside="true"
+                  :duration="3"
+                  striped
+                  striped-flow
+                >
+                  <span
+                    ><el-icon class="is-loading"><Loading /></el-icon
+                  ></span>
+                </el-progress>
+              </el-card>
+            </el-col>
+          </el-row>
+        </div>
       </div>
 
       <el-divider />
@@ -247,7 +261,7 @@
 </template>
 
 <script setup>
-import "@/style/dashboard/index.css";
+import "@/styles/dashboard/index.css";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -298,8 +312,7 @@ const getRunInfo = async () => {
 
 // 刷新
 const refresh = async () => {
-  await getActivity();
-  await getRunInfo();
+  await Promise.all([getActivity(), getRunInfo()]);
 };
 
 // 提交
@@ -361,7 +374,7 @@ onMounted(async () => {
     const result = await fetchUser();
     if (result) {
       LoginState.value = false;
-      await fetchActivity(user.value.schoolId, user.value.studentId);
+      await getActivity();
       await getRunInfo();
     }
   }

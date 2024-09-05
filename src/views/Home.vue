@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import "@/style/home/index.css";
+import "@/styles/home/index.css";
 import { useRouter } from 'vue-router';
 import Header from '@/components/Header.vue';
 
