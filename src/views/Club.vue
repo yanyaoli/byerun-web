@@ -1,27 +1,22 @@
 <template>
   <el-container>
-    <el-header class="header-container">
-      <el-menu
-        :default-active="activeName"
+    <el-header>
+      <el-button icon="ArrowLeftBold" @click="goBack" plain></el-button>
+      <el-select
+        v-model="activeName"
+        placeholder="选择时间"
+        @change="handleSelect"
         class="week-menu"
-        mode="horizontal"
-        :collapse-transition="false"
-        @select="handleSelect"
       >
-        <el-menu-item index="0">
-          <el-icon>
-            <ArrowLeft />
-          </el-icon>
-        </el-menu-item>
-        <el-menu-item index="1">周一</el-menu-item>
-        <el-menu-item index="2">周二</el-menu-item>
-        <el-menu-item index="3">周三</el-menu-item>
-        <el-menu-item index="4">周四</el-menu-item>
-        <el-menu-item index="5">周五</el-menu-item>
-        <el-menu-item index="6">我的俱乐部</el-menu-item>
-      </el-menu>
+        <el-option
+          v-for="option in options"
+          :key="option.id"
+          :label="option.label"
+          :value="option.id.toString()"
+        >
+        </el-option>
+      </el-select>
     </el-header>
-
     <el-main v-if="isLoading">
       <el-result title="Byerun">
         <template #extra>
@@ -31,7 +26,6 @@
         </template>
       </el-result>
     </el-main>
-
     <el-main v-else>
       <el-scrollbar height="70vh" v-if="clubs.length > 0">
         <div v-for="club in clubs" :key="club.configurationId">
@@ -79,7 +73,7 @@
               <template #label>
                 <div class="cell-item">
                   <el-icon :style="iconStyle">
-                    <Clock />
+                    <clock />
                   </el-icon>
                   时间
                 </div>
@@ -91,7 +85,7 @@
               <template #label>
                 <div class="cell-item">
                   <el-icon :style="iconStyle">
-                    <Location />
+                    <location />
                   </el-icon>
                   地点
                 </div>
@@ -119,7 +113,7 @@
         sub-title="暂无俱乐部活动或俱乐部活动已达标"
       >
         <template #extra>
-          <el-button type="primary" @click="goBack">返回</el-button>
+          <el-button @click="goBack">返回</el-button>
         </template>
       </el-result>
     </el-main>
@@ -150,13 +144,22 @@ const isLoading = ref(false);
 const router = useRouter();
 const activeName = ref("1");
 
+const options = ref([
+  { id: 1, label: "周一" },
+  { id: 2, label: "周二" },
+  { id: 3, label: "周三" },
+  { id: 4, label: "周四" },
+  { id: 5, label: "周五" },
+  { id: 6, label: "我的俱乐部" },
+]);
 const weekDayMap = reactive({
-  1: "一",
-  2: "二",
-  3: "三",
-  4: "四",
-  5: "五",
-  6: "俱乐部记录",
+  0: "返回",
+  1: "周一",
+  2: "周二",
+  3: "周三",
+  4: "周四",
+  5: "周五",
+  6: "我的俱乐部",
 });
 
 const buttonTypes = reactive({

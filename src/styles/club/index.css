@@ -1,5 +1,5 @@
 .el-container {
-  max-width: 1200px;
+  max-width: 500px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border-radius: 10px;
   display: flex;
@@ -11,16 +11,8 @@
 
 .el-header {
   width: 100%;
-  padding: 10px 0;
-  background-color: #fff;
-  /* box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1); */
-  border-radius: 25px;
-}
-
-.week-menu {
-  line-height: 50px;
-  height: 50px;
-  background-color: transparent;
+  display: flex;
+  justify-content: center;
 }
 
 .el-main {
@@ -34,18 +26,15 @@
 
 .el-main .el-descriptions-item {
   word-break: break-word;
-  /* 设置单词过长时自动换行 */
-}
-
-.week-menu > .el-menu-item {
-  padding: 0 20px;
-  color: #6b778c;
-  font-size: 15px;
-  font-weight: 500;
 }
 
 .cell-item {
   display: flex;
   align-items: center;
   min-width: 50px;
+}
+
+.week-menu {
+  width: 80%;
+  margin-left: 20px;
 }
