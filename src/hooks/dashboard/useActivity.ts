@@ -13,6 +13,10 @@ export default function useActivity() {
   const activity: Ref<ActivityData | null> = ref(null);
   const isLoading = ref(false);
 
+  const adjustCompletionPercentage = (percentage: number): number => {
+    return percentage > 100 ? 100 : percentage;
+  };
+
   const fetchActivity = async (schoolId: number, studentId: number) => {
     isLoading.value = true;
     activity.value = null;
@@ -25,8 +29,12 @@ export default function useActivity() {
         const runJoinNum = response.data.response.runJoinNum;
         const club_completion_rate = `${joinNum}/${totalNum}`;
         const running_completion_rate = `${runJoinNum}/${runTotalNum}`;
-        const club_completion_percentage = totalNum === 0 ? 0 : Math.floor((joinNum / totalNum) * 100);
-        const running_completion_percentage = runTotalNum === 0 ? 0 : Math.floor((runJoinNum / runTotalNum) * 100);
+        let club_completion_percentage = totalNum === 0 ? 0 : Math.floor((joinNum / totalNum) * 100);
+        let running_completion_percentage = runTotalNum === 0 ? 0 : Math.floor((runJoinNum / runTotalNum) * 100);
+
+        club_completion_percentage = adjustCompletionPercentage(club_completion_percentage);
+        running_completion_percentage = adjustCompletionPercentage(running_completion_percentage);
+
         activity.value = {
           club_completion_rate: club_completion_rate,
           running_completion_rate: running_completion_rate,

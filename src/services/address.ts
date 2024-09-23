@@ -1,7 +1,7 @@
 // const baseURL = process.env.VUE_APP_BASE_API || '';
-const baseURL = "https://worker.run.ohnnn.com"; // Worker代理,自定义域名解除污染
+const baseURL = "https://worker.run.where.nyc.mn"; // Worker代理,自定义域名解除污染
 const homeURL = "https://byerun.pages.dev/" // 主页
-const noticeURL = "https://ohnnn.com/unirun/notice"; // 公告通知
+const noticeURL = "https://where.nyc.mn/unirun/notice"; // 公告通知
 const downloadURL = "https://byerundownload.pages.dev/" // 下载页
 const opensrcURL = "https://github.com/yanyaoli/byerun-web" // 开源地址
 

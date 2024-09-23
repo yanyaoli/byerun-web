@@ -25,6 +25,10 @@ interface RunInfo {
 export default function useRunInfo() {
   const runInfo = ref<RunInfo | null>(null);
 
+  const adjustCompletionPercentage = (percentage: number): number => {
+    return percentage > 100 ? 100 : percentage;
+  };
+
   const fetchRunInfo = async (userId: number, schoolId: number) => {
     runInfo.value = null;
     try {
@@ -40,7 +44,9 @@ export default function useRunInfo() {
       if (res.data.code === 10000) {
         const runValidDistance = res.data.response.runValidDistance;
         const runDistanceCompletionRate = `${runValidDistance}/${needRunDistance}`;
-        const runDistanceCompletionPercentage = (needRunDistance === 0 || runValidDistance === 0) ? 0 : Math.floor((runValidDistance / needRunDistance) * 100);
+        let runDistanceCompletionPercentage = (needRunDistance === 0 || runValidDistance === 0) ? 0 : Math.floor((runValidDistance / needRunDistance) * 100);
+
+        runDistanceCompletionPercentage = adjustCompletionPercentage(runDistanceCompletionPercentage);
 
         runInfo.value = {
           ...res.data.response,

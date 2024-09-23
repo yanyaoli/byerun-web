@@ -53,8 +53,8 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="refresh">
-                  <el-icon class="is-loading">
+                <el-dropdown-item @click="refresh" :disabled="isRefreshing">
+                  <el-icon :class="{ 'is-loading': isRefreshing }">
                     <Refresh />
                   </el-icon>
                   刷新
@@ -311,8 +311,11 @@ const getRunInfo = async () => {
 };
 
 // 刷新
+const isRefreshing = ref(false);
 const refresh = async () => {
+  isRefreshing.value = true;
   await Promise.all([getActivity(), getRunInfo()]);
+  isRefreshing.value = false;
 };
 
 // 提交
@@ -331,8 +334,7 @@ const submitActivityData = async () => {
     userId
   );
   if (result) {
-    await fetchActivity(user.value.schoolId, user.value.studentId);
-    await getRunInfo();
+    refresh();
   }
 };
 
@@ -374,8 +376,7 @@ onMounted(async () => {
     const result = await fetchUser();
     if (result) {
       LoginState.value = false;
-      await getActivity();
-      await getRunInfo();
+      refresh();
     }
   }
 });
