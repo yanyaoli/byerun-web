@@ -260,6 +260,7 @@
   </el-container>
 </template>
 
+
 <script setup>
 import "@/styles/dashboard/index.css";
 import { ref, onMounted } from "vue";
@@ -273,9 +274,6 @@ import {
   useSubmitActivity,
 } from "@/hooks/dashboard/index";
 import useNotice from "@/hooks/notice/";
-import address from "@/services/address";
-
-const homeURL = ref(address.homeURL);
 
 const { getNotice } = useNotice();
 
@@ -291,7 +289,7 @@ const showMainBoard = ref(true);
 const masked = ref(true);
 
 const goHome = () => {
-  window.open(homeURL.value);
+  router.push("/");
 };
 
 const router = useRouter();
@@ -345,7 +343,15 @@ const goClub = () => {
 
 // 随机填充
 const randomizeInputs = () => {
-  const maps = ["cuit_lqy", "cuit_hkg", "cdutcm_wj"];
+  const schoolName = userData.schoolName;
+  let maps = [];
+
+  if (schoolName === "成都信息工程大学") {
+    maps = ["cuit_lqy", "cuit_hkg"];
+  } else if (schoolName === "成都中医药大学") {
+    maps = ["cdutcm_wj"];
+  }
+
   runDistance.value = Math.floor(Math.random() * (6000 - 1000 + 1)) + 1000;
   runTime.value = Math.floor(Math.random() * (100 - 30 + 1)) + 30;
   mapChoice.value = maps[Math.floor(Math.random() * maps.length)];

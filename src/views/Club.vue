@@ -110,7 +110,6 @@
       <el-result
         v-else
         icon="success"
-    
         sub-title="暂无俱乐部活动或俱乐部活动已达标"
       >
         <template #extra>
@@ -179,7 +178,7 @@ const iconStyle = {
 };
 
 const goBack = () => {
-  router.push("/dashboard");
+  window.history.go(-1);
 };
 
 const handleSelect = (index) => {
