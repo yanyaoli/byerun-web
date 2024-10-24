@@ -1,3 +1,4 @@
+// 成都中医药大学温江校区
 export default {
   mapdata: [
     { id: 0, location: "103.808457,30.686278", edge: [1] },

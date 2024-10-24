@@ -1,3 +1,4 @@
+// 成都信息工程大学龙泉校区
 export default {
   mapdata: [
     { id: 0, location: "104.30599,30.607908", edge: [1] },

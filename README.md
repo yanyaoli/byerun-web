@@ -2,19 +2,22 @@
 
 校园跑助手网页版，自动规划跑步路径，生成跑步记录。
 
-| 地图支持                    |
-| --------------------------- |
+<img src="./intro/intro.jfif" alt="banner" height=300 />
+
+| 地图支持 |
+| --- |
 | 成都信息工程大学（航空港校区） |
 | 成都信息工程大学（龙泉校区） |
 | 成都中医药大学（温江校区） |
-| ...                         |
+| 四川省南充卫生学校 |
+| ... |
 
 ## 使用
 
-|Cloudflare|Vercel|
-|---|---|
-|[Byerun](https://byerun.pages.dev)|[Byerun](https://byerun.vercel.app)|
-|[Unirun](https://unirun.pages.dev)|[Unirun](https://unirun.vercel.app)|
+|Deployment Platform|||
+|---|---|---|
+|Cloudflare|[Byerun](https://byerun.pages.dev)|[Unirun](https://unirun.pages.dev)|
+|Vercel|[Byerun](https://byerun.vercel.app)|[Unirun](https://unirun.vercel.app)|
 
 
 ## 编译
@@ -41,7 +44,7 @@ npm run build
 
 | Name |Url |
 | -------- | -------- |
-| baseURL | https://run-lb.tanmasports.com/v1 |
+| baseURL | run-lb.tanmasports.com/v1 |
 | 登录 | `${baseURL}/auth/login/password` |
 | 用户信息 | `${baseURL}/auth/query/token` |
 | 完成率信息 | `${baseURL}/clubactivity/getJoinNum` |

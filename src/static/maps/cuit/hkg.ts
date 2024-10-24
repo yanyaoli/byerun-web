@@ -1,3 +1,4 @@
+// 成都信息工程大学航空港校区
 export default {
   mapdata: [
     { id: 0, location: "103.9857179,30.5809638", edge: [1] },

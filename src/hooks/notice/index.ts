@@ -38,7 +38,7 @@ export default function useNotice() {
           ...(notice.type ? { type: notice.type } : {}),
           duration: 5000,
           dangerouslyUseHTMLString: true,
-          position: "top-left",
+          position: "top-right",
         });
       } else {
         return;

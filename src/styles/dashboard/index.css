@@ -4,7 +4,7 @@
   border-radius: 10px;
   flex-direction: column;
   justify-content: center;
-  padding: 20px;
+  padding: 5px 10px;
   margin: 0 auto;
 }
 
@@ -34,17 +34,30 @@
 }
 
 .stuInfo {
-  letter-spacing: 2px;
+  letter-spacing: 1px;
+  margin-bottom: -10px;
+}
+
+.stuInfo h1 {
+    font-size: 1.5em;
+    letter-spacing: 5px;
+    margin-bottom: 0;
+}
+
+.stuInfo p {
+    font-size: 0.8em;
+    margin-top: 0.5rem;
+    letter-spacing: 2px;
 }
 
 .runInfo {
   letter-spacing: 2px;
-  margin-bottom: -20px;
+  /* margin-bottom: -20px; */
 }
 
 .el-progress {
-  margin-bottom: 15px;
-  max-width: 600px;
+  margin-bottom: 8px;
+  max-width: 500px;
 }
 
 .el-progress-bar__innerText {
@@ -54,7 +67,7 @@
 }
 
 .input-group {
-  margin: 10px 0;
+  margin-bottom: 5px;
 }
 
 .icon-button {
@@ -77,3 +90,7 @@
   filter: blur(2px);
 }
 
+
+.el-divider {
+    margin: 18px auto;
+}

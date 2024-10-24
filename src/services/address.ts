@@ -3,13 +3,13 @@ const baseURL = "https://worker.run.where.nyc.mn"; // Worker代理,自定义域�
 const homeURL = "https://byerun.pages.dev/" // 主页
 const noticeURL = "https://where.nyc.mn/unirun/notice"; // 公告通知
 const downloadURL = "https://byerundownload.pages.dev/" // 下载页
-const opensrcURL = "https://github.com/yanyaoli/byerun-web" // 开源地址
+const githubURL = "https://github.com/yanyaoli/byerun-web" // 开源地址
 
 export default {
   baseURL,
   homeURL,
   noticeURL,
-  opensrcURL,
+  githubURL,
   downloadURL,
   login: `${baseURL}/auth/login/password`,
   user: `${baseURL}/auth/query/token`,

@@ -1,4 +1,4 @@
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 
 const Login = () => import(/* webpackChunkName: "login" */ "../views/Login.vue");
 const DashBoard = () => import(/* webpackChunkName: "dashboard" */ "../views/DashBoard.vue");
@@ -6,7 +6,7 @@ const Club = () => import(/* webpackChunkName: "club" */ "../views/Club.vue");
 const Home = () => import(/* webpackChunkName: "home" */ "../views/Home.vue");
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes: [
     { path: "/home", component: Home },
     { path: "/login", component: Login },

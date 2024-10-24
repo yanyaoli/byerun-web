@@ -11,7 +11,7 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="getNotice">
+                <el-dropdown-item @click="getNotification">
                   <el-icon>
                     <Bell />
                   </el-icon>
@@ -112,90 +112,84 @@
         </p>
       </div>
 
-      <div>
-        <div class="runInfo">
-          <el-row :gutter="20" justify="center">
-            <el-col :span="24">
-              <el-card class="no-border-card">
-                <!-- 俱乐部完成率进度条 -->
-                <el-progress
-                  v-if="activity"
-                  :percentage="activity.club_completion_percentage"
-                  :stroke-width="20"
-                  :text-inside="true"
-                  @click="getActivity"
-                >
-                  <span>俱乐部完成率 {{ activity.club_completion_rate }}</span>
-                </el-progress>
-                <el-progress
-                  v-else
-                  :percentage="100"
-                  :stroke-width="20"
-                  :text-inside="true"
-                  :duration="3"
-                  striped
-                  striped-flow
-                >
-                  <span
-                    ><el-icon class="is-loading"><Loading /></el-icon
-                  ></span>
-                </el-progress>
+      <div class="runInfo">
+        <el-row :gutter="20" justify="center">
+          <el-col :span="24">
+            <el-card class="no-border-card">
+              <!-- 俱乐部完成率进度条 -->
+              <el-progress
+                v-if="activity"
+                :percentage="activity.club_completion_percentage"
+                :stroke-width="20"
+                :text-inside="true"
+                @click="getActivity"
+              >
+                <span>俱乐部完成率 {{ activity.club_completion_rate }}</span>
+              </el-progress>
+              <el-progress
+                v-else
+                :percentage="100"
+                :stroke-width="20"
+                :text-inside="true"
+                :duration="3"
+                striped
+                striped-flow
+              >
+                <span
+                  ><el-icon class="is-loading"><Loading /></el-icon
+                ></span>
+              </el-progress>
 
-                <!-- 校园跑完成率进度条 -->
-                <el-progress
-                  v-if="activity"
-                  :percentage="activity.running_completion_percentage"
-                  :stroke-width="20"
-                  :text-inside="true"
-                  @click="getActivity"
-                >
-                  <span
-                    >校园跑完成率 {{ activity.running_completion_rate }}</span
-                  >
-                </el-progress>
-                <el-progress
-                  v-else
-                  :percentage="100"
-                  :stroke-width="20"
-                  :text-inside="true"
-                  :duration="3"
-                  striped
-                  striped-flow
-                >
-                  <span
-                    ><el-icon class="is-loading"><Loading /></el-icon
-                  ></span>
-                </el-progress>
+              <!-- 校园跑完成率进度条 -->
+              <el-progress
+                v-if="activity"
+                :percentage="activity.running_completion_percentage"
+                :stroke-width="20"
+                :text-inside="true"
+                @click="getActivity"
+              >
+                <span>校园跑完成率 {{ activity.running_completion_rate }}</span>
+              </el-progress>
+              <el-progress
+                v-else
+                :percentage="100"
+                :stroke-width="20"
+                :text-inside="true"
+                :duration="3"
+                striped
+                striped-flow
+              >
+                <span
+                  ><el-icon class="is-loading"><Loading /></el-icon
+                ></span>
+              </el-progress>
 
-                <!-- 里程完成率进度条 -->
-                <el-progress
-                  v-if="runInfo"
-                  :percentage="runInfo.runDistanceCompletionPercentage"
-                  :stroke-width="20"
-                  :text-inside="true"
-                  @click="getRunInfo"
-                >
-                  <span
-                    >里程完成率 {{ runInfo.runDistanceCompletionRate }}</span
-                  >
-                </el-progress>
-                <el-progress
-                  v-else
-                  :percentage="100"
-                  :stroke-width="20"
-                  :text-inside="true"
-                  :duration="3"
-                  striped
-                  striped-flow
-                >
-                  <span
-                    ><el-icon class="is-loading"><Loading /></el-icon
-                  ></span>
-                </el-progress>
-              </el-card>
-            </el-col>
-          </el-row>
-        </div>
+              <!-- 里程完成率进度条 -->
+              <el-progress
+                v-if="runInfo"
+                :percentage="runInfo.runDistanceCompletionPercentage"
+                :stroke-width="20"
+                :text-inside="true"
+                @click="getRunInfo"
+              >
+                <span>里程完成率 {{ runInfo.runDistanceCompletionRate }}</span>
+              </el-progress>
+              <el-progress
+                v-else
+                :percentage="100"
+                :stroke-width="20"
+                :text-inside="true"
+                :duration="3"
+                striped
+                striped-flow
+              >
+                <span
+                  ><el-icon class="is-loading"><Loading /></el-icon
+                ></span>
+              </el-progress>
+            </el-card>
+          </el-col>
+        </el-row>
       </div>
 
       <el-divider />
@@ -225,18 +219,16 @@
           ></el-input-number>
         </div>
         <div class="input-group">
-          <el-select id="map" v-model="mapChoice" placeholder="请选择地图">
+          <el-select
+            id="school"
+            v-model="schoolChoice"
+            placeholder="请选择学校"
+          >
             <el-option
-              label="成都信息工程大学龙泉校区"
-              value="cuit_lqy"
-            ></el-option>
-            <el-option
-              label="成都信息工程大学航空港校区"
-              value="cuit_hkg"
-            ></el-option>
-            <el-option
-              label="成都中医药大学温江校区"
-              value="cdutcm_wj"
+              v-for="school in availableSchools"
+              :key="school.value"
+              :label="school.label"
+              :value="school.value"
             ></el-option>
           </el-select>
         </div>
@@ -260,12 +252,12 @@
   </el-container>
 </template>
 
-
 <script setup>
 import "@/styles/dashboard/index.css";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
+import { getSchoolMaps } from "@/static/maps/map";
 
 import {
   useUser,
@@ -295,8 +287,10 @@ const goHome = () => {
 const router = useRouter();
 const runDistance = ref(null);
 const runTime = ref(null);
-const mapChoice = ref(null);
+const schoolChoice = ref(null);
 const LoginState = ref(true);
+
+const availableSchools = ref([]);
 
 // 获取活动信息
 const getActivity = async () => {
@@ -318,16 +312,17 @@ const refresh = async () => {
 
 // 提交
 const submitActivityData = async () => {
-  if (!runDistance.value || !runTime.value || !mapChoice.value) {
+  if (!runDistance.value || !runTime.value || !schoolChoice.value) {
     ElMessage.error("参数不完整，请检查后重新提交");
     return;
   }
   const schoolId = userData.schoolId;
   const userId = userData.userId;
+  const mapChoice = schoolChoice.value; // 获取对应的地图编号
   const result = await submit(
     runDistance.value,
     runTime.value,
-    mapChoice.value,
+    mapChoice,
     schoolId,
     userId
   );
@@ -343,18 +338,12 @@ const goClub = () => {
 
 // 随机填充
 const randomizeInputs = () => {
-  const schoolName = userData.schoolName;
-  let maps = [];
-
-  if (schoolName === "成都信息工程大学") {
-    maps = ["cuit_lqy", "cuit_hkg"];
-  } else if (schoolName === "成都中医药大学") {
-    maps = ["cdutcm_wj"];
-  }
-
   runDistance.value = Math.floor(Math.random() * (6000 - 1000 + 1)) + 1000;
   runTime.value = Math.floor(Math.random() * (100 - 30 + 1)) + 30;
-  mapChoice.value = maps[Math.floor(Math.random() * maps.length)];
+  schoolChoice.value =
+    availableSchools.value[
+      Math.floor(Math.random() * availableSchools.value.length)
+    ].value;
 };
 
 // 切换用户
@@ -372,9 +361,13 @@ const toggleNotification = () => {
   notificationAvailable.value = newValue;
 };
 
+const getNotification = () => {
+  getNotice();
+  localStorage.setItem("NotificationAvailable", true);
+};
 onMounted(async () => {
   if (notificationAvailable.value) {
-    getNotice();
+    getNotification();
   }
   if (!userData || !token) {
     router.push("/home");
@@ -385,6 +378,9 @@ onMounted(async () => {
       refresh();
     }
   }
+
+  // 设置可用学校
+  availableSchools.value = getSchoolMaps();
 });
 
 // 退出账号
