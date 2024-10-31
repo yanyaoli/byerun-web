@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { getRunStandard, getRunInfo } from "@/apis/user";
+import { getRunStandard, getRunInfo } from "@/apis/run";
 import { ElMessage } from "element-plus";
 
 interface RunInfo {

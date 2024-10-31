@@ -29,6 +29,12 @@
                   </el-icon>
                   俱乐部
                 </el-dropdown-item>
+                <el-dropdown-item @click="goRunRecord">
+                  <el-icon>
+                    <List />
+                  </el-icon>
+                  跑步记录
+                </el-dropdown-item>
                 <el-dropdown-item @click="toggleNotification">
                   <el-icon>
                     <component
@@ -266,6 +272,7 @@ import {
   useSubmitActivity,
 } from "@/hooks/dashboard/index";
 import useNotice from "@/hooks/notice/";
+// import RunRecord from "./RunRecord.vue";
 
 const { getNotice } = useNotice();
 
@@ -282,6 +289,10 @@ const masked = ref(true);
 
 const goHome = () => {
   router.push("/");
+};
+
+const goRunRecord = () => {
+  router.push("/run/record");
 };
 
 const router = useRouter();

@@ -1,0 +1,57 @@
+.el-container {
+    max-width: 500px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px;
+    margin: 0 auto;
+  }
+  
+  .el-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  
+  .el-main {
+    width: 100%;
+    max-width: 1200px;
+  }
+  
+  .el-main .el-descriptions {
+    margin-top: 20px;
+  }
+  
+  .el-main .el-descriptions-item {
+    word-break: break-word;
+  }
+
+  .scroll-container {
+    height: 70vh;
+    overflow-y: auto;
+  }
+  
+  /* 自定义滚动条样式 */
+  .scroll-container::-webkit-scrollbar {
+    width: 8px; /* 滚动条宽度 */
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb {
+    background-color: #888; /* 滚动条颜色 */
+    border-radius: 4px; /* 滚动条圆角 */
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* 滚动条悬停颜色 */
+  }
+  
+  .scroll-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* 滚动条轨道颜色 */
+  }
+  .loading-indicator {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+  }

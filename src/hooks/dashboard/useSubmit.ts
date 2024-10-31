@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { getRunStandard, submitActivityInfo } from "@/apis/user";
+import { getRunStandard, submitActivityInfo } from "@/apis/run";
 import { ElMessage } from "element-plus";
 
 interface submitData {

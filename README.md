@@ -1,8 +1,16 @@
 # Byerun Web
 
-校园跑助手网页版，自动规划跑步路径，生成跑步记录。
+Goodbye Unirun  校园跑助手网页版
 
-<img src="./intro/intro.jfif" alt="banner" height=300 />
+### 功能
+
+- [x] 在线登录登出
+- [x] 密码修改重置
+- [x] 跑步记录查询
+- [x] 跑步记录生成
+- [x] 俱乐部活动查询
+- [x] 俱乐部活动报名
+
 
 | 地图支持 |
 | --- |
@@ -11,6 +19,10 @@
 | 成都中医药大学（温江校区） |
 | 四川省南充卫生学校 |
 | ... |
+
+### Demo
+
+<img src="./intro/intro.jfif" alt="banner" height=300 />
 
 ## 使用
 
@@ -40,26 +52,28 @@ npm run serve
 npm run build
 ```
 
-## 主要API
+## APIs
 
 | Name |Url |
 | -------- | -------- |
 | baseURL | run-lb.tanmasports.com/v1 |
 | 登录 | `${baseURL}/auth/login/password` |
-| 用户信息 | `${baseURL}/auth/query/token` |
-| 完成率信息 | `${baseURL}/clubactivity/getJoinNum` |
-| 标准信息 | `${baseURL}/unirun/query/runStandard` |
-| 新纪录 | `${baseURL}/unirun/save/run/record/new` |
-| 俱乐部信息 | `${baseURL}/clubactivity/querySemesterClubActivity` |
-| 俱乐部参与记录 | `${baseURL}/clubactivity/queryMyActivityList` |
-| 待签到俱乐部 | `${baseURL}/clubactivity/queryMySemesterClubActivity` |
-| 俱乐部加入退出状态 | `${baseURL}/clubactivity/joinOrCancelSchoolSemesterActivity` |
-| 验证码| `${baseURL}/auth/sendSmsForPassWord` |
+| 用户信息查询 | `${baseURL}/auth/query/token` |
+| 完成率信息查询 | `${baseURL}/clubactivity/getJoinNum` |
+| 标准信息查询 | `${baseURL}/unirun/query/runStandard` |
+| 跑步信息查询 | `${baseURL}/unirun/query/runInfo` |
+| 跑步历史记录查询 | `${baseURL}/unirun/query/student/all/run/record` |
+| 跑步新纪录提交 | `${baseURL}/unirun/save/run/record/new` |
+| 俱乐部活动查询 | `${baseURL}/clubactivity/querySemesterClubActivity` |
+| 俱乐部参与记录查询 | `${baseURL}/clubactivity/queryMyActivityList` |
+| 已报名俱乐部查询 | `${baseURL}/clubactivity/queryMySemesterClubActivity` |
+| 俱乐部状态查询 | `${baseURL}/clubactivity/joinOrCancelSchoolSemesterActivity` |
+| 发送验证码 | `${baseURL}/auth/sendSmsForPassWord` |
 | 重置密码 | `${baseURL}/auth/updateUserPassWord` |
 
 
 
-### Workerjs
+## Worker
 
 ```
 export default {
@@ -111,8 +125,14 @@ async function handleRequest(request, env) {
 }
 ```
 
-# 免责声明
+## 免责声明
 
 使用本工具所产生的任何后果，用户需自行承担。
 
 本工具仅供学习交流使用，不得用于任何商业用途。
+
+## Credit
+
+[@AutoRun](https://github.com/msojocs/AutoRun)
+
+[@Byerun](https://github.com/yanyaoli/byerun)
