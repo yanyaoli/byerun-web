@@ -1,4 +1,5 @@
 <template>
+  <Notice />
   <el-container>
     <el-header>
       <div class="header-container">
@@ -11,12 +12,6 @@
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="getNotification">
-                  <el-icon>
-                    <Bell />
-                  </el-icon>
-                  公告
-                </el-dropdown-item>
                 <el-dropdown-item @click="goHome">
                   <el-icon>
                     <House />
@@ -34,14 +29,6 @@
                     <List />
                   </el-icon>
                   跑步记录
-                </el-dropdown-item>
-                <el-dropdown-item @click="toggleNotification">
-                  <el-icon>
-                    <component
-                      :is="notificationAvailable ? 'Bell' : 'MuteNotification'"
-                    />
-                  </el-icon>
-                  公告开关
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -260,6 +247,7 @@
 
 <script setup>
 import "@/styles/dashboard/index.css";
+import Notice from "@/components/Notice.vue";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -271,10 +259,6 @@ import {
   useRunInfo,
   useSubmitActivity,
 } from "@/hooks/dashboard/index";
-import useNotice from "@/hooks/notice/";
-// import RunRecord from "./RunRecord.vue";
-
-const { getNotice } = useNotice();
 
 const { user, fetchUser } = useUser();
 const { activity, fetchActivity } = useActivity();
@@ -362,24 +346,7 @@ const switchUser = () => {
   ElMessage.info("还没有实现该功能");
 };
 
-const notificationAvailable = ref(
-  localStorage.getItem("NotificationAvailable") !== "false"
-);
-
-const toggleNotification = () => {
-  const newValue = !notificationAvailable.value;
-  localStorage.setItem("NotificationAvailable", newValue);
-  notificationAvailable.value = newValue;
-};
-
-const getNotification = () => {
-  getNotice();
-  localStorage.setItem("NotificationAvailable", true);
-};
 onMounted(async () => {
-  if (notificationAvailable.value) {
-    getNotification();
-  }
   if (!userData || !token) {
     router.push("/home");
   } else {

@@ -1,6 +1,6 @@
 import axios from "axios";
 import address from "@/services/address";
-import { ElNotification, ElMessage } from "element-plus"; // 导入 ElMessage
+import { ElNotification, ElMessage } from "element-plus";
 
 export default function useNotice() {
   const fetchNotice = async () => {

@@ -13,6 +13,7 @@
             v-model="password"
             type="password"
             placeholder="请输入密码"
+            show-password
           ></el-input>
         </el-form-item>
         <el-form-item>
@@ -73,6 +74,7 @@
             v-model="newPassword"
             type="password"
             placeholder="请输入新密码"
+            show-password
           ></el-input>
         </el-form-item>
         <el-form-item>
