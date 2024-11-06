@@ -1,8 +1,7 @@
-// const baseURL = process.env.VUE_APP_BASE_API || '';
-const baseURL = "http://localhost:3000";
-const homeURL = "https://byerun.pages.dev/" // 主页
+const baseURL = process.env.NODE_ENV === 'production' ? "https://worker.run.where.nyc.mn" : "http://localhost:3000";
+const homeURL = "https://byerun.pages.dev/"; // 主页
 const noticeURL = "https://where.nyc.mn/unirun/notice"; // 公告通知
-const githubURL = "https://github.com/yanyaoli/byerun-web" // 开源地址
+const githubURL = "https://github.com/yanyaoli/byerun-web"; // 开源地址
 
 export default {
   baseURL,

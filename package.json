@@ -10,7 +10,9 @@
     "api": "node api/index.js",
     "dev": "concurrently \"npm run api\" \"npm run serve\"",
     "lint": "eslint --ext .js,.vue src",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "start": "NODE_ENV=development npm run dev",
+    "build:prod": "NODE_ENV=production npm run build"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
