@@ -4,13 +4,13 @@
       <h1>Byerun</h1>
     </el-header>
     <el-main>
-      <el-form v-if="showLoginForm">
-        <el-form-item>
-          <el-input v-model="phone" placeholder="请输入手机号"></el-input>
+      <el-form v-if="showLoginForm" :model="loginForm" :rules="rules" ref="loginFormRef">
+        <el-form-item prop="phone">
+          <el-input v-model="loginForm.phone" placeholder="请输入手机号" clearable />
         </el-form-item>
-        <el-form-item>
+        <el-form-item prop="password">
           <el-input
-            v-model="password"
+            v-model="loginForm.password"
             type="password"
             placeholder="请输入密码"
             show-password
@@ -49,10 +49,10 @@
           >返回登录</el-button
         >
       </el-form>
-      <el-form v-else>
-        <el-form-item>
+      <el-form v-else :model="resetForm" :rules="rules" ref="resetFormRef">
+        <el-form-item prop="phoneNum">
           <el-input
-            v-model="phoneNum"
+            v-model="resetForm.phoneNum"
             placeholder="请输入手机号"
             class="phone-input"
           ></el-input>
@@ -66,12 +66,12 @@
             >{{ codeText }}</el-button
           >
         </el-form-item>
-        <el-form-item>
-          <el-input v-model="smsCode" placeholder="请输入验证码"></el-input>
+        <el-form-item prop="smsCode">
+          <el-input v-model="resetForm.smsCode" placeholder="请输入验证码"></el-input>
         </el-form-item>
-        <el-form-item>
+        <el-form-item prop="newPassword">
           <el-input
-            v-model="newPassword"
+            v-model="resetForm.newPassword"
             type="password"
             placeholder="请输入新密码"
             show-password
@@ -116,15 +116,54 @@ const router = useRouter();
 
 const showLoginForm = ref(true);
 const showDisclaimerForm = ref(false);
-const phone = ref("");
-const password = ref("");
-const phoneNum = ref("");
-const newPassword = ref("");
-const smsCode = ref("");
+
+const loginForm = ref({
+  phone: '',
+  password: ''
+});
+
+const resetForm = ref({
+  phoneNum: '',
+  newPassword: '',
+  smsCode: ''
+});
 
 const { LoginLoading, isLoggedIn, fetchLogin, LoginState } = useLogin();
 const { SmsLoading, codeText, codeDisabled, fetchSendSMS } = useSms();
 const { ResetLoading, fetchResetPassword } = useResetPassword();
+
+// 规则
+const rules = {
+  phone: [
+    { required: true, message: "请输入正确的手机号码", trigger: "blur" },
+    {
+      validator: (rule, value, callback) => {
+        if (/^1\d{10}$/.test(value) === false) {
+          callback(new Error("手机号格式错误"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+  phoneNum: [
+    { required: true, message: "请输入正确的手机号码", trigger: "blur" },
+    {
+      validator: (rule, value, callback) => {
+        if (/^1\d{10}$/.test(value) === false) {
+          callback(new Error("手机号格式错误"));
+        } else {
+          callback();
+        }
+      },
+      trigger: "blur"
+    }
+  ],
+  smsCode: [{ required: true, message: "请输入验证码", trigger: "blur" }],
+  newPassword: [{ required: true, message: "请输入新密码", trigger: "blur" }]
+};
 
 // 显示免责声明表单
 const showDisclaimer = () => {
@@ -132,8 +171,8 @@ const showDisclaimer = () => {
   showDisclaimerForm.value = true;
 };
 
-const PhoneValid = () => {
-  if (!/^1[3-9]\d{9}$/.test(phone.value || phoneNum.value)) {
+const PhoneValid = (phone) => {
+  if (!/^1[3-9]\d{9}$/.test(phone)) {
     ElMessage.error("请输入正确的手机号");
     return false;
   } else {
@@ -142,30 +181,54 @@ const PhoneValid = () => {
 };
 
 const LoginHandler = () => {
-  if (PhoneValid()) {
-    fetchLogin(phone.value, password.value);
-  }
+  const loginFormRef = ref(null);
+  loginFormRef.value.validate((valid) => {
+    if (valid) {
+      if (PhoneValid(loginForm.value.phone)) {
+        fetchLogin(loginForm.value.phone, loginForm.value.password);
+      }
+    } else {
+      console.log('error submit!!');
+      return false;
+    }
+  });
 };
 
 const SendSMSHandler = () => {
-  if (PhoneValid()) {
-    fetchSendSMS(phoneNum.value);
-  }
+  const resetFormRef = ref(null);
+  resetFormRef.value.validateField('phoneNum', (valid) => {
+    if (valid) {
+      if (PhoneValid(resetForm.value.phoneNum)) {
+        fetchSendSMS(resetForm.value.phoneNum);
+      }
+    } else {
+      console.log('error submit!!');
+      return false;
+    }
+  });
 };
 
 const ResetPasswordHandler = async () => {
-  if (PhoneValid()) {
-    const success = await fetchResetPassword(
-      phoneNum.value,
-      newPassword.value,
-      smsCode.value
-    );
-    if (success) {
-      phone.value = phoneNum.value;
-      password.value = newPassword.value;
-      showLoginForm.value = true;
+  const resetFormRef = ref(null);
+  resetFormRef.value.validate(async (valid) => {
+    if (valid) {
+      if (PhoneValid(resetForm.value.phoneNum)) {
+        const success = await fetchResetPassword(
+          resetForm.value.phoneNum,
+          resetForm.value.newPassword,
+          resetForm.value.smsCode
+        );
+        if (success) {
+          loginForm.value.phone = resetForm.value.phoneNum;
+          loginForm.value.password = resetForm.value.newPassword;
+          showLoginForm.value = true;
+        }
+      }
+    } else {
+      console.log('error submit!!');
+      return false;
     }
-  }
+  });
 };
 
 const goToHome = () => {

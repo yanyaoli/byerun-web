@@ -38,10 +38,7 @@
   display: inline-block;
 }
 
-.footer-links {
-  display: flex;
-  justify-content: space-between;
-}
+
 
 .phone-input {
   position: relative;

@@ -1,23 +1,50 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router';
 
-const Login = () => import(/* webpackChunkName: "login" */ "../views/Login.vue");
-const DashBoard = () => import(/* webpackChunkName: "dashboard" */ "../views/DashBoard.vue");
-const Club = () => import(/* webpackChunkName: "club" */ "../views/Club.vue");
-const Home = () => import(/* webpackChunkName: "home" */ "../views/Home.vue");
-const RunRecord = () => import(/* webpackChunkName: "runrecord" */ "../views/RunRecord.vue");
+const routes = [
+  {
+    name: 'home',
+    path: '/home',
+    component: () => import('@/views/Home.vue'),
+  },
+  {
+    name: 'login',
+    path: '/login',
+    component: () => import('@/views/LoginViews/Login.vue'),
+  },
+  {
+    name: 'dashboard',
+    path: '/dashboard',
+    component: () => import('@/views/DashBoard.vue'),
+  },
+  {
+    name: 'runrecord',
+    path: '/run/record',
+    component: () => import('@/views/RunRecord.vue'),
+  },
+  {
+    name: 'club',
+    path: '/club',
+    component: () => import('@/views/Club.vue'),
+  },
+  {
+    name: 'myclub',
+    path: '/myclub',
+    component: () => import('@/views/Club.vue'),
+  },
+  {
+    name: 'notfound',
+    path: '/:pathMatch(.*)*',
+    component: () => import('@/views/Home.vue'),
+  },
+  {
+    path: '/',
+    redirect: '/home',
+  },
+];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes: [
-    { path: "/home", component: Home },
-    { path: "/login", component: Login },
-    { path: "/dashboard", component: DashBoard },
-    { path: "/run/record", component: RunRecord },
-    { path: "/club", component: Club },
-    { path: "/myclub", component: Club },
-    { path: "/:pathMatch(.*)*", component: Home },
-    { path: "/", redirect: "/home" },
-  ],
+  routes,
 });
 
 export default router;

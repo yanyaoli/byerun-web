@@ -1,8 +1,7 @@
 // const baseURL = process.env.VUE_APP_BASE_API || '';
-const baseURL = "https://worker.run.where.nyc.mn"; // Worker代理,自定义域名解除污染
+const baseURL = "http://localhost:3000";
 const homeURL = "https://byerun.pages.dev/" // 主页
 const noticeURL = "https://where.nyc.mn/unirun/notice"; // 公告通知
-const downloadURL = "https://byerundownload.pages.dev/" // 下载页
 const githubURL = "https://github.com/yanyaoli/byerun-web" // 开源地址
 
 export default {
@@ -10,7 +9,6 @@ export default {
   homeURL,
   noticeURL,
   githubURL,
-  downloadURL,
   // 登录
   login: `${baseURL}/auth/login/password`,
   // 用户信息查询

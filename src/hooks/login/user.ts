@@ -2,7 +2,6 @@
 import { defineStore } from "pinia";
 import { ElMessage } from "element-plus";
 import { login } from "@/apis/login";
-import router from "@/routers";
 
 interface User {
   oauthToken: {
@@ -54,7 +53,6 @@ export const useUserStore = defineStore("user", {
       this.token = null;
       this.isLoggedIn = false;
       ElMessage.info("账号已退出");
-      router.push("/login");
     },
     checkAuth() {
       if (this.token !== null) {

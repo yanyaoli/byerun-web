@@ -1,7 +1,6 @@
 import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import { login } from "@/apis/login";
-import { useRouter } from "vue-router";
 
 interface LoginResponse {
   data: {
@@ -16,7 +15,6 @@ interface LoginResponse {
 
 export default function useLogin() {
   const LoginLoading = ref(false);
-  const router = useRouter();
   const isLoggedIn = ref(false);
   const fetchLogin = async (phone: number, password: string) => {
     LoginLoading.value = true;
@@ -33,12 +31,14 @@ export default function useLogin() {
         localStorage.setItem("userData", JSON.stringify(userData));
         ElMessage.success("登录成功");
         isLoggedIn.value = true;
-        router.push("/user");
+        return true;
       } else {
         ElMessage.error("登录失败: " + response.data.msg);
+        return false;
       }
     } catch (error: any) {
 		ElMessage.error("登录失败: " + error.message);
+        return false;
     } finally {
       LoginLoading.value = false;
     }

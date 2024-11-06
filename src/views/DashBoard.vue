@@ -364,7 +364,7 @@ onMounted(async () => {
 // 退出账号
 const logout = () => {
   localStorage.clear();
-  router.push("/home");
+  router.push("/login");
   ElMessage.info("账号已退出");
 };
 
