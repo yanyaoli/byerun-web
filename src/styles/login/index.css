@@ -10,9 +10,10 @@
 }
 
 .el-header {
-  /* height: auto; */
-  justify-content: space-between;
+  /* height: 5px; */
   width: 100%;
+  padding: 20px;
+  justify-content: space-between;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -38,7 +39,7 @@
 
 .sms-button {
   position: absolute;
-  width: 100px;
+  max-width: 100px;
   right: 0;
   top: 0;
   border-radius: 0;

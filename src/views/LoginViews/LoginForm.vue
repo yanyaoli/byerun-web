@@ -124,14 +124,15 @@ const goToHome = () => {
 }
 .disclaimer-container {
   text-align: center;
-  margin-top: -10px;
+  margin-top: -20px;
+  margin-bottom: 20px;
 }
 
 .disclaimer-link {
-  font-size: 12px;
+  font-size: 10px;
   color: #999;
 }
 .disclaimer-text {
-  color: #409eff; /* 自定义颜色 */
+  color: #409eff;
 }
 </style>
