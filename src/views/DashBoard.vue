@@ -253,7 +253,11 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getSchoolMaps } from "@/static/maps/map";
 
-import { useUser, useActivity, useRunInfo } from "@/hooks/dashboard/index";
+import {
+  useUser,
+  useActivity,
+  useRunInfo,
+} from "@/hooks/dashboard/index";
 
 import { useRunStandard, useSubmitActivity } from "@/hooks/run/index";
 
@@ -261,14 +265,7 @@ const { user, fetchUser } = useUser();
 const { activity, fetchActivity } = useActivity();
 const { runInfo, fetchRunInfo } = useRunInfo();
 const { isSubmitting, submit } = useSubmitActivity();
-const {
-  runDistanceMin,
-  runDistanceMax,
-  runTimeMin,
-  runTimeMax,
-  fetchRunStandard,
-  setRunStandardValues,
-} = useRunStandard();
+const { runDistanceMin, runDistanceMax, runTimeMin, runTimeMax, fetchRunStandard, setRunStandardValues } = useRunStandard();
 const userData = JSON.parse(localStorage.getItem("userData")) || null;
 const token = localStorage.getItem("token") || null;
 
@@ -298,20 +295,22 @@ const getActivity = async () => {
 
 // 获取跑步信息
 const getRunInfo = async () => {
-  await fetchRunInfo(user.value.userId);
+  await fetchRunInfo(user.value.userId, user.value.schoolId);
 };
 
+// 延迟函数
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 // 刷新
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const isRefreshing = ref(false);
 const refresh = async () => {
   isRefreshing.value = true;
   try {
     await getActivity();
-    await delay(1000);
+    await delay(1000); // 请求间隔 1 秒
     await getRunInfo();
   } catch (error) {
-    await delay(3000);
+    await delay(3000); // 请求失败后等待 3 秒再重试
     await refresh();
   } finally {
     isRefreshing.value = false;
@@ -346,17 +345,16 @@ const goClub = () => {
 
 // 随机填充
 const randomizeInputs = () => {
-  runDistance.value =
-    Math.floor(
-      Math.random() * (runDistanceMax.value - runDistanceMin.value + 1)
-    ) + runDistanceMin.value;
-  runTime.value =
-    Math.floor(Math.random() * (runTimeMax.value - runTimeMin.value + 1)) +
-    runTimeMin.value;
-  schoolChoice.value =
-    availableSchools.value[
-      Math.floor(Math.random() * availableSchools.value.length)
-    ].value;
+  let distance, time, speed;
+  do {
+    distance = Math.floor(Math.random() * (runDistanceMax.value - runDistanceMin.value + 1)) + runDistanceMin.value;
+    time = Math.floor(Math.random() * (runTimeMax.value - runTimeMin.value + 1)) + runTimeMin.value;
+    speed = time / (distance / 1000); // 计算配速
+  } while (speed <= 6); // 确保配速大于6分钟每公里
+
+  runDistance.value = distance;
+  runTime.value = time;
+  schoolChoice.value = availableSchools.value[Math.floor(Math.random() * availableSchools.value.length)].value;
 };
 
 // 切换用户
@@ -371,20 +369,16 @@ onMounted(async () => {
     const result = await fetchUser();
     if (result) {
       LoginState.value = false;
-      const storedRunStandardData = JSON.parse(
-        localStorage.getItem("runStandardData")
-      );
-      if (storedRunStandardData) {
+      const runStandardData = localStorage.getItem('runStandardData');
+      if (runStandardData) {
         setRunStandardValues();
       } else {
         await fetchRunStandard(user.value.schoolId); // 请求获取跑步标准信息
       }
 
       // 从 localStorage 获取 activityData 和 runInfoData
-      const storedActivityData = JSON.parse(
-        localStorage.getItem("activityData")
-      );
-      const storedRunInfoData = JSON.parse(localStorage.getItem("runInfoData"));
+      const storedActivityData = JSON.parse(localStorage.getItem('activityData'));
+      const storedRunInfoData = JSON.parse(localStorage.getItem('runInfoData'));
 
       if (storedActivityData) {
         activity.value = storedActivityData;
