@@ -32,14 +32,6 @@
   border-radius: 20px;
 }
 
-.el-link {
-  margin-right: 8px;
-  text-align: center;
-  display: inline-block;
-}
-
-
-
 .phone-input {
   position: relative;
 }
@@ -52,19 +44,3 @@
   border-radius: 0;
 }
 
-.DisclaimerForm {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  margin: auto;
-}
-
-.DisclaimerForm .el-space {
-  padding: 20px;
-}
-.DisclaimerForm .el-space .el-text {
-  text-align: center !important;
-  line-height: 1.5 !important;
-}

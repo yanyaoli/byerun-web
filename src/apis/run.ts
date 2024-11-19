@@ -11,7 +11,7 @@ interface ActivityData {
   semesterYear: number;
 }
 
-// 获取学期年份
+// 获取跑步标准信息
 export const getRunStandard = (schoolId: number) =>
   request.get(address.runStandard, {
     params: {

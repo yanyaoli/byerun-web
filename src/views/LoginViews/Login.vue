@@ -1,13 +1,12 @@
 <template>
   <el-container>
-    <el-header>
-      <h1>Byerun</h1>
-    </el-header>
-    <el-main>
-      <Disclaimer v-if="showDisclaimerForm" @closeDisclaimer="closeDisclaimer" />
-      <LoginForm v-else-if="showLoginForm" @showDisclaimer="showDisclaimer" @showResetPassword="showResetPassword" />
-      <ResetPasswordForm v-else @backToLogin="backToLogin" />
-    </el-main>
+    <Disclaimer v-if="showDisclaimerForm" @closeDisclaimer="closeDisclaimer" />
+    <LoginForm
+      v-else-if="showLoginForm"
+      @showDisclaimer="showDisclaimer"
+      @showResetPassword="showResetPassword"
+    />
+    <ResetPasswordForm v-else @backToLogin="backToLogin" />
   </el-container>
 </template>
 

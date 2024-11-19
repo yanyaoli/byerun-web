@@ -7,8 +7,7 @@
             <Loading />
           </el-icon>
         </template>
-        <template #extra>
-        </template>
+        <template #extra> </template>
       </el-result>
     </el-main>
     <el-main v-else>
@@ -21,8 +20,18 @@
             border
           >
             <template #title>
-              <el-icon :style="{ color: record.defeatedInfo === '有效跑步' ? 'blue' : 'red' }">
-                <component :is="record.defeatedInfo === '有效跑步' ? SuccessFilled : WarningFilled" />
+              <el-icon
+                :style="{
+                  color: record.defeatedInfo === '有效跑步' ? 'blue' : 'red',
+                }"
+              >
+                <component
+                  :is="
+                    record.defeatedInfo === '有效跑步'
+                      ? SuccessFilled
+                      : WarningFilled
+                  "
+                />
               </el-icon>
               {{ record.defeatedInfo }} - {{ record.createTime }}
             </template>
@@ -44,12 +53,11 @@
         </div>
       </div>
       <el-result
-        v-if="records.length === 0"
+        v-if="!isLoading && records.length === 0"
         icon="success"
         sub-title="暂无跑步记录"
       >
-        <template #extra>
-        </template>
+        <template #extra> </template>
       </el-result>
     </el-main>
     <el-button @click="goBack">返回</el-button>
@@ -61,8 +69,8 @@ import "@/styles/run/record.css";
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
-import useRunRecord from '../hooks/run/useRunRecord';
-import { SuccessFilled, WarningFilled, Loading } from '@element-plus/icons-vue';
+import useRunRecord from "../hooks/run/useRunRecord";
+import { SuccessFilled, WarningFilled, Loading } from "@element-plus/icons-vue";
 
 const { runRecord, fetchRunRecord } = useRunRecord();
 
@@ -72,18 +80,29 @@ const isLoading = ref(false);
 const pageNum = ref(1);
 const pageSize = ref(15);
 const router = useRouter();
+const noMoreData = ref(false);
 
 const goBack = () => {
   window.history.go(-1);
 };
 
 const getRunRecords = async () => {
+  if (noMoreData.value) return;
+
   isLoading.value = true;
-  await fetchRunRecord(pageNum.value, pageSize.value);
+  const response = await fetchRunRecord(pageNum.value, pageSize.value);
   isLoading.value = false;
-  records.value = [...records.value, ...runRecord.value];
-  if (records.value.length === 0) {
-    ElMessage.success("暂无跑步记录");
+
+  if (response && response.code === 10000) {
+    if (response.response.length < pageSize.value) {
+      noMoreData.value = true;
+    }
+    records.value = [...records.value, ...response.response];
+  } else {
+    noMoreData.value = true;
+    if (records.value.length === 0) {
+      ElMessage.success("暂无跑步记录");
+    }
   }
 };
 
@@ -95,7 +114,7 @@ const handleScroll = (event) => {
 };
 
 const loadMore = () => {
-  if (!isLoading.value) {
+  if (!isLoading.value && !noMoreData.value) {
     pageNum.value += 1;
     getRunRecords();
   }
@@ -105,7 +124,7 @@ const formatPace = (runTime, runDistance) => {
   const pace = runTime / (runDistance / 1000);
   const minutes = Math.floor(pace);
   const seconds = Math.round((pace - minutes) * 60);
-  return `${minutes}'${seconds < 10 ? '0' : ''}${seconds}''`;
+  return `${minutes}'${seconds < 10 ? "0" : ""}${seconds}''`;
 };
 
 onMounted(() => {
@@ -117,4 +136,18 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.scroll-container {
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.loading-indicator {
+  text-align: center;
+  margin: 20px 0;
+}
+.el-main {
+  min-height: calc(
+    100vh - 100px
+  );
+}
+</style>

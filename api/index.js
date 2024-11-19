@@ -24,7 +24,9 @@ const logger = createLogger({
 // 使用 morgan 中间件记录 HTTP 请求日志
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
-app.use(express.json());
+// 设置请求主体大小限制
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {

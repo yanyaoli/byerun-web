@@ -41,6 +41,7 @@ export default function useActivity() {
           club_completion_percentage: club_completion_percentage,
           running_completion_percentage: running_completion_percentage,
         };
+        localStorage.setItem('activityData', JSON.stringify(activity.value));
       } else {
         ElMessage.error("获取活动信息失败: " + response.data.msg);
       }

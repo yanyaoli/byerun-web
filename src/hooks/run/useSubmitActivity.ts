@@ -1,5 +1,6 @@
+// hooks/run/useSubmitActivity.ts
 import { ref } from "vue";
-import { getRunStandard, submitActivityInfo } from "@/apis/run";
+import { submitActivityInfo } from "@/apis/run";
 import { ElMessage } from "element-plus";
 
 interface submitData {
@@ -21,12 +22,12 @@ export default function useSubmitActivity() {
   ) => {
     isSubmitting.value = true;
     try {
-      const response = await getRunStandard(schoolId);
-      if (response.data.code !== 10000) {
-        ElMessage.error("获取学年学期失败: " + response.data.msg);
-        return false;
-      }
-      const semesterYear = response.data.response.semesterYear;
+        const runStandardData = JSON.parse(localStorage.getItem('runStandardData') || '{}');
+        if (!runStandardData.semesterYear) {
+          ElMessage.error("错误: 缺少学期年份信息");
+          return false;
+        }
+      const semesterYear = runStandardData.semesterYear;
       const data: submitData = {
         runDistance,
         runTime,

@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { getRunStandard, getRunInfo } from "@/apis/run";
+import { getRunInfo } from "@/apis/run";
 import { ElMessage } from "element-plus";
 
 interface RunInfo {
@@ -24,21 +24,20 @@ interface RunInfo {
 
 export default function useRunInfo() {
   const runInfo = ref<RunInfo | null>(null);
-
   const adjustCompletionPercentage = (percentage: number): number => {
     return percentage > 100 ? 100 : percentage;
   };
 
-  const fetchRunInfo = async (userId: number, schoolId: number) => {
+  const fetchRunInfo = async (userId: number) => {
     runInfo.value = null;
     try {
-      const runStandardInfo = await getRunStandard(schoolId);
-      if (runStandardInfo.data.code !== 10000) {
-        ElMessage.error("获取标准信息失败: " + runStandardInfo.data.msg);
+      const runStandardData = JSON.parse(localStorage.getItem('runStandardData') || '{}');
+      if (!runStandardData.semesterYear) {
+        ElMessage.error("错误: 缺少学期年份信息");
         return false;
       }
-      const yearSemester = runStandardInfo.data.response.semesterYear;
-      const needRunDistance = runStandardInfo.data.response.girlAllRunDistance;
+      const yearSemester = runStandardData.semesterYear;
+      const needRunDistance = runStandardData.girlAllRunDistance;
 
       const res = await getRunInfo(userId, yearSemester);
       if (res.data.code === 10000) {
@@ -54,6 +53,7 @@ export default function useRunInfo() {
           runDistanceCompletionRate,
           runDistanceCompletionPercentage,
         };
+        localStorage.setItem('runInfoData', JSON.stringify(runInfo.value));
       } else {
         ElMessage.error(res.data.msg);
       }
