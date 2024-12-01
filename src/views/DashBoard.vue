@@ -326,6 +326,11 @@ const submitActivityData = async () => {
   const schoolId = userData.schoolId;
   const userId = userData.userId;
   const mapChoice = schoolChoice.value; // 获取对应的地图编号
+  const pace = runTime.value / (runDistance.value / 1000); // 计算配速
+  if (pace <= 6) {
+    ElMessage.error("配速须大于6分钟每公里，请检查后重新提交");
+    return;
+  }
   const result = await submit(
     runDistance.value,
     runTime.value,
@@ -345,12 +350,12 @@ const goClub = () => {
 
 // 随机填充
 const randomizeInputs = () => {
-  let distance, time, speed;
+  let distance, time, pace;
   do {
     distance = Math.floor(Math.random() * (runDistanceMax.value - runDistanceMin.value + 1)) + runDistanceMin.value;
     time = Math.floor(Math.random() * (runTimeMax.value - runTimeMin.value + 1)) + runTimeMin.value;
-    speed = time / (distance / 1000); // 计算配速
-  } while (speed <= 6); // 确保配速大于6分钟每公里
+    pace = time / (distance / 1000); // 计算配速
+  } while (pace <= 6); // 确保配速大于6分钟每公里
 
   runDistance.value = distance;
   runTime.value = time;
@@ -364,7 +369,7 @@ const switchUser = () => {
 
 onMounted(async () => {
   if (!userData || !token) {
-    router.push("/home");
+    router.push("/login");
   } else {
     const result = await fetchUser();
     if (result) {
@@ -400,7 +405,11 @@ onMounted(async () => {
 
 // 退出账号
 const logout = () => {
+//   const accounts = localStorage.getItem("accounts");
   localStorage.clear();
+//   if (accounts) {
+//     localStorage.setItem("accounts", accounts);
+//   }
   router.push("/login");
   ElMessage.info("账号已退出");
 };
