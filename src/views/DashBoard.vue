@@ -85,10 +85,10 @@
 
     <el-main v-if="showMainBoard">
       <div v-if="user" class="stuInfo">
-        <h1 @click="toggleMask" :class="{ masked: !masked }">
+        <h1>
           {{ user.studentName }}
         </h1>
-        <p @click="toggleMask" :class="{ masked: !masked }">
+        <p>
           {{ user.registerCode }}
         </p>
       </div>
@@ -192,9 +192,9 @@
             for="runDistance"
             id="distance"
             v-model="runDistance"
-            :min="runDistanceMin"
-            :max="runDistanceMax"
-            :step="500"
+            :min="distanceMin"
+            :max="distanceMax"
+            :step="randomDistanceStep"
             style="width: 200px"
             placeholder="跑步里程（米）"
           ></el-input-number>
@@ -204,9 +204,9 @@
             for="runTime"
             id="time"
             v-model="runTime"
-            :min="runTimeMin"
-            :max="runTimeMax"
-            :step="10"
+            :min="timeMin"
+            :max="timeMax"
+            :step="randomTimeStep"
             style="width: 200px"
             placeholder="跑步时长（分钟）"
           ></el-input-number>
@@ -227,7 +227,7 @@
         </div>
         <el-button @click="randomizeInputs" plain class="icon-button">
           <el-icon class="is-loading">
-            <RefreshRight />
+            <Refresh />
           </el-icon>
         </el-button>
       </div>
@@ -253,11 +253,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { getSchoolMaps } from "@/static/maps/map";
 
-import {
-  useUser,
-  useActivity,
-  useRunInfo,
-} from "@/hooks/dashboard/index";
+import { useUser, useActivity, useRunInfo } from "@/hooks/dashboard/index";
 
 import { useRunStandard, useSubmitActivity } from "@/hooks/run/index";
 
@@ -265,12 +261,18 @@ const { user, fetchUser } = useUser();
 const { activity, fetchActivity } = useActivity();
 const { runInfo, fetchRunInfo } = useRunInfo();
 const { isSubmitting, submit } = useSubmitActivity();
-const { runDistanceMin, runDistanceMax, runTimeMin, runTimeMax, fetchRunStandard, setRunStandardValues } = useRunStandard();
+const {
+  runDistanceMin,
+  runDistanceMax,
+  runTimeMin,
+  runTimeMax,
+  fetchRunStandard,
+  setRunStandardValues,
+} = useRunStandard();
 const userData = JSON.parse(localStorage.getItem("userData")) || null;
 const token = localStorage.getItem("token") || null;
 
 const showMainBoard = ref(true);
-const masked = ref(true);
 
 const goHome = () => {
   router.push("/");
@@ -287,6 +289,15 @@ const schoolChoice = ref(null);
 const LoginState = ref(true);
 
 const availableSchools = ref([]);
+const randomDistanceStep = ref(500);
+const randomTimeStep = ref(10);
+// 随机生成 step 值
+randomDistanceStep.value = Math.floor(Math.random() * 133) + 50;
+randomTimeStep.value = Math.floor(Math.random() * 13) + 5;
+const distanceMin = runDistanceMin.value;
+const distanceMax = runDistanceMax.value + 2333;
+const timeMin = runTimeMin.value;
+const timeMax = runTimeMax.value + 23;
 
 // 获取活动信息
 const getActivity = async () => {
@@ -299,7 +310,7 @@ const getRunInfo = async () => {
 };
 
 // 延迟函数
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 刷新
 const isRefreshing = ref(false);
@@ -352,14 +363,17 @@ const goClub = () => {
 const randomizeInputs = () => {
   let distance, time, pace;
   do {
-    distance = Math.floor(Math.random() * (runDistanceMax.value - runDistanceMin.value + 1)) + runDistanceMin.value;
-    time = Math.floor(Math.random() * (runTimeMax.value - runTimeMin.value + 1)) + runTimeMin.value;
+    distance = Math.random() * (distanceMax - distanceMin) + distanceMin;
+    time = Math.random() * (timeMax - timeMin) + timeMin;
     pace = time / (distance / 1000); // 计算配速
   } while (pace <= 6); // 确保配速大于6分钟每公里
 
-  runDistance.value = distance;
-  runTime.value = time;
-  schoolChoice.value = availableSchools.value[Math.floor(Math.random() * availableSchools.value.length)].value;
+  runDistance.value = Math.round(distance);
+  runTime.value = Math.round(time);
+  schoolChoice.value =
+    availableSchools.value[
+      Math.floor(Math.random() * availableSchools.value.length)
+    ].value;
 };
 
 // 切换用户
@@ -374,7 +388,7 @@ onMounted(async () => {
     const result = await fetchUser();
     if (result) {
       LoginState.value = false;
-      const runStandardData = localStorage.getItem('runStandardData');
+      const runStandardData = localStorage.getItem("runStandardData");
       if (runStandardData) {
         setRunStandardValues();
       } else {
@@ -382,8 +396,10 @@ onMounted(async () => {
       }
 
       // 从 localStorage 获取 activityData 和 runInfoData
-      const storedActivityData = JSON.parse(localStorage.getItem('activityData'));
-      const storedRunInfoData = JSON.parse(localStorage.getItem('runInfoData'));
+      const storedActivityData = JSON.parse(
+        localStorage.getItem("activityData")
+      );
+      const storedRunInfoData = JSON.parse(localStorage.getItem("runInfoData"));
 
       if (storedActivityData) {
         activity.value = storedActivityData;
@@ -405,18 +421,13 @@ onMounted(async () => {
 
 // 退出账号
 const logout = () => {
-//   const accounts = localStorage.getItem("accounts");
+  //   const accounts = localStorage.getItem("accounts");
   localStorage.clear();
-//   if (accounts) {
-//     localStorage.setItem("accounts", accounts);
-//   }
+  //   if (accounts) {
+  //     localStorage.setItem("accounts", accounts);
+  //   }
   router.push("/login");
   ElMessage.info("账号已退出");
-};
-
-// 切换蒙版显示
-const toggleMask = () => {
-  masked.value = !masked.value;
 };
 </script>
 

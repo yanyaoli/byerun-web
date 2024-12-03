@@ -81,16 +81,6 @@
   color: red;
 }
 
-.masked {
-  filter: blur(5px);
-  cursor: pointer;
-}
-
-.masked:hover {
-  filter: blur(2px);
-}
-
-
 .el-divider {
     margin: 18px auto;
 }
