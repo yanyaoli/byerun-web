@@ -44,6 +44,7 @@ export default function useRunStandard() {
   const runTimeMin = ref(30);
   const runTimeMax = ref(100);
   const runStandardData = ref<RunStandard_Success['response'] | null>(null);
+  const semesterDateEnd = ref('');
 
 //   获取跑步标准信息
   const fetchRunStandard = async (schoolId: number) => {
@@ -66,21 +67,32 @@ export default function useRunStandard() {
     const runStandard = JSON.parse(localStorage.getItem('runStandardData') || '{}');
     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
     const gender = userData.gender;
+    const semesterYear = runStandard.semesterYear;
+    const isSecondSemester = semesterYear && semesterYear.slice(-1) === '2';
+
     if (gender === '1') {
       runDistanceMin.value = runStandard.boyOnceDistanceMin;
       runDistanceMax.value = runStandard.boyOnceDistanceMax;
       runTimeMin.value = runStandard.boyOnceTimeMin;
       runTimeMax.value = runStandard.boyOnceTimeMax;
-      console.log("使用男生标准");
     } else {
       runDistanceMin.value = runStandard.girlOnceDistanceMin;
       runDistanceMax.value = runStandard.girlOnceDistanceMax;
       runTimeMin.value = runStandard.girlOnceTimeMin;
       runTimeMax.value = runStandard.girlOnceTimeMax;
-      console.log("使用女生标准");
     }
-    console.log(`跑步里程区间: ${runDistanceMin.value} - ${runDistanceMax.value}`);
-    console.log(`跑步时长区间: ${runTimeMin.value} - ${runTimeMax.value}`);
+
+    const semesterDateEnd = isSecondSemester ? runStandard.secondSemesterDateEnd : runStandard.firstSemesterDateEnd;
+    ElMessage({
+        showClose: true,
+        center: true,
+        duration: 5000,
+        type: "warning",
+        message: `本学期校园跑截至日期：${semesterDateEnd}`,
+        grouping: true
+    }
+    )
+
   };
 
   return {
@@ -89,6 +101,7 @@ export default function useRunStandard() {
     runTimeMin,
     runTimeMax,
     runStandardData,
+    semesterDateEnd,
     fetchRunStandard,
     setRunStandardValues,
   };
