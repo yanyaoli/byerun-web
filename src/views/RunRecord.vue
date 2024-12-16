@@ -33,7 +33,7 @@
                   "
                 />
               </el-icon>
-              {{ record.defeatedInfo }} - {{ record.createTime }}
+              {{ record.defeatedInfo }} - {{ record.recordDate }}
             </template>
             <el-descriptions-item label="跑步时长">
               {{ record.runTime }} 分钟
@@ -43,6 +43,9 @@
             </el-descriptions-item>
             <el-descriptions-item label="平均配速">
               {{ formatPace(record.runTime, record.runDistance) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="记录时间">
+              {{ record.createTime }}
             </el-descriptions-item>
           </el-descriptions>
         </div>
@@ -65,7 +68,6 @@
 </template>
 
 <script setup>
-import "@/styles/run/record.css";
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
@@ -137,17 +139,45 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.el-container {
+  max-width: 500px;
+  max-height: 100vh;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5px;
+  margin: 0 auto;
+}
+
+.el-main {
+  width: 100%;
+  max-width: 100%;
+}
+
+.el-descriptions {
+  margin-top: 20px;
+}
+
+.el-main .el-descriptions-item {
+  word-break: break-word;
+}
+
 .scroll-container {
-  max-height: 80vh;
+  height: 70vh;
   overflow-y: auto;
 }
+
+.scroll-container::-webkit-scrollbar {
+  width: 0;
+}
+
 .loading-indicator {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
   text-align: center;
   margin: 20px 0;
-}
-.el-main {
-  min-height: calc(
-    100vh - 100px
-  );
 }
 </style>

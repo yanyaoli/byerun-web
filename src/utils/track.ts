@@ -1,5 +1,5 @@
 import { getDistance } from "geolib";
-import { getMapData } from "@/static/maps/map";
+import { getMapData } from "@/utils/maps/map";
 
 class Location {
   id: number;

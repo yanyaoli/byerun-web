@@ -4,9 +4,18 @@
       <h1>Byerun</h1>
     </el-header>
     <el-main>
-      <el-form v-if="showLoginForm" :model="loginForm" :rules="rules" ref="loginFormRef">
+      <el-form
+        v-if="showLoginForm"
+        :model="loginForm"
+        :rules="rules"
+        ref="loginFormRef"
+      >
         <el-form-item prop="phone">
-          <el-input v-model="loginForm.phone" placeholder="请输入手机号" clearable />
+          <el-input
+            v-model="loginForm.phone"
+            placeholder="请输入手机号"
+            clearable
+          />
         </el-form-item>
         <el-form-item prop="password">
           <el-input
@@ -35,8 +44,20 @@
           <el-text>使用本工具所产生的任何后果，用户需自行承担。</el-text>
           <el-text>本工具仅供学习交流使用，不得用于任何商业用途。</el-text>
           <el-link type="primary" :href="githubURL" target="_blank">
-            <svg class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2307" width="20" height="20">
-                <path d="M64 512c0 195.2 124.8 361.6 300.8 422.4 22.4 6.4 19.2-9.6 19.2-22.4v-76.8c-134.4 16-140.8-73.6-150.4-89.6-19.2-32-60.8-38.4-48-54.4 32-16 64 3.2 99.2 57.6 25.6 38.4 76.8 32 105.6 25.6 6.4-22.4 19.2-44.8 35.2-60.8-144-22.4-201.6-108.8-201.6-211.2 0-48 16-96 48-131.2-22.4-60.8 0-115.2 3.2-121.6 57.6-6.4 118.4 41.6 124.8 44.8 32-9.6 70.4-12.8 112-12.8 41.6 0 80 6.4 112 12.8 12.8-9.6 67.2-48 121.6-44.8 3.2 6.4 25.6 57.6 6.4 118.4 32 38.4 48 83.2 48 131.2 0 102.4-57.6 188.8-201.6 214.4 22.4 22.4 38.4 54.4 38.4 92.8v112c0 9.6 0 19.2 16 19.2C832 876.8 960 710.4 960 512c0-246.4-201.6-448-448-448S64 265.6 64 512z" fill="#040000" p-id="2308"></path>
+            <svg
+              class="icon"
+              viewBox="0 0 1024 1024"
+              version="1.1"
+              xmlns="http://www.w3.org/2000/svg"
+              p-id="2307"
+              width="20"
+              height="20"
+            >
+              <path
+                d="M64 512c0 195.2 124.8 361.6 300.8 422.4 22.4 6.4 19.2-9.6 19.2-22.4v-76.8c-134.4 16-140.8-73.6-150.4-89.6-19.2-32-60.8-38.4-48-54.4 32-16 64 3.2 99.2 57.6 25.6 38.4 76.8 32 105.6 25.6 6.4-22.4 19.2-44.8 35.2-60.8-144-22.4-201.6-108.8-201.6-211.2 0-48 16-96 48-131.2-22.4-60.8 0-115.2 3.2-121.6 57.6-6.4 118.4 41.6 124.8 44.8 32-9.6 70.4-12.8 112-12.8 41.6 0 80 6.4 112 12.8 12.8-9.6 67.2-48 121.6-44.8 3.2 6.4 25.6 57.6 6.4 118.4 32 38.4 48 83.2 48 131.2 0 102.4-57.6 188.8-201.6 214.4 22.4 22.4 38.4 54.4 38.4 92.8v112c0 9.6 0 19.2 16 19.2C832 876.8 960 710.4 960 512c0-246.4-201.6-448-448-448S64 265.6 64 512z"
+                fill="#040000"
+                p-id="2308"
+              ></path>
             </svg>
           </el-link>
         </el-space>
@@ -67,7 +88,10 @@
           >
         </el-form-item>
         <el-form-item prop="smsCode">
-          <el-input v-model="resetForm.smsCode" placeholder="请输入验证码"></el-input>
+          <el-input
+            v-model="resetForm.smsCode"
+            placeholder="请输入验证码"
+          ></el-input>
         </el-form-item>
         <el-form-item prop="newPassword">
           <el-input
@@ -103,7 +127,6 @@
 </template>
 
 <script setup>
-import "@/styles/login/index.css";
 import { ref, watchEffect, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
@@ -118,14 +141,14 @@ const showLoginForm = ref(true);
 const showDisclaimerForm = ref(false);
 
 const loginForm = ref({
-  phone: '',
-  password: ''
+  phone: "",
+  password: "",
 });
 
 const resetForm = ref({
-  phoneNum: '',
-  newPassword: '',
-  smsCode: ''
+  phoneNum: "",
+  newPassword: "",
+  smsCode: "",
 });
 
 const { LoginLoading, isLoggedIn, fetchLogin, LoginState } = useLogin();
@@ -144,8 +167,8 @@ const rules = {
           callback();
         }
       },
-      trigger: "blur"
-    }
+      trigger: "blur",
+    },
   ],
   password: [{ required: true, message: "请输入密码", trigger: "blur" }],
   phoneNum: [
@@ -158,11 +181,11 @@ const rules = {
           callback();
         }
       },
-      trigger: "blur"
-    }
+      trigger: "blur",
+    },
   ],
   smsCode: [{ required: true, message: "请输入验证码", trigger: "blur" }],
-  newPassword: [{ required: true, message: "请输入新密码", trigger: "blur" }]
+  newPassword: [{ required: true, message: "请输入新密码", trigger: "blur" }],
 };
 
 // 显示免责声明表单
@@ -188,7 +211,7 @@ const LoginHandler = () => {
         fetchLogin(loginForm.value.phone, loginForm.value.password);
       }
     } else {
-      console.log('error submit!!');
+      console.log("error submit!!");
       return false;
     }
   });
@@ -196,13 +219,13 @@ const LoginHandler = () => {
 
 const SendSMSHandler = () => {
   const resetFormRef = ref(null);
-  resetFormRef.value.validateField('phoneNum', (valid) => {
+  resetFormRef.value.validateField("phoneNum", (valid) => {
     if (valid) {
       if (PhoneValid(resetForm.value.phoneNum)) {
         fetchSendSMS(resetForm.value.phoneNum);
       }
     } else {
-      console.log('error submit!!');
+      console.log("error submit!!");
       return false;
     }
   });
@@ -225,7 +248,7 @@ const ResetPasswordHandler = async () => {
         }
       }
     } else {
-      console.log('error submit!!');
+      console.log("error submit!!");
       return false;
     }
   });
@@ -256,4 +279,52 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.el-container {
+  max-width: 500px;
+  max-height: 100vh;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5px;
+  margin: 0 auto;
+}
+
+.el-header {
+  /* height: 5px; */
+  width: 100%;
+  padding: 20px;
+  justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.el-form {
+  width: 100%;
+}
+
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.el-button {
+  width: 100%;
+  border-radius: 20px;
+}
+
+.phone-input {
+  position: relative;
+}
+
+.sms-button {
+  position: absolute;
+  max-width: 100px;
+  right: 0;
+  top: 0;
+  border-radius: 0;
+}
+</style>

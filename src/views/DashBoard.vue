@@ -35,17 +35,25 @@
           </el-dropdown>
         </div>
 
-        <div class="center-content">
-          <h2></h2>
-        </div>
-
         <div class="right-menu">
           <el-dropdown trigger="click">
             <el-button plain class="icon-button">
-              <el-icon><Avatar /></el-icon>
+              <el-icon>
+                <Avatar />
+              </el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
+                <el-dropdown-item @click="fetchUser">
+                  <div v-if="user" class="stuInfo">
+                    <el-text>{{ user.studentName }}</el-text>
+                    <el-text size="small">{{ user.registerCode }}</el-text>
+                  </div>
+                  <div v-else class="stuInfo">
+                    <el-text>未登录</el-text>
+                  </div>
+                </el-dropdown-item>
+                <el-divider style="margin: 1px" />
                 <el-dropdown-item @click="refresh" :disabled="isRefreshing">
                   <el-icon :class="{ 'is-loading': isRefreshing }">
                     <Refresh />
@@ -84,108 +92,49 @@
     </el-header>
 
     <el-main v-if="showMainBoard">
-      <div v-if="user" class="stuInfo">
-        <h1>
-          {{ user.studentName }}
-        </h1>
-        <p>
-          {{ user.registerCode }}
-        </p>
-      </div>
-      <div v-else class="stuInfo">
-        <h1>
-          <el-icon class="is-loading">
-            <Loading />
-          </el-icon>
-        </h1>
-        <p>
-          <el-icon class="is-loading">
-            <Loading />
-          </el-icon>
-        </p>
-      </div>
-
       <div class="runInfo">
-        <el-row :gutter="20" justify="center">
-          <el-col :span="24">
-            <el-card class="no-border-card">
-              <!-- 俱乐部完成率进度条 -->
-              <el-progress
-                v-if="activity"
-                :percentage="activity.club_completion_percentage"
-                :stroke-width="20"
-                :text-inside="true"
-                @click="getActivity"
-              >
-                <span>俱乐部完成率 {{ activity.club_completion_rate }}</span>
-              </el-progress>
-              <el-progress
-                v-else
-                :percentage="100"
-                :stroke-width="20"
-                :text-inside="true"
-                :duration="3"
-                striped
-                striped-flow
-              >
-                <span
-                  ><el-icon class="is-loading"><Loading /></el-icon
-                ></span>
-              </el-progress>
-
-              <!-- 校园跑完成率进度条 -->
-              <el-progress
-                v-if="activity"
-                :percentage="activity.running_completion_percentage"
-                :stroke-width="20"
-                :text-inside="true"
-                @click="getActivity"
-              >
-                <span>校园跑完成率 {{ activity.running_completion_rate }}</span>
-              </el-progress>
-              <el-progress
-                v-else
-                :percentage="100"
-                :stroke-width="20"
-                :text-inside="true"
-                :duration="3"
-                striped
-                striped-flow
-              >
-                <span
-                  ><el-icon class="is-loading"><Loading /></el-icon
-                ></span>
-              </el-progress>
-
-              <!-- 里程完成率进度条 -->
-              <el-progress
-                v-if="runInfo"
-                :percentage="runInfo.runDistanceCompletionPercentage"
-                :stroke-width="20"
-                :text-inside="true"
-                @click="getRunInfo"
-              >
-                <span>里程完成率 {{ runInfo.runDistanceCompletionRate }}</span>
-              </el-progress>
-              <el-progress
-                v-else
-                :percentage="100"
-                :stroke-width="20"
-                :text-inside="true"
-                :duration="3"
-                striped
-                striped-flow
-              >
-                <span
-                  ><el-icon class="is-loading"><Loading /></el-icon
-                ></span>
-              </el-progress>
-            </el-card>
+        <el-row :gutter="16">
+          <el-col :span="8">
+            <el-statistic
+              v-if="activity"
+              title="俱乐部完成率"
+              :value="activity.club_completion_rate"
+              value-style="color: #409EFF;"
+            />
+            <el-statistic v-else title="俱乐部完成率" :value="0" />
+          </el-col>
+          <el-col :span="8">
+            <el-statistic
+              v-if="activity"
+              title="校园跑完成率"
+              :value="activity.running_completion_rate"
+              value-style="color: #409EFF;"
+            />
+            <el-statistic v-else title="校园跑完成率" :value="0" />
+          </el-col>
+          <el-col :span="8">
+            <el-statistic
+              v-if="runInfo"
+              title="里程完成率"
+              :value="runInfo.runValidDistance"
+              value-style="color: #409EFF;"
+            />
+            <el-statistic v-else title="里程完成率" :value="0" />
+            <div class="statistic-footer">
+              <div class="footer-item">
+                <span>/</span>
+                <span style="color: #409eff" v-if="runInfo">
+                  {{ runInfo.needRunDistance }}
+                </span>
+                <span style="color: #409eff" v-else>0</span>
+              </div>
+            </div>
           </el-col>
         </el-row>
       </div>
 
       <el-divider />
+
       <div>
         <div class="input-group">
           <el-input-number
@@ -216,6 +165,7 @@
             id="school"
             v-model="schoolChoice"
             placeholder="请选择学校"
+            style="width: 300px"
           >
             <el-option
               v-for="school in availableSchools"
@@ -225,14 +175,11 @@
             ></el-option>
           </el-select>
         </div>
-        <el-button @click="randomizeInputs" plain class="icon-button">
-          <el-icon class="is-loading">
-            <Refresh />
-          </el-icon>
-        </el-button>
       </div>
-
       <el-divider />
+      <el-button type="" @click="randomizeInputs" plain round
+        >随机填充</el-button
+      >
       <el-button
         type="primary"
         :loading="isSubmitting"
@@ -246,12 +193,11 @@
 </template>
 
 <script setup>
-import "@/styles/dashboard/index.css";
 import Notice from "@/components/Notice.vue";
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import { getSchoolMaps } from "@/static/maps/map";
+import { getSchoolMaps } from "@/utils/maps/map";
 
 import { useUser, useActivity, useRunInfo } from "@/hooks/dashboard/index";
 
@@ -432,6 +378,84 @@ const logout = () => {
 </script>
 
 <style scoped>
+.el-container {
+  max-width: 500px;
+  max-height: 100vh;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 10px;
+  margin: 0 auto;
+}
+
+.el-header {
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.left-menu,
+.right-menu {
+  flex: 0 0 auto;
+}
+
+.el-dropdown-menu {
+  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.el-main {
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+}
+
+.stuInfo {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+
+.runInfo {
+  letter-spacing: 2px;
+  /* margin-bottom: -20px; */
+}
+
+.el-statistic {
+  overflow: hidden;
+}
+
+.input-group {
+  margin-bottom: 5px;
+}
+
+.icon-button {
+  border: none;
+  color: #000;
+  background-color: transparent;
+  font-size: 20px;
+  padding: 0;
+}
+.icon-button:hover {
+  color: red;
+}
+
+.el-divider {
+  margin: 18px auto;
+}
+
 .el-card {
   border: none;
   box-shadow: none;

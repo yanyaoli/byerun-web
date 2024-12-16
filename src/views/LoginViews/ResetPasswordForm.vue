@@ -1,6 +1,6 @@
 <template>
   <el-header>
-    <h1>Byerun</h1>
+    <h1>重置密码</h1>
   </el-header>
   <el-main>
     <el-form :model="resetForm" :rules="rules" ref="resetFormRef">
@@ -37,16 +37,16 @@
           clearable
         />
       </el-form-item>
-      <el-form-item>
-        <el-button
-          type="primary"
-          @click="ResetPasswordHandler"
-          :loading="ResetLoading"
-          >提交</el-button
-        >
-      </el-form-item>
-      <el-button type="text" @click="$emit('backToLogin')">返回登录</el-button>
     </el-form>
+    <div class="button-group">
+      <el-button type="" @click="$emit('backToLogin')">返回登录</el-button>
+      <el-button
+        type="primary"
+        @click="ResetPasswordHandler"
+        :loading="ResetLoading"
+        >提交</el-button
+      >
+    </div>
   </el-main>
 </template>
 
@@ -133,4 +133,45 @@ const ResetPasswordHandler = async () => {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.el-header {
+  width: 100%;
+  padding: 20px;
+  justify-content: space-between;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.el-form {
+  width: 100%;
+}
+
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.phone-input {
+  position: relative;
+}
+
+.sms-button {
+  position: absolute;
+  max-width: 100px;
+  right: 0;
+  top: 0;
+  border-radius: 0;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.button-group .el-button {
+  width: 48%;
+  border-radius: 20px;
+}
+</style>

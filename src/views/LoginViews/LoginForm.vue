@@ -31,7 +31,7 @@
           :underline="false"
           @click="$emit('showDisclaimer')"
           class="disclaimer-link"
-        >
+        ><el-icon><InfoFilled /></el-icon>  
           选择登录表示您已阅读并同意<span class="disclaimer-text"
             >免责声明</span
           >
@@ -117,21 +117,60 @@ const goToHome = () => {
 </script>
 
 <style scoped>
+.el-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.el-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.el-form {
+  width: 100%;
+}
+
+.el-button {
+  width: 100%;
+  border-radius: 20px;
+}
+
+.phone-input {
+  position: relative;
+}
+
+.sms-button {
+  position: absolute;
+  max-width: 100px;
+  right: 0;
+  top: 0;
+  border-radius: 0;
+}
+
 .footer-links {
   display: flex;
   justify-content: space-between;
   text-decoration: none;
 }
+
 .disclaimer-container {
   text-align: center;
-  margin-top: -20px;
-  margin-bottom: 20px;
+  margin-top:-16px;
+  margin-bottom: 16px;
 }
 
 .disclaimer-link {
   font-size: 10px;
   color: #999;
 }
+
 .disclaimer-text {
   color: #409eff;
 }

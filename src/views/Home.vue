@@ -1,46 +1,47 @@
 <template>
   <Header />
   <div class="main-section">
-    <span class="title">你好 同学</span>
-    <span class="subtitle">{{ subtitle }}</span>
+    <span class="title">{{ title }}</span>
+    <span class="quote" @click="fetchQuote">{{ quote }}</span>
     <button class="start-btn" @click="getStarted">立即开始</button>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import { useRouter } from 'vue-router';
-import Header from '@/components/Header.vue';
+import { ref, onMounted } from "vue";
+import axios from "axios";
+import { useRouter } from "vue-router";
+import Header from "@/components/Header.vue";
 
 const router = useRouter();
-const subtitle = ref('未来是你的，记得享受过程');
+const title = ref("你好 同学");
+const quote = ref("未来是你的，记得享受过程");
 
 const getStarted = () => {
-  router.push('/dashboard');
+  router.push("/dashboard");
 };
 
-const fetchSubtitle = async () => {
+const fetchQuote = async () => {
   try {
-    const response = await axios.get('https://v1.hitokoto.cn/?c=i');
-    subtitle.value = response.data.hitokoto;
+    const response = await axios.get("https://v1.hitokoto.cn/?c=i");
+    quote.value = response.data.hitokoto;
   } catch (error) {
-    console.error('Failed to fetch subtitle:', error);
+    console.error("Failed to fetch quote:", error);
   }
 };
 
 onMounted(() => {
-  fetchSubtitle();
+  fetchQuote();
 });
 </script>
 
 <style scoped>
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Poppins', sans-serif;
-    background: var(--color-background);
-    max-height: 100px;
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", sans-serif;
+  background: var(--color-background);
+  max-height: 100px;
 }
 
 .main-section {
@@ -65,10 +66,16 @@ body {
   margin-bottom: 1rem;
 }
 
-.subtitle {
+.quote {
   font-size: 1.1em;
   color: #555;
   letter-spacing: 5px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.quote:hover {
+  color: #0072ff;
 }
 
 .start-btn {

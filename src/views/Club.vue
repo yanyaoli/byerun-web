@@ -23,8 +23,7 @@
             <Loading />
           </el-icon>
         </template>
-        <template #extra>
-        </template>
+        <template #extra> </template>
       </el-result>
     </el-main>
     <el-main v-else>
@@ -112,8 +111,7 @@
         icon="success"
         sub-title="暂无俱乐部活动或俱乐部活动已达标"
       >
-        <template #extra>
-        </template>
+        <template #extra> </template>
       </el-result>
     </el-main>
     <el-button @click="goBack">返回</el-button>
@@ -121,7 +119,6 @@
 </template>
 
 <script setup>
-import "@/styles/club/index.css";
 import { ref, reactive, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { useRouter } from "vue-router";
@@ -243,4 +240,44 @@ onMounted(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.el-container {
+  max-width: 500px;
+  max-height: 100vh;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px;
+  margin: 0 auto;
+}
+
+.el-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.el-main {
+  width: 100%;
+}
+
+.el-main .el-descriptions {
+  margin-top: 20px;
+}
+
+.el-main .el-descriptions-item {
+  word-break: break-word;
+}
+
+.cell-item {
+  display: flex;
+  align-items: center;
+  min-width: 50px;
+}
+
+.week-menu {
+  width: 80%;
+}
+</style>

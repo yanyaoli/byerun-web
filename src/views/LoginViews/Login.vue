@@ -11,7 +11,6 @@
 </template>
 
 <script setup>
-import "@/styles/login/index.css";
 import { ref, watchEffect, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useLogin } from "@/hooks/login/";
@@ -71,4 +70,16 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+.el-container {
+  max-width: 500px;
+  max-height: 100vh;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5px;
+  margin: 0 auto;
+}
+</style>
