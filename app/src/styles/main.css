@@ -1,0 +1,42 @@
+:root {
+    --el-transition-duration: none;
+    /* --el-switch-border-color: #141414; */
+}
+
+/* .el-icon svg {
+    color: #141414 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.el-switch {
+    --el-switch-on-color: #000 !important;
+    --el-switch-off-color: #141414 !important;
+
+}
+
+.el-switch.is-checked .el-switch__core {
+    background-color: var(--el-switch-on-color);
+    border-color: var(--el-switch-border-color, var(--el-switch-on-color));
+    width: 1.2em !important;
+    height: 1.2em !important;
+}
+
+.el-switch__core {
+    width: 1.2em !important;
+    height: 1.2em !important;
+}
+
+.el-switch__action {
+    background-color: #5e5d5d !important;
+    width: 1em !important;
+    height: 1em !important;
+} */
+
+
+
+.submit-btn {
+    color: #fafafa;
+    background-color: #0984e3;
+    border: none;
+}

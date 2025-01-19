@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://byerun.pages.dev" target="_blank" rel="noopener noreferrer">
-    <img width="160" height="160" src="./app/public/favicon.ico" alt="Byerun">
+    <img width="160" height="160" src="./public/favicon.ico" alt="Byerun">
   </a>
 </p>
 
@@ -12,7 +12,7 @@ Goodbye Unirun - Campus Running Assistant Web Version🏃‍♂️
 
 <p align="center">
   <a href="https://byerun.pages.dev/" target="_blank" rel="noopener noreferrer" >
-    <img src="./old/intro/intro.jfif" alt="Byerun screenshots" width="600" height="auto">
+    <img src="./intro/intro.jfif" alt="Byerun screenshots" width="600" height="auto">
   </a>
 </p>
 

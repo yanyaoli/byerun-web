@@ -1,0 +1,37 @@
+{
+  "name": "byerun-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "install-all": "npm install && cd server && npm install",
+    "start": "NODE_ENV=development npm run dev",
+    "preview": "vite preview",
+    "server": "node server/index.js",
+    "dev": "concurrently \"npm run dev\" \"npm run server\"",
+    "build": "vue-tsc -b && vite build",
+    "build:prod": "NODE_ENV=production npm run build"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.x.x",
+    "axios": "^1.7.9",
+    "crypto-js": "^4.2.0",
+    "element-plus": "^2.9.3",
+    "geolib": "^3.3.4",
+    "md5": "^2.3.0",
+    "pinia": "^2.3.0",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/md5": "^2.3.5",
+    "@types/node": "^22.10.7",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "concurrently": "^8.2.2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.5",
+    "vue-tsc": "^2.2.0"
+  }
+}
