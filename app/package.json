@@ -2,17 +2,16 @@
   "name": "byerun-web",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "install-all": "npm install && cd server && npm install",
-    "start": "NODE_ENV=development npm run dev",
     "preview": "vite preview",
-    "server": "node server/index.js",
-    "dev": "concurrently \"npm run dev\" \"npm run server\"",
+    "server": "cd server && npm run start",
+    "dev": "concurrently \"npm run server\" \"vite\"",
     "build": "vue-tsc -b && vite build",
     "build:prod": "NODE_ENV=production npm run build"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@element-plus/icons-vue": "^2.x.x",
     "axios": "^1.7.9",
     "crypto-js": "^4.2.0",

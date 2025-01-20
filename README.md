@@ -45,7 +45,7 @@ npm install-all
 Run for development:
 
 ```bash
-npm run dev
+npm run start
 ```
 
 Build for production:

@@ -58,32 +58,40 @@
                 <el-skeleton :loading="!activity || !runInfo || statsLoading" animated>
                     <template #template>
                         <el-row :gutter="16">
-                            <el-col :span="12">
+                            <el-col :span="8">
                                 <div class="stats-skeleton">
                                     <el-skeleton-item variant="text" style="width: 30%; margin-bottom: 8px;" />
                                     <el-skeleton-item variant="text" style="width: 50%;" />
                                 </div>
                             </el-col>
-                            <el-col :span="12">
+                            <el-col :span="8">
                                 <div class="stats-skeleton">
                                     <el-skeleton-item variant="text" style="width: 30%; margin-bottom: 8px;" />
-                                    <el-skeleton-item variant="text" style="width: 50%;" />
+                                    <el-skeleton-item variant="text" style="width: 30%;" />
+                                </div>
+                            </el-col>
+                            <el-col :span="8">
+                                <div class="stats-skeleton">
+                                    <el-skeleton-item variant="text" style="width: 30%; margin-bottom: 8px;" />
+                                    <el-skeleton-item variant="text" style="width: 30%;" />
                                 </div>
                             </el-col>
                         </el-row>
                     </template>
                     <template #default>
                         <el-row :gutter="16">
-                            <el-col :span="12">
-                                <el-statistic v-if="activity" title="校园跑完成率" :value="activity.running_completion_rate"
+                            <el-col :span="8">
+                                <el-statistic title="俱乐部完成率" :value="activity?.club_completion_rate || 0"
                                     value-style="color: #409EFF;" />
-                                <el-statistic v-else title="校园跑完成率" value="0" />
                             </el-col>
-                            <el-col :span="12">
-                                <el-statistic v-if="runInfo" title="里程完成率"
-                                    :value="`${(runInfo.runValidDistance / 1000).toFixed(2)}/${(runInfo.needRunDistance / 1000).toFixed(0)}KM`"
+                            <el-col :span="8">
+                                <el-statistic title="校园跑完成率" :value="activity?.running_completion_rate || 0"
                                     value-style="color: #409EFF;" />
-                                <el-statistic v-else title="里程完成率" value="0/0KM" />
+                            </el-col>
+                            <el-col :span="8">
+                                <el-statistic title="里程完成率"
+                                    :value="runInfo ? `${(runInfo.runValidDistance / 1000).toFixed(2)}/${(runInfo.needRunDistance / 1000).toFixed(0)}` : '0/0'"
+                                    value-style="color: #409EFF;" :precision="2" />
                             </el-col>
                         </el-row>
                     </template>
@@ -123,7 +131,8 @@
                     <div class="form-info" v-if="formState.distance && formState.duration">
                         <span :class="{ 'text-error': !paceLimit }">
                             当前配速:
-                            {{ formatPace(formState.duration, formState.distance) }}/公里
+                            {{ formState.distance === 0 ? '0:00' : formatPace(formState.duration, formState.distance)
+                            }}/公里
                         </span>
                     </div>
 
@@ -138,6 +147,24 @@
                             提交记录
                         </el-button>
                     </div>
+
+                    <!-- 添加地图显示 -->
+                    <el-skeleton :loading="!formState.route" animated>
+                        <template #template>
+                            <div class="map-skeleton">
+                                <div class="map-skeleton-content">
+                                    <el-icon class="map-skeleton-icon">
+                                        <Location />
+                                    </el-icon>
+                                </div>
+                            </div>
+                        </template>
+                        <template #default>
+                            <div v-show="formState.route" class="map-container">
+                                <RunMap :map-choice="formState.route" :visible="showMap" />
+                            </div>
+                        </template>
+                    </el-skeleton>
                 </el-form>
             </el-card>
 
@@ -196,7 +223,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, h, computed } from "vue";
+import { ref, onMounted, reactive, h, computed, watch } from "vue";
 import { useUserStore } from "@/stores/user";
 import { useAuth } from "@/composables/useAuth";
 import { useDashboard } from "@/composables/useDashboard";
@@ -207,9 +234,10 @@ import type { RunRecord } from "@/types/run";
 import NoticeBoard from "@/components/NoticeBoard.vue";
 import { config } from "@/config";
 import { ElMessage } from "element-plus";
-import { SuccessFilled, CircleCloseFilled, Loading, MagicStick, Operation, Avatar } from "@element-plus/icons-vue";
+import { SuccessFilled, CircleCloseFilled, Loading, MagicStick, Operation, Avatar, Location } from "@element-plus/icons-vue";
 import DarkIcon from "@/components/icons/DarkIcon.vue";
 import LightIcon from "@/components/icons/LightIcon.vue";
+import RunMap from '@/components/RunMap.vue';
 
 const userStore = useUserStore();
 const { logout } = useAuth();
@@ -250,11 +278,21 @@ const formState = reactive({
     route: "",
 });
 
+// 添加地图显示控制
+const showMap = ref(false);
+
+// 监听路线选择变化
+watch(() => formState.route, (newVal) => {
+    if (newVal) {
+        showMap.value = true;
+    }
+});
+
 // 计算配速限制
 const paceLimit = computed(() => {
-    if (!formState.distance || !formState.duration) return true;
+    if (!formState.distance || !formState.duration || formState.distance === 0) return true;
     const paceInMinutes = (formState.duration * 60) / (formState.distance / 1000);
-    return paceInMinutes >= 6;
+    return !isNaN(paceInMinutes) && paceInMinutes >= 6;
 });
 
 // 获取距离和时间限制
@@ -536,7 +574,7 @@ onMounted(async () => {
     background-color: var(--el-bg-color-page);
     border: 1px solid var(--el-border-color-light);
     box-shadow: var(--el-box-shadow);
-    padding: 20px;
+    padding: 10px;
     border-radius: 8px;
     color: var(--el-text-color-primary);
     overflow: hidden;
@@ -544,12 +582,11 @@ onMounted(async () => {
 }
 
 .stats-skeleton {
-    padding: 16px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 80px;
 }
 
 /* 提交表单卡片 */
@@ -649,5 +686,35 @@ onMounted(async () => {
 .header-icon-button:hover {
     background-color: var(--el-fill-color-light);
     color: var(--el-text-color-primary);
+}
+
+.map-container {
+    margin: 16px 0;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.map-skeleton {
+    border-radius: 4px;
+    overflow: hidden;
+    padding: 16px;
+    background-color: var(--el-fill-color-blank);
+    border: 1px solid var(--el-border-color-lighter);
+    margin-top: 10px;
+}
+
+.map-skeleton-content {
+    height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--el-fill-color-light);
+    border-radius: 4px;
+}
+
+.map-skeleton-icon {
+    font-size: 48px;
+    color: var(--el-text-color-placeholder);
 }
 </style>
