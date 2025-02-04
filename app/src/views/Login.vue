@@ -11,8 +11,8 @@
             </div>
 
             <!-- 登录表单 -->
-            <el-form v-if="!isResetMode" ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="top">
-                <el-form-item label="手机号" prop="phone">
+            <el-form v-if="!isResetMode" ref="loginFormRef" :model="loginForm" :rules="loginRules" label-position="left">
+                <el-form-item label="" prop="phone">
                     <el-input v-model="loginForm.phone" placeholder="请输入手机号">
                         <template #prefix>
                             <el-icon>
@@ -22,7 +22,7 @@
                     </el-input>
                 </el-form-item>
 
-                <el-form-item label="密码" prop="password">
+                <el-form-item label="" prop="password">
                     <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" show-password>
                         <template #prefix>
                             <el-icon>
@@ -41,8 +41,8 @@
             </el-form>
 
             <!-- 重置密码表单 -->
-            <el-form v-else ref="resetFormRef" :model="resetForm" :rules="resetRules" label-position="top">
-                <el-form-item label="手机号" prop="phone">
+            <el-form v-else ref="resetFormRef" :model="resetForm" :rules="resetRules" label-position="left">
+                <el-form-item label="" prop="phone">
                     <el-input v-model="resetForm.phone" placeholder="请输入手机号">
                         <template #append>
                             <el-button :disabled="!!countdown || loading" @click="handleSendCode">
@@ -52,7 +52,7 @@
                     </el-input>
                 </el-form-item>
 
-                <el-form-item label="验证码" prop="code">
+                <el-form-item label="" prop="code">
                     <el-input v-model="resetForm.code" placeholder="请输入验证码">
                         <template #prefix>
                             <el-icon>
@@ -62,7 +62,7 @@
                     </el-input>
                 </el-form-item>
 
-                <el-form-item label="新密码" prop="password">
+                <el-form-item label="" prop="password">
                     <el-input v-model="resetForm.password" type="password" placeholder="请输入新密码" show-password>
                         <template #prefix>
                             <el-icon>
@@ -72,7 +72,7 @@
                     </el-input>
                 </el-form-item>
 
-                <el-form-item label="确认密码" prop="confirmPassword">
+                <el-form-item label="" prop="confirmPassword">
                     <el-input v-model="resetForm.confirmPassword" type="password" placeholder="请再次输入新密码" show-password>
                         <template #prefix>
                             <el-icon>
@@ -255,6 +255,7 @@ const switchMode = () => {
     width: 100%;
     max-width: 400px;
     padding: 24px;
+    margin: 0 16px;
     background-color: var(--el-bg-color-overlay);
     border-radius: 8px;
     box-shadow: var(--el-box-shadow-light);

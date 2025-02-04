@@ -9,8 +9,8 @@ export function useRunRecord() {
   const loading = ref(false);
   const pagination = reactive({
     current: 1,
-    pageSize: 5,
-    total: 50,
+    pageSize: 30,
+    total: 150,
   });
 
   const fetchRecords = async () => {
@@ -39,7 +39,7 @@ export function useRunRecord() {
         runSpeed: record.runStatus === "1" ? record.runSpeed : 0,
       }));
 
-      pagination.total = 25;
+      pagination.total = 150;
     } catch (error: any) {
       console.error("获取跑步记录失败:", error);
       ElMessage.error("获取跑步记录失败");

@@ -23,7 +23,7 @@ onMounted(() => {
 
 <style scoped>
 .notice-board {
-    margin-bottom: 24px;
+    margin-bottom: 10px;
     padding: 12px;
     background-color: var(--el-color-warning-light-8);
     border-radius: 8px;
@@ -36,8 +36,8 @@ onMounted(() => {
 
 .notice-content {
     flex: 1;
-    font-size: 13px;
-    line-height: 1.2;
+    font-size: 11px;
+    line-height: 1;
     color: var(--el-text-color-primary);
 }
 

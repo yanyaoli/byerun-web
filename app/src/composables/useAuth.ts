@@ -17,8 +17,6 @@ export function useAuth() {
       const hashedPassword = stringToMd5(password);
       const data = await authService.login(phone, hashedPassword);
 
-      console.log("Login response:", data);
-
       if (data.code === 10000 && data.response) {
         const token = data.response.oauthToken?.token;
         if (!token) {
@@ -57,7 +55,6 @@ export function useAuth() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      ElMessage.error(typeof error === "string" ? error : "登录失败，请重试");
     } finally {
       loading.value = false;
     }
@@ -69,6 +66,7 @@ export function useAuth() {
       await authService.sendSms(phone);
       ElMessage.success("验证码已发送");
     } catch (error) {
+      console.error("发送验证码失败:", error);
       ElMessage.error("发送验证码失败，请重试");
       throw error;
     }
@@ -95,6 +93,7 @@ export function useAuth() {
         router.push("/login");
         return true;
       } else {
+        console.error("密码重置失败:", response);
         ElMessage.error(response.msg || "密码重置失败");
         return false;
       }

@@ -47,11 +47,32 @@ export function useRunStandard() {
     semesterDateEnd.value = isSecondSemester
       ? runStandard.secondSemesterDateEnd
       : runStandard.firstSemesterDateEnd;
+  };
 
-    ElMessage.warning({
-      message: `本学期校园跑截至日期：${semesterDateEnd.value}`,
-      duration: 5000,
-    });
+  const showEndDate = () => {
+    // 从本地存储重新获取数据
+    const runStandard = JSON.parse(
+      localStorage.getItem("runStandardData") || "{}"
+    );
+    
+    // 检查本地存储中是否有学期数据
+    const semesterYear = runStandard.semesterYear;
+    const isSecondSemester = semesterYear && semesterYear.slice(-1) === "2";
+    
+    // 根据学期设置结束日期
+    const endDate = isSecondSemester
+      ? runStandard.secondSemesterDateEnd
+      : runStandard.firstSemesterDateEnd;
+
+    if (endDate) {
+      ElMessage({
+        message: `本学期校园跑截至日期：${endDate}`,
+        type: 'info',
+        duration: 3000
+      });
+    } else {
+      ElMessage.warning('未获取到截至日期信息');
+    }
   };
 
   return {
@@ -62,6 +83,7 @@ export function useRunStandard() {
     runStandardData,
     semesterDateEnd,
     fetchRunStandard,
-    setRunStandardValues,
+    showEndDate,
+    setRunStandardValues
   };
 }
