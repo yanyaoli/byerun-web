@@ -3,12 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "install-all": "npm install && cd server && npm install",
+    "install-all": "yarn install && cd server && yarn install",
     "preview": "vite preview",
-    "server": "cd server && npm run start",
-    "dev": "concurrently \"npm run server\" \"vite\"",
+    "server": "cd server && yarn run start",
+    "dev": "concurrently \"yarn run server\" \"vite\"",
     "build": "vue-tsc -b && vite build",
-    "build:prod": "NODE_ENV=production npm run build"
+    "build:prod": "NODE_ENV=production yarn run build"
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",

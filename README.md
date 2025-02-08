@@ -36,25 +36,55 @@ Goodbye Unirun - Campus Running Assistant Web Version🏃‍♂️
 
 ## Build
 
+Enter the project folder:
+
+```bash
+cd app
+```
+
 Install dependencies:
 
 ```bash
-npm install-all
+yarn install-all
 ```
 
 Run for development:
 
 ```bash
-npm run start
+yarn run start
 ```
 
 Build for production:
 
 ```bash
-npm run build
+yarn run build
 ```
 
 ## Cloudflare Worker
+
+Function: Avoid cross-origin restrictions of the source server.
+
+```mermaid
+graph TD;
+
+    classDef process fill:#E5F6FF,stroke:#73A6FF,stroke-width:2px;
+
+    classDef error fill:#FFEBEB,stroke:#E68994,stroke-width:2px;
+
+
+
+    A([ByerunWeb]):::process -->|Direct Request| U([UnirunAPI]):::process
+
+    U --> |Cross - Origin Restriction| E([Request Failed]):::error
+
+    A -->|Request Forwarded by Worker| C([Cloudflare Worker]):::process
+
+    C --> U
+
+    U --> C
+
+    C --> |Response Returned| A
+```
 
 ```
 export default {

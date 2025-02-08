@@ -1,6 +1,6 @@
 <template>
     <div v-if="notice?.message" class="notice-board">
-        <div class="notice-content" v-html="notice.message"></div>
+      <div class="notice-content" v-html="notice.message"></div>
     </div>
 </template>
 
@@ -23,16 +23,26 @@ onMounted(() => {
 
 <style scoped>
 .notice-board {
-    margin-bottom: 10px;
+  position: relative;
+  position: fixed;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
     padding: 12px;
-    background-color: var(--el-color-warning-light-8);
-    border-radius: 8px;
-    box-shadow: var(--el-box-shadow-light-8);
-    display: flex;
+    box-shadow: var(--noticeboard-box-shadow);
+    min-width: 300px;
+    max-width: 800px;
+    color: var(--noticeboard-text-color);
+    background-color: var(--noticeboard-bg-color);
     align-items: center;
     text-align: center;
     gap: 12px;
+    border-radius: 20px;
+    transition:  0.3s ease;
+    border: var(--noticeboard-border);
+    z-index: 9999;
 }
+
 
 .notice-content {
     flex: 1;
@@ -61,4 +71,6 @@ onMounted(() => {
     background-color: var(--el-bg-color-overlay);
     box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
+
+
 </style>

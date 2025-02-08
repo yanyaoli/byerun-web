@@ -1,55 +1,301 @@
 :root {
-    --el-transition-duration: none;
-    /* --el-switch-border-color: #141414; */
+  color-scheme: light;
+
+  /* 登录面板背景 */
+  --login-container-bg-color: #fff;
+  --login-card-bg-color: #fff;
+  --login-card-border: 1px solid #fff;
+  --login-card-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
+    0px 8px 20px rgba(0, 0, 0, 0.08);
+
+    /* Dashboard */
+  --dashboard-container-bg-color: #fff;
+  --dashboard-header-bg-color: #fff;
+  --dashboard-header-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
+  0px 8px 20px rgba(0, 0, 0, 0.08);
+
+  --stats-panel-bg-color: #fff;
+  --stats-panel-border: 1px solid #fdfdfd;
+
+  /* 提交面板 */
+  --submit-card-bg-color: #fff;
+  --submit-card-border: none;
+  --submit-card-box-shadow: none;
+
+  --dashboard-content-bg-color: #fff;
+  --dashboard-content-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
+    0px 8px 20px rgba(0, 0, 0, 0.08);
+
+  /* 通知板 */
+  --noticeboard-text-color: #000;
+  --noticeboard-bg-color: #fff;
+  --noticeboard-border: 1px solid #fff;
+  --noticeboard-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
+    0px 8px 20px rgba(0, 0, 0, 0.08);
+
+  /* 文字 */
+  --text-color: #141414;
+  --tetx-color-hover: #000;
+
+  /* 按钮 */
+  --btn-text-color: #fff;
+  --btn-bg-color: #000;
+  --btn-text-color-hover: #fff;
+  --btn-bg-color-hover: #000;
+
+  /* 边线 */
+  --input-border-color-active: #141414;
+  --el-color-white: #ffffff;
+  --el-color-black: #000000;
+  --el-font-size-extra-large: 20px;
+  --el-font-size-large: 18px;
+  --el-font-size-medium: 16px;
+  --el-font-size-base: 14px;
+  --el-font-size-small: 13px;
+  --el-font-size-extra-small: 12px;
+  --el-font-family: "Helvetica Neue", Helvetica, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+  --el-font-weight-primary: 500;
+  --el-font-line-height-primary: 24px;
+  --el-index-normal: 1;
+  --el-index-top: 1000;
+  --el-index-popper: 2000;
+  --el-transition-duration: 0.3s;
+  --el-transition-duration-fast: 0.2s;
+  --el-transition-function-ease-in-out-bezier: cubic-bezier(
+    0.645,
+    0.045,
+    0.355,
+    1
+  );
+  --el-transition-function-fast-bezier: cubic-bezier(0.23, 1, 0.32, 1);
+  --el-transition-all: all var(--el-transition-duration)
+    var(--el-transition-function-ease-in-out-bezier);
+  --el-transition-fade: opacity var(--el-transition-duration)
+    var(--el-transition-function-fast-bezier);
+  --el-transition-md-fade: transform var(--el-transition-duration)
+      var(--el-transition-function-fast-bezier),
+    opacity var(--el-transition-duration)
+      var(--el-transition-function-fast-bezier);
+  --el-transition-fade-linear: opacity var(--el-transition-duration-fast) linear;
+  --el-transition-border: border-color var(--el-transition-duration-fast)
+    var(--el-transition-function-ease-in-out-bezier);
+  --el-transition-box-shadow: box-shadow var(--el-transition-duration-fast)
+    var(--el-transition-function-ease-in-out-bezier);
+  --el-transition-color: color var(--el-transition-duration-fast)
+    var(--el-transition-function-ease-in-out-bezier);
+  --el-component-size-large: 40px;
+  --el-component-size: 32px;
+  --el-component-size-small: 24px;
+
+  --el-bg-color: #ffffff;
+  --el-bg-color-page: #f2f3f5;
+  --el-bg-color-overlay: #ffffff;
+  --el-btn-bg-color: #000;
+
+  /* 文本 */
+  --el-text-color: #fff;
+  --el-text-color-primary: #303133;
+  --el-text-color-regular: #606266;
+  --el-text-color-secondary: #909399;
+  --el-text-color-placeholder: #a8abb2;
+  --el-text-color-disabled: #c0c4cc;
+
+  /* 边线 */
+
+  /* 菜单边线 */
+  --el-menu-active-color: #141414;
+  --el-menu-hover-bg-color: #fff;
+  --el-menu-hover-text-color: #000;
+  --el-menu-active-text-color: #000;
+
+  /* 填充 */
+  --el-fill-color: #f0f2f5;
+  --el-fill-color-light: #f5f7fa;
+  --el-fill-color-lighter: #fafafa;
+  --el-fill-color-extra-light: #fafcff;
+  --el-fill-color-dark: #ebedf0;
+  --el-fill-color-darker: #e6e8eb;
+  --el-fill-color-blank: #ffffff;
+
+  /* 阴影 */
+
+
+  --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
+    0px 8px 20px rgba(0, 0, 0, 0.08);
+  --el-disabled-bg-color: var(--el-fill-color-light);
+  --el-disabled-text-color: var(--el-text-color-placeholder);
+  --el-disabled-border-color: var(--el-border-color-light);
+  --el-overlay-color: rgba(0, 0, 0, 0.8);
+  --el-overlay-color-light: rgba(0, 0, 0, 0.7);
+  --el-overlay-color-lighter: rgba(0, 0, 0, 0.5);
+  --el-mask-color: rgba(255, 255, 255, 0.9);
+  --el-mask-color-extra-light: rgba(255, 255, 255, 0.3);
+  --el-border-width: 1px;
+  --el-border-style: solid;
+  --el-border-color-hover: var(--el-text-color-disabled);
+  --el-border: var(--el-border-width) var(--el-border-style)
+    var(--el-border-color);
+  --el-svg-monochrome-grey: var(--el-border-color);
+  --logo-value: 0;
 }
 
-/* .el-icon svg {
-    color: #141414 !important;
-    width: 16px !important;
-    height: 16px !important;
+/* 暗黑配色 */
+html.dark {
+  color-scheme: dark;
+  /* 登录 */
+  --login-container-bg-color: #000;
+  --login-card-bg-color: #000;
+  --login-card-border: 1px solid #222831;
+  --login-card-box-shadow: 0 0 5px rgb(57, 62, 70);
+
+  /* Dashboard */
+  --darl-bg-color: #000;
+  --dark-text-color: #fff;
+  --dark-box-shadow: 0 0 5px rgb(57, 62, 70);
+  --dark-border: 1px solid #222831;
+
+  --dashboard-container-bg-color: #000;
+
+  /* 导航栏 */
+  --dashboard-header-bg-color: #000;
+  --dashboard-header-border: 1px solid #222831;
+  --dashboard-header-box-shadow: 0 0 10px rgb(57, 62, 70);
+  /* 内容 */
+  --dashboard-content-bg-color: #000;
+  --dashboard-content-border: 1px solid #222831;
+  --dashboard-content-box-shadow: 0 0 5px rgb(57, 62, 70);
+  /* 统计面板 */
+  --stats-panel-bg-color: #000;
+  --stats-panel-border: 1px solid #222831;
+  /* 提交面板 */
+  --submit-card-box-shadow: none;
+  --submit-card-border: none;
+  --submit-card-bg-color: #000;
+
+    /* 通知板 */
+  --noticeboard-text-color: #fff;
+  --noticeboard-bg-color: #000;
+  --noticeboard-border: 1px solid #222831;
+  --noticeboard-box-shadow: 0 0 5px rgb(57, 62, 70);
+
+  /* 菜单 */
+  --el-menu-hover-bg-color: #000;
+  --el-menu-hover-text-color: #000;
+  --el-menu-active-color: #fafafa;
+  --el-menu-active-text-color: #fafafa;
+  --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
+    0px 8px 20px rgba(0, 0, 0, 0.08);
+  --el-bg-color-page: #0a0a0a;
+  --el-bg-color: #000000;
+  --el-bg-color-overlay: #1d1e1f;
+  --el-text-color: #000;
+  --el-btn-bg-color: #ffffff;
+  --el-text-color-primary: #e5eaf3;
+  --el-text-color-regular: #cfd3dc;
+  --el-text-color-secondary: #a3a6ad;
+  --el-text-color-placeholder: #8d9095;
+  --el-text-color-disabled: #6c6e72;
+  --el-fill-color-darker: #424243;
+  --el-fill-color-dark: #39393a;
+  --el-fill-color: #303030;
+  --el-fill-color-light: #262727;
+  --el-fill-color-lighter: #1d1d1d;
+  --el-fill-color-extra-light: #191919;
+  --el-fill-color-blank: transparent;
+  --el-mask-color: rgba(0, 0, 0, 0.8);
+  --el-mask-color-extra-light: rgba(0, 0, 0, 0.3);
+  --logo-value: 100;
+
+
+  --el-button-hover-text-color: #000;
+
+  /* 按钮 */
+  --btn-bg-color: #fff;
+  --btn-text-color: #000;
+  --btn-bg-color-hover: #fff;
+  --btn-text-color-hover: #000;
+
+  /* 文字 */
+  --text-color: #fff;
+  --tetx-color-hover: #fff;
+
+  /* 边线 */
+  --input-border-color-focus: #fafafa;
+
 }
 
-.el-switch {
-    --el-switch-on-color: #000 !important;
-    --el-switch-off-color: #141414 !important;
 
+.el-icon svg {
+  color: var(--icon-color);
 }
 
-.el-switch.is-checked .el-switch__core {
-    background-color: var(--el-switch-on-color);
-    border-color: var(--el-switch-border-color, var(--el-switch-on-color));
-    width: 1.2em !important;
-    height: 1.2em !important;
-}
-
-.el-switch__core {
-    width: 1.2em !important;
-    height: 1.2em !important;
-}
-
-.el-switch__action {
-    background-color: #5e5d5d !important;
-    width: 1em !important;
-    height: 1em !important;
-} */
-
-
-
+/* 提交按钮 */
 .submit-btn {
-    color: #fafafa;
-    background-color: #0984e3;
-    border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  color: var(--btn-text-color);
+  background-color: var(--btn-bg-color);
+  border: none;
+  border-radius: 20px;
+  width:100%;
+}
+.submit-btn:hover {
+  color: var(--btn-text-color);
+  background-color: var(--btn-bg-color);
+  transform: translateY(-2px);
+}
+.submit-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background-color: var(--btn-bg-color-hover);
+}
+.submit-btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+.submit-btn:active::after {
+  width: 200%;
+  height: 200%;
 }
 
+/* 图标 */
 .el-icon {
-    font-size: 16px;
-    width: 16px;
-    height: 16px;
-    flex-shrink: 0;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
+/* 输入框 */
+
+
+
+.el-input:focus {
+  border-color: #000;
+  box-shadow: 0 0 0 2px #000 !important;
+}
 .el-card__header {
-    font-weight: 500px;
-    font-size: 14px;
-    padding: 10px 20px;
+  font-weight: 500px;
+  font-size: 14px;
+  padding: 10px 20px;
+}
+
+
+
+.el-menu {
+  color: var(--el-text-color-primary);
+}
+.el-menu-item:active {
+  color: var(--el-menu-active-text-color);
+  border-bottom: var(--el-border);
 }
