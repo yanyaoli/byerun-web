@@ -10,11 +10,6 @@
 Goodbye Unirun - Campus Running Assistant Web Version🏃‍♂️
 </p>
 
-<p align="center">
-  <a href="https://byerun.pages.dev/" target="_blank" rel="noopener noreferrer" >
-    <img src="./old/intro/intro.jfif" alt="Byerun screenshots" width="600" height="auto">
-  </a>
-</p>
 
 ## Supported Maps
 
@@ -45,19 +40,19 @@ cd app
 Install dependencies:
 
 ```bash
-yarn install-all
+npm install-all
 ```
 
 Run for development:
 
 ```bash
-yarn run start
+npm run start
 ```
 
 Build for production:
 
 ```bash
-yarn run build
+npm run build
 ```
 
 ## Cloudflare Worker

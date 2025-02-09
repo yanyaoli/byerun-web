@@ -1244,7 +1244,7 @@
                   table-layout="auto"
                   border
                   stripe
-                  height="400px"
+                  height="calc(100vh - 300px)"
                   style="width: 100%"
                 >
                   <el-table-column
@@ -1630,23 +1630,26 @@ onMounted(async () => {
 }
 
 .dashboard-container {
-  min-height: 100vh;
+  height: 100vh;
+  width: 100%;
   background-color: var(--dashboard-container-bg-color);
   align-content: center;
   justify-content: center;
   display: flex;
+  padding: 0 16px;
   flex-direction: column;
-  gap: 10px;
+  gap: 1px;
   align-items: center;
 }
 
 .dashboard-header {
   background: var(--dashboard-container-bg-color);
   border-radius: 50px;
-  margin: 10px 0 5px 0;
+  margin: 10px 0;
   height: 40px;
-  min-width: 300px;
-  max-width: 800px;
+  width: 100%;
+  max-width: 600px;
+  min-width: auto;
   box-shadow: var(--dashboard-header-box-shadow);
   border: var(--dashboard-header-border);
   transition: all 0.3s ease;
@@ -1659,7 +1662,6 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 0 auto;
   height: 100%;
 }
 
@@ -1682,7 +1684,6 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
   height: 32px;
   cursor: pointer;
   border-radius: 4px;
@@ -1692,18 +1693,19 @@ onMounted(async () => {
 .menu-item {
   display: flex;
   justify-content: space-between;
-  width: 100%;
   flex-direction: column;
   align-items: center;
 }
 
 .dashboard-content {
-  padding: 16px 24px;
-  max-width: 800px;
+  width: 100%;
+  max-width: 600px;
+  min-width: auto;
+  margin: 10px 0;
+  padding: 16px 0;
   background-color: var(--dashboard-content-bg-color);
   border: var(--dashboard-content-border);
   border-radius: 20px;
-  margin: 2px 20px 50px 20px;
   box-shadow: var(--dashboard-content-box-shadow);
   transition: all 0.3s ease;
 }
@@ -1711,14 +1713,46 @@ onMounted(async () => {
   transform: translateY(-2px);
 }
 
+/* 添加响应式布局 */
+@media screen and (max-width: 480px) {
+  .dashboard-container {
+    padding: 0 8px;
+  }
+  
+  .dashboard-content {
+    padding: 8px;
+  }
+
+  /* 优化表单在移动端的展示 */
+  .el-form-item {
+    margin-bottom: 12px;
+  }
+
+  /* 调整移动端的表格显示 */
+  :deep(.el-table) {
+    font-size: 12px;
+  }
+
+  /* 优化状态展示 */
+  .status-container {
+    min-width: 60px;
+    font-size: 12px;
+  }
+}
+
+/* 优化表格滚动 */
+:deep(.el-table) {
+  width: 100% !important;
+  overflow-x: auto;
+}
+
 /* 数据状态板 */
 .stats-panel {
   text-align: center;
-  padding: 15px 0 5px 0;
+  padding: 20px 0 10px 0;
   color: var(--el-text-color-primary);
-  overflow: hidden;
-  position: relative;
-  margin: 15px 10px 5px 10px;
+  padding: 16px 8px;
+  overflow-x: auto;
 }
 
 .stats-skeleton {
@@ -1748,8 +1782,6 @@ onMounted(async () => {
   color: var(--el-text-color-primary);
   overflow: hidden;
   transition: none;
-  position: relative;
-  height: auto;
 }
 
 .add-record-btn {
@@ -1766,10 +1798,10 @@ onMounted(async () => {
 }
 
 .nav-bar {
-  margin: 0 10px;
+  gap: 20px;
   align-items: center;
   justify-content: center;
-  height: 30px;
+  height: 40px;
 }
 
 .records-list {
@@ -1792,13 +1824,14 @@ onMounted(async () => {
 .pagination {
   display: flex;
   justify-content: center;
+  margin: 15px 0 0 0;
 }
 
 .form-info {
-  margin-top: 8px;
+  margin: 10px 0 20px 0;
   color: var(--el-text-color-secondary);
   font-size: 12px;
-  text-align: left;
+  text-align: center;
   transition: all 0.3s;
 }
 
@@ -1839,8 +1872,8 @@ onMounted(async () => {
   border: 1px solid var(--el-border-color-light);
   border-radius: 4px;
   overflow: hidden;
-  height: 300px;
-  margin: 16px 0;
+  height: 200px;
+  margin: 24px 0 5px 0;
 }
 
 .map-skeleton-content {
@@ -1852,14 +1885,8 @@ onMounted(async () => {
 }
 
 .map-skeleton-icon {
-  font-size: 48px;
+  font-size: 50px;
   color: var(--el-text-color-placeholder);
-}
-
-.el-table {
-  --el-table-border-color: var(--el-border-color-lighter);
-  --el-table-header-bg-color: var(--el-fill-color-light);
-  margin-bottom: 16px;
 }
 
 .status-container {
@@ -1877,7 +1904,6 @@ onMounted(async () => {
 }
 
 .expanded-form :deep(.el-form-item) {
-  margin-right: 32px;
   margin-bottom: 0;
 }
 
