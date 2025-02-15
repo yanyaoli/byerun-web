@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import AMapLoader from '@amap/amap-jsapi-loader';
-import { getMapData } from '@/utils/map';
+import { getMapData, generateDynamicPath } from '@/utils/map';
 
 // 添加 AMap 类型声明
 declare const AMap: any;
@@ -13,6 +13,8 @@ declare const AMap: any;
 const props = defineProps<{
     mapChoice: string;
     visible: boolean;
+    distance?: number;  // 添加距离属性
+    duration?: number;  // 添加时长属性
 }>();
 
 const mapContainer = ref<HTMLElement | null>(null);
@@ -60,13 +62,31 @@ const drawRoute = () => {
     markers.forEach(marker => map.remove(marker));
     markers = [];
 
-    // 转换坐标点
-    const path = mapData.map(point => {
-        const [lng, lat] = point.location.split(',').map(Number);
-        return [lng, lat];
-    });
+    // 转换地图数据为路径数据格式
+    const basePathData = {
+        pathLength: 0,
+        startPoint: { lat: 0, lng: 0 },
+        endPoint: { lat: 0, lng: 0 },
+        path: mapData.map(point => {
+            const [lng, lat] = point.location.split(',').map(Number);
+            return { lat, lng };
+        }),
+        mapChoice: props.mapChoice
+    };
+
+    // 根据距离和时长生成动态路径
+    let pathData;
+    if (props.distance && props.duration) {
+        pathData = generateDynamicPath(basePathData, props.distance, props.duration);
+    } else {
+        // 如果没有提供距离和时长，使用默认路径
+        basePathData.startPoint = basePathData.path[0];
+        basePathData.endPoint = basePathData.path[basePathData.path.length - 1];
+        pathData = basePathData;
+    }
 
     // 创建折线
+    const path = pathData.path.map(point => [point.lng, point.lat]);
     polyline = new AMap.Polyline({
         path,
         strokeColor: '#409EFF',
@@ -77,13 +97,13 @@ const drawRoute = () => {
 
     // 添加起点标记
     const startMarker = new AMap.Marker({
-        position: path[0],
+        position: [pathData.startPoint.lng, pathData.startPoint.lat],
         content: '<div class="marker start-marker">起</div>'
     });
 
     // 添加终点标记
     const endMarker = new AMap.Marker({
-        position: path[path.length - 1],
+        position: [pathData.endPoint.lng, pathData.endPoint.lat],
         content: '<div class="marker end-marker">终</div>'
     });
 
@@ -110,6 +130,15 @@ watch(() => props.visible, (newVal) => {
         }, 100);
     }
 });
+
+watch(
+    () => [props.distance, props.duration],
+    () => {
+        if (props.visible && map) {
+            drawRoute();
+        }
+    }
+);
 
 onMounted(() => {
     if (props.visible) {

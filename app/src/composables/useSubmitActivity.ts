@@ -2,6 +2,7 @@ import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import { userService } from "@/services/user";
 import { genTrackPoints, getDate } from "@/utils/track";
+import { generateDynamicPath } from "@/utils/map";
 import { config } from "@/config";
 
 interface SubmitData {
@@ -31,6 +32,8 @@ export function useSubmitActivity() {
         return false;
       }
 
+      const trackPoints = genTrackPoints(runDistance, mapChoice);
+
       const body = {
         againRunStatus: "0",
         againRunTime: 0,
@@ -38,7 +41,7 @@ export function useSubmitActivity() {
         brand: config.device.brand,
         mobileType: config.device.mobileType,
         sysVersions: config.device.sysVersion,
-        trackPoints: genTrackPoints(runDistance, mapChoice),
+        trackPoints,
         distanceTimeStatus: "1",
         innerSchool: "1",
         runDistance,

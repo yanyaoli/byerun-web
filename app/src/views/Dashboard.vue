@@ -10,407 +10,8 @@
         />
         <div class="header-right">
           <div class="header-icon-button" @click="toggleTheme">
-            <el-icon v-if="!isDarkMode"
-              ><svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill-opacity="0"
-                  d="M15.22 6.03l2.53-1.94L14.56 4L13.5 1l-1.06 3l-3.19.09l2.53 1.94l-.91 3.06l2.63-1.81l2.63 1.81z"
-                  fill="currentColor"
-                >
-                  <animate
-                    id="lineMdSunnyOutlineToMoonLoopTransition0"
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="0.6s;lineMdSunnyOutlineToMoonLoopTransition0.begin+6s"
-                    dur="0.4s"
-                    values="0;1"
-                  />
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+2.2s"
-                    dur="0.4s"
-                    values="1;0"
-                  />
-                </path>
-                <path
-                  fill-opacity="0"
-                  d="M13.61 5.25L15.25 4l-2.06-.05L12.5 2l-.69 1.95L9.75 4l1.64 1.25l-.59 1.98l1.7-1.17l1.7 1.17z"
-                  fill="currentColor"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+3s"
-                    dur="0.4s"
-                    values="0;1"
-                  />
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+5.2s"
-                    dur="0.4s"
-                    values="1;0"
-                  />
-                </path>
-                <path
-                  fill-opacity="0"
-                  d="M19.61 12.25L21.25 11l-2.06-.05L18.5 9l-.69 1.95l-2.06.05l1.64 1.25l-.59 1.98l1.7-1.17l1.7 1.17z"
-                  fill="currentColor"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+0.4s"
-                    dur="0.4s"
-                    values="0;1"
-                  />
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+2.8s"
-                    dur="0.4s"
-                    values="1;0"
-                  />
-                </path>
-                <path
-                  fill-opacity="0"
-                  d="M20.828 9.731l1.876-1.439l-2.366-.067L19.552 6l-.786 2.225l-2.366.067l1.876 1.439L17.601 12l1.951-1.342L21.503 12z"
-                  fill="currentColor"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+3.4s"
-                    dur="0.4s"
-                    values="0;1"
-                  />
-                  <animate
-                    fill="freeze"
-                    attributeName="fill-opacity"
-                    begin="lineMdSunnyOutlineToMoonLoopTransition0.begin+5.6s"
-                    dur="0.4s"
-                    values="1;0"
-                  />
-                </path>
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                >
-                  <g>
-                    <path
-                      stroke-dasharray="2"
-                      stroke-dashoffset="4"
-                      d="M12 21v1M21 12h1M12 3v-1M3 12h-1"
-                    >
-                      <animate
-                        fill="freeze"
-                        attributeName="stroke-dashoffset"
-                        dur="0.2s"
-                        values="4;2"
-                      />
-                    </path>
-                    <path
-                      stroke-dasharray="2"
-                      stroke-dashoffset="4"
-                      d="M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5"
-                    >
-                      <animate
-                        fill="freeze"
-                        attributeName="stroke-dashoffset"
-                        begin="0.2s"
-                        dur="0.2s"
-                        values="4;2"
-                      />
-                    </path>
-                    <set
-                      fill="freeze"
-                      attributeName="opacity"
-                      begin="0.5s"
-                      to="0"
-                    />
-                  </g>
-                  <path
-                    d="M7 6 C7 12.08 11.92 17 18 17 C18.53 17 19.05 16.96 19.56 16.89 C17.95 19.36 15.17 21 12 21 C7.03 21 3 16.97 3 12 C3 8.83 4.64 6.05 7.11 4.44 C7.04 4.95 7 5.47 7 6 Z"
-                    opacity="0"
-                  >
-                    <set
-                      fill="freeze"
-                      attributeName="opacity"
-                      begin="0.5s"
-                      to="1"
-                    />
-                  </path>
-                </g>
-                <mask id="lineMdSunnyOutlineToMoonLoopTransition1">
-                  <circle cx="12" cy="12" r="12" fill="#fff" />
-                  <circle cx="12" cy="12" r="4">
-                    <animate
-                      fill="freeze"
-                      attributeName="r"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="4;8"
-                    />
-                  </circle>
-                  <circle cx="22" cy="2" r="3" fill="#fff">
-                    <animate
-                      fill="freeze"
-                      attributeName="cx"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="22;18"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="cy"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="2;6"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="r"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="3;12"
-                    />
-                  </circle>
-                  <circle cx="22" cy="2" r="1">
-                    <animate
-                      fill="freeze"
-                      attributeName="cx"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="22;18"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="cy"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="2;6"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="r"
-                      begin="0.1s"
-                      dur="0.4s"
-                      values="1;10"
-                    />
-                  </circle>
-                </mask>
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="6"
-                  mask="url(#lineMdSunnyOutlineToMoonLoopTransition1)"
-                  fill="currentColor"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="r"
-                    begin="0.1s"
-                    dur="0.4s"
-                    values="6;10"
-                  />
-                  <set
-                    fill="freeze"
-                    attributeName="opacity"
-                    begin="0.5s"
-                    to="0"
-                  />
-                </circle></svg
-            ></el-icon>
-            <el-icon v-else
-              ><svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-              >
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-dasharray="2"
-                    stroke-dashoffset="2"
-                    d="M12 19v1M19 12h1M12 5v-1M5 12h-1"
-                  >
-                    <animate
-                      fill="freeze"
-                      attributeName="d"
-                      begin="1.2s"
-                      dur="0.2s"
-                      values="M12 19v1M19 12h1M12 5v-1M5 12h-1;M12 21v1M21 12h1M12 3v-1M3 12h-1"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="stroke-dashoffset"
-                      begin="1.2s"
-                      dur="0.2s"
-                      values="2;0"
-                    />
-                  </path>
-                  <path
-                    stroke-dasharray="2"
-                    stroke-dashoffset="2"
-                    d="M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5"
-                  >
-                    <animate
-                      fill="freeze"
-                      attributeName="d"
-                      begin="1.4s"
-                      dur="0.2s"
-                      values="M17 17l0.5 0.5M17 7l0.5 -0.5M7 7l-0.5 -0.5M7 17l-0.5 0.5;M18.5 18.5l0.5 0.5M18.5 5.5l0.5 -0.5M5.5 5.5l-0.5 -0.5M5.5 18.5l-0.5 0.5"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="stroke-dashoffset"
-                      begin="1.4s"
-                      dur="0.2s"
-                      values="2;0"
-                    />
-                  </path>
-                  <animateTransform
-                    attributeName="transform"
-                    dur="30s"
-                    repeatCount="indefinite"
-                    type="rotate"
-                    values="0 12 12;360 12 12"
-                  />
-                </g>
-                <g fill="currentColor">
-                  <path
-                    d="M15.22 6.03L17.75 4.09L14.56 4L13.5 1L12.44 4L9.25 4.09L11.78 6.03L10.87 9.09L13.5 7.28L16.13 9.09L15.22 6.03Z"
-                  >
-                    <animate
-                      fill="freeze"
-                      attributeName="fill-opacity"
-                      dur="0.4s"
-                      values="1;0"
-                    />
-                  </path>
-                  <path
-                    d="M19.61 12.25L21.25 11L19.19 10.95L18.5 9L17.81 10.95L15.75 11L17.39 12.25L16.8 14.23L18.5 13.06L20.2 14.23L19.61 12.25Z"
-                  >
-                    <animate
-                      fill="freeze"
-                      attributeName="fill-opacity"
-                      begin="0.2s"
-                      dur="0.4s"
-                      values="1;0"
-                    />
-                  </path>
-                </g>
-                <path
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M7 6 C7 12.08 11.92 17 18 17 C18.53 17 19.05 16.96 19.56 16.89 C17.95 19.36 15.17 21 12 21 C7.03 21 3 16.97 3 12 C3 8.83 4.64 6.05 7.11 4.44 C7.04 4.95 7 5.47 7 6 Z"
-                >
-                  <set
-                    fill="freeze"
-                    attributeName="opacity"
-                    begin="0.6s"
-                    to="0"
-                  />
-                </path>
-                <mask id="lineMdMoonToSunnyOutlineLoopTransition0">
-                  <circle cx="12" cy="12" r="12" fill="#fff" />
-                  <circle cx="12" cy="12" r="8">
-                    <animate
-                      fill="freeze"
-                      attributeName="r"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="8;4"
-                    />
-                  </circle>
-                  <circle cx="18" cy="6" r="12" fill="#fff">
-                    <animate
-                      fill="freeze"
-                      attributeName="cx"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="18;22"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="cy"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="6;2"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="r"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="12;3"
-                    />
-                  </circle>
-                  <circle cx="18" cy="6" r="10">
-                    <animate
-                      fill="freeze"
-                      attributeName="cx"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="18;22"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="cy"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="6;2"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="r"
-                      begin="0.6s"
-                      dur="0.4s"
-                      values="10;1"
-                    />
-                  </circle>
-                </mask>
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  mask="url(#lineMdMoonToSunnyOutlineLoopTransition0)"
-                  opacity="0"
-                  fill="currentColor"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="r"
-                    begin="0.6s"
-                    dur="0.4s"
-                    values="10;6"
-                  />
-                  <set
-                    fill="freeze"
-                    attributeName="opacity"
-                    begin="0.6s"
-                    to="1"
-                  />
-                </circle></svg
-            ></el-icon>
+            <el-icon v-if="!isDarkMode"><MoonIcon /></el-icon>
+            <el-icon v-else><SunnyIcon /></el-icon>
           </div>
           <a
             :href="config.urls.github"
@@ -418,75 +19,7 @@
             rel="noopener noreferrer"
             class="header-icon-button"
           >
-            <el-icon
-              ><svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
-                viewBox="0 0 24 24"
-              >
-                <mask id="lineMdGithubLoop0" width="24" height="24" x="0" y="0">
-                  <g fill="#fff">
-                    <ellipse cx="9.5" cy="9" rx="1.5" ry="1" />
-                    <ellipse cx="14.5" cy="9" rx="1.5" ry="1" />
-                  </g>
-                </mask>
-                <g
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-dasharray="32"
-                    stroke-dashoffset="32"
-                    d="M12 4c1.67 0 2.61 0.4 3 0.5c0.53 -0.43 1.94 -1.5 3.5 -1.5c0.34 1 0.29 2.22 0 3c0.75 1 1 2 1 3.5c0 2.19 -0.48 3.58 -1.5 4.5c-1.02 0.92 -2.11 1.37 -3.5 1.5c0.65 0.54 0.5 1.87 0.5 2.5c0 0.73 0 3 0 3M12 4c-1.67 0 -2.61 0.4 -3 0.5c-0.53 -0.43 -1.94 -1.5 -3.5 -1.5c-0.34 1 -0.29 2.22 0 3c-0.75 1 -1 2 -1 3.5c0 2.19 0.48 3.58 1.5 4.5c1.02 0.92 2.11 1.37 3.5 1.5c-0.65 0.54 -0.5 1.87 -0.5 2.5c0 0.73 0 3 0 3"
-                  >
-                    <animate
-                      fill="freeze"
-                      attributeName="stroke-dashoffset"
-                      dur="0.7s"
-                      values="32;0"
-                    />
-                  </path>
-                  <path
-                    stroke-dasharray="10"
-                    stroke-dashoffset="10"
-                    d="M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5"
-                  >
-                    <animate
-                      attributeName="d"
-                      dur="3s"
-                      repeatCount="indefinite"
-                      values="M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5;M9 19c-1.406 0-3-.5-4-.5-.532 0-1 0-2-.5;M9 19c-1.406 0-2.844-.563-3.688-1.188C4.47 17.188 4.22 16.157 3 15.5"
-                    />
-                    <animate
-                      fill="freeze"
-                      attributeName="stroke-dashoffset"
-                      begin="0.8s"
-                      dur="0.2s"
-                      values="10;0"
-                    />
-                  </path>
-                </g>
-                <rect
-                  width="8"
-                  height="4"
-                  x="8"
-                  y="11"
-                  fill="currentColor"
-                  mask="url(#lineMdGithubLoop0)"
-                >
-                  <animate
-                    attributeName="y"
-                    dur="10s"
-                    keyTimes="0;0.45;0.46;0.54;0.55;1"
-                    repeatCount="indefinite"
-                    values="11;11;7;7;11;11"
-                  />
-                </rect></svg
-            ></el-icon>
+            <el-icon><GithubIcon /></el-icon>
           </a>
           <el-dropdown
             @command="handleCommand"
@@ -494,238 +27,29 @@
             placement="bottom-end"
           >
             <div class="header-icon-button">
-              <el-icon>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                >
-                  <defs>
-                    <symbol id="lineMdCogLoop0">
-                      <path
-                        d="M15.24 6.37C15.65 6.6 16.04 6.88 16.38 7.2C16.6 7.4 16.8 7.61 16.99 7.83C17.46 8.4 17.85 9.05 18.11 9.77C18.2 10.03 18.28 10.31 18.35 10.59C18.45 11.04 18.5 11.52 18.5 12"
-                      >
-                        <animate
-                          fill="freeze"
-                          attributeName="d"
-                          begin="0.9s"
-                          dur="0.2s"
-                          values="M15.24 6.37C15.65 6.6 16.04 6.88 16.38 7.2C16.6 7.4 16.8 7.61 16.99 7.83C17.46 8.4 17.85 9.05 18.11 9.77C18.2 10.03 18.28 10.31 18.35 10.59C18.45 11.04 18.5 11.52 18.5 12;M15.24 6.37C15.65 6.6 16.04 6.88 16.38 7.2C16.38 7.2 19 6.12 19.01 6.14C19.01 6.14 20.57 8.84 20.57 8.84C20.58 8.87 18.35 10.59 18.35 10.59C18.45 11.04 18.5 11.52 18.5 12"
-                        />
-                      </path>
-                    </symbol>
-                  </defs>
-                  <g fill="none" stroke="currentColor" stroke-width="2">
-                    <g stroke-linecap="round">
-                      <path
-                        stroke-dasharray="20"
-                        stroke-dashoffset="20"
-                        d="M12 9c1.66 0 3 1.34 3 3c0 1.66 -1.34 3 -3 3c-1.66 0 -3 -1.34 -3 -3c0 -1.66 1.34 -3 3 -3Z"
-                      >
-                        <animate
-                          fill="freeze"
-                          attributeName="stroke-dashoffset"
-                          dur="0.2s"
-                          values="20;0"
-                        />
-                      </path>
-                      <path
-                        stroke-dasharray="48"
-                        stroke-dashoffset="48"
-                        d="M12 5.5c3.59 0 6.5 2.91 6.5 6.5c0 3.59 -2.91 6.5 -6.5 6.5c-3.59 0 -6.5 -2.91 -6.5 -6.5c0 -3.59 2.91 -6.5 6.5 -6.5Z"
-                      >
-                        <animate
-                          fill="freeze"
-                          attributeName="stroke-dashoffset"
-                          begin="0.2s"
-                          dur="0.6s"
-                          values="48;0"
-                        />
-                        <set
-                          fill="freeze"
-                          attributeName="opacity"
-                          begin="0.9s"
-                          to="0"
-                        />
-                      </path>
-                    </g>
-                    <g opacity="0">
-                      <use href="#lineMdCogLoop0" />
-                      <use
-                        href="#lineMdCogLoop0"
-                        transform="rotate(60 12 12)"
-                      />
-                      <use
-                        href="#lineMdCogLoop0"
-                        transform="rotate(120 12 12)"
-                      />
-                      <use
-                        href="#lineMdCogLoop0"
-                        transform="rotate(180 12 12)"
-                      />
-                      <use
-                        href="#lineMdCogLoop0"
-                        transform="rotate(240 12 12)"
-                      />
-                      <use
-                        href="#lineMdCogLoop0"
-                        transform="rotate(300 12 12)"
-                      />
-                      <set
-                        fill="freeze"
-                        attributeName="opacity"
-                        begin="0.9s"
-                        to="1"
-                      />
-                      <animateTransform
-                        fill="freeze"
-                        attributeName="transform"
-                        dur="30s"
-                        type="rotate"
-                        values="0 12 12;360 12 12"
-                      />
-                    </g>
-                  </g>
-                </svg>
-              </el-icon>
+              <el-icon><SettingsIcon /></el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu class="menu-item">
                 <el-dropdown-item command="refresh">
                   <el-icon>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                    >
-                      <g
-                        fill="currentColor"
-                        fill-opacity="0"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                      >
-                        <path
-                          stroke-dasharray="20"
-                          stroke-dashoffset="20"
-                          d="M12 5c1.66 0 3 1.34 3 3c0 1.66 -1.34 3 -3 3c-1.66 0 -3 -1.34 -3 -3c0 -1.66 1.34 -3 3 -3Z"
-                        >
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            dur="0.4s"
-                            values="20;0"
-                          />
-                        </path>
-                        <path
-                          stroke-dasharray="36"
-                          stroke-dashoffset="36"
-                          d="M12 14c4 0 7 2 7 3v2h-14v-2c0 -1 3 -3 7 -3Z"
-                        >
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            begin="0.5s"
-                            dur="0.5s"
-                            values="36;0"
-                          />
-                        </path>
-                        <animate
-                          fill="freeze"
-                          attributeName="fill-opacity"
-                          begin="1.1s"
-                          dur="0.5s"
-                          values="0;1"
-                        />
-                      </g>
-                    </svg>
+                    <UserIcon />
                   </el-icon>
                   {{ userStore.userInfo?.name }}
                 </el-dropdown-item>
                 <el-dropdown-item command="refresh">
                   <el-icon>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                    >
-                      <g
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                      >
-                        <path
-                          stroke-dasharray="16"
-                          stroke-dashoffset="16"
-                          d="M12 3c4.97 0 9 4.03 9 9"
-                        >
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            dur="0.3s"
-                            values="16;0"
-                          />
-                          <animateTransform
-                            attributeName="transform"
-                            dur="1.5s"
-                            repeatCount="indefinite"
-                            type="rotate"
-                            values="0 12 12;360 12 12"
-                          />
-                        </path>
-                        <path
-                          stroke-dasharray="64"
-                          stroke-dashoffset="64"
-                          stroke-opacity=".3"
-                          d="M12 3c4.97 0 9 4.03 9 9c0 4.97 -4.03 9 -9 9c-4.97 0 -9 -4.03 -9 -9c0 -4.97 4.03 -9 9 -9Z"
-                        >
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            dur="1.2s"
-                            values="64;0"
-                          />
-                        </path>
-                      </g>
-                    </svg>
+                    <RefreshIcon />
                   </el-icon>
                   刷新数据
                 </el-dropdown-item>
                 <el-dropdown-item command="showEndDate">
-                  <el-icon>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="m22 5.72l-4.6-3.86l-1.29 1.53l4.6 3.86zM7.88 3.39L6.6 1.86L2 5.71l1.29 1.53zM12.5 8H11v6l4.75 2.85l.75-1.23l-4-2.37zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9a9 9 0 0 0 0-18m0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7s7 3.13 7 7s-3.13 7-7 7"
-                      />
-                    </svg>
-                  </el-icon>
+                  <el-icon><AlarmClockIcon /></el-icon>
                   截止日期
                 </el-dropdown-item>
                 <el-dropdown-item command="logout">
                   <el-icon>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="32"
-                      height="32"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="currentColor"
-                        d="M12 3c-4.625 0-8.442 3.507-8.941 8.001H10v-3l5 4l-5 4v-3H3.06C3.56 17.494 7.376 21 12 21c4.963 0 9-4.037 9-9s-4.037-9-9-9"
-                      />
-                    </svg>
+                    <LogoutIcon />
                   </el-icon>
                   退出登录
                 </el-dropdown-item>
@@ -748,145 +72,9 @@
         class="nav-bar"
       >
         <el-menu-item index="home"
-          ><el-icon
-            ><svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-            >
-              <g
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-              >
-                <path
-                  stroke-dasharray="64"
-                  stroke-dashoffset="64"
-                  d="M13 3l6 6v12h-14v-18h8"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    dur="0.6s"
-                    values="64;0"
-                  />
-                </path>
-                <path
-                  stroke-dasharray="14"
-                  stroke-dashoffset="14"
-                  stroke-width="1"
-                  d="M12.5 3v5.5h6.5"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="0.7s"
-                    dur="0.2s"
-                    values="14;0"
-                  />
-                </path>
-                <path stroke-dasharray="4" stroke-dashoffset="4" d="M9 17v-3">
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="0.9s"
-                    dur="0.2s"
-                    values="4;0"
-                  />
-                </path>
-                <path stroke-dasharray="6" stroke-dashoffset="6" d="M12 17v-4">
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="1.1s"
-                    dur="0.2s"
-                    values="6;0"
-                  />
-                </path>
-                <path stroke-dasharray="6" stroke-dashoffset="6" d="M15 17v-5">
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="1.3s"
-                    dur="0.2s"
-                    values="6;0"
-                  />
-                </path>
-              </g></svg></el-icon
           >数据</el-menu-item
         >
         <el-menu-item index="records"
-          ><el-icon
-            ><svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-            >
-              <g
-                fill="none"
-                stroke="currentColor"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-              >
-                <path
-                  stroke-dasharray="72"
-                  stroke-dashoffset="72"
-                  d="M12 3h7v18h-14v-18h7Z"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    dur="0.6s"
-                    values="72;0"
-                  />
-                </path>
-                <path
-                  stroke-dasharray="12"
-                  stroke-dashoffset="12"
-                  stroke-width="1"
-                  d="M14.5 3.5v3h-5v-3"
-                >
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="0.7s"
-                    dur="0.2s"
-                    values="12;0"
-                  />
-                </path>
-                <path stroke-dasharray="4" stroke-dashoffset="4" d="M9 10h3">
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="0.9s"
-                    dur="0.2s"
-                    values="4;0"
-                  />
-                </path>
-                <path stroke-dasharray="6" stroke-dashoffset="6" d="M9 13h5">
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="1.1s"
-                    dur="0.2s"
-                    values="6;0"
-                  />
-                </path>
-                <path stroke-dasharray="8" stroke-dashoffset="8" d="M9 16h6">
-                  <animate
-                    fill="freeze"
-                    attributeName="stroke-dashoffset"
-                    begin="1.3s"
-                    dur="0.2s"
-                    values="8;0"
-                  />
-                </path>
-              </g></svg></el-icon
           >记录</el-menu-item
         >
       </el-menu>
@@ -1066,63 +254,7 @@
                 :loading="submitting"
                 class="submit-btn"
                 style="width: 100%"
-              >
-                <el-icon style="margin-right: 10px"
-                  ><svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="32"
-                    height="32"
-                    viewBox="0 0 24 24"
-                  >
-                    <mask id="lineMdCheckAll0">
-                      <g
-                        fill="none"
-                        stroke="#fff"
-                        stroke-dasharray="24"
-                        stroke-dashoffset="24"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                      >
-                        <path d="M2 13.5l4 4l10.75 -10.75">
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            dur="0.4s"
-                            values="24;0"
-                          />
-                        </path>
-                        <path
-                          stroke="#000"
-                          stroke-width="6"
-                          d="M7.5 13.5l4 4l10.75 -10.75"
-                        >
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            begin="0.4s"
-                            dur="0.4s"
-                            values="24;0"
-                          />
-                        </path>
-                        <path d="M7.5 13.5l4 4l10.75 -10.75">
-                          <animate
-                            fill="freeze"
-                            attributeName="stroke-dashoffset"
-                            begin="0.4s"
-                            dur="0.4s"
-                            values="24;0"
-                          />
-                        </path>
-                      </g>
-                    </mask>
-                    <rect
-                      width="24"
-                      height="24"
-                      fill="currentColor"
-                      mask="url(#lineMdCheckAll0)"
-                    /></svg></el-icon
-                >提交记录
+              >提交记录
               </el-button>
             </div>
 
@@ -1212,7 +344,12 @@
               </template>
               <template #default>
                 <div v-show="formState.route" class="map-content">
-                  <RunMap :map-choice="formState.route" :visible="showMap" />
+                  <RunMap
+                    :map-choice="formState.route"
+                    :visible="showMap"
+                    :distance="formState.distance"
+                    :duration="formState.duration"
+                  />
                 </div>
               </template>
             </el-skeleton>
@@ -1316,7 +453,7 @@
               :currentPage="pagination.current"
               :total="pagination.total"
               :page-size="pagination.pageSize"
-              layout="prev, pager, next"
+              layout="pager"
               @current-change="handleTableChange"
             />
           </div>
@@ -1344,8 +481,19 @@ import {
   CircleCloseFilled,
   MagicStick,
 } from "@element-plus/icons-vue";
-
 import RunMap from "@/components/RunMap.vue";
+
+// 导入图标
+import {
+  UserIcon,
+  SettingsIcon,
+  MoonIcon,
+  SunnyIcon,
+  GithubIcon,
+  LogoutIcon,
+  AlarmClockIcon,
+  RefreshIcon,
+} from "@/components/icons";
 
 const userStore = useUserStore();
 const { logout } = useAuth();
@@ -1545,8 +693,16 @@ const handleCommand = (command: string) => {
   }
 };
 
-// 添加随机填充函数
+// 修改 fillRandomData 函数
 const fillRandomData = () => {
+  // 如果没有选择地图，随机选择一个地图
+  if (!formState.route) {
+    const maps = getSchoolMaps();
+    const randomMapIndex = Math.floor(Math.random() * maps.length);
+    formState.route = maps[randomMapIndex].value;
+  }
+
+  // 生成随机的距离和时间，确保配速大于6分钟每公里
   let distance, time, pace;
   do {
     distance = Math.random() * (distanceMax - distanceMin) + distanceMin;
@@ -1554,12 +710,8 @@ const fillRandomData = () => {
     pace = time / (distance / 1000); // 计算配速
   } while (pace <= 6); // 确保配速大于6分钟每公里
 
-  const maps = getSchoolMaps();
-  const randomMapIndex = Math.floor(Math.random() * maps.length);
-
   formState.distance = Math.round(distance);
   formState.duration = Math.round(time);
-  formState.route = maps[randomMapIndex].value;
 };
 
 const handleTableChange = async (currentPage: number) => {
@@ -1602,312 +754,303 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* 设置描述列表中的标签宽度 */
-:deep(.el-descriptions__label) {
-  width: 80px !important;
-  text-align: right !important;
-}
-
-/* 确保内容区域正确对齐 */
-:deep(.el-descriptions__content) {
-  padding-left: 12px !important;
-}
 
 .status-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 100px;
-  /* 确保最小宽度一致 */
-}
-
-/* 确保图标大小一致 */
-.status-container .el-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-.dashboard-container {
-  height: 100vh;
-  width: 100%;
-  background-color: var(--dashboard-container-bg-color);
-  align-content: center;
-  justify-content: center;
-  display: flex;
-  padding: 0 16px;
-  flex-direction: column;
-  gap: 1px;
-  align-items: center;
-}
-
-.dashboard-header {
-  background: var(--dashboard-container-bg-color);
-  border-radius: 50px;
-  margin: 10px 0;
-  height: 40px;
-  width: 100%;
-  max-width: 600px;
-  min-width: auto;
-  box-shadow: var(--dashboard-header-box-shadow);
-  border: var(--dashboard-header-border);
-  transition: all 0.3s ease;
-}
-
-.dashboard-header:hover {
-  transform: translateY(-2px);
-}
-.dashboard-header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 100%;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.user-menu {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--primary-text);
-  cursor: pointer;
-  border: none;
-}
-
-.settings-menu {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.3s;
-}
-
-.menu-item {
-  display: flex;
-  justify-content: space-between;
-  flex-direction: column;
-  align-items: center;
-}
-
-.dashboard-content {
-  width: 100%;
-  max-width: 600px;
-  min-width: auto;
-  margin: 10px 0;
-  padding: 16px 0;
-  background-color: var(--dashboard-content-bg-color);
-  border: var(--dashboard-content-border);
-  border-radius: 20px;
-  box-shadow: var(--dashboard-content-box-shadow);
-  transition: all 0.3s ease;
-}
-.dashboard-content:hover {
-  transform: translateY(-2px);
-}
-
-/* 添加响应式布局 */
-@media screen and (max-width: 480px) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+    /* 确保最小宽度一致 */
+  }
+  
+  /* 确保图标大小一致 */
+  .status-container .el-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+  }
+  
   .dashboard-container {
-    padding: 0 8px;
+    height: auto;
+    width: 100%;
+    background-color: var(--dashboard-container-bg-color);
+    align-content: center;
+    justify-content: center;
+    display: flex;
+    padding: 0 16px;
+    flex-direction: column;
+    gap: 1px;
+    align-items: center;
+  }
+  
+  .dashboard-header {
+    background: var(--dashboard-container-bg-color);
+    border-radius: 50px;
+    margin: 10px 0;
+    height: 40px;
+    width: 100%;
+    max-width: 600px;
+    min-width: auto;
+    box-shadow: var(--dashboard-header-box-shadow);
+    border: var(--dashboard-header-border);
+    transition: all 0.3s ease;
+  }
+  
+  .dashboard-header:hover {
+    transform: translateY(-2px);
+  }
+  .dashboard-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .user-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-text);
+    cursor: pointer;
+    border: none;
+  }
+  
+  .settings-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s;
+  }
+  
+  .menu-item {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
   }
   
   .dashboard-content {
-    padding: 8px;
+    width: 100%;
+    max-width: 600px;
+    min-width: auto;
+    margin: 10px 0;
+    padding: 16px 0;
+    background-color: var(--dashboard-content-bg-color);
+    border: var(--dashboard-content-border);
+    border-radius: 20px;
+    box-shadow: var(--dashboard-content-box-shadow);
+    transition: all 0.3s ease;
   }
-
-  /* 优化表单在移动端的展示 */
-  .el-form-item {
-    margin-bottom: 12px;
+  .dashboard-content:hover {
+    transform: translateY(-2px);
   }
-
-  /* 调整移动端的表格显示 */
+  
+  /* 添加响应式布局 */
+  @media screen and (max-width: 480px) {
+    .dashboard-container {
+      padding: 0 8px;
+    }
+    
+    .dashboard-content {
+      padding: 8px;
+    }
+  
+    /* 优化表单在移动端的展示 */
+    .el-form-item {
+      margin-bottom: 12px;
+    }
+  
+    /* 调整移动端的表格显示 */
+    :deep(.el-table) {
+      font-size: 12px;
+    }
+  
+    /* 优化状态展示 */
+    .status-container {
+      min-width: 60px;
+      font-size: 12px;
+    }
+  }
+  
+  /* 优化表格滚动 */
   :deep(.el-table) {
-    font-size: 12px;
+    width: 100% !important;
+    overflow-x: auto;
   }
-
-  /* 优化状态展示 */
+  
+  /* 数据状态板 */
+  .stats-panel {
+    background-color: var(--stats-panel-bg-color);
+    border: var(--stats-panel-border);
+    text-align: center;
+    padding: 20px 0 10px 0;
+    color: var(--el-text-color-primary);
+    padding: 16px 8px;
+    overflow-x: auto;
+  }
+  
+  .stats-skeleton {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* 提交表单卡片 */
+  .submit-card {
+    background-color: var(--submit-card-bg-color);
+    border: var(--submit-card-border);
+    box-shadow: var(--submit-card-box-shadow);
+    border-radius: 0px;
+    color: var(--el-text-color-primary);
+    overflow: hidden;
+    transition: none;
+  }
+  
+  /* 记录表格卡片 */
+  .records-card {
+    background-color: var(--records-card-bg-color);
+    box-shadow: none;
+    border: none;
+    color: var(--el-text-color-primary);
+    overflow: hidden;
+    transition: none;
+  }
+  
+  .add-record-btn {
+    margin-bottom: 10px;
+  }
+  
+  .logo {
+    height: 24px;
+    width: 24px;
+    margin-right: 24px;
+    object-fit: contain;
+    cursor: pointer;
+    filter: brightness(var(--logo-value));
+  }
+  
+  .nav-bar {
+    gap: 20px;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+  }
+  
+  .records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .record-item {
+    background-color: var(--secondary-bg);
+  }
+  
+  .record-status {
+    display: inline-flex;
+    align-items: center;
+    color: var(--primary-text);
+    font-size: 14px;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    margin: 15px 0 0 0;
+  }
+  
+  .form-info {
+    margin: 10px 0 20px 0;
+    color: var(--el-text-color-secondary);
+    font-size: 12px;
+    text-align: center;
+    transition: all 0.3s;
+  }
+  
+  .form-footer {
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+    display: flex;
+  }
+  
+  .randomBtn {
+    color: var(--el-text-color-secondary);
+    width: 100%;
+  }
+  
+  .text-error {
+    color: var(--el-color-danger);
+  }
+  
+  .header-icon-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    border-radius: 4px;
+    color: var(--el-text-color-primary);
+    transition: all 0.3s;
+  }
+  
+  .header-icon-button:hover {
+    background-color: var(--el-fill-color-light);
+    color: var(--el-text-color-primary);
+  }
+  
+  .map-container {
+    border: 1px solid var(--el-border-color-light);
+    border-radius: 4px;
+    overflow: hidden;
+    height: 200px;
+    margin: 24px 0 5px 0;
+  }
+  
+  .map-skeleton-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--el-fill-color-light);
+    height: 100%;
+  }
+  
+  .map-skeleton-icon {
+    font-size: 50px;
+    color: var(--el-text-color-placeholder);
+  }
+  
   .status-container {
-    min-width: 60px;
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
-}
-
-/* 优化表格滚动 */
-:deep(.el-table) {
-  width: 100% !important;
-  overflow-x: auto;
-}
-
-/* 数据状态板 */
-.stats-panel {
-  text-align: center;
-  padding: 20px 0 10px 0;
-  color: var(--el-text-color-primary);
-  padding: 16px 8px;
-  overflow-x: auto;
-}
-
-.stats-skeleton {
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 提交表单卡片 */
-.submit-card {
-  background-color: var(--submit-card-bg-color);
-  border: var(--submit-card-border);
-  box-shadow: var(--submit-card-box-shadow);
-  border-radius: 0px;
-  color: var(--el-text-color-primary);
-  overflow: hidden;
-  transition: none;
-}
-
-/* 记录表格卡片 */
-.records-card {
-  background-color: var(--records-card-bg-color);
-  box-shadow: none;
-  border: none;
-  color: var(--el-text-color-primary);
-  overflow: hidden;
-  transition: none;
-}
-
-.add-record-btn {
-  margin-bottom: 10px;
-}
-
-.logo {
-  height: 24px;
-  width: 24px;
-  margin-right: 24px;
-  object-fit: contain;
-  cursor: pointer;
-  filter: brightness(var(--logo-value));
-}
-
-.nav-bar {
-  gap: 20px;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-}
-
-.records-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.record-item {
-  background-color: var(--secondary-bg);
-}
-
-.record-status {
-  display: inline-flex;
-  align-items: center;
-  color: var(--primary-text);
-  font-size: 14px;
-}
-
-.pagination {
-  display: flex;
-  justify-content: center;
-  margin: 15px 0 0 0;
-}
-
-.form-info {
-  margin: 10px 0 20px 0;
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  text-align: center;
-  transition: all 0.3s;
-}
-
-.form-footer {
-  justify-content: center;
-  align-items: center;
-  margin-top: 10px;
-  display: flex;
-}
-
-.randomBtn {
-  color: var(--el-text-color-secondary);
-  width: 100%;
-}
-
-.text-error {
-  color: var(--el-color-danger);
-}
-
-.header-icon-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-  border-radius: 4px;
-  color: var(--el-text-color-primary);
-  transition: all 0.3s;
-}
-
-.header-icon-button:hover {
-  background-color: var(--el-fill-color-light);
-  color: var(--el-text-color-primary);
-}
-
-.map-container {
-  border: 1px solid var(--el-border-color-light);
-  border-radius: 4px;
-  overflow: hidden;
-  height: 200px;
-  margin: 24px 0 5px 0;
-}
-
-.map-skeleton-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--el-fill-color-light);
-  height: 100%;
-}
-
-.map-skeleton-icon {
-  font-size: 50px;
-  color: var(--el-text-color-placeholder);
-}
-
-.status-container {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-container .el-icon {
-  font-size: 16px;
-}
-
-.expanded-form {
-  padding: 16px;
-}
-
-.expanded-form :deep(.el-form-item) {
-  margin-bottom: 0;
-}
-
-.expanded-form :deep(.el-form-item__label) {
-  color: var(--el-text-color-secondary);
-}
-</style>
+  
+  .status-container .el-icon {
+    font-size: 16px;
+  }
+  
+  .expanded-form {
+    padding: 16px;
+  }
+  
+  .expanded-form :deep(.el-form-item) {
+    margin-bottom: 0;
+  }
+  
+  .expanded-form :deep(.el-form-item__label) {
+    color: var(--el-text-color-secondary);
+  }</style>

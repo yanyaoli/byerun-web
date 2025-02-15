@@ -15,7 +15,7 @@
   0px 8px 20px rgba(0, 0, 0, 0.08);
 
   --stats-panel-bg-color: #fff;
-  --stats-panel-border: 1px solid #fdfdfd;
+  --stats-panel-border: none;
 
   /* 提交面板 */
   --submit-card-bg-color: #fff;
@@ -228,45 +228,30 @@ html.dark {
 
 .el-icon svg {
   color: var(--icon-color);
+  font-size: 32px; /* 确保继承尺寸 */
 }
 
 /* 提交按钮 */
 .submit-btn {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  color: var(--btn-text-color);
-  background-color: var(--btn-bg-color);
-  border: none;
-  border-radius: 20px;
-  width:100%;
-}
-.submit-btn:hover {
-  color: var(--btn-text-color);
-  background-color: var(--btn-bg-color);
-  transform: translateY(-2px);
-}
-.submit-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  background-color: var(--btn-bg-color-hover);
-}
-.submit-btn::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
-}
-.submit-btn:active::after {
-  width: 200%;
-  height: 200%;
-}
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    color: var(--btn-text-color);
+    background-color: var(--btn-bg-color);
+    border: none;
+    border-radius: 20px;
+    width:100%;
+  }
+  .submit-btn:hover {
+    color: var(--btn-text-color);
+    background-color: var(--btn-bg-color);
+    transform: translateY(-2px);
+  }
+  .submit-btn:active {
+    transform: scale(0.95);
+    background-color: var(--btn-bg-color);
+  }
+
 
 /* 图标 */
 .el-icon {
@@ -302,8 +287,10 @@ html.dark {
 
 
 html::-webkit-scrollbar {
-  width: 10px;
+  width: 1px;
+  display: none;
 }
+
 
 html::-webkit-scrollbar-track {
   background: rgb(179, 177, 177);
@@ -311,7 +298,7 @@ html::-webkit-scrollbar-track {
 }
 
 html::-webkit-scrollbar-thumb {
-  background: rgb(136, 136, 136);
+  background: rgb(0, 0, 0);
   border-radius: 10px;
 }
 

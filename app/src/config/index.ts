@@ -33,4 +33,5 @@ export const API_URLS = {
   newActivity: "/unirun/save/run/record/new",
   sendSms: "/auth/sendSmsForPassWord",
   updatePassword: "/auth/updateUserPassWord",
+  schoolBound: "/unirun/querySchoolBound",
 } as const;
