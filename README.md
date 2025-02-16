@@ -55,7 +55,10 @@ Build for production:
 npm run build
 ```
 
-## Cloudflare Worker
+
+## Server
+
+Supports deployment of the server backend on Vercel and Cloudflare.
 
 Function: Avoid cross-origin restrictions of the source server.
 
@@ -72,7 +75,7 @@ graph TD;
 
     U --> |Cross - Origin Restriction| E([Request Failed]):::error
 
-    A -->|Request Forwarded by Worker| C([Cloudflare Worker]):::process
+    A -->|Request Forwarded | C([Cloudflare / Vercel]):::process
 
     C --> U
 
@@ -81,6 +84,7 @@ graph TD;
     C --> |Response Returned| A
 ```
 
+#### Cloudflare Worker
 ```
 export default {
   async fetch(request, env) {
