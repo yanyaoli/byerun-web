@@ -4,12 +4,6 @@
   </div>
 </template>
 
-<script lang="ts">
-export default {
-  name: "NoticeBoard",
-};
-</script>
-
 <script setup lang="ts">
 import { onMounted } from "vue";
 import { useNotice } from "@/composables/useNotice";
@@ -23,28 +17,17 @@ onMounted(() => {
 
 <style scoped>
 .notice-board {
-  position: fixed;
-  bottom: 25px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 12px 16px;
-  box-shadow: var(--noticeboard-box-shadow);
-  min-width: 300px;
+  width: 100%;
   max-width: 600px;
-  color: var(--noticeboard-text-color);
-  background-color: var(--noticeboard-bg-color);
-  align-items: center;
+  padding: 8px 0;
   text-align: center;
-  border-radius: 20px;
-  transition: 0.3s ease;
-  border: var(--noticeboard-border);
-  z-index: 9999;
+  border: none;
+  margin: 0 auto;
 }
 
 .notice-content {
-  flex: 1;
   font-size: 12px;
-  line-height: 1;
+  line-height: 1.4;
   color: var(--el-text-color-primary);
 }
 
@@ -63,9 +46,14 @@ onMounted(() => {
   color: var(--el-color-primary-light-3);
 }
 
-/* 暗黑模式适配 */
-:deep(.dark .notice-board) {
-  background-color: var(--el-bg-color-overlay);
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+@media screen and (max-width: 480px) {
+  .notice-board {
+    padding: 6px 8px;
+  }
+
+  .notice-content {
+    font-size: 11px;
+    line-height: 1.3;
+  }
 }
 </style>

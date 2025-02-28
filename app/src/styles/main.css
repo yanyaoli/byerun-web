@@ -1,6 +1,12 @@
 :root {
   color-scheme: light;
+  --grid-color: rgba(0, 0, 0, 0.02); /* 白天模式默认颜色 */
+  --background-color: #fafafa; /* 白天模式背景色 */
+  --background: #fafafa;
 
+  --dashboard-border: 1px solid #f0f0f0;
+  ---nav-background-color: #f0f0f0;
+  --dashboard-header-bg-color: rgba(255, 255, 255, 0.3);
   /* 登录面板背景 */
   --login-container-bg-color: #fff;
   --login-card-bg-color: #fff;
@@ -13,6 +19,7 @@
   --dashboard-header-bg-color: #fff;
   --dashboard-header-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
   0px 8px 20px rgba(0, 0, 0, 0.08);
+  --dashboard-header-border: 1px solid #141414;
 
   --stats-panel-bg-color: #fff;
   --stats-panel-border: none;
@@ -39,9 +46,11 @@
 
   /* 按钮 */
   --btn-text-color: #fff;
-  --btn-bg-color: #000;
+  --btn-bg-color: #413a3a;
   --btn-text-color-hover: #fff;
-  --btn-bg-color-hover: #000;
+  --btn-bg-color-hover: #413a3a;
+
+  --btn-bg-color-random: #5e5959;
 
   /* 边线 */
   --input-border-color-active: #141414;
@@ -105,7 +114,7 @@
 
   /* 菜单边线 */
   --el-menu-active-color: #141414;
-  --el-menu-hover-bg-color: #fff;
+  --el-menu-hover-bg-color: transparent;
   --el-menu-hover-text-color: #000;
   --el-menu-active-text-color: #000;
 
@@ -116,7 +125,7 @@
   --el-fill-color-extra-light: #fafcff;
   --el-fill-color-dark: #ebedf0;
   --el-fill-color-darker: #e6e8eb;
-  --el-fill-color-blank: #ffffff;
+  --el-fill-color-blank: transparent;
 
   /* 阴影 */
 
@@ -143,6 +152,11 @@
 /* 暗黑配色 */
 html.dark {
   color-scheme: dark;
+  --grid-color: rgba(255, 255, 255, 0.02); /* 黑夜模式颜色 */
+  --background-color: #0c0c0c; /* 黑夜模式背景色 */
+
+  --dashboard-border: 1px solid #0a0a0a;
+  ---nav-background-color: #0a0a0a;
   /* 登录 */
   --login-container-bg-color: #000;
   --login-card-bg-color: #000;
@@ -158,7 +172,7 @@ html.dark {
   --dashboard-container-bg-color: #000;
 
   /* 导航栏 */
-  --dashboard-header-bg-color: #000;
+  --dashboard-header-bg-color: #f3f3f3;
   --dashboard-header-border: 1px solid #222831;
   --dashboard-header-box-shadow: 0 0 10px rgb(57, 62, 70);
   /* 内容 */
@@ -167,7 +181,7 @@ html.dark {
   --dashboard-content-box-shadow: 0 0 5px rgb(57, 62, 70);
   /* 统计面板 */
   --stats-panel-bg-color: #000;
-  --stats-panel-border: 1px solid #222831;
+  --stats-panel-border: none;
   /* 提交面板 */
   --submit-card-box-shadow: none;
   --submit-card-border: none;
@@ -180,8 +194,8 @@ html.dark {
   --noticeboard-box-shadow: 0 0 5px rgb(57, 62, 70);
 
   /* 菜单 */
-  --el-menu-hover-bg-color: #000;
-  --el-menu-hover-text-color: #000;
+  --el-menu-hover-bg-color: transparent;
+  --el-menu-hover-text-color: #ffffff;
   --el-menu-active-color: #fafafa;
   --el-menu-active-text-color: #fafafa;
   --el-box-shadow: 0px 12px 32px 4px rgba(0, 0, 0, 0.04),
@@ -211,9 +225,9 @@ html.dark {
   --el-button-hover-text-color: #000;
 
   /* 按钮 */
-  --btn-bg-color: #fff;
+  --btn-bg-color: #413a3a;
   --btn-text-color: #000;
-  --btn-bg-color-hover: #fff;
+  --btn-bg-color-hover: #413a3a;
   --btn-text-color-hover: #000;
 
   /* 文字 */
@@ -226,16 +240,10 @@ html.dark {
 }
 
 
-.el-icon svg {
-  color: var(--icon-color);
-  font-size: 32px; /* 确保继承尺寸 */
-}
-
 /* 提交按钮 */
 .submit-btn {
     position: relative;
     overflow: hidden;
-    transition: all 0.3s ease;
     color: var(--btn-text-color);
     background-color: var(--btn-bg-color);
     border: none;
@@ -253,61 +261,3 @@ html.dark {
   }
 
 
-/* 图标 */
-.el-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* 输入框 */
-
-
-
-.el-input:focus {
-  border-color: #000;
-  box-shadow: 0 0 0 2px #000 !important;
-}
-.el-card__header {
-  font-weight: 500px;
-  font-size: 14px;
-  padding: 10px 20px;
-}
-
-
-
-.el-menu {
-  color: var(--el-text-color-primary);
-}
-.el-menu-item:active {
-  color: var(--el-menu-active-text-color);
-  border-bottom: var(--el-border);
-}
-
-
-html::-webkit-scrollbar {
-  width: 1px;
-  display: none;
-}
-
-
-html::-webkit-scrollbar-track {
-  background: rgb(179, 177, 177);
-  border-radius: 10px;
-}
-
-html::-webkit-scrollbar-thumb {
-  background: rgb(0, 0, 0);
-  border-radius: 10px;
-}
-
-html::-webkit-scrollbar-thumb:hover {
-  background: rgb(100, 100, 100);
-  border-radius: 10px;
-}
-
-html::-webkit-scrollbar-thumb:active {
-  background: rgb(68, 68, 68);
-  border-radius: 10px;
-}

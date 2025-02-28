@@ -167,6 +167,7 @@ export default {
     height: 300px;
     border-radius: 4px;
     border: 2px solid var(--el-border-color-light);
+    background-color: transparent;
 }
 
 :deep(.marker) {

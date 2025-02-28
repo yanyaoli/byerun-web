@@ -292,17 +292,21 @@ const switchMode = () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--login-container-bg-color);
+  background-color: var(--background-color);
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px), /* 垂直线 */
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); /* 水平线 */
+  background-size: 20px 20px;
+  background-position: 0 0;
 }
 
 .login-card {
   width: 100%;
   width: 300px;
   padding: 24px;
-  background-color: var(--login-card-bg-color);
-  border-radius: 25px;
-  box-shadow: var(--login-card-box-shadow);
-  border: var(--login-card-border);
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
 }
 
 .header {
@@ -322,7 +326,6 @@ const switchMode = () => {
   cursor: pointer;
   padding: 8px;
   border-radius: 4px;
-  transition: background-color 0.3s;
 }
 
 .form-footer {

@@ -1,0 +1,29 @@
+/* 隐藏全局滚动条 */
+::-webkit-scrollbar {
+  display: none;
+}
+
+html, body {
+  overflow: hidden;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  background-color: var(--background-color);
+}
+
+#app {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 图标 */
+.el-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.el-icon svg {
+  color: var(--icon-color);
+  font-size: 24px; /* 确保继承尺寸 */
+}

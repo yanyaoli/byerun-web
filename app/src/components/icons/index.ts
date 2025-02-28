@@ -6,6 +6,7 @@ import AlarmClockIcon from './AlarmClockIcon.vue'
 import RefreshIcon from './RefreshIcon.vue'
 import UserIcon from './UserIcon.vue'
 import SettingsIcon from './SettingsIcon.vue'
+import MapLocationIcon from './MapLocationIcon.vue'
 
 export {
   MoonIcon,
@@ -15,5 +16,6 @@ export {
   AlarmClockIcon,
   RefreshIcon,
   UserIcon,
-  SettingsIcon
+  SettingsIcon,
+  MapLocationIcon
 }
