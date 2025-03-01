@@ -316,11 +316,6 @@ const switchMode = () => {
   margin-bottom: 24px;
 }
 
-.logo {
-  height: 24px;
-  filter: brightness(var(--logo-value));
-}
-
 
 .theme-toggle {
   cursor: pointer;

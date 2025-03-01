@@ -25,5 +25,15 @@ html, body {
 }
 .el-icon svg {
   color: var(--icon-color);
-  font-size: 24px; /* 确保继承尺寸 */
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  filter: brightness(var(--logo-value));
 }
