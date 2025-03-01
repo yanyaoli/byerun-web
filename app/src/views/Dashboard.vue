@@ -182,7 +182,7 @@
 </style>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from "vue";
+import { ref, onMounted, computed, reactive } from "vue";
 import { useUserStore } from "@/stores/user";
 import { useAuth } from "@/composables/useAuth";
 import { useDashboard } from "@/composables/useDashboard";
@@ -214,6 +214,11 @@ const {
   refreshData,
   initDashboard,
 } = useDashboard();
+
+const distanceMin = computed(() => runDistanceMin.value)
+const distanceMax = computed(() => runDistanceMax.value)
+const timeMin = computed(() => runTimeMin.value)
+const timeMax = computed(() => runTimeMax.value)
 
 const { submit: submitActivity, isSubmitting } = useSubmitActivity();
 

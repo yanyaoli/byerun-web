@@ -117,6 +117,13 @@ const formRef = ref()
 const showMap = ref(false)
 const maps = getSchoolMaps()
 
+const { distanceLimits, timeLimits } = props
+
+const distanceMin = computed(() => distanceLimits.min)
+const distanceMax = computed(() => distanceLimits.max)
+const timeMin = computed(() => timeLimits.min)
+const timeMax = computed(() => timeLimits.max)
+
 // 计算配速限制
 const paceLimit = computed(() => {
   if (!props.formState.distance || !props.formState.duration || props.formState.distance === 0) return true
