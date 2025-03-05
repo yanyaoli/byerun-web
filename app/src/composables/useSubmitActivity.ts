@@ -22,6 +22,11 @@ export function useSubmitActivity() {
     mapChoice: string,
     userId: number
   ) => {
+    if (isSubmitting.value) {
+      ElMessage.warning("正在提交中，请勿重复操作");
+      return false;
+    }
+
     isSubmitting.value = true;
     try {
       const runStandardData = JSON.parse(
@@ -60,7 +65,9 @@ export function useSubmitActivity() {
       ElMessage.error("提交失败");
       return false;
     } finally {
-      isSubmitting.value = false;
+      setTimeout(() => {
+        isSubmitting.value = false;
+      }, 2000);
     }
   };
 

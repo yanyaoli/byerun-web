@@ -135,31 +135,65 @@ const paceLimit = computed(() => {
 const rules = {
   distance: [
     { required: true, message: '请输入跑步里程' },
-    { type: 'number', min: props.distanceLimits.min, message: `最小里程为 ${props.distanceLimits.min} 米` },
-    { type: 'number', max: props.distanceLimits.max, message: `最大里程为 ${props.distanceLimits.max} 米` }
+    { 
+      validator: (rule: any, value: any, callback: any) => {
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          callback(new Error('请输入有效数字'));
+        } else if (numValue < props.distanceLimits.min) {
+          callback(new Error(`最小里程为 ${props.distanceLimits.min} 米`));
+        } else if (numValue > props.distanceLimits.max) {
+          callback(new Error(`最大里程为 ${props.distanceLimits.max} 米`));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
   ],
   duration: [
     { required: true, message: '请输入跑步时长' },
-    { type: 'number', min: props.timeLimits.min, message: `最小时长为 ${props.timeLimits.min} 分钟` },
-    { type: 'number', max: props.timeLimits.max, message: `最大时长为 ${props.timeLimits.max} 分钟` }
+    {
+      validator: (rule: any, value: any, callback: any) => {
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+          callback(new Error('请输入有效数字'));
+        } else if (numValue < props.timeLimits.min) {
+          callback(new Error(`最小时长为 ${props.timeLimits.min} 分钟`));
+        } else if (numValue > props.timeLimits.max) {
+          callback(new Error(`最大时长为 ${props.timeLimits.max} 分钟`));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'blur'
+    }
   ],
   route: [
     { required: true, message: '请选择学校地图' }
   ]
-}
+};
 
 const onSubmit = async () => {
   try {
-    await formRef.value.validate()
+    await formRef.value.validate();
+    // 转换为数字类型
+    const distance = Number(props.formState.distance);
+    const duration = Number(props.formState.duration);
+    
+    // 更新表单状态
+    props.formState.distance = distance;
+    props.formState.duration = duration;
+    
     if (!paceLimit.value) {
-      ElMessage.error('配速不能小于6分钟/公里')
-      return
+      ElMessage.error('配速不能小于6分钟/公里');
+      return;
     }
-    emit('submit')
+    emit('submit');
   } catch (error) {
-    console.error(error)
+    console.error(error);
   }
-}
+};
 
 const onRandomFill = () => {
   emit('random-fill')

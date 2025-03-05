@@ -271,13 +271,21 @@ const handleSubmit = async () => {
     formState.duration = ensureNotRoundNumber(formState.duration);
 
     submitting.value = true;
-    await submitActivity(
+    // 提交活动
+    const success = await submitActivity(
       formState.distance,
       formState.duration,
       formState.route,
       userStore.userInfo.userId
     );
-    await refreshData();
+    
+    // 只有在提交成功后才刷新数据
+    if (success) {
+      // 增加延时，避免立即请求
+      setTimeout(async () => {
+        await refreshData();
+      }, 1000);
+    }
   } catch (error) {
     console.error(error);
   } finally {

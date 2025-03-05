@@ -124,73 +124,49 @@ export function useDashboard() {
     }
   };
 
-  // 修改刷新方法，也要验证 token
+  // 刷新
   const refreshData = async () => {
+    // 增加loading状态检查
+    if (loading.value) {
+      console.log("数据正在刷新中，请稍候...");
+      return;
+    }
+  
     // 先验证 token
     const isTokenValid = await verifyToken();
     if (!isTokenValid) {
       return;
     }
-
+  
     const { userId, schoolId, studentId } = userStore.userInfo || {};
     if (!userId || !schoolId || !studentId) {
       ElMessage.error("获取用户信息失败");
       router.push("/login");
       return;
     }
-
+  
+    loading.value = true;
     try {
-      try {
-        // 1. 先获取跑步标准
-        await fetchRunStandard(schoolId);
-        console.log("刷新跑步标准完成");
-      } catch (error) {
-        console.error("刷新跑步标准失败:", error);
-        throw error; // 跑步标准是必需的，失败时终止后续请求
-      }
-
-      try {
-        // 2. 获取活动信息
-        await fetchActivity(schoolId, studentId);
-        console.log("刷新活动信息完成");
-      } catch (error) {
-        console.error("刷新活动信息失败:", error);
-        ElMessage.warning("刷新活动信息失败");
-        // 继续执行，不影响其他功能
-      }
-
-      try {
-        // 3. 获取跑步信息
-        await fetchRunInfo(userId);
-        console.log("刷新跑步信息完成");
-      } catch (error) {
-        console.error("刷新跑步信息失败:", error);
-        ElMessage.warning("刷新跑步信息失败");
-        // 继续执行，不影响记录查看
-      }
-
-      try {
-        // 4. 最后获取跑步记录
-        await fetchRecords();
-        console.log("刷新跑步记录完成");
-      } catch (error) {
-        console.error("刷新跑步记录失败:", error);
-        ElMessage.warning("刷新跑步记录失败");
-        // 继续执行，不影响其他功能
-      }
+      // 依次执行各个请求，使用 Promise.all 并发执行
+      await Promise.all([
+        fetchRunStandard(schoolId),
+        fetchActivity(schoolId, studentId),
+        fetchRunInfo(userId),
+        fetchRecords()
+      ]);
+      
+      console.log("数据刷新完成");
     } catch (error: any) {
       console.error("刷新数据失败:", error);
-      // 检查是否是 token 相关错误
-      if (
-        error.response?.status === 401 ||
-        error.response?.data?.code === 401
-      ) {
+      if (error.response?.status === 401 || error.response?.data?.code === 401) {
         ElMessage.error("登录已过期，请重新登录");
         userStore.logout();
         router.push("/login");
       } else {
         ElMessage.error("数据刷新失败，请重试");
       }
+    } finally {
+      loading.value = false;
     }
   };
 
