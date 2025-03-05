@@ -9,14 +9,14 @@ import cuit_hkg from "@/data/maps/cuit/hkg";
 import cuit_lqy from "@/data/maps/cuit/lqy";
 import cdutcm_wj from "@/data/maps/cdutcm/wj";
 import ncwsxx from "@/data/maps/ncwsxx/index";
-import stbu from "@/data/maps/stbu/index";
+import sctbc from "@/data/maps/sctbc/index";
 
 const mapData: MapDataCollection = {
   cuit_hkg: cuit_hkg.mapdata,
   cuit_lqy: cuit_lqy.mapdata,
   cdutcm_wj: cdutcm_wj.mapdata,
   ncwsxx: ncwsxx.mapdata,
-  stbu: stbu.mapdata,
+  sctbc: sctbc.mapdata,
 };
 
 export function getMapData(mapChoice: string): MapItem[] {
@@ -29,7 +29,7 @@ export function getSchoolMaps(): MapOption[] {
     成都信息工程大学龙泉校区: "cuit_lqy",
     成都中医药大学温江校区: "cdutcm_wj",
     南充卫生学校: "ncwsxx",
-    四川工商学院: "stbu",
+    四川工商职业技术学院: "sctbc",
   };
 
   return Object.entries(schoolMaps).map(([label, value]) => ({
