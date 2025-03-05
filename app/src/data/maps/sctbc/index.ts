@@ -129,7 +129,7 @@ export default {
     {
       id: 25,
       location: "103.695853,30.913967",
-      edge: [25],
+      edge: [26],
     },
     {
       id: 26,
