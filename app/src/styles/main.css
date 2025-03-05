@@ -1,11 +1,11 @@
 :root {
   color-scheme: light;
-  --grid-color: rgba(0, 0, 0, 0.02); /* 白天模式默认颜色 */
+  --grid-color: rgba(0, 0, 0, 0.05); /* 白天模式默认颜色 */
   --background-color: #fafafa; /* 白天模式背景色 */
   --background: #fafafa;
 
   --dashboard-border: 1px solid #f0f0f0;
-  ---nav-background-color: #f0f0f0;
+  --nav-background-color: #f0f0f0;
   --dashboard-header-bg-color: rgba(255, 255, 255, 0.3);
   /* 登录面板背景 */
   --login-container-bg-color: #fff;
@@ -156,7 +156,7 @@ html.dark {
   --background-color: #0c0c0c; /* 黑夜模式背景色 */
 
   --dashboard-border: 1px solid #0a0a0a;
-  ---nav-background-color: #0a0a0a;
+  --nav-background-color: #0a0a0a;
   /* 登录 */
   --login-container-bg-color: #000;
   --login-card-bg-color: #000;
@@ -259,5 +259,11 @@ html.dark {
     transform: scale(0.95);
     background-color: var(--btn-bg-color);
   }
-
-
+  .submit-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.6;
+    background-color: var(--btn-bg-color);
+  }
+  .submit-btn[disabled]:hover {
+    background-color: var(--btn-bg-color);
+  }

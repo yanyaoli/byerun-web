@@ -1,5 +1,9 @@
 <template>
-  <el-card class="records-card" v-loading="loading" element-loading-text="记录加载中">
+  <el-card
+    class="records-card"
+    v-loading="loading"
+    element-loading-text="记录加载中"
+  >
     <div class="records-list">
       <el-skeleton :loading="loading" animated :count="10">
         <template #template>
@@ -14,7 +18,7 @@
             table-layout="auto"
             border
             stripe
-            :height="tableHeight"
+            :height="calculatedTableHeight"
             style="width: 100%"
           >
             <el-table-column
@@ -27,29 +31,14 @@
             <el-table-column prop="defeatedInfo" label="状态" align="center">
               <template #default="{ row }">
                 <div class="status-container">
-                  <el-icon
-                    :style="{
-                      color: row.defeatedInfo === '有效跑步' ? '#409EFF' : '#F56C6C',
-                    }"
-                  >
-                    <component
-                      :is="
-                        row.defeatedInfo === '有效跑步'
-                          ? SuccessFilled
-                          : CircleCloseFilled
-                      "
-                    />
+                  <el-icon :style="{ color: row.defeatedInfo === '有效跑步' ? '#409EFF' : '#F56C6C' }">
+                    <component :is="row.defeatedInfo === '有效跑步' ? SuccessFilled : CircleCloseFilled" />
                   </el-icon>
                   {{ row.defeatedInfo }}
                 </div>
               </template>
             </el-table-column>
-            <el-table-column
-              type="expand"
-              min-width="10"
-              label=""
-              align="center"
-            >
+            <el-table-column type="expand" min-width="10" label="更多" align="center">
               <template #default="{ row }">
                 <el-form label-position="left" inline class="expanded-form">
                   <el-form-item label="跑步时长">
@@ -70,16 +59,15 @@
       </el-skeleton>
     </div>
 
-    <div class="pagination">
-      <el-pagination
-        :currentPage="pagination.current"
-        :total="pagination.total"
-        :page-size="pagination.pageSize"
-        layout="pager"
-        @current-change="handlePageChange"
-        small
-      />
-    </div>
+    <el-pagination
+      class="pagination"
+      :current-page="pagination.current"
+      :total="pagination.total"
+      :page-size="pagination.pageSize"
+      layout="pager"
+      @current-change="handlePageChange"
+      small
+    />
   </el-card>
 </template>
 
@@ -94,30 +82,37 @@
   border: none;
   color: var(--el-text-color-primary);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .records-card :deep(.el-card__body) {
   padding: 0;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .records-list {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  flex-grow: 1; /* 让表格列表占据剩余空间 */
+  overflow: auto; /* Add overflow auto to enable scrolling */
 }
 
 .pagination {
   display: flex;
   justify-content: center;
-  margin-top: 15px;
-  width: 100%; /* 添加宽度100% */
+  padding: 15px;
+  width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0; /* Prevent pagination from shrinking */
 }
 
 :deep(.el-pagination) {
-  width: 100%; /* 添加分页组件宽度 */
+  width: 100%;
   justify-content: center;
 }
 
@@ -172,15 +167,13 @@
 }
 
 :deep(.el-table__inner-wrapper) {
-  width: 100%; /* 添加内部包装器宽度 */
+  width: 100%;
 }
 
 :deep(.el-table__body-wrapper) {
   overflow-y: auto;
-  width: 100%; /* 添加表格主体宽度 */
+  width: 100%;
 }
-
-
 
 /* 移动端适配 */
 @media screen and (max-width: 480px) {
@@ -219,7 +212,7 @@
 
   /* 分页样式 */
   .pagination {
-    margin: 8px 0;
+    padding: 8px 0;
   }
 
   :deep(.el-pagination) {
@@ -248,12 +241,6 @@ import { SuccessFilled, CircleCloseFilled } from "@element-plus/icons-vue";
 import { formatPace } from "@/utils/format";
 import type { RunRecord } from "@/types/run";
 
-const tableHeight = computed(() => {
-  const screenHeight = window.innerHeight;
-  const offset = window.innerWidth <= 480 ? 220 : 240; // 移动端和桌面端的不同偏移量
-  return `calc(100vh - ${offset}px)`;
-});
-
 interface Pagination {
   current: number;
   total: number;
@@ -272,6 +259,15 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+
+// 假设导航栏高度为 60px，菜单栏高度为 50px，翻页栏高度为 50px
+const navbarHeight = 50;
+const menuHeight = 50;
+const paginationHeight = 50;
+
+const calculatedTableHeight = computed(() => {
+  return window.innerHeight - navbarHeight - menuHeight - paginationHeight;
+});
 
 const handlePageChange = (page: number) => {
   emit('pageChange', page);

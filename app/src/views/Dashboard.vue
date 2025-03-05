@@ -31,7 +31,7 @@
             :distance-limits="{ min: distanceMin, max: distanceMax }"
             :time-limits="{ min: timeMin, max: timeMax }"
             @submit="handleSubmit"
-            @random-fill="fillRandomData"
+            @update-form-state="updateFormState"
           />
 
                 <div class="notice-container">
@@ -72,7 +72,7 @@
 <style scoped>
 .dashboard-container {
   height: 100vh;
-  width: 100%;
+  width: 100vw;
   max-width: 600px;
   margin: 0 auto;
   display: flex;
@@ -84,7 +84,6 @@
     linear-gradient(90deg, var(--grid-color) 1px, transparent 1px); /* 水平线 */
   background-size: 20px 20px;
   background-position: 0 0;
-  border: var(--dashboard-border);
 }
 
 /* 顶部固定区域 */
@@ -119,11 +118,10 @@
   flex-direction: column;
   align-items: center;
   /* 调整上下边距 */
-  margin-top: calc(70px + env(safe-area-inset-top));
+  margin-top: calc(50px + env(safe-area-inset-top));
   margin-bottom: calc(50px + env(safe-area-inset-bottom));
   -ms-overflow-style: none;
   scrollbar-width: none;
-  border: var(--dashboard-);
 }
 
 .content-wrapper {
@@ -156,7 +154,7 @@
   width: 100%;
   display: flex;
   justify-content: space-around;
-  background-color: var(---nav-background-color)
+  background-color: var(--nav-background-color)
 }
 
 /* 移动端适配 */
@@ -258,6 +256,11 @@ const formState = reactive({
   route: "",
 });
 
+// 更新表单状态
+const updateFormState = (newState: { distance: number; duration: number }) => {
+  formState.distance = newState.distance;
+  formState.duration = newState.duration;
+};
 
 // 提交新记录
 const handleSubmit = async () => {

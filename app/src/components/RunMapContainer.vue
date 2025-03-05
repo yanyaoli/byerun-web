@@ -19,6 +19,13 @@
     </template>
   </el-skeleton>
 </template>
+
+<script lang="ts">
+export default {
+  RunMapContainer: "RunMapContainer"
+}
+</script>
+
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import RunMap from './RunMap.vue'

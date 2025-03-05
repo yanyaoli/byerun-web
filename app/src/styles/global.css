@@ -18,13 +18,12 @@ html, body {
 
 /* 图标 */
 .el-icon {
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 .el-icon svg {
-  color: var(--icon-color);
   font-size: 24px;
   width: 24px;
   height: 24px;
@@ -32,8 +31,26 @@ html, body {
 }
 
 .logo {
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
   filter: brightness(var(--logo-value));
+}
+
+@media screen and (max-width: 480px) {
+  .el-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  .el-icon svg {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+  .logo {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
 }

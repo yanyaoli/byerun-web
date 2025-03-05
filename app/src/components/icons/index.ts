@@ -7,7 +7,7 @@ import RefreshIcon from './RefreshIcon.vue'
 import UserIcon from './UserIcon.vue'
 import SettingsIcon from './SettingsIcon.vue'
 import MapLocationIcon from './MapLocationIcon.vue'
-
+import LogoIcon from './LogoIcon.vue'
 export {
   MoonIcon,
   SunnyIcon,
@@ -17,5 +17,6 @@ export {
   RefreshIcon,
   UserIcon,
   SettingsIcon,
-  MapLocationIcon
+  MapLocationIcon,
+  LogoIcon
 }

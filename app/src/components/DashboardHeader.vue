@@ -1,12 +1,9 @@
 <template>
   <el-header class="dashboard-header">
     <div class="dashboard-header-content">
-      <img
-        src="@/assets/logo.png"
-        alt="logo"
-        class="logo"
-        @click="$emit('refresh')"
-      />
+      <div class="logo-container" @click="$emit('refresh')">
+        <el-icon><LogoIcon class="logo-icon"/></el-icon>
+      </div>
       <div class="header-right">
         <div class="header-icon-button" @click="handleThemeToggle">
           <el-icon v-if="!isDarkMode"><MoonIcon /></el-icon>
@@ -60,7 +57,6 @@
   </el-header>
 </template>
 
-
 <style scoped>
 .dashboard-header {
   height: 50px;
@@ -70,9 +66,8 @@
   position: relative;
   z-index: 1;
   overflow: hidden;
-  background-color: var(---nav-background-color);
+  background-color: var(--nav-background-color);
 }
-
 
 .dashboard-header-content {
   display: flex;
@@ -107,13 +102,20 @@
   transform: translateY(-1px);
 }
 
-.logo {
-  height: 32px;
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
+  height: 32px;
   margin-right: 24px;
-  object-fit: contain;
   cursor: pointer;
   filter: brightness(var(--logo-value));
+}
+
+.logo-icon {
+  height: 32px;
+  width: 32px;
 }
 
 :deep(.el-dropdown-menu) {
@@ -148,10 +150,15 @@
     height: 36px;
   }
 
-  .logo {
+  .logo-container {
+    width: 28px;
+    height: 28px;
+    margin-right: 16px;
+  }
+
+  .logo-icon {
     height: 28px;
     width: 28px;
-    margin-right: 16px;
   }
 }
 </style>
@@ -160,6 +167,7 @@
 import { computed } from 'vue';
 import { config } from "@/config";
 import {
+  LogoIcon,
   UserIcon,
   SettingsIcon,
   MoonIcon,
