@@ -6,7 +6,11 @@
     label-position="left"
   >
     <el-form-item label="" prop="phone">
-      <el-input v-model="loginForm.phone" placeholder="请输入手机号">
+      <el-input 
+        v-model="loginForm.phone" 
+        placeholder="请输入手机号"
+        :disabled="loading"
+      >
         <template #prefix>
           <el-icon>
             <Iphone />
@@ -21,6 +25,7 @@
         type="password"
         placeholder="请输入密码"
         show-password
+        :disabled="loading"
       >
         <template #prefix>
           <el-icon>
@@ -33,13 +38,14 @@
       type="primary"
       @click="handleLogin"
       :loading="loading"
+      :disabled="loading"
       class="submit-btn"
       style="width: 100%"
     >
-      登录
+      {{ loading ? '登录中...' : '登录' }}
     </el-button>
     <div class="form-footer">
-      <el-button type="text" @click="switchMode" class="forgotBtn"
+      <el-button type="text" @click="switchMode" :disabled="loading" class="forgotBtn"
         >忘记密码？</el-button
       >
     </div>
@@ -49,15 +55,18 @@
 <script setup lang="ts">
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { useAuth } from "@/composables/useAuth";
 import { ElMessage } from "element-plus";
 import type { FormInstance } from "element-plus";
 import { Lock, Iphone } from '@element-plus/icons-vue';
 
 const router = useRouter();
 const loginFormRef = ref<FormInstance>();
-const loading = ref(false); //  useAuth 替换
 const emit = defineEmits(['switch-mode', 'login']);
+
+// 只使用父组件传递的loading状态
+const props = defineProps<{
+  loading: boolean
+}>();
 
 const loginForm = reactive({
   phone: "",
@@ -78,18 +87,17 @@ const loginRules = {
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return;
+  
   try {
     await loginFormRef.value.validate();
-    loading.value = true;
     emit('login', loginForm.phone, loginForm.password);
   } catch (error: any) {
     ElMessage.error(error.message || "登录失败");
-  } finally {
-    loading.value = false;
   }
 };
 
 const switchMode = () => {
+  if (props.loading) return; // 如果正在加载，不允许切换模式
   emit('switch-mode');
 };
 </script>

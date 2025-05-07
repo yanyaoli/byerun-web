@@ -6,12 +6,15 @@
         v-if="!isResetMode"
         @switch-mode="switchMode"
         @login="handleLogin"
+        :loading="loading"
       />
       <ResetPasswordForm
         v-else
         @switch-mode="switchMode"
         @reset-password="handleReset"
         @send-code="handleSendCode"
+        :loading="loading"
+        :countdown="countdown"
       />
     </div>
   </div>
