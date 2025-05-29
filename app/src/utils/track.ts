@@ -39,8 +39,8 @@ const randInt = (start: number, end: number) => {
 
 const gen = (distance: number, locations: Location[]) => {
   if (!locations || locations.length === 0) {
-    console.error('No locations provided');
-    return '[]';
+    console.error("No locations provided");
+    return "[]";
   }
 
   let currentDistance = 0;
@@ -112,8 +112,8 @@ export const getDate = () => {
 export const genTrackPoints = (distance: number, mapChoice: string) => {
   const data = getMapData(mapChoice);
   if (!data || data.length === 0) {
-    console.error('No map data found for:', mapChoice);
-    return '[]';
+    console.error("No map data found for:", mapChoice);
+    return "[]";
   }
   const locations = data.map((d) => new Location(d.id, d.location, d.edge));
   return gen(distance, locations);

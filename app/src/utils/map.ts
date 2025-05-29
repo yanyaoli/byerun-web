@@ -82,15 +82,26 @@ export const generateDynamicPath = (
         )
     );
 
-    // 如果添加这段距离后不会超过目标距离太多，则添加这个点
-    if (currentDist + segmentDist <= distance * 1.1) {
-      path.push({ lat: nextLat, lng: nextLng });
-      visited.add(nextPoint.id);
-      currentDist += segmentDist;
-      currentPoint = nextPoint;
-    } else {
-      break;
+    // 添加当前点到路径
+    path.push({ lat: currLat, lng: currLng });
+
+    // 在当前点和下一点之间添加抖动点
+    const steps = Math.max(3, Math.floor(segmentDist / 20)); // 每20米至少添加3个中间点
+    for (let i = 1; i <= steps; i++) {
+      const ratio = i / (steps + 1);
+      const jitterLng = (Math.random() - 0.5) * 0.00001; // 约1米的经度抖动
+      const jitterLat = (Math.random() - 0.5) * 0.00001; // 约1米的纬度抖动
+
+      path.push({
+        lat: currLat + (nextLat - currLat) * ratio + jitterLat,
+        lng: currLng + (nextLng - currLng) * ratio + jitterLng,
+      });
     }
+
+    path.push({ lat: nextLat, lng: nextLng });
+    visited.add(nextPoint.id);
+    currentDist += segmentDist;
+    currentPoint = nextPoint;
   }
 
   // 确保至少有两个点
@@ -101,23 +112,25 @@ export const generateDynamicPath = (
     path.push({ lat: nextLat, lng: nextLng });
   }
 
-  // 对中间点进行轻微随机偏移
-  const adjustedPath = path.map((pt, idx) => {
-    if (idx === 0 || idx === path.length - 1) {
-      return pt; // 保持起点和终点不变
+  // 对路径进行平滑处理
+  const smoothPath = [];
+  for (let i = 0; i < path.length; i++) {
+    if (i > 0 && i < path.length - 1) {
+      // 对中间点进行平均平滑
+      smoothPath.push({
+        lat: (path[i - 1].lat + path[i].lat + path[i + 1].lat) / 3,
+        lng: (path[i - 1].lng + path[i].lng + path[i + 1].lng) / 3,
+      });
+    } else {
+      smoothPath.push(path[i]);
     }
-    const offset = 0.00002; // 约2米的偏移
-    return {
-      lat: pt.lat + (Math.random() - 0.5) * offset,
-      lng: pt.lng + (Math.random() - 0.5) * offset,
-    };
-  });
+  }
 
   return {
     pathLength: currentDist,
-    startPoint: adjustedPath[0],
-    endPoint: adjustedPath[adjustedPath.length - 1],
-    path: adjustedPath,
+    startPoint: smoothPath[0],
+    endPoint: smoothPath[smoothPath.length - 1],
+    path: smoothPath,
     mapChoice: baseMap.mapChoice,
   };
 };
