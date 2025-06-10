@@ -18,7 +18,7 @@ export const config = {
   },
   urls: {
     home: "https://byerun.pages.dev/",
-    notice: "https://where.nyc.mn/unirun/notice",
+    notice: "https://unirun-notice.where.nyc.mn/",
     github: "https://github.com/yanyaoli/byerun-web",
   },
 } as const;
