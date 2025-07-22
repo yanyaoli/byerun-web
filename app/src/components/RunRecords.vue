@@ -1,275 +1,753 @@
 <template>
-  <el-card
-    class="records-card"
-    v-loading="loading"
-    element-loading-text="记录加载中"
-  >
-    <div class="records-list">
-      <el-skeleton :loading="loading" animated :count="10">
-        <template #template>
-          <div style="padding: 2px">
-            <el-skeleton-item variant="p" style="width: 100%; height: 5px" />
+  <div class="records-container">
+    <!-- 内容区包装器 -->
+    <div class="records-content-wrapper">
+      <!-- 骨架屏加载状态 -->
+      <div v-if="loading" class="skeleton-list">
+        <div v-for="i in 5" :key="i" class="record-item skeleton-record">
+          <div class="record-list-title-bar">
+            <div class="record-list-title-left">
+              <div
+                class="skeleton-block"
+                style="width: 120px; height: 18px"
+              ></div>
+            </div>
+            <div class="record-list-title-right">
+              <div
+                class="skeleton-block"
+                style="width: 60px; height: 24px; border-radius: 12px"
+              ></div>
+            </div>
           </div>
-        </template>
-        <template #default>
-          <el-table
-            :data="records"
-            v-if="records.length > 0"
-            table-layout="auto"
-            border
-            stripe
-            :height="calculatedTableHeight"
-            style="width: 100%"
-          >
-            <el-table-column
-              prop="recordDate"
-              label="记录时间"
-              fixed
-              sortable
-              align="center"
-            />
-            <el-table-column prop="defeatedInfo" label="状态" align="center">
-              <template #default="{ row }">
-                <div class="status-container">
-                  <el-icon :style="{ color: row.defeatedInfo === '有效跑步' ? '#409EFF' : '#F56C6C' }">
-                    <component :is="row.defeatedInfo === '有效跑步' ? SuccessFilled : CircleCloseFilled" />
-                  </el-icon>
-                  {{ row.defeatedInfo }}
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column type="expand" min-width="10" label="更多" align="center">
-              <template #default="{ row }">
-                <el-form label-position="left" inline class="expanded-form">
-                  <el-form-item label="跑步时长">
-                    {{ row.runTime }} 分钟
-                  </el-form-item>
-                  <el-form-item label="跑步里程">
-                    {{ (row.runDistance / 1000).toFixed(2) }} 公里
-                  </el-form-item>
-                  <el-form-item label="平均配速">
-                    {{ formatPace(row.runTime, row.runDistance) }}
-                  </el-form-item>
-                </el-form>
-              </template>
-            </el-table-column>
-          </el-table>
-          <el-empty v-else description="暂无跑步记录" />
-        </template>
-      </el-skeleton>
-    </div>
+          <div class="record-list-row">
+            <div
+              class="record-list-label skeleton-block"
+              style="width: 60px; height: 14px"
+            ></div>
+            <div
+              class="record-list-value skeleton-block"
+              style="width: 80px; height: 14px"
+            ></div>
+          </div>
+          <div class="record-list-row">
+            <div
+              class="record-list-label skeleton-block"
+              style="width: 60px; height: 14px"
+            ></div>
+            <div
+              class="record-list-value skeleton-block"
+              style="width: 80px; height: 14px"
+            ></div>
+          </div>
+          <div class="record-list-row">
+            <div
+              class="record-list-label skeleton-block"
+              style="width: 60px; height: 14px"
+            ></div>
+            <div
+              class="record-list-value skeleton-block"
+              style="width: 80px; height: 14px"
+            ></div>
+          </div>
+        </div>
+      </div>
 
-    <el-pagination
-      class="pagination"
-      :current-page="pagination.current"
-      :total="pagination.total"
-      :page-size="pagination.pageSize"
-      layout="pager"
-      @current-change="handlePageChange"
-      small
-    />
-  </el-card>
+      <!-- 记录列表（每条为一个卡片，列表形式，表头左右布局） -->
+      <div
+        v-else-if="records.length > 0"
+        class="records-content scrollable-list"
+        ref="scrollableListRef"
+      >
+        <div class="records-list">
+          <div
+            v-for="record in records"
+            :key="record.key"
+            class="record-item record-list-card"
+          >
+            <div class="record-list-title record-list-title-bar">
+              <div class="record-list-title-left">
+                {{ formatCreateTime(record.createTime) }}
+              </div>
+              <div class="record-list-title-right">
+                <span
+                  class="defeated-info"
+                  :class="[
+                    record.runStatus === '1'
+                      ? 'status-success-bg'
+                      : 'status-error-bg',
+                  ]"
+                  >{{ record.defeatedInfo }}</span
+                >
+              </div>
+            </div>
+            <div class="record-list-row">
+              <div class="record-list-label">跑步里程</div>
+              <div class="record-list-value">
+                {{ (record.runDistance / 1000).toFixed(2) }}km
+              </div>
+            </div>
+            <div class="record-list-row">
+              <div class="record-list-label">跑步时长</div>
+              <div class="record-list-value">{{ record.runTime }}分钟</div>
+            </div>
+            <div class="record-list-row">
+              <div class="record-list-label">平均配速</div>
+              <div class="record-list-value">
+                {{ formatPaceDetail(record.runTime, record.runDistance) }}
+              </div>
+            </div>
+          </div>
+          <div class="load-more">
+            <button
+              class="load-more-btn"
+              @click="loadMoreRecords"
+              :disabled="isLoading"
+            >
+              {{ isLoading ? "加载中..." : "加载更多" }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else class="empty-state">
+        <h3>暂无跑步记录</h3>
+      </div>
+    </div>
+  </div>
+  <Message ref="messageRef" />
 </template>
 
-<style scoped>
-.records-card {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0;
-  background-color: var(--records-card-bg-color);
-  box-shadow: none;
-  border: none;
-  color: var(--el-text-color-primary);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+<script setup lang="ts">
+import type { ComponentPublicInstance } from "vue";
+import Message from "./Message.vue";
+import { ref, reactive, onMounted, defineProps } from "vue";
+import api from "../api";
+
+const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
+
+defineProps({
+  runInfo: {
+    type: Object,
+    default: null,
+  },
+  runStandard: {
+    type: Object,
+    default: null,
+  },
+  userInfo: {
+    type: Object,
+    default: null,
+  },
+  activityInfo: {
+    type: Object,
+    default: null,
+  },
+  profileLoading: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+// 类型定义
+interface RunRecord {
+  recordId: number;
+  userId: number;
+  studentId: number;
+  schoolId: number;
+  yearSemester: number;
+  recordDate: string;
+  recordMonth: string;
+  runDistance: number;
+  runValidDistance: number;
+  runTime: number;
+  runValidTime: number;
+  runSpeed: number;
+  runCalorie: number;
+  runValidCalorie: number;
+  vocalStatus: string;
+  runStatus: string;
+  defeatedInfo: string;
+  createTime: string;
+  infoStatus: string;
+  runSpeedWarn: string;
+  defeatStudentRatio: number;
+  suspectedStatus: string;
+  rangeStatus: string;
 }
 
-.records-card :deep(.el-card__body) {
-  padding: 0;
-  width: 100%;
-  height: 100%;
+interface DisplayRunRecord
+  extends Omit<RunRecord, "runDistance" | "runTime" | "runSpeed"> {
+  key: number;
+  runDistance: number;
+  runTime: number;
+  runSpeed: number;
+}
+
+// 响应式数据
+const records = ref<DisplayRunRecord[]>([]);
+const loading = ref(false);
+const pagination = reactive({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+});
+const isLoading = ref(false);
+
+// 数据获取
+const fetchRecords = async (): Promise<void> => {
+  loading.value = true;
+  pagination.current = 1; // 保证第一页
+  try {
+    const { data } = await api.get("/unirun/query/student/all/run/record", {
+      params: {
+        pageNum: pagination.current,
+        pageSize: pagination.pageSize,
+      },
+    });
+
+    const recordsList = Array.isArray(data.response)
+      ? data.response
+      : data.response?.records || [];
+
+    records.value = recordsList.map(
+      (record: RunRecord): DisplayRunRecord => ({
+        ...record,
+        key: record.recordId,
+        runDistance: Number(record.runValidDistance || record.runDistance),
+        runTime: Number(record.runValidTime || record.runTime),
+        runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
+      })
+    );
+
+    pagination.total = data.response?.total || records.value.length || 0;
+  } catch (error) {
+    console.error("获取跑步记录失败:", error);
+    records.value = [];
+    pagination.total = 0;
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 格式化创建时间
+function formatCreateTime(createTime: string): string {
+  if (!createTime) return "";
+  // 只保留到分钟
+  return createTime.slice(0, 16);
+}
+
+// 平均配速格式 xx'xx''
+function formatPaceDetail(time: number, distance: number): string {
+  if (!distance || !time) return "0'00''";
+  const pace = time / (distance / 1000);
+  const min = Math.floor(pace);
+  const sec = Math.round((pace - min) * 60)
+    .toString()
+    .padStart(2, "0");
+  return `${min}'${sec}''`;
+}
+
+// 加载更多记录
+const loadMoreRecords = async () => {
+  if (isLoading.value) return;
+  isLoading.value = true;
+
+  try {
+    const nextPage = pagination.current + 1;
+    const { data } = await api.get("/unirun/query/student/all/run/record", {
+      params: {
+        pageNum: nextPage,
+        pageSize: pagination.pageSize,
+      },
+    });
+
+    const recordsList = Array.isArray(data.response)
+      ? data.response
+      : data.response?.records || [];
+
+    // 如果返回了数据，就添加到列表中
+    if (recordsList.length > 0) {
+      const newRecords = recordsList.map(
+        (record: RunRecord): DisplayRunRecord => ({
+          ...record,
+          key: record.recordId,
+          runDistance: Number(record.runValidDistance || record.runDistance),
+          runTime: Number(record.runValidTime || record.runTime),
+          runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
+        })
+      );
+
+      records.value = [...records.value, ...newRecords];
+      pagination.current = nextPage;
+    } else {
+      // 没有更多数据时显示提示
+      messageRef.value?.show("没有更多数据了", "info");
+    }
+  } catch (error) {
+    messageRef.value?.show("加载更多记录失败", "error");
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// 生命周期
+onMounted(() => {
+  fetchRecords();
+});
+</script>
+
+<script lang="ts">
+export default {
+  name: "RunRecords",
+};
+</script>
+
+<style scoped>
+/* 容器基础样式 */
+.records-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  background: #f6f7f9;
+  height: 100%;
+  position: relative;
+}
+
+/* 内容区包装器 */
+.records-content-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  padding: 16px 0;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 可滚动列表 */
+.scrollable-list {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 记录列表容器 */
+.records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+  padding-bottom: 70px; /* 预留底部导航栏的空间 */
+}
+
+/* 通用顶部标题栏 */
+.page-header {
+  background: #fff;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e3e6e8;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3a3f;
+  margin: 0;
+}
+
+/* 移除不再使用的样式 */
+.skeleton-list {
+  padding: 0 16px;
+}
+.skeleton-record {
+  background: #fff;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #e3e6e8;
+  /* 保持与 record-item 一致 */
+  overflow: hidden;
+}
+.skeleton-block {
+  display: inline-block;
+  background: #e3e6e8;
+  border-radius: 4px;
+  min-height: 16px;
+  animation: pulse 1.5s infinite;
+}
+.skeleton-date {
+  width: 100px;
+  height: 18px;
+  margin-bottom: 4px;
+}
+.skeleton-arrow {
+  width: 16px;
+  height: 16px;
+  background: #e3e6e8;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse 1.5s infinite;
+}
+.skeleton-label {
+  height: 16px;
+  margin-right: 8px;
+}
+.skeleton-value {
+  height: 16px;
+}
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 移除不需要的样式 */
+.records-container {
+  min-height: unset;
+  margin: 0;
+}
+
+.records-content {
+  padding-bottom: 0;
+}
+
+/* 确保底部有足够空间 */
+@supports (padding: max(0px)) {
+  .records-content-wrapper {
+    padding-bottom: max(70px, calc(70px + env(safe-area-inset-bottom)));
+  }
+}
+
+.records-content-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f6f7f9;
+  padding: 16px 0;
 }
 
 .records-list {
-  width: 100%;
-  height: 100%;
-  flex-grow: 1; /* 让表格列表占据剩余空间 */
-  overflow: auto; /* Add overflow auto to enable scrolling */
-}
-
-.pagination {
   display: flex;
-  justify-content: center;
-  padding: 15px;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0 auto;
+  padding: 0 16px;
+  background: #f6f7f9;
   width: 100%;
-  box-sizing: border-box;
-  flex-shrink: 0; /* Prevent pagination from shrinking */
 }
 
-:deep(.el-pagination) {
-  width: 100%;
-  justify-content: center;
+.scrollable-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: calc(100vh - 100px); /* 减去头部和底部导航的高度 */
+  padding-bottom: 20px;
 }
 
-.status-container {
-  display: inline-flex;
+.record-item {
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e3e6e8;
+  margin-bottom: 0;
+  transition: box-shadow 0.2s;
+}
+
+.record-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+  background: #fff;
+  border: 1px solid #e3e6e8;
+}
+.record-main-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.record-date-main {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3a3f;
+}
+.record-main-right {
+  display: flex;
   align-items: center;
   gap: 8px;
 }
-
-.status-container .el-icon {
-  font-size: 16px;
+.defeated-info {
+  font-size: 12px;
+  margin-right: 0;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 2px 12px;
+  display: inline-block;
+  min-width: 48px;
+  text-align: center;
+  line-height: 1.6;
+  /* 默认灰色背景 */
+  background: #b0b0b0;
+  color: #fff;
+}
+.status-success-bg {
+  background: #3b9eff;
+  color: #fff;
+}
+.status-error-bg {
+  background: #f2713e;
+  color: #fff;
+}
+.status-invalid-bg {
+  background: #b0b0b0;
+  color: #fff;
+}
+.expand-arrow {
+  font-size: 14px;
+  color: #b0b0b0;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.expand-arrow.rotated {
+  transform: rotate(180deg);
 }
 
-.expanded-form {
-  padding: 8px;
+.record-details {
+  background: #f8fafb;
+  border-top: 1px solid #e3e6e8;
+  padding: 12px 16px 14px 16px;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
-  width: 100%;
+}
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  color: #4f6d7a;
+}
+.detail-item label {
+  color: #7b8a8b;
+  font-size: 14px;
+  margin-right: 8px;
 }
 
-.expanded-form :deep(.el-form-item) {
-  margin: 0;
+/* 摘要统计合并卡片样式 */
+.stat-card-merged {
+  padding: 0;
+  border-radius: 12px;
+  box-shadow: none;
+  background: #fff;
+  border: 1px solid #e3e6e8;
+  margin-bottom: 12px;
+}
+.stat-merged-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  padding: 16px 0;
+}
+.stat-merged-item {
   flex: 1;
-  min-width: 120px;
+  text-align: center;
+  border-right: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.stat-merged-item:last-child {
+  border-right: none;
 }
 
-.expanded-form :deep(.el-form-item__label) {
-  color: var(--el-text-color-secondary);
-  font-size: 13px;
+/* 表格样式 */
+.records-table {
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e3e6e8;
+  margin-bottom: 16px;
+}
+.records-table-header {
+  display: flex;
+  background: #f6f7f9;
+  font-weight: 600;
+  font-size: 15px;
+  color: #4f6d7a;
+  border-bottom: 1px solid #e3e6e8;
+  padding: 0 8px;
+}
+.records-table-row {
+  display: flex;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  color: #4f6d7a;
+  padding: 0 8px;
+  align-items: center;
+}
+.records-table-row:last-child {
+  border-bottom: none;
+}
+.table-cell {
+  flex: 1;
+  padding: 12px 4px;
+  text-align: center;
+  word-break: break-all;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.records-table-header .table-cell {
+  padding: 10px 4px;
 }
 
-.expanded-form :deep(.el-form-item__content) {
-  font-size: 13px;
+/* 列表卡片样式 */
+.record-list-card {
+  padding: 0 0 8px 0;
+  margin-bottom: 16px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e3e6e8;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+.record-list-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3a3f;
+  padding: 16px 16px 8px 16px;
 }
 
-/* 表格样式优化 */
-:deep(.el-table) {
-  --el-table-border-color: var(--el-border-color-light);
-  --el-table-header-background-color: var(--el-fill-color-light);
-  width: 100% !important;
+/* 新增：表头左右布局和背景色 */
+.record-list-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f6f7fa;
+  border-bottom: 1px solid #e3e6e8;
+  border-radius: 10px 10px 0 0;
+  padding: 14px 16px 10px 16px;
+  margin-bottom: 0;
+}
+.record-list-title-left {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3a3f;
+}
+.record-list-title-right {
+  font-size: 14px;
+  font-weight: normal;
+  color: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.record-list-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  font-size: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.record-list-row:last-child {
+  border-bottom: none;
+}
+.record-list-label {
+  color: #7b8a8b;
   font-size: 14px;
 }
-
-:deep(.el-table__cell) {
-  padding: 8px 4px !important;
-  white-space: nowrap;
+.record-list-value {
+  color: #4f6d7a;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: right;
+  min-width: 60px;
 }
 
-:deep(.el-table__expand-icon) {
-  margin-right: 0;
+/* skeleton-list 卡片适配 */
+.skeleton-record {
+  padding: 0 0 8px 0;
+  margin-bottom: 16px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e3e6e8;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+.skeleton-block {
+  background: #e3e6e8;
+  border-radius: 4px;
+  min-height: 14px;
+  animation: pulse 1.5s infinite;
 }
 
-:deep(.el-table__inner-wrapper) {
-  width: 100%;
-}
-
-:deep(.el-table__body-wrapper) {
-  overflow-y: auto;
-  width: 100%;
-}
-
-/* 移动端适配 */
-@media screen and (max-width: 480px) {
-  :deep(.el-table) {
-    font-size: 13px;
+/* 适配移动端表格 */
+@media (max-width: 375px) {
+  .stat-card-merged {
+    margin-bottom: 8px;
   }
-
-  :deep(.el-table__cell) {
-    padding: 6px 2px !important;
+  .stat-merged-row {
+    padding: 10px 0;
   }
-
-  /* 状态列样式 */
-  .status-container {
+  .records-table-header .table-cell,
+  .records-table-row .table-cell {
     font-size: 12px;
-    gap: 4px;
-  }
-
-  .status-container .el-icon {
-    font-size: 14px;
-  }
-
-  /* 展开行样式 */
-  .expanded-form {
-    padding: 6px;
-    gap: 4px;
-  }
-
-  .expanded-form :deep(.el-form-item) {
-    min-width: 100px;
-  }
-
-  .expanded-form :deep(.el-form-item__label),
-  .expanded-form :deep(.el-form-item__content) {
-    font-size: 12px;
-  }
-
-  /* 分页样式 */
-  .pagination {
-    padding: 8px 0;
-  }
-
-  :deep(.el-pagination) {
-    font-size: 12px;
-  }
-
-  :deep(.el-pagination .btn-prev),
-  :deep(.el-pagination .btn-next) {
-    min-width: 24px;
-  }
-
-  :deep(.el-pagination .el-pager li) {
-    min-width: 24px;
+    padding: 8px 2px;
   }
 }
 
-/* 暗色模式适配 */
-:deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
-  background-color: var(--el-table-row-hover-bg-color);
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 安全区域适配 */
+@supports (padding: max(0px)) {
+  .records-content {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+}
+
+/* 加载更多按钮样式 */
+.load-more {
+  padding: 5px 0;
+  text-align: center;
+}
+
+.load-more-btn {
+  background: transparent;
+  border: none;
+  color: #3b9eff;
+  font-size: 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.load-more-btn:active {
+  opacity: 0.7;
 }
 </style>
-
-<script setup lang="ts">
-import { computed } from 'vue';
-import { SuccessFilled, CircleCloseFilled } from "@element-plus/icons-vue";
-import { formatPace } from "@/utils/format";
-import type { RunRecord } from "@/types/run";
-
-interface Pagination {
-  current: number;
-  total: number;
-  pageSize: number;
-}
-
-interface Props {
-  records: RunRecord[];
-  loading: boolean;
-  pagination: Pagination;
-}
-
-interface Emits {
-  (e: 'pageChange', page: number): void;
-}
-
-const props = defineProps<Props>();
-const emit = defineEmits<Emits>();
-
-// 假设导航栏高度为 60px，菜单栏高度为 50px，翻页栏高度为 50px
-const navbarHeight = 50;
-const menuHeight = 50;
-const paginationHeight = 50;
-
-const calculatedTableHeight = computed(() => {
-  return window.innerHeight - navbarHeight - menuHeight - paginationHeight;
-});
-
-const handlePageChange = (page: number) => {
-  emit('pageChange', page);
-};
-</script>

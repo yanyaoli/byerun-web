@@ -1,36 +1,25 @@
 {
-  "name": "byerun-web",
+  "name": "byerun",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "install-all": "npm install && cd server && npm install",
-    "preview": "vite preview",
-    "server": "cd server && npm run start",
-    "dev": "concurrently \"npm run server\" \"vite\"",
+    "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "build:prod": "NODE_ENV=production npm run build"
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@amap/amap-jsapi-loader": "^1.0.1",
-    "@element-plus/icons-vue": "^2.x.x",
-    "axios": "^1.7.9",
+    "artalk": "^2.9.1",
+    "axios": "^1.10.0",
     "crypto-js": "^4.2.0",
-    "element-plus": "^2.9.3",
-    "geolib": "^3.3.4",
-    "md5": "^2.3.0",
-    "pinia": "^2.3.0",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue": "^3.5.17"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.2.2",
-    "@types/md5": "^2.3.5",
-    "@types/node": "^22.10.7",
-    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue": "^6.0.0",
     "@vue/tsconfig": "^0.7.0",
-    "concurrently": "^8.2.2",
-    "typescript": "~5.6.2",
-    "vite": "^6.0.5",
-    "vue-tsc": "^2.2.0"
+    "typescript": "~5.8.3",
+    "vite": "^7.0.4",
+    "vue-tsc": "^2.2.12"
   }
 }

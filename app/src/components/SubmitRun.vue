@@ -1,0 +1,949 @@
+<template>
+  <div class="submit-container">
+    <div class="stats-table">
+      <div class="stats-table-header">
+        <div class="stats-header-title">完成情况</div>
+        <div class="stats-header-semester">{{ semesterYearText }}学期</div>
+      </div>
+      <!-- 三个卡片表格布局 -->
+      <div class="stats-table-row">
+        <div class="stats-card club-activity">
+          <div class="stats-percentage">
+            {{
+              totalActivities === 0
+                ? "0%"
+                : Math.round(clubCompletionRate) + "%"
+            }}
+          </div>
+          <div class="stats-title">俱乐部活动</div>
+          <div class="stats-ratio">
+            {{ completedActivities + "/" + totalActivities }}
+          </div>
+        </div>
+        <div class="stats-card run-completion">
+          <div class="stats-percentage">{{ runCompletionRate }}%</div>
+          <div class="stats-title">跑步次数</div>
+          <div class="stats-ratio">
+            {{ completedRuns }}/{{ totalRequiredRuns }}
+          </div>
+        </div>
+        <div class="stats-card distance-stats">
+          <div class="stats-percentage">
+            {{ Math.round(distancePercentage) }}%
+          </div>
+          <div class="stats-title">跑步里程</div>
+          <div class="stats-ratio">
+            {{ totalDistanceKm }}/{{
+              Number(targetDistanceKm) ? targetDistanceKm : "0"
+            }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据输入表单 -->
+    <form @submit.prevent="handleSubmit">
+      <div class="form-section">
+        <h3 class="section-title">提交记录</h3>
+
+        <!-- 跑步路线选择 -->
+        <div class="form-group">
+          <label>选择地图</label>
+          <div
+            class="route-dropdown"
+            @click="showRouteOptions = !showRouteOptions"
+          >
+            <div class="selected-route">
+              <span>{{ getRouteName(form.route) }}</span>
+              <div
+                class="dropdown-arrow"
+                :class="{ active: showRouteOptions }"
+              ></div>
+            </div>
+            <transition name="dropdown">
+              <div v-show="showRouteOptions" class="route-options">
+                <div
+                  v-for="(name, value) in routeOptions"
+                  :key="value"
+                  class="route-option"
+                  :class="{ selected: form.route === value }"
+                  @click.stop="selectRoute(value)"
+                >
+                  {{ name }}
+                </div>
+              </div>
+            </transition>
+          </div>
+        </div>
+
+        <!-- 跑步里程输入 -->
+        <div class="form-group">
+          <label>跑步里程</label>
+          <div class="input-wrapper">
+            <input
+              v-model.number="form.distance"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="输入里程"
+              required
+              style="box-shadow: none; outline: none"
+            />
+            <span class="unit">米</span>
+          </div>
+        </div>
+
+        <!-- 跑步时长输入 -->
+        <div class="form-group">
+          <label>跑步时长</label>
+          <div class="input-wrapper">
+            <input
+              v-model.number="form.duration"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="输入时长"
+              required
+              style="box-shadow: none; outline: none"
+            />
+            <span class="unit">分钟</span>
+          </div>
+        </div>
+
+        <!-- 配速计算 -->
+        <div class="form-group">
+          <div class="pace-display">
+            <div class="pace-card" :class="{ error: !paceLimit }">
+              <div class="pace-label">当前配速：</div>
+              <div class="pace-value">
+                {{
+                  form.distance && form.distance > 0
+                    ? formatPace(form.duration, form.distance)
+                    : "0:00"
+                }}
+                <span class="pace-unit">分钟/公里</span>
+              </div>
+              <transition name="fade">
+                <div v-if="!paceLimit" class="pace-error">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path
+                      fill="currentColor"
+                      d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
+                    />
+                  </svg>
+                  {{ getPaceLimitErrorText() }}
+                </div>
+              </transition>
+            </div>
+          </div>
+        </div>
+
+        <!-- 按钮区域 -->
+        <div class="action-buttons">
+          <button
+            type="button"
+            class="random-btn"
+            @click="onRandomFill"
+            :disabled="submitting"
+          >
+            随机填充
+          </button>
+          <button
+            type="submit"
+            class="submit-btn"
+            :disabled="submitting || !paceLimit"
+            :class="{ submitting: submitting }"
+          >
+            <span class="btn-icon" v-if="!submitting"> </span>
+            <span class="loader" v-else></span>
+            {{ submitting ? "提交中..." : "提交记录" }}
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- 路线预览部分 -->
+    <div class="route-preview-section">
+      <h3 class="section-title">路线预览</h3>
+      <div class="route-preview-placeholder">
+        <div class="placeholder-text">暂无预览</div>
+      </div>
+    </div>
+  </div>
+  <Message ref="messageRef" />
+</template>
+
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, defineProps } from "vue";
+import api from "../api";
+import { genTrackPoints } from "../utils/map";
+import type { ComponentPublicInstance } from "vue";
+import Message from "./Message.vue";
+
+const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
+
+// 定义props
+const props = defineProps({
+  userInfo: { type: Object, default: null },
+  runStandard: { type: Object, default: null },
+  runInfo: { type: Object, default: null },
+  activityInfo: { type: Object, default: null },
+});
+
+// 路由选项数据
+const routeOptions = {
+  cuit_hkg: "成都信息工程大学（航空港校区）",
+  cuit_lqy: "成都信息工程大学（龙泉驿校区）",
+  cdutcm_wj: "成都中医药大学（温江校区）",
+  ncwsxx: "南充卫生学校",
+  sctbc: "四川工商职业技术学院",
+};
+
+const form = ref({
+  distance: 2000,
+  duration: 20,
+  route: "cuit_hkg",
+  date: new Date().toISOString().split("T")[0],
+});
+const submitting = ref(false);
+const showRouteOptions = ref(false);
+const animateProgress = ref(false);
+
+// 俱乐部完成情况统计数据
+const completedActivities = computed(() => {
+  return props.activityInfo ? props.activityInfo.joinNum : 0;
+});
+const totalActivities = computed(() => {
+  return props.activityInfo ? props.activityInfo.totalNum : 0;
+});
+const clubCompletionRate = computed(() => {
+  if (!totalActivities.value) return 0;
+  return (completedActivities.value / totalActivities.value) * 100;
+});
+
+// 跑步完成率统计数据
+const completedRuns = computed(() => {
+  return props.activityInfo ? props.activityInfo.runJoinNum : 0;
+});
+const totalRequiredRuns = computed(() => {
+  return props.activityInfo ? props.activityInfo.runTotalNum : 0;
+});
+const runCompletionRate = computed(() => {
+  if (!totalRequiredRuns.value) return 0;
+  return Math.min(
+    100,
+    Math.round((completedRuns.value / totalRequiredRuns.value) * 100)
+  );
+});
+
+// 跑步里程统计数据
+const totalDistanceKm = computed(() => {
+  // 从runInfo中获取有效里程数据，转为公里并保留一位小数
+  if (props.runInfo && props.runInfo.runValidDistance) {
+    return (Number(props.runInfo.runValidDistance) / 1000).toFixed(1);
+  }
+  return "0.0";
+});
+const targetDistanceKm = computed(() => {
+  // 根据性别从runStandard中获取目标里程
+  if (props.runStandard && props.userInfo) {
+    const gender = props.userInfo.gender;
+    if (gender === "1") {
+      // 男生
+      return (Number(props.runStandard.boyAllRunDistance) / 1000).toFixed(1);
+    } else if (gender === "2") {
+      // 女生
+      return (Number(props.runStandard.girlAllRunDistance) / 1000).toFixed(1);
+    }
+  }
+  return "0.0";
+});
+const distancePercentage = computed(() => {
+  const target = Number(targetDistanceKm.value);
+  const current = Number(totalDistanceKm.value);
+  if (!target) return 0;
+  return Math.min(100, (current / target) * 100);
+});
+
+// 学期年份显示
+const semesterYearText = computed(() => {
+  if (props.runStandard && props.runStandard.semesterYear) {
+    return props.runStandard.semesterYear
+      ? props.runStandard.semesterYear
+      : "当前";
+  }
+  return "当前";
+});
+
+// 检查配速是否符合要求
+const paceLimit = computed(() => {
+  if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
+    return true;
+
+  const distanceInKm = form.value.distance / 1000;
+  const pace = form.value.duration / distanceInKm; // 分钟/公里
+
+  // 使用之前的方式：不能小于 6 分钟/公里
+  return isNaN(pace) || pace >= 6;
+});
+
+// 路由选择相关函数
+function getRouteName(routeValue: string) {
+  return routeOptions[routeValue as keyof typeof routeOptions] || "选择路线";
+}
+
+function selectRoute(route: string) {
+  form.value.route = route;
+  showRouteOptions.value = false;
+}
+
+function formatPace(duration: number, distance: number) {
+  if (!distance) return "0:00";
+  const pace = duration / (distance / 1000);
+  const min = Math.floor(pace);
+  const sec = Math.round((pace - min) * 60)
+    .toString()
+    .padStart(2, "0");
+  return `${min}:${sec}`;
+}
+
+function getPaceLimitErrorText() {
+  // 始终返回固定提示
+  return "配速必须大于6分钟/公里";
+} // 动画相关函数
+function triggerProgressAnimation() {
+  animateProgress.value = false;
+  setTimeout(() => {
+    animateProgress.value = true;
+  }, 50);
+}
+
+// 监听表单变化，更新进度环
+watch(
+  () => [form.value.distance, form.value.duration],
+  () => {
+    triggerProgressAnimation();
+  },
+  { deep: true }
+);
+
+onMounted(() => {
+  // 初始化动画
+  setTimeout(() => {
+    animateProgress.value = true;
+  }, 500);
+});
+
+const handleSubmit = async () => {
+  // 验证配速
+  if (!paceLimit.value) {
+    messageRef.value?.show("配速不能小于6分钟/公里", "error");
+    return;
+  }
+
+  // 验证距离
+  if (!Number.isInteger(form.value.distance) || form.value.distance <= 0) {
+    messageRef.value?.show("跑步里程必须为正整数", "error");
+    return;
+  }
+
+  // 验证距离范围
+  if (props.runStandard && props.userInfo) {
+    const gender = props.userInfo.gender;
+    let minDistance = 0;
+    let maxDistance = 0;
+
+    if (gender === "1") {
+      // 男生
+      minDistance = Number(props.runStandard.boyOnceDistanceMin);
+      maxDistance = Number(props.runStandard.boyOnceDistanceMax);
+    } else if (gender === "2") {
+      // 女生
+      minDistance = Number(props.runStandard.girlOnceDistanceMin);
+      maxDistance = Number(props.runStandard.girlOnceDistanceMax);
+    }
+
+    if (form.value.distance < minDistance) {
+      messageRef.value?.show(`跑步距离不能小于${minDistance}米`, "error");
+      return;
+    }
+
+    if (form.value.distance > maxDistance) {
+      messageRef.value?.show(`跑步距离不能大于${maxDistance}米`, "error");
+      return;
+    }
+  }
+
+  // 验证时长范围
+  if (props.runStandard && props.userInfo) {
+    const gender = props.userInfo.gender;
+    let minTime = 0;
+    let maxTime = 0;
+
+    if (gender === "1") {
+      // 男生
+      minTime = Number(props.runStandard.boyOnceTimeMin);
+      maxTime = Number(props.runStandard.boyOnceTimeMax);
+    } else if (gender === "2") {
+      // 女生
+      minTime = Number(props.runStandard.girlOnceTimeMin);
+      maxTime = Number(props.runStandard.girlOnceTimeMax);
+    }
+
+    if (form.value.duration < minTime) {
+      messageRef.value?.show(`跑步时长不能小于${minTime}分钟`, "error");
+      return;
+    }
+
+    if (form.value.duration > maxTime) {
+      messageRef.value?.show(`跑步时长不能大于${maxTime}分钟`, "error");
+      return;
+    }
+  }
+
+  const userId = localStorage.getItem("userId");
+  const studentId = localStorage.getItem("studentId");
+  const schoolId = localStorage.getItem("schoolId");
+  if (!userId || !studentId || !schoolId) {
+    messageRef.value?.show("请先登录", "error");
+    return;
+  }
+
+  submitting.value = true;
+  const trackPoints = genTrackPoints(form.value.distance, form.value.route);
+
+  // 构造后端要求的 payload
+  const now = new Date(form.value.date);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const recordDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
+    now.getDate()
+  )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+  // 获取当前学期
+  let yearSemester;
+  if (props.runStandard && props.runStandard.semesterYear) {
+    yearSemester = props.runStandard.semesterYear;
+  } else {
+    // 备用逻辑
+    const year = now.getFullYear();
+    const semester = now.getMonth() + 1 < 8 ? "1" : "2";
+    yearSemester = `${year}${semester}`;
+  }
+
+  const payload = {
+    againRunStatus: "0",
+    againRunTime: 0,
+    appVersions: "1.8.3",
+    brand: "iPhone",
+    mobileType: "iPhone 15 Pro Max",
+    sysVersions: "17.0",
+    trackPoints, // 轨迹点数据
+    distanceTimeStatus: "1",
+    innerSchool: "1",
+    runDistance: form.value.distance,
+    runTime: form.value.duration,
+    userId: Number(userId),
+    vocalStatus: "1",
+    yearSemester,
+    recordDate,
+  };
+  try {
+    const { data } = await api.post("/unirun/save/run/record/new", payload);
+    if (data.code === 10000) {
+      messageRef.value?.show(data.response.resultDesc, "success");
+      // 成功动画效果
+      triggerProgressAnimation();
+    } else {
+      messageRef.value?.show(data.msg || "提交失败", "error");
+    }
+  } catch (e) {
+    messageRef.value?.show("提交异常", "error");
+  } finally {
+    submitting.value = false;
+  }
+};
+
+const onRandomFill = () => {
+  if (!props.runStandard || !props.userInfo) {
+    // 如果没有标准数据，使用默认范围
+    let randomDistance, randomDuration;
+    do {
+      randomDistance = Math.floor(Math.random() * (7500 - 1000)) + 1000;
+      randomDuration = Math.floor(Math.random() * 120) + 30;
+    } while (
+      randomDistance > 0 &&
+      randomDuration / (randomDistance / 1000) < 6
+    );
+    form.value.distance = randomDistance;
+    form.value.duration = randomDuration;
+  } else {
+    // 使用标准限制，但保持配速>=6分钟/公里
+    const gender = props.userInfo.gender;
+    let minDistance, maxDistance, minTime, maxTime;
+
+    if (gender === "1") {
+      // 男生
+      minDistance = Number(props.runStandard.boyOnceDistanceMin);
+      maxDistance = Number(props.runStandard.boyOnceDistanceMax);
+      minTime = Number(props.runStandard.boyOnceTimeMin);
+      maxTime = Number(props.runStandard.boyOnceTimeMax);
+
+      // 生成随机距离和时间
+      const randomDistance =
+        Math.floor(Math.random() * (maxDistance - minDistance)) + minDistance;
+
+      // 根据配速≥6分钟/公里计算最小时间
+      const minTimeForDistance = Math.ceil((randomDistance / 1000) * 6);
+
+      // 结合标准限制和配速限制
+      const effectiveMinTime = Math.max(minTime, minTimeForDistance);
+
+      // 生成随机时间
+      const randomDuration =
+        Math.floor(Math.random() * (maxTime - effectiveMinTime)) +
+        effectiveMinTime;
+
+      form.value.distance = randomDistance;
+      form.value.duration = randomDuration;
+    } else if (gender === "2") {
+      // 女生
+      minDistance = Number(props.runStandard.girlOnceDistanceMin);
+      maxDistance = Number(props.runStandard.girlOnceDistanceMax);
+      minTime = Number(props.runStandard.girlOnceTimeMin);
+      maxTime = Number(props.runStandard.girlOnceTimeMax);
+
+      // 生成随机距离和时间
+      const randomDistance =
+        Math.floor(Math.random() * (maxDistance - minDistance)) + minDistance;
+
+      // 根据配速≥6分钟/公里计算最小时间
+      const minTimeForDistance = Math.ceil((randomDistance / 1000) * 6);
+
+      // 结合标准限制和配速限制
+      const effectiveMinTime = Math.max(minTime, minTimeForDistance);
+
+      // 生成随机时间
+      const randomDuration =
+        Math.floor(Math.random() * (maxTime - effectiveMinTime)) +
+        effectiveMinTime;
+
+      form.value.distance = randomDistance;
+      form.value.duration = randomDuration;
+    } else {
+      // 性别未知，使用默认值
+      form.value.distance = 2000;
+      form.value.duration = 20;
+    }
+  }
+
+  // 触发动画效果
+  triggerProgressAnimation();
+};
+</script>
+<script lang="ts">
+export default {};
+</script>
+
+<style scoped>
+.submit-container {
+  padding: 0px 20px 20px 20px;
+}
+
+.submit-main {
+  padding: 20px;
+  background: #f6f7f9;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 通用顶部标题栏 */
+.page-header {
+  background: #fff;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e3e6e8;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3a3f;
+  margin: 0;
+}
+
+.stats-table {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e3e6e8;
+  box-shadow: none;
+}
+/* 完成情况表头 */
+.stats-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-bottom: 1px solid #e3e6e8;
+}
+.stats-header-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3a3f;
+  margin: 0 0 5px 0;
+}
+.stats-header-semester {
+  font-size: 14px;
+  color: #7b8a8b;
+  margin: 0 0 5px 0;
+}
+
+/* 三卡片表格布局 */
+.stats-table-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  padding: 10px 0px 0px 0px;
+}
+.stats-card {
+  flex: 1;
+  background: #f0f2f5;
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stats-percentage {
+  font-size: 20px;
+  font-weight: 600;
+  color: #323538;
+  margin-bottom: 6px;
+}
+.stats-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3a3f;
+  margin: 0 0 6px 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stats-ratio {
+  font-size: 13px;
+  color: #7b8a8b;
+  margin-bottom: 8px;
+}
+
+.form-section,
+.route-preview-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e3e6e8;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #2d3a3f;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: #7b8a8b;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-group-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form-group.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #f6f7f9;
+  border: 1px solid #e3e6e8;
+  border-radius: 8px;
+  padding: 0 12px;
+}
+
+.input-wrapper input {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  font-size: 15px;
+  background: transparent;
+  outline: none;
+  color: #2d3a3f;
+}
+
+.input-wrapper .unit {
+  color: #7b8a8b;
+  font-size: 14px;
+  padding-left: 4px;
+}
+
+/* 路线选择 */
+.route-dropdown {
+  background: #f6f7f9;
+  border: 1px solid #e3e6e8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+.selected-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #2d3a3f;
+}
+.dropdown-arrow {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #b0b0b0;
+  margin-left: 8px;
+  transition: transform 0.2s;
+}
+.dropdown-arrow.active {
+  transform: rotate(180deg);
+}
+.route-options {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 110%;
+  background: #fff;
+  border: 1px solid #e3e6e8;
+  border-radius: 8px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 4px 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.route-option {
+  padding: 12px 16px;
+  font-size: 15px;
+  color: #4f6d7a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.route-option.selected,
+.route-option:hover {
+  background: #f0f7ff;
+  color: #3b9eff;
+}
+
+/* 配速卡片 */
+.pace-display {
+  margin-bottom: 0;
+}
+.pace-card {
+  background: #f6f7f9;
+  border-radius: 8px;
+  border: 1px solid #e3e6e8;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+.pace-card.error {
+  border-color: #f8500e;
+  background: #fff8f6;
+}
+.pace-label {
+  font-size: 14px;
+  color: #7b8a8b;
+  margin-right: 6px;
+}
+.pace-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2d3a3f;
+}
+.pace-unit {
+  font-size: 14px;
+  color: #7b8a8b;
+  margin-left: 2px;
+}
+.pace-error {
+  color: #f8500e;
+  font-size: 14px;
+  position: absolute;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 按钮区域 */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+.random-btn,
+.submit-btn {
+  flex: 1;
+  padding: 14px 0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.random-btn {
+  background: #f0f2f5;
+  color: #4f6d7a;
+}
+.random-btn:active {
+  background: #e3e6e8;
+}
+.random-btn:disabled {
+  background: #f0f0f0;
+  color: #b0b0b0;
+  cursor: not-allowed;
+}
+.submit-btn {
+  background: #3b9eff;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(59, 158, 255, 0.2);
+}
+.submit-btn:active {
+  background: #2b8ff0;
+  transform: translateY(1px);
+}
+.submit-btn:disabled {
+  background: #b0b0b0;
+  box-shadow: none;
+  color: #fff;
+  cursor: not-allowed;
+}
+.submit-btn.submitting {
+  background: #7b8a8b;
+  color: #fff;
+}
+.loader {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #fff;
+  border-top: 2px solid #3b9eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.route-preview-placeholder {
+  background: #f6f7f9;
+  border: 1px dashed #e3e6e8;
+  border-radius: 8px;
+  height: 140px; /* 减少高度，节省空间 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-text {
+  color: #7b8a8b;
+  font-size: 14px;
+}
+
+/* 消息提示 */
+.message-box {
+  margin: 16px;
+  background: #e6f4ff;
+  border-radius: 8px;
+  border: 1px solid #a8d8ff;
+  color: #3b9eff;
+  font-size: 15px;
+  padding: 14px;
+  text-align: center;
+  box-shadow: none;
+  transition: all 0.2s;
+}
+.message-box.error {
+  background: #fff2e6;
+  border-color: #ffcca5;
+  color: #f8500e;
+}
+.message-text {
+  font-size: 15px;
+}
+
+@media (max-width: 375px) {
+  .stats-header {
+    padding: 14px 12px 6px 12px;
+  }
+  .stats-header-title {
+    font-size: 15px;
+  }
+  .stats-header-semester {
+    font-size: 13px;
+  }
+  .stats-section {
+    padding: 16px 12px 6px 12px;
+    gap: 8px;
+  }
+  .stats-card {
+    padding: 12px 8px 10px;
+  }
+  .stats-title {
+    font-size: 12px;
+  }
+  .stats-percentage {
+    font-size: 18px;
+  }
+  .stats-ratio {
+    font-size: 12px;
+  }
+  .route-dropdown {
+    padding: 8px 8px;
+  }
+  .modal-container {
+    width: 98vw;
+    padding: 0 0 8px 0;
+  }
+}
+</style>
