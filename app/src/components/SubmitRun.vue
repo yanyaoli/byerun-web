@@ -199,10 +199,33 @@ const routeOptions = {
   sctbc: "四川工商职业技术学院",
 };
 
+
+const LOCAL_STORAGE_ROUTE_KEY = "submitRunRoute";
+const LOCAL_STORAGE_DISTANCE_KEY = "submitRunDistance";
+const LOCAL_STORAGE_DURATION_KEY = "submitRunDuration";
+
+let defaultRoute = "cuit_hkg";
+let defaultDistance = 2000;
+let defaultDuration = 20;
+try {
+  const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
+  if (savedRoute && Object.prototype.hasOwnProperty.call(routeOptions, savedRoute)) {
+    defaultRoute = savedRoute;
+  }
+  const savedDistance = localStorage.getItem(LOCAL_STORAGE_DISTANCE_KEY);
+  if (savedDistance && !isNaN(Number(savedDistance))) {
+    defaultDistance = Number(savedDistance);
+  }
+  const savedDuration = localStorage.getItem(LOCAL_STORAGE_DURATION_KEY);
+  if (savedDuration && !isNaN(Number(savedDuration))) {
+    defaultDuration = Number(savedDuration);
+  }
+} catch (e) {}
+
 const form = ref({
-  distance: 2000,
-  duration: 20,
-  route: "cuit_hkg",
+  distance: defaultDistance,
+  duration: defaultDuration,
+  route: defaultRoute,
   date: new Date().toISOString().split("T")[0],
 });
 const submitting = ref(false);
@@ -275,16 +298,20 @@ const semesterYearText = computed(() => {
   return "当前";
 });
 
-// 检查配速是否符合要求
+// 检查配速是否符合要求（不能高于最高配速也不能低于最低配速）
+// 跑步标准：runDistance 单位米，runTime 单位分钟，配速=runTime/(runDistance/1000) 分钟/公里
 const paceLimit = computed(() => {
   if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
     return true;
-
-  const distanceInKm = form.value.distance / 1000;
-  const pace = form.value.duration / distanceInKm; // 分钟/公里
-
-  // 使用之前的方式：不能小于 6 分钟/公里
-  return isNaN(pace) || pace >= 6;
+  // 距离米，时长分钟，配速=分钟/公里
+  const pace = form.value.duration / (form.value.distance / 1000);
+  // 配速区间：6~10分钟/公里
+  const minPace = 6;
+  const maxPace = 10;
+  if (isNaN(pace)) return true;
+  if (pace < minPace) return false;
+  if (pace > maxPace) return false;
+  return true;
 });
 
 // 路由选择相关函数
@@ -295,7 +322,28 @@ function getRouteName(routeValue: string) {
 function selectRoute(route: string) {
   form.value.route = route;
   showRouteOptions.value = false;
+  try {
+    localStorage.setItem(LOCAL_STORAGE_ROUTE_KEY, route);
+  } catch (e) {}
 }
+
+// 监听里程和时长变化，保存到localStorage
+watch(
+  () => form.value.distance,
+  (val) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
+    } catch (e) {}
+  }
+);
+watch(
+  () => form.value.duration,
+  (val) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_DURATION_KEY, String(val));
+    } catch (e) {}
+  }
+);
 
 function formatPace(duration: number, distance: number) {
   if (!distance) return "0:00";
@@ -308,9 +356,19 @@ function formatPace(duration: number, distance: number) {
 }
 
 function getPaceLimitErrorText() {
-  // 始终返回固定提示
-  return "配速必须大于6分钟/公里";
-} // 动画相关函数
+  if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
+    return "";
+  const pace = form.value.duration / (form.value.distance / 1000);
+  const minPace = 6;
+  const maxPace = 10;
+  if (pace < minPace) {
+    return `配速过快，不能快于6:00分钟/公里`;
+  }
+  if (pace > maxPace) {
+    return `配速过慢，不能慢于10:00分钟/公里`;
+  }
+  return "配速不符合要求";
+}
 function triggerProgressAnimation() {
   animateProgress.value = false;
   setTimeout(() => {
@@ -332,6 +390,22 @@ onMounted(() => {
   setTimeout(() => {
     animateProgress.value = true;
   }, 500);
+
+  // 自动选择上次保存的地图、里程、时长
+  try {
+    const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
+    if (savedRoute && Object.prototype.hasOwnProperty.call(routeOptions, savedRoute)) {
+      form.value.route = savedRoute;
+    }
+    const savedDistance = localStorage.getItem(LOCAL_STORAGE_DISTANCE_KEY);
+    if (savedDistance && !isNaN(Number(savedDistance))) {
+      form.value.distance = Number(savedDistance);
+    }
+    const savedDuration = localStorage.getItem(LOCAL_STORAGE_DURATION_KEY);
+    if (savedDuration && !isNaN(Number(savedDuration))) {
+      form.value.duration = Number(savedDuration);
+    }
+  } catch (e) {}
 });
 
 const handleSubmit = async () => {
@@ -464,79 +538,36 @@ const handleSubmit = async () => {
 };
 
 const onRandomFill = () => {
-  if (!props.runStandard || !props.userInfo) {
-    // 如果没有标准数据，使用默认范围
-    let randomDistance, randomDuration;
-    do {
-      randomDistance = Math.floor(Math.random() * (7500 - 1000)) + 1000;
-      randomDuration = Math.floor(Math.random() * 120) + 30;
-    } while (
-      randomDistance > 0 &&
-      randomDuration / (randomDistance / 1000) < 6
-    );
-    form.value.distance = randomDistance;
-    form.value.duration = randomDuration;
-  } else {
-    // 使用标准限制，但保持配速>=6分钟/公里
-    const gender = props.userInfo.gender;
-    let minDistance, maxDistance, minTime, maxTime;
-
-    if (gender === "1") {
-      // 男生
-      minDistance = Number(props.runStandard.boyOnceDistanceMin);
-      maxDistance = Number(props.runStandard.boyOnceDistanceMax);
-      minTime = Number(props.runStandard.boyOnceTimeMin);
-      maxTime = Number(props.runStandard.boyOnceTimeMax);
-
-      // 生成随机距离和时间
-      const randomDistance =
-        Math.floor(Math.random() * (maxDistance - minDistance)) + minDistance;
-
-      // 根据配速≥6分钟/公里计算最小时间
-      const minTimeForDistance = Math.ceil((randomDistance / 1000) * 6);
-
-      // 结合标准限制和配速限制
-      const effectiveMinTime = Math.max(minTime, minTimeForDistance);
-
-      // 生成随机时间
-      const randomDuration =
-        Math.floor(Math.random() * (maxTime - effectiveMinTime)) +
-        effectiveMinTime;
-
-      form.value.distance = randomDistance;
-      form.value.duration = randomDuration;
-    } else if (gender === "2") {
-      // 女生
-      minDistance = Number(props.runStandard.girlOnceDistanceMin);
-      maxDistance = Number(props.runStandard.girlOnceDistanceMax);
-      minTime = Number(props.runStandard.girlOnceTimeMin);
-      maxTime = Number(props.runStandard.girlOnceTimeMax);
-
-      // 生成随机距离和时间
-      const randomDistance =
-        Math.floor(Math.random() * (maxDistance - minDistance)) + minDistance;
-
-      // 根据配速≥6分钟/公里计算最小时间
-      const minTimeForDistance = Math.ceil((randomDistance / 1000) * 6);
-
-      // 结合标准限制和配速限制
-      const effectiveMinTime = Math.max(minTime, minTimeForDistance);
-
-      // 生成随机时间
-      const randomDuration =
-        Math.floor(Math.random() * (maxTime - effectiveMinTime)) +
-        effectiveMinTime;
-
-      form.value.distance = randomDistance;
-      form.value.duration = randomDuration;
-    } else {
-      // 性别未知，使用默认值
-      form.value.distance = 2000;
-      form.value.duration = 20;
+  // 随机生成的配速必须严格符合配速区间 6~10 分钟/公里
+  const minDistance = 1000, maxDistance = 7500, minTime = 6, maxTime = 75;
+  const minPace = 6, maxPace = 10;
+  let randomDistance: number = 0, randomDuration: number = 0, pace: number = 0;
+  let tryCount = 0;
+  while (true) {
+    randomDistance = Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
+    // 允许的最小/最大时长
+    const minDuration = Math.max(minTime, Math.ceil(randomDistance / 1000 * minPace));
+    const maxDuration = Math.min(maxTime, Math.floor(randomDistance / 1000 * maxPace));
+    if (minDuration > maxDuration) {
+      tryCount++;
+      if (tryCount > 100) break;
+      continue;
     }
+    randomDuration = Math.floor(Math.random() * (maxDuration - minDuration + 1)) + minDuration;
+    pace = randomDuration / (randomDistance / 1000);
+    if (
+      randomDistance > 0 &&
+      randomDuration > 0 &&
+      pace >= minPace &&
+      pace <= maxPace
+    ) {
+      break;
+    }
+    tryCount++;
+    if (tryCount > 100) break;
   }
-
-  // 触发动画效果
+  form.value.distance = randomDistance;
+  form.value.duration = randomDuration;
   triggerProgressAnimation();
 };
 </script>
@@ -796,14 +827,30 @@ export default {};
   color: #7b8a8b;
   margin-left: 2px;
 }
+/* 配速错误提示样式优化，移动端适配 */
 .pace-error {
   color: #f8500e;
   font-size: 14px;
   position: absolute;
   right: 16px;
+  left: 16px;
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: pre-line;
+  word-break: break-all;
+  background: #fff8f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 2;
+}
+@media (max-width: 500px) {
+  .pace-error {
+    font-size: 13px;
+    left: 8px;
+    right: 8px;
+    padding: 2px 2px;
+  }
 }
 
 /* 按钮区域 */
