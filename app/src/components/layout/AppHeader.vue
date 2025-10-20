@@ -23,7 +23,6 @@ defineProps({
   position: fixed;
   left: 0;
   top: 0;
-  width: 100vw;
   height: var(--app-header-height, 56px);
   display: flex;
   align-items: center;
@@ -42,5 +41,15 @@ defineProps({
   width: 100%;
   padding: 0 16px;
   box-sizing: border-box;
+}
+
+/* Always constrain the fixed header to the same centered max-width as .app-layout.
+   For fixed elements, setting left:0; right:0; margin:auto; with a max-width centers them. */
+.page-header {
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 420px;
 }
 </style>

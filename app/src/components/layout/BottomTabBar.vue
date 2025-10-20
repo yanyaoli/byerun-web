@@ -66,7 +66,6 @@ defineProps({
   position: fixed;
   left: 0;
   bottom: 0;
-  width: 100vw; /* span the full viewport */
   height: var(--app-bottom-height, 72px);
   display: flex;
   align-items: center;
@@ -89,6 +88,18 @@ defineProps({
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+}
+
+/* Always constrain the fixed bottom bar to the same centered max-width as .app-layout. */
+.bottom-tab-bar {
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 420px;
+}
+.bottom-fixed {
+  width: 100%;
 }
 
 .tab-item {
