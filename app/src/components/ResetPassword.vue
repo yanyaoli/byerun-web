@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import api from "../api";
+import api from "../utils/api";
 import CryptoJS from "crypto-js";
 import Message from "./Message.vue";
 

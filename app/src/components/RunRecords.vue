@@ -122,7 +122,7 @@
 import type { ComponentPublicInstance } from "vue";
 import Message from "./Message.vue";
 import { ref, reactive, onMounted, defineProps } from "vue";
-import api from "../api";
+import api from "../utils/api";
 
 const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
 

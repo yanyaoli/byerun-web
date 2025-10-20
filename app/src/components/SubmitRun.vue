@@ -11,13 +11,13 @@
           <div class="stats-percentage">
             {{
               totalActivities === 0
-                ? "0%"
-                : Math.round(clubCompletionRate) + "%"
+                ? '0%'
+                : Math.round(clubCompletionRate) + '%'
             }}
           </div>
           <div class="stats-title">俱乐部活动</div>
           <div class="stats-ratio">
-            {{ completedActivities + "/" + totalActivities }}
+            {{ completedActivities + '/' + totalActivities }}
           </div>
         </div>
         <div class="stats-card run-completion">
@@ -33,9 +33,7 @@
           </div>
           <div class="stats-title">跑步里程</div>
           <div class="stats-ratio">
-            {{ totalDistanceKm }}/{{
-              Number(targetDistanceKm) ? targetDistanceKm : "0"
-            }}
+            {{ totalDistanceKm }}/{{ Number(targetDistanceKm) ? targetDistanceKm : '0' }}
           </div>
         </div>
       </div>
@@ -49,16 +47,10 @@
         <!-- 跑步路线选择 -->
         <div class="form-group">
           <label>选择地图</label>
-          <div
-            class="route-dropdown"
-            @click="showRouteOptions = !showRouteOptions"
-          >
+          <div class="route-dropdown" @click="showRouteOptions = !showRouteOptions">
             <div class="selected-route">
               <span>{{ getRouteName(form.route) }}</span>
-              <div
-                class="dropdown-arrow"
-                :class="{ active: showRouteOptions }"
-              ></div>
+              <div class="dropdown-arrow" :class="{ active: showRouteOptions }"></div>
             </div>
             <transition name="dropdown">
               <div v-show="showRouteOptions" class="route-options">
@@ -83,7 +75,6 @@
             <input
               v-model.number="form.distance"
               type="number"
-              min="1"
               step="1"
               placeholder="输入里程"
               required
@@ -100,7 +91,6 @@
             <input
               v-model.number="form.duration"
               type="number"
-              min="1"
               step="1"
               placeholder="输入时长"
               required
@@ -119,7 +109,7 @@
                 {{
                   form.distance && form.distance > 0
                     ? formatPace(form.duration, form.distance)
-                    : "0:00"
+                    : '0:00'
                 }}
                 <span class="pace-unit">分钟/公里</span>
               </div>
@@ -156,7 +146,7 @@
           >
             <span class="btn-icon" v-if="!submitting"> </span>
             <span class="loader" v-else></span>
-            {{ submitting ? "提交中..." : "提交记录" }}
+            {{ submitting ? '提交中...' : '提交记录' }}
           </button>
         </div>
       </div>
@@ -165,20 +155,23 @@
     <!-- 路线预览部分 -->
     <div class="route-preview-section">
       <h3 class="section-title">路线预览</h3>
-      <div class="route-preview-placeholder">
-        <div class="placeholder-text">暂无预览</div>
-      </div>
+      <MapPreview :track="generatedTrack" />
     </div>
+
+    <Message ref="messageRef" />
   </div>
-  <Message ref="messageRef" />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, defineProps } from "vue";
-import api from "../api";
+import api from "../utils/api";
 import { genTrackPoints } from "../utils/map";
+import MapPreview from './MapPreview.vue';
 import type { ComponentPublicInstance } from "vue";
 import Message from "./Message.vue";
+
+// 在 imports 后调用 defineEmits（script setup 要求 import 在最前面）
+const emit = defineEmits<{ (e: 'submitted'): void }>();
 
 const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
 
@@ -231,6 +224,8 @@ const form = ref({
 const submitting = ref(false);
 const showRouteOptions = ref(false);
 const animateProgress = ref(false);
+// 生成轨迹字符串并暴露给 MapPreview
+const generatedTrack = ref<string | null>(null);
 
 // 俱乐部完成情况统计数据
 const completedActivities = computed(() => {
@@ -422,58 +417,10 @@ const handleSubmit = async () => {
   }
 
   // 验证距离范围
-  if (props.runStandard && props.userInfo) {
-    const gender = props.userInfo.gender;
-    let minDistance = 0;
-    let maxDistance = 0;
-
-    if (gender === "1") {
-      // 男生
-      minDistance = Number(props.runStandard.boyOnceDistanceMin);
-      maxDistance = Number(props.runStandard.boyOnceDistanceMax);
-    } else if (gender === "2") {
-      // 女生
-      minDistance = Number(props.runStandard.girlOnceDistanceMin);
-      maxDistance = Number(props.runStandard.girlOnceDistanceMax);
-    }
-
-    if (form.value.distance < minDistance) {
-      messageRef.value?.show(`跑步距离不能小于${minDistance}米`, "error");
-      return;
-    }
-
-    if (form.value.distance > maxDistance) {
-      messageRef.value?.show(`跑步距离不能大于${maxDistance}米`, "error");
-      return;
-    }
-  }
+  // NOTE: Removed fixed min/max distance enforcement per request. Only integer and pace checks remain.
 
   // 验证时长范围
-  if (props.runStandard && props.userInfo) {
-    const gender = props.userInfo.gender;
-    let minTime = 0;
-    let maxTime = 0;
-
-    if (gender === "1") {
-      // 男生
-      minTime = Number(props.runStandard.boyOnceTimeMin);
-      maxTime = Number(props.runStandard.boyOnceTimeMax);
-    } else if (gender === "2") {
-      // 女生
-      minTime = Number(props.runStandard.girlOnceTimeMin);
-      maxTime = Number(props.runStandard.girlOnceTimeMax);
-    }
-
-    if (form.value.duration < minTime) {
-      messageRef.value?.show(`跑步时长不能小于${minTime}分钟`, "error");
-      return;
-    }
-
-    if (form.value.duration > maxTime) {
-      messageRef.value?.show(`跑步时长不能大于${maxTime}分钟`, "error");
-      return;
-    }
-  }
+  // NOTE: Removed fixed min/max duration enforcement per request. Only integer and pace checks remain.
 
   const userId = localStorage.getItem("userId");
   const studentId = localStorage.getItem("studentId");
@@ -514,23 +461,38 @@ const handleSubmit = async () => {
     trackPoints, // 轨迹点数据
     distanceTimeStatus: "1",
     innerSchool: "1",
-    runDistance: form.value.distance,
-    runTime: form.value.duration,
+  // send the raw integer values provided by the user (rounded) — do not clamp to any limits
+  runDistance: Math.round(form.value.distance),
+  runTime: Math.round(form.value.duration),
     userId: Number(userId),
     vocalStatus: "1",
     yearSemester,
     recordDate,
   };
   try {
+    // Debug: log payload to help diagnose server-side clamping
+    // (remove or guard these logs in production)
+    // eslint-disable-next-line no-console
+    console.debug("Submitting run payload:", payload);
+
     const { data } = await api.post("/unirun/save/run/record/new", payload);
-    if (data.code === 10000) {
+
+    // Debug: log server response
+    // eslint-disable-next-line no-console
+    console.debug("Server response for run submit:", data);
+
+    if (data && data.code === 10000) {
       messageRef.value?.show(data.response.resultDesc, "success");
       // 成功动画效果
       triggerProgressAnimation();
+      // 通知父组件刷新用户相关数据（记录/里程/活动数等）
+      emit('submitted');
     } else {
-      messageRef.value?.show(data.msg || "提交失败", "error");
+      messageRef.value?.show(data?.msg || "提交失败", "error");
     }
   } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error("Submit run error:", e);
     messageRef.value?.show("提交异常", "error");
   } finally {
     submitting.value = false;
@@ -570,22 +532,33 @@ const onRandomFill = () => {
   form.value.duration = randomDuration;
   triggerProgressAnimation();
 };
+
+// 监听 route/distance 的变化以更新预览轨迹
+watch(
+  () => [form.value.route, form.value.distance],
+  () => {
+    try {
+      generatedTrack.value = genTrackPoints(Number(form.value.distance), form.value.route);
+    } catch (e) {
+      generatedTrack.value = null;
+    }
+  },
+  { immediate: true }
+);
 </script>
 <script lang="ts">
 export default {};
 </script>
 
 <style scoped>
-.submit-container {
-  padding: 0px 20px 20px 20px;
-}
-
-.submit-main {
-  padding: 20px;
-  background: #f6f7f9;
-  min-height: 100vh;
+.submit-container{
+    flex: 1;
   display: flex;
   flex-direction: column;
+  background: #f6f7f9;
+  height: 100%;
+  position: relative;
+  padding: 16px 16px;
 }
 
 /* 通用顶部标题栏 */

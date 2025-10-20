@@ -46,8 +46,8 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import api from "../api";
-import { getLoginParams } from "../config";
+import api from "../utils/api";
+import { getLoginParams } from "../utils/config";
 import CryptoJS from "crypto-js";
 import type { ComponentPublicInstance } from "vue";
 import Message from "./Message.vue";
