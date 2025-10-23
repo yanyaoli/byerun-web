@@ -135,8 +135,8 @@
             class="autorun-setting-btn"
             :class="{ active: showAutoModal }"
             @click="showAutoModal = !showAutoModal"
-            :aria-pressed="String(showAutoModal)"
-            title="自动配置"
+            :aria-pressed="showAutoModal"
+            title="定时任务配置"
           >
             <i class="fa-solid fa-gear"></i>
           </button>
@@ -168,8 +168,8 @@
       <MapPreview :track="generatedTrack" />
     </div>
 
-    <Message ref="messageRef" />
-    <AutoConfig :visible="showAutoModal" @update:visible="(v)=>showAutoModal=v" @saved="()=>{ messageRef.value?.show && messageRef.value.show('自动配置已保存','success') }" />
+  <Message ref="messageRef" />
+  <AutoConfig :visible="showAutoModal" @update:visible="updateAutoVisible" @saved="onAutoSaved" />
   </div>
 </template>
 
@@ -179,13 +179,21 @@ import api from "../utils/api";
 import { genTrackPoints } from "../utils/map";
 const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
 const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
-import type { ComponentPublicInstance } from "vue";
 import Message from "./Message.vue";
 
 // 在 imports 后调用 defineEmits（script setup 要求 import 在最前面）
 const emit = defineEmits<{ (e: 'submitted'): void }>();
 
 const messageRef = ref<any>(null);
+
+// handlers for AutoConfig events (typed)
+function updateAutoVisible(v: boolean) {
+  showAutoModal.value = v;
+}
+
+function onAutoSaved() {
+  if (messageRef.value?.show) messageRef.value.show('定时任务配置已保存', 'success');
+}
 
 // 定义props
 const props = defineProps({
@@ -558,9 +566,6 @@ watch(
   },
   { immediate: true }
 );
-</script>
-<script lang="ts">
-export default {};
 </script>
 
 <style scoped>
