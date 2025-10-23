@@ -300,9 +300,8 @@ export default {} as any;
   right: 0;
   bottom: 0;
   /* semi-transparent dark overlay + blur the page behind the modal */
+  /* keep a semi-transparent overlay but remove blur for mobile compatibility */
   background: rgba(0, 0, 0, 0.36);
-  -webkit-backdrop-filter: blur(1px);
-  backdrop-filter: blur(1px);
   /* ensure this backdrop sits above other UI like Message (z-index:10000) */
   z-index: 11000;
   display: flex;
@@ -391,6 +390,19 @@ export default {} as any;
   border-radius: 8px;
   border: 1px solid #e6eef6;
   background: #fff;
+}
+.time-picker,
+.input,
+.select {
+  /* force dark text color to avoid iOS Safari using white text for inputs inside modals */
+  color: #0f172a;
+  -webkit-text-fill-color: #0f172a; /* iOS specific fix */
+}
+.input::placeholder,
+.time-picker::placeholder,
+.select::placeholder {
+  color: #667085; /* darker placeholder for visibility */
+  opacity: 1;
 }
 .input {
   padding: 10px;
