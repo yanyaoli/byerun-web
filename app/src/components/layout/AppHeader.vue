@@ -22,6 +22,7 @@ export default {
 .page-header {
   flex: none;
   padding: 12px 16px;
+  background: #eeeeee;
   border-bottom: 1px solid #e3e6e8;
   text-align: center;
   z-index: 100;
