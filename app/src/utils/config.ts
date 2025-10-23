@@ -1,10 +1,11 @@
 export const config = {
   api: {
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    appKey: import.meta.env.VITE_APP_KEY,
-    appSecret: import.meta.env.VITE_APP_SECRET,
+    appKey: "389885588s0648fa",
+    appSecret: "56E39A1658455588885690425C0FD16055A21676",
     artalkServer: import.meta.env.VITE_ARTALK_SERVER,
     artalkSite: import.meta.env.VITE_ARTALK_SITE,
+    autorunServerBase: import.meta.env.VITE_AUTORUN_SERVER_BASE,
   },
   device: {
     appVersion: "1.8.3",

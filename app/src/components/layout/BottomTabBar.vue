@@ -57,12 +57,16 @@ defineProps({
   active: { type: String, default: 'submit' }
 });
 </script>
+<script lang="ts">
+export default {
+  name: "BottomTabBar",
+};
+</script>
 
 <style scoped>
 .bottom-tab-bar {
   flex: none;
-  background-color: #ffffff;
-  border-top: 1px solid #e3e6e8;
+  border: 1px solid #e3e6e8;
   position: fixed;
   left: 0;
   bottom: 0;
@@ -81,13 +85,13 @@ defineProps({
   display: flex;
   flex-direction: row; /* 确保水平布局 */
   justify-content: space-around;
-  /* center vertically and occupy full bar height */
   align-items: center;
   height: 100%;
   padding: 0 12px;
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
+  background: #eeeeee;
 }
 
 /* Always constrain the fixed bottom bar to the same centered max-width as .app-layout. */
@@ -126,6 +130,8 @@ defineProps({
 
 .tab-item.active {
   color: #24343b;
+  background: #dbdbdb;
+  border-radius: 20px;
 }
 
 .tab-icon {
@@ -136,7 +142,7 @@ defineProps({
 }
 
 .tab-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   letter-spacing: 0.01em;
   white-space: nowrap;

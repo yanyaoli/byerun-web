@@ -226,8 +226,8 @@ export default {
 }
 
 .profile-avatar {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   background: #4f6d7a;
   border-radius: 50%;
   display: flex;
@@ -258,7 +258,7 @@ export default {
 }
 
 .profile-name {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: #2d3a3f;
   margin-bottom: 4px;
@@ -272,7 +272,7 @@ export default {
 /* 退出登录按钮 */
 
 .logout-button {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
@@ -285,7 +285,7 @@ export default {
   border: none;
   color: #e57373;
   border: 1px solid #e57373;
-  border-radius: 12px;
+  border-radius: 20px;
   padding: 6px 16px;
   margin-left: 24px;
   align-self: center;

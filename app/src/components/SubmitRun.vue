@@ -128,8 +128,18 @@
           </div>
         </div>
 
-        <!-- 按钮区域 -->
+        <!-- AutoRun配置区域 -->
         <div class="action-buttons">
+          <button
+            type="button"
+            class="autorun-setting-btn"
+            :class="{ active: showAutoModal }"
+            @click="showAutoModal = !showAutoModal"
+            :aria-pressed="String(showAutoModal)"
+            title="自动配置"
+          >
+            <i class="fa-solid fa-gear"></i>
+          </button>
           <button
             type="button"
             class="random-btn"
@@ -159,21 +169,23 @@
     </div>
 
     <Message ref="messageRef" />
+    <AutoConfig :visible="showAutoModal" @update:visible="(v)=>showAutoModal=v" @saved="()=>{ messageRef.value?.show && messageRef.value.show('自动配置已保存','success') }" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, defineProps } from "vue";
+import { ref, computed, watch, onMounted, defineProps, defineAsyncComponent } from "vue";
 import api from "../utils/api";
 import { genTrackPoints } from "../utils/map";
-import MapPreview from './MapPreview.vue';
+const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
+const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
 import type { ComponentPublicInstance } from "vue";
 import Message from "./Message.vue";
 
 // 在 imports 后调用 defineEmits（script setup 要求 import 在最前面）
 const emit = defineEmits<{ (e: 'submitted'): void }>();
 
-const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
+const messageRef = ref<any>(null);
 
 // 定义props
 const props = defineProps({
@@ -222,6 +234,7 @@ const form = ref({
   date: new Date().toISOString().split("T")[0],
 });
 const submitting = ref(false);
+const showAutoModal = ref(false);
 const showRouteOptions = ref(false);
 const animateProgress = ref(false);
 // 生成轨迹字符串并暴露给 MapPreview
@@ -832,12 +845,22 @@ export default {};
   gap: 12px;
   margin-top: 20px;
 }
+.autorun-setting-btn {
+  background: #f0f2f5;
+  border: none;
+  border-radius: 25px;
+  padding: 14px;
+  font-size: 16px;
+  color: #4f6d7a;
+  cursor: pointer;
+  transition: all 0.2s;
+}
 .random-btn,
 .submit-btn {
   flex: 1;
-  padding: 14px 0;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 8px 0;
+  border-radius: 25px;
+  font-size: 15px;
   font-weight: 600;
   border: none;
   outline: none;
@@ -857,8 +880,9 @@ export default {};
   cursor: not-allowed;
 }
 .submit-btn {
-  background: #3b9eff;
-  color: #fff;
+  background: #000;
+  border: 2px solid #000;
+  color: white;
   box-shadow: 0 2px 6px rgba(59, 158, 255, 0.2);
 }
 .submit-btn:active {

@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js';
+import { config } from './config';
 
 interface QueryBody {
   [key: string]: string | number | null;
@@ -8,8 +9,8 @@ export function genSign(
   query: QueryBody | null = null,
   body: QueryBody | null = null
 ): string {
-  const appKey = import.meta.env.VITE_APP_KEY;
-  const appSecret = import.meta.env.VITE_APP_SECRET;
+  const appKey = config.api.appKey;
+  const appSecret = config.api.appSecret;
   let signStr = "";
   // 处理查询参数
   if (query !== null) {

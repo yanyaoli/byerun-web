@@ -1,13 +1,14 @@
 
 import axios from 'axios';
 import { genSign } from './sign';
+import { config } from './config';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: config.api.baseURL,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
-    appKey: import.meta.env.VITE_APP_KEY,
+    appKey: config.api.appKey,
   },
 });
 

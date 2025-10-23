@@ -9,12 +9,18 @@
 defineProps({
   title: { type: String, default: '' }
 });
+
+</script>
+
+<script lang="ts">
+export default {
+  name: "AppHeader",
+};
 </script>
 
 <style scoped>
 .page-header {
   flex: none;
-  background: #fff;
   padding: 12px 16px;
   border-bottom: 1px solid #e3e6e8;
   text-align: center;
@@ -23,13 +29,13 @@ defineProps({
   position: fixed;
   left: 0;
   top: 0;
-  height: var(--app-header-height, 56px);
+  height: var(--app-header-height, 16px);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .page-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: #2d3a3f;
   margin: 0;

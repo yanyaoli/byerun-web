@@ -221,7 +221,7 @@ body,
   border-right: 1px solid #e3e6e8;
   border-left: 1px solid #e3e6e8;
   /* 定义 header 和 bottom 的高度变量（可根据需要调整） */
-  --app-header-height: 56px;
+  --app-header-height: 48px;
   --app-bottom-height: 72px;
 }
 

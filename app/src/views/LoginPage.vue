@@ -14,3 +14,8 @@ import ResetPassword from "../components/ResetPassword.vue";
 const isLogin = ref(false);
 const showResetPassword = ref(false);
 </script>
+<script lang="ts">
+export default {
+  name: "LoginPage",
+};
+</script>
