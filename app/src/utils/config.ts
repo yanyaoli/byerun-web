@@ -1,4 +1,8 @@
 export const config = {
+  key: {
+    amapKey: import.meta.env.VITE_AMAP_KEY,
+    amapSecurity: import.meta.env.VITE_AMAP_SECURITY,
+  },
   api: {
     baseURL: import.meta.env.VITE_API_BASE_URL,
     appKey: "389885588s0648fa",

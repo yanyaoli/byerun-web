@@ -7,12 +7,13 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { config } from '../utils/config';
 
 const props = defineProps<{ track?: string | null }>();
 
 // Read AMap key from Vite env, fall back to empty string
-const API_KEY = import.meta.env.VITE_AMAP_KEY as string | undefined;
-const SECURITY = import.meta.env.VITE_AMAP_SECURITY as string | undefined;
+const API_KEY = config.key.amapKey as string | undefined;
+const SECURITY = config.key.amapSecurity as string | undefined;
 
 const apiKey = API_KEY || '';
 const mapContainer = ref<HTMLDivElement | null>(null);
@@ -152,7 +153,7 @@ onBeforeUnmount(() => {
 }
 .map-container {
   width: 100%;
-  height: 160px;
+  height: 300px;
   border-radius: 8px;
   overflow: hidden;
 }

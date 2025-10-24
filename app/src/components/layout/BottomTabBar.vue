@@ -8,12 +8,7 @@
         @click="$emit('switch', 'records')"
       >
         <div class="tab-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4zm2.5 2.5h-15V5h15v14.5zm0-16.5h-15c-.83 0-1.5.67-1.5 1.5v15c0 .83.67 1.5 1.5 1.5h15c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5z"
-              fill="currentColor"
-            />
-          </svg>
+          <i class="fa-solid fa-square-poll-vertical"></i>
         </div>
         <span class="tab-label">记录</span>
       </button>
@@ -24,9 +19,7 @@
         @click="$emit('switch', 'submit')"
       >
         <div class="tab-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="currentColor" />
-          </svg>
+          <i class="fa-solid fa-square-plus"></i>
         </div>
         <span class="tab-label">提交</span>
       </button>
@@ -37,12 +30,7 @@
         @click="$emit('switch', 'profile')"
       >
         <div class="tab-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
-              fill="currentColor"
-            />
-          </svg>
+          <i class="fa-solid fa-user"></i>
         </div>
         <span class="tab-label">我的</span>
       </button>
@@ -138,7 +126,9 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
+}
+.tab-icon i {
+  font-size: 20px;
 }
 
 .tab-label {

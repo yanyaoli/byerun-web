@@ -132,16 +132,6 @@
         <div class="action-buttons">
           <button
             type="button"
-            class="autorun-setting-btn"
-            :class="{ active: showAutoModal }"
-            @click="showAutoModal = !showAutoModal"
-            :aria-pressed="showAutoModal"
-            title="定时任务配置"
-          >
-            <i class="fa-solid fa-gear"></i>
-          </button>
-          <button
-            type="button"
             class="random-btn"
             @click="onRandomFill"
             :disabled="submitting"
@@ -157,6 +147,16 @@
             <span class="btn-icon" v-if="!submitting"> </span>
             <span class="loader" v-else></span>
             {{ submitting ? '提交中...' : '提交记录' }}
+          </button>
+                    <button
+            type="button"
+            class="autorun-setting-btn"
+            :class="{ active: showAutoModal }"
+            @click="showAutoModal = !showAutoModal"
+            :aria-pressed="showAutoModal"
+            title="定时任务配置"
+          >
+            <i class="fa-solid fa-alarm-clock"></i>
           </button>
         </div>
       </div>
