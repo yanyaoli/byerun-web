@@ -154,34 +154,29 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, onMounted } from "vue";
 import Artalk from "artalk";
 import "artalk/dist/Artalk.css";
 import MaleAvatar from "./Avatar/MaleAvatar.vue";
 import FemaleAvatar from "./Avatar/FemaleAvatar.vue";
 import Message from "./Message.vue";
-import type { ComponentPublicInstance } from "vue";
 import { config } from "../utils/config";
 
-defineProps<{
-  userInfo: any;
-  loading: boolean;
-}>();
+defineProps({
+  userInfo: Object,
+  loading: Boolean
+});
 
-const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
-const artalkContainer = ref<HTMLElement | null>(null);
+const messageRef = ref(null);
+const artalkContainer = ref(null);
 
-const emit = defineEmits<{
-  (e: "logout"): void;
-}>();
+const emit = defineEmits(['logout']);
 
 const handleLogout = () => {
   messageRef.value?.show("已退出登录");
   emit("logout");
 };
-
-// 个人/学校信息标签函数已删除，因为相关模板已被注释掉，保留此处以便日后需要再恢复。
 
 onMounted(() => {
   if (artalkContainer.value) {
@@ -195,7 +190,8 @@ onMounted(() => {
   }
 });
 </script>
-<script lang="ts">
+
+<script>
 export default {
   name: "Profile",
 };

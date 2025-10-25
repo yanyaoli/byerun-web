@@ -11,13 +11,13 @@
           <div class="stats-percentage">
             {{
               totalActivities === 0
-                ? '0%'
-                : Math.round(clubCompletionRate) + '%'
+                ? "0%"
+                : Math.round(clubCompletionRate) + "%"
             }}
           </div>
           <div class="stats-title">俱乐部活动</div>
           <div class="stats-ratio">
-            {{ completedActivities + '/' + totalActivities }}
+            {{ completedActivities + "/" + totalActivities }}
           </div>
         </div>
         <div class="stats-card run-completion">
@@ -33,7 +33,9 @@
           </div>
           <div class="stats-title">跑步里程</div>
           <div class="stats-ratio">
-            {{ totalDistanceKm }}/{{ Number(targetDistanceKm) ? targetDistanceKm : '0' }}
+            {{ totalDistanceKm }}/{{
+              Number(targetDistanceKm) ? targetDistanceKm : "0"
+            }}
           </div>
         </div>
       </div>
@@ -45,15 +47,34 @@
         <h3 class="section-title">提交记录</h3>
 
         <!-- 跑步路线选择 -->
+        <!-- 修改路由选择部分 -->
         <div class="form-group">
           <label>选择地图</label>
-          <div class="route-dropdown" @click="showRouteOptions = !showRouteOptions">
-            <div class="selected-route">
-              <span>{{ getRouteName(form.route) }}</span>
-              <div class="dropdown-arrow" :class="{ active: showRouteOptions }"></div>
+          <div
+            class="route-dropdown"
+            @click="
+              mapsLoaded && !submitting
+                ? (showRouteOptions = !showRouteOptions)
+                : null
+            "
+          >
+            <div
+              class="selected-route"
+              :class="{ disabled: !mapsLoaded || submitting }"
+            >
+              <span v-if="!mapsLoaded">加载地图中...</span>
+              <span v-else>{{ getRouteName(form.route) }}</span>
+              <div
+                class="dropdown-arrow"
+                :class="{ active: showRouteOptions && mapsLoaded }"
+                v-if="mapsLoaded"
+              ></div>
             </div>
             <transition name="dropdown">
-              <div v-show="showRouteOptions" class="route-options">
+              <div
+                v-show="showRouteOptions && mapsLoaded"
+                class="route-options"
+              >
                 <div
                   v-for="(name, value) in routeOptions"
                   :key="value"
@@ -62,6 +83,12 @@
                   @click.stop="selectRoute(value)"
                 >
                   {{ name }}
+                </div>
+                <div
+                  v-if="Object.keys(routeOptions).length === 0"
+                  class="route-option disabled"
+                >
+                  无可用地图
                 </div>
               </div>
             </transition>
@@ -109,7 +136,7 @@
                 {{
                   form.distance && form.distance > 0
                     ? formatPace(form.duration, form.distance)
-                    : '0:00'
+                    : "0:00"
                 }}
                 <span class="pace-unit">分钟/公里</span>
               </div>
@@ -146,9 +173,9 @@
           >
             <span class="btn-icon" v-if="!submitting"> </span>
             <span class="loader" v-else></span>
-            {{ submitting ? '提交中...' : '提交记录' }}
+            {{ submitting ? "提交中..." : "提交记录" }}
           </button>
-                    <button
+          <button
             type="button"
             class="autorun-setting-btn"
             :class="{ active: showAutoModal }"
@@ -168,34 +195,33 @@
       <MapPreview :track="generatedTrack" />
     </div>
 
-  <Message ref="messageRef" />
-  <AutoConfig :visible="showAutoModal" @update:visible="updateAutoVisible" @saved="onAutoSaved" />
+    <Message ref="messageRef" />
+    <AutoConfig
+      :visible="showAutoModal"
+      @update:visible="updateAutoVisible"
+      @saved="onAutoSaved"
+    />
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch, onMounted, defineProps, defineAsyncComponent } from "vue";
+<script setup>
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  defineProps,
+  defineAsyncComponent,
+} from "vue";
 import api from "../utils/api";
 import { genTrackPoints } from "../utils/map";
-const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
-const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
 import Message from "./Message.vue";
 
-// 在 imports 后调用 defineEmits（script setup 要求 import 在最前面）
-const emit = defineEmits<{ (e: 'submitted'): void }>();
+// 异步组件
+const MapPreview = defineAsyncComponent(() => import("./MapPreview.vue"));
+const AutoConfig = defineAsyncComponent(() => import("./AutoConfig.vue"));
 
-const messageRef = ref<any>(null);
-
-// handlers for AutoConfig events (typed)
-function updateAutoVisible(v: boolean) {
-  showAutoModal.value = v;
-}
-
-function onAutoSaved() {
-  if (messageRef.value?.show) messageRef.value.show('定时任务配置已保存', 'success');
-}
-
-// 定义props
+// Props
 const props = defineProps({
   userInfo: { type: Object, default: null },
   runStandard: { type: Object, default: null },
@@ -203,70 +229,52 @@ const props = defineProps({
   activityInfo: { type: Object, default: null },
 });
 
-// 路由选项数据
-const routeOptions = {
-  cuit_hkg: "成都信息工程大学（航空港校区）",
-  cuit_lqy: "成都信息工程大学（龙泉驿校区）",
-  cdutcm_wj: "成都中医药大学（温江校区）",
-  ncwsxx: "南充卫生学校",
-  sctbc: "四川工商职业技术学院",
-};
+// Emits
+const emit = defineEmits(["submitted"]);
 
-
+// 常量定义
 const LOCAL_STORAGE_ROUTE_KEY = "submitRunRoute";
 const LOCAL_STORAGE_DISTANCE_KEY = "submitRunDistance";
 const LOCAL_STORAGE_DURATION_KEY = "submitRunDuration";
 
-let defaultRoute = "cuit_hkg";
-let defaultDistance = 2000;
-let defaultDuration = 20;
-try {
-  const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
-  if (savedRoute && Object.prototype.hasOwnProperty.call(routeOptions, savedRoute)) {
-    defaultRoute = savedRoute;
-  }
-  const savedDistance = localStorage.getItem(LOCAL_STORAGE_DISTANCE_KEY);
-  if (savedDistance && !isNaN(Number(savedDistance))) {
-    defaultDistance = Number(savedDistance);
-  }
-  const savedDuration = localStorage.getItem(LOCAL_STORAGE_DURATION_KEY);
-  if (savedDuration && !isNaN(Number(savedDuration))) {
-    defaultDuration = Number(savedDuration);
-  }
-} catch (e) {}
-
+// Refs
+const messageRef = ref(null);
+const mapsLoaded = ref(false);
+const routeOptions = ref({});
 const form = ref({
-  distance: defaultDistance,
-  duration: defaultDuration,
-  route: defaultRoute,
+  distance: 2000,
+  duration: 20,
+  route: "",
   date: new Date().toISOString().split("T")[0],
 });
 const submitting = ref(false);
 const showAutoModal = ref(false);
 const showRouteOptions = ref(false);
 const animateProgress = ref(false);
-// 生成轨迹字符串并暴露给 MapPreview
-const generatedTrack = ref<string | null>(null);
+const generatedTrack = ref(null);
 
-// 俱乐部完成情况统计数据
+// Computed Properties - 统计数据
 const completedActivities = computed(() => {
   return props.activityInfo ? props.activityInfo.joinNum : 0;
 });
+
 const totalActivities = computed(() => {
   return props.activityInfo ? props.activityInfo.totalNum : 0;
 });
+
 const clubCompletionRate = computed(() => {
   if (!totalActivities.value) return 0;
   return (completedActivities.value / totalActivities.value) * 100;
 });
 
-// 跑步完成率统计数据
 const completedRuns = computed(() => {
   return props.activityInfo ? props.activityInfo.runJoinNum : 0;
 });
+
 const totalRequiredRuns = computed(() => {
   return props.activityInfo ? props.activityInfo.runTotalNum : 0;
 });
+
 const runCompletionRate = computed(() => {
   if (!totalRequiredRuns.value) return 0;
   return Math.min(
@@ -275,28 +283,25 @@ const runCompletionRate = computed(() => {
   );
 });
 
-// 跑步里程统计数据
 const totalDistanceKm = computed(() => {
-  // 从runInfo中获取有效里程数据，转为公里并保留一位小数
   if (props.runInfo && props.runInfo.runValidDistance) {
     return (Number(props.runInfo.runValidDistance) / 1000).toFixed(1);
   }
   return "0.0";
 });
+
 const targetDistanceKm = computed(() => {
-  // 根据性别从runStandard中获取目标里程
   if (props.runStandard && props.userInfo) {
     const gender = props.userInfo.gender;
     if (gender === "1") {
-      // 男生
       return (Number(props.runStandard.boyAllRunDistance) / 1000).toFixed(1);
     } else if (gender === "2") {
-      // 女生
       return (Number(props.runStandard.girlAllRunDistance) / 1000).toFixed(1);
     }
   }
   return "0.0";
 });
+
 const distancePercentage = computed(() => {
   const target = Number(targetDistanceKm.value);
   const current = Number(totalDistanceKm.value);
@@ -304,24 +309,17 @@ const distancePercentage = computed(() => {
   return Math.min(100, (current / target) * 100);
 });
 
-// 学期年份显示
 const semesterYearText = computed(() => {
   if (props.runStandard && props.runStandard.semesterYear) {
-    return props.runStandard.semesterYear
-      ? props.runStandard.semesterYear
-      : "当前";
+    return props.runStandard.semesterYear || "当前";
   }
   return "当前";
 });
 
-// 检查配速是否符合要求（不能高于最高配速也不能低于最低配速）
-// 跑步标准：runDistance 单位米，runTime 单位分钟，配速=runTime/(runDistance/1000) 分钟/公里
 const paceLimit = computed(() => {
   if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
     return true;
-  // 距离米，时长分钟，配速=分钟/公里
   const pace = form.value.duration / (form.value.distance / 1000);
-  // 配速区间：6~10分钟/公里
   const minPace = 6;
   const maxPace = 10;
   if (isNaN(pace)) return true;
@@ -330,38 +328,23 @@ const paceLimit = computed(() => {
   return true;
 });
 
-// 路由选择相关函数
-function getRouteName(routeValue: string) {
-  return routeOptions[routeValue as keyof typeof routeOptions] || "选择路线";
+// 工具函数
+function getMapDisplayName(mapId) {
+  const displayNames = {
+    cuit_hkg: "成都信息工程大学（航空港校区）",
+    cuit_lqy: "成都信息工程大学（龙泉驿校区）",
+    cdutcm_wj: "成都中医药大学（温江校区）",
+    ncwsxx: "南充卫生学校",
+    sctbc: "四川工商职业技术学院",
+  };
+  return displayNames[mapId] || mapId;
 }
 
-function selectRoute(route: string) {
-  form.value.route = route;
-  showRouteOptions.value = false;
-  try {
-    localStorage.setItem(LOCAL_STORAGE_ROUTE_KEY, route);
-  } catch (e) {}
+function getRouteName(routeValue) {
+  return routeOptions.value[routeValue] || "选择路线";
 }
 
-// 监听里程和时长变化，保存到localStorage
-watch(
-  () => form.value.distance,
-  (val) => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
-    } catch (e) {}
-  }
-);
-watch(
-  () => form.value.duration,
-  (val) => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_DURATION_KEY, String(val));
-    } catch (e) {}
-  }
-);
-
-function formatPace(duration: number, distance: number) {
+function formatPace(duration, distance) {
   if (!distance) return "0:00";
   const pace = duration / (distance / 1000);
   const min = Math.floor(pace);
@@ -385,6 +368,7 @@ function getPaceLimitErrorText() {
   }
   return "配速不符合要求";
 }
+
 function triggerProgressAnimation() {
   animateProgress.value = false;
   setTimeout(() => {
@@ -392,56 +376,61 @@ function triggerProgressAnimation() {
   }, 50);
 }
 
-// 监听表单变化，更新进度环
-watch(
-  () => [form.value.distance, form.value.duration],
-  () => {
-    triggerProgressAnimation();
-  },
-  { deep: true }
-);
+// 事件处理函数
+function updateAutoVisible(v) {
+  showAutoModal.value = v;
+}
 
-onMounted(() => {
-  // 初始化动画
-  setTimeout(() => {
-    animateProgress.value = true;
-  }, 500);
+function onAutoSaved() {
+  if (messageRef.value?.show)
+    messageRef.value.show("定时任务配置已保存", "success");
+}
 
-  // 自动选择上次保存的地图、里程、时长
+function selectRoute(route) {
+  if (!Object.prototype.hasOwnProperty.call(routeOptions.value, route)) {
+    return;
+  }
+  form.value.route = route;
+  showRouteOptions.value = false;
   try {
-    const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
-    if (savedRoute && Object.prototype.hasOwnProperty.call(routeOptions, savedRoute)) {
-      form.value.route = savedRoute;
-    }
-    const savedDistance = localStorage.getItem(LOCAL_STORAGE_DISTANCE_KEY);
-    if (savedDistance && !isNaN(Number(savedDistance))) {
-      form.value.distance = Number(savedDistance);
-    }
-    const savedDuration = localStorage.getItem(LOCAL_STORAGE_DURATION_KEY);
-    if (savedDuration && !isNaN(Number(savedDuration))) {
-      form.value.duration = Number(savedDuration);
-    }
+    localStorage.setItem(LOCAL_STORAGE_ROUTE_KEY, route);
   } catch (e) {}
-});
+}
+
+// 主要业务函数
+async function loadMaps() {
+  try {
+    const trackUtils = await import("../utils/map");
+    const mapIds = await trackUtils.loadMapFiles();
+
+    const options = {};
+    for (const mapId of mapIds) {
+      options[mapId] = getMapDisplayName(mapId);
+    }
+
+    routeOptions.value = options;
+    mapsLoaded.value = true;
+
+    console.log("成功加载地图选项:", options);
+  } catch (error) {
+    console.error("加载地图失败:", error);
+    routeOptions.value = {
+      cdutcm_wj: "成都中医药大学（温江校区）",
+    };
+    mapsLoaded.value = true;
+  }
+}
 
 const handleSubmit = async () => {
-  // 验证配速
   if (!paceLimit.value) {
     messageRef.value?.show("配速不能小于6分钟/公里", "error");
     return;
   }
 
-  // 验证距离
   if (!Number.isInteger(form.value.distance) || form.value.distance <= 0) {
     messageRef.value?.show("跑步里程必须为正整数", "error");
     return;
   }
-
-  // 验证距离范围
-  // NOTE: Removed fixed min/max distance enforcement per request. Only integer and pace checks remain.
-
-  // 验证时长范围
-  // NOTE: Removed fixed min/max duration enforcement per request. Only integer and pace checks remain.
 
   const userId = localStorage.getItem("userId");
   const studentId = localStorage.getItem("studentId");
@@ -454,19 +443,16 @@ const handleSubmit = async () => {
   submitting.value = true;
   const trackPoints = genTrackPoints(form.value.distance, form.value.route);
 
-  // 构造后端要求的 payload
   const now = new Date(form.value.date);
-  const pad = (n: number) => n.toString().padStart(2, "0");
+  const pad = (n) => n.toString().padStart(2, "0");
   const recordDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
     now.getDate()
   )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-  // 获取当前学期
   let yearSemester;
   if (props.runStandard && props.runStandard.semesterYear) {
     yearSemester = props.runStandard.semesterYear;
   } else {
-    // 备用逻辑
     const year = now.getFullYear();
     const semester = now.getMonth() + 1 < 8 ? "1" : "2";
     yearSemester = `${year}${semester}`;
@@ -479,40 +465,30 @@ const handleSubmit = async () => {
     brand: "iPhone",
     mobileType: "iPhone 15 Pro Max",
     sysVersions: "17.0",
-    trackPoints, // 轨迹点数据
+    trackPoints,
     distanceTimeStatus: "1",
     innerSchool: "1",
-  // send the raw integer values provided by the user (rounded) — do not clamp to any limits
-  runDistance: Math.round(form.value.distance),
-  runTime: Math.round(form.value.duration),
+    runDistance: Math.round(form.value.distance),
+    runTime: Math.round(form.value.duration),
     userId: Number(userId),
     vocalStatus: "1",
     yearSemester,
     recordDate,
   };
+
   try {
-    // Debug: log payload to help diagnose server-side clamping
-    // (remove or guard these logs in production)
-    // eslint-disable-next-line no-console
     console.debug("Submitting run payload:", payload);
-
     const { data } = await api.post("/unirun/save/run/record/new", payload);
-
-    // Debug: log server response
-    // eslint-disable-next-line no-console
     console.debug("Server response for run submit:", data);
 
     if (data && data.code === 10000) {
       messageRef.value?.show(data.response.resultDesc, "success");
-      // 成功动画效果
       triggerProgressAnimation();
-      // 通知父组件刷新用户相关数据（记录/里程/活动数等）
-      emit('submitted');
+      emit("submitted");
     } else {
       messageRef.value?.show(data?.msg || "提交失败", "error");
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.error("Submit run error:", e);
     messageRef.value?.show("提交异常", "error");
   } finally {
@@ -521,23 +497,39 @@ const handleSubmit = async () => {
 };
 
 const onRandomFill = () => {
-  // 随机生成的配速必须严格符合配速区间 6~10 分钟/公里
-  const minDistance = 1000, maxDistance = 7500, minTime = 6, maxTime = 75;
-  const minPace = 6, maxPace = 10;
-  let randomDistance: number = 0, randomDuration: number = 0, pace: number = 0;
+  const minDistance = 1000,
+    maxDistance = 7500,
+    minTime = 6,
+    maxTime = 75;
+  const minPace = 6,
+    maxPace = 10;
+  let randomDistance = 0,
+    randomDuration = 0,
+    pace = 0;
   let tryCount = 0;
+
   while (true) {
-    randomDistance = Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
-    // 允许的最小/最大时长
-    const minDuration = Math.max(minTime, Math.ceil(randomDistance / 1000 * minPace));
-    const maxDuration = Math.min(maxTime, Math.floor(randomDistance / 1000 * maxPace));
+    randomDistance =
+      Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
+    const minDuration = Math.max(
+      minTime,
+      Math.ceil((randomDistance / 1000) * minPace)
+    );
+    const maxDuration = Math.min(
+      maxTime,
+      Math.floor((randomDistance / 1000) * maxPace)
+    );
+
     if (minDuration > maxDuration) {
       tryCount++;
       if (tryCount > 100) break;
       continue;
     }
-    randomDuration = Math.floor(Math.random() * (maxDuration - minDuration + 1)) + minDuration;
+
+    randomDuration =
+      Math.floor(Math.random() * (maxDuration - minDuration + 1)) + minDuration;
     pace = randomDuration / (randomDistance / 1000);
+
     if (
       randomDistance > 0 &&
       randomDuration > 0 &&
@@ -549,28 +541,89 @@ const onRandomFill = () => {
     tryCount++;
     if (tryCount > 100) break;
   }
+
   form.value.distance = randomDistance;
   form.value.duration = randomDuration;
   triggerProgressAnimation();
 };
 
-// 监听 route/distance 的变化以更新预览轨迹
+// Watchers
+watch(
+  () => form.value.distance,
+  (val) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
+    } catch (e) {}
+  }
+);
+
+watch(
+  () => form.value.duration,
+  (val) => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_DURATION_KEY, String(val));
+    } catch (e) {}
+  }
+);
+
+watch(
+  () => [form.value.distance, form.value.duration],
+  () => {
+    triggerProgressAnimation();
+  },
+  { deep: true }
+);
+
 watch(
   () => [form.value.route, form.value.distance],
   () => {
     try {
-      generatedTrack.value = genTrackPoints(Number(form.value.distance), form.value.route);
+      generatedTrack.value = genTrackPoints(
+        Number(form.value.distance),
+        form.value.route
+      );
     } catch (e) {
       generatedTrack.value = null;
     }
   },
   { immediate: true }
 );
+
+// Lifecycle
+onMounted(async () => {
+  await loadMaps();
+
+  try {
+    const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
+    if (
+      savedRoute &&
+      Object.prototype.hasOwnProperty.call(routeOptions.value, savedRoute)
+    ) {
+      form.value.route = savedRoute;
+    } else if (Object.keys(routeOptions.value).length > 0) {
+      form.value.route = Object.keys(routeOptions.value)[0];
+    }
+
+    const savedDistance = localStorage.getItem(LOCAL_STORAGE_DISTANCE_KEY);
+    if (savedDistance && !isNaN(Number(savedDistance))) {
+      form.value.distance = Number(savedDistance);
+    }
+
+    const savedDuration = localStorage.getItem(LOCAL_STORAGE_DURATION_KEY);
+    if (savedDuration && !isNaN(Number(savedDuration))) {
+      form.value.duration = Number(savedDuration);
+    }
+  } catch (e) {}
+
+  setTimeout(() => {
+    animateProgress.value = true;
+  }, 500);
+});
 </script>
 
 <style scoped>
-.submit-container{
-    flex: 1;
+.submit-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
   background: #f6f7f9;

@@ -24,7 +24,7 @@ export const config = {
     notice: "https://unirun-notice.where.nyc.mn/",
     github: "https://github.com/yanyaoli/byerun-web",
   },
-} as const;
+};
 
 export const API_URLS = {
   login: "/auth/login/password",
@@ -37,19 +37,12 @@ export const API_URLS = {
   sendSms: "/auth/sendSmsForPassWord",
   updatePassword: "/auth/updateUserPassWord",
   schoolBound: "/unirun/querySchoolBound",
-} as const;
+};
 
 /**
  * 获取登录参数的基础配置（使用简单的默认参数）
  */
-export function getLoginParams(): {
-  appVersion: string;
-  brand: string;
-  deviceToken: string;
-  deviceType: string;
-  mobileType: string;
-  sysVersion: string;
-} {
+export function getLoginParams() {
   return {
     appVersion: config.device.appVersion,
     brand: config.device.brand,

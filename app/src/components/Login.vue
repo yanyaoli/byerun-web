@@ -44,19 +44,16 @@
 </template>
 
 
-<script setup lang="ts">
+<script setup>
 import { ref } from "vue";
 import api from "../utils/api";
 import { getLoginParams } from "../utils/config";
 import CryptoJS from "crypto-js";
-import type { ComponentPublicInstance } from "vue";
 import Message from "./Message.vue";
 
-defineEmits<{
-  showReset: [];
-}>();
+defineEmits(['showReset']);
 
-const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
+const messageRef = ref(null);
 const form = ref({
   userPhone: "",
   password: "",
@@ -92,9 +89,6 @@ const handleLogin = async () => {
     loading.value = false;
   }
 };
-</script>
-<script lang="ts">
-export default {};
 </script>
 
 <style scoped>

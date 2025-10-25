@@ -1,14 +1,7 @@
-import CryptoJS from 'crypto-js';
+import { MD5 } from 'crypto-js';
 import { config } from './config';
 
-interface QueryBody {
-  [key: string]: string | number | null;
-}
-
-export function genSign(
-  query: QueryBody | null = null,
-  body: QueryBody | null = null
-): string {
+export function genSign(query = null, body = null) {
   const appKey = config.api.appKey;
   const appSecret = config.api.appSecret;
   let signStr = "";
@@ -17,7 +10,7 @@ export function genSign(
     const normalizedQuery = Object.entries(query).reduce((acc, [key, value]) => {
       acc[key] = value === null ? "" : String(value);
       return acc;
-    }, {} as Record<string, string>);
+    }, {});
     const sortedKeys = Object.keys(normalizedQuery).sort();
     for (const key of sortedKeys) {
       const value = normalizedQuery[key];
@@ -46,7 +39,7 @@ export function genSign(
     signStr = encodeURIComponent(signStr);
   }
   // 生成 MD5 签名
-  let sign = CryptoJS.MD5(signStr).toString().toUpperCase();
+  let sign = MD5(signStr).toString().toUpperCase();
   if (replaced) {
     sign += "encodeutf8";
   }

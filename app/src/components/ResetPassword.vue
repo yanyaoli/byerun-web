@@ -69,15 +69,13 @@
   <Message ref="messageRef" />
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref } from "vue";
 import api from "../utils/api";
 import CryptoJS from "crypto-js";
 import Message from "./Message.vue";
 
-defineEmits<{
-  backToLogin: [];
-}>();
+defineEmits(['backToLogin']);
 
 const phone = ref("");
 const password = ref("");
@@ -137,9 +135,7 @@ const handleReset = async () => {
   }
 };
 </script>
-<script lang="ts">
-export default {};
-</script>
+
 
 <style scoped>
 /* 重置密码界面 - 与登录页风格统一 */

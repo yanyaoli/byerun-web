@@ -1,7 +1,6 @@
-
 import axios from 'axios';
-import { genSign } from './sign';
-import { config } from './config';
+import { genSign } from './sign.js';
+import { config } from './config.js';
 
 const api = axios.create({
   baseURL: config.api.baseURL,

@@ -118,13 +118,12 @@
   <Message ref="messageRef" />
 </template>
 
-<script setup lang="ts">
-import type { ComponentPublicInstance } from "vue";
+<script setup>
 import Message from "./Message.vue";
 import { ref, reactive, onMounted, defineProps } from "vue";
 import api from "../utils/api";
 
-const messageRef = ref<ComponentPublicInstance<typeof Message> | null>(null);
+const messageRef = ref(null);
 
 defineProps({
   runInfo: {
@@ -149,43 +148,8 @@ defineProps({
   },
 });
 
-// 类型定义
-interface RunRecord {
-  recordId: number;
-  userId: number;
-  studentId: number;
-  schoolId: number;
-  yearSemester: number;
-  recordDate: string;
-  recordMonth: string;
-  runDistance: number;
-  runValidDistance: number;
-  runTime: number;
-  runValidTime: number;
-  runSpeed: number;
-  runCalorie: number;
-  runValidCalorie: number;
-  vocalStatus: string;
-  runStatus: string;
-  defeatedInfo: string;
-  createTime: string;
-  infoStatus: string;
-  runSpeedWarn: string;
-  defeatStudentRatio: number;
-  suspectedStatus: string;
-  rangeStatus: string;
-}
-
-interface DisplayRunRecord
-  extends Omit<RunRecord, "runDistance" | "runTime" | "runSpeed"> {
-  key: number;
-  runDistance: number;
-  runTime: number;
-  runSpeed: number;
-}
-
 // 响应式数据
-const records = ref<DisplayRunRecord[]>([]);
+const records = ref([]);
 const loading = ref(false);
 const pagination = reactive({
   current: 1,
@@ -195,7 +159,7 @@ const pagination = reactive({
 const isLoading = ref(false);
 
 // 数据获取
-const fetchRecords = async (): Promise<void> => {
+const fetchRecords = async () => {
   loading.value = true;
   pagination.current = 1; // 保证第一页
   try {
@@ -210,15 +174,13 @@ const fetchRecords = async (): Promise<void> => {
       ? data.response
       : data.response?.records || [];
 
-    records.value = recordsList.map(
-      (record: RunRecord): DisplayRunRecord => ({
-        ...record,
-        key: record.recordId,
-        runDistance: Number(record.runValidDistance || record.runDistance),
-        runTime: Number(record.runValidTime || record.runTime),
-        runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
-      })
-    );
+    records.value = recordsList.map((record) => ({
+      ...record,
+      key: record.recordId,
+      runDistance: Number(record.runValidDistance || record.runDistance),
+      runTime: Number(record.runValidTime || record.runTime),
+      runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
+    }));
 
     pagination.total = data.response?.total || records.value.length || 0;
   } catch (error) {
@@ -231,14 +193,14 @@ const fetchRecords = async (): Promise<void> => {
 };
 
 // 格式化创建时间
-function formatCreateTime(createTime: string): string {
+function formatCreateTime(createTime) {
   if (!createTime) return "";
   // 只保留到分钟
   return createTime.slice(0, 16);
 }
 
 // 平均配速格式 xx'xx''
-function formatPaceDetail(time: number, distance: number): string {
+function formatPaceDetail(time, distance) {
   if (!distance || !time) return "0'00''";
   const pace = time / (distance / 1000);
   const min = Math.floor(pace);
@@ -268,15 +230,13 @@ const loadMoreRecords = async () => {
 
     // 如果返回了数据，就添加到列表中
     if (recordsList.length > 0) {
-      const newRecords = recordsList.map(
-        (record: RunRecord): DisplayRunRecord => ({
-          ...record,
-          key: record.recordId,
-          runDistance: Number(record.runValidDistance || record.runDistance),
-          runTime: Number(record.runValidTime || record.runTime),
-          runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
-        })
-      );
+      const newRecords = recordsList.map((record) => ({
+        ...record,
+        key: record.recordId,
+        runDistance: Number(record.runValidDistance || record.runDistance),
+        runTime: Number(record.runValidTime || record.runTime),
+        runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
+      }));
 
       records.value = [...records.value, ...newRecords];
       pagination.current = nextPage;
@@ -295,12 +255,6 @@ const loadMoreRecords = async () => {
 onMounted(() => {
   fetchRecords();
 });
-</script>
-
-<script lang="ts">
-export default {
-  name: "RunRecords",
-};
 </script>
 
 <style scoped>

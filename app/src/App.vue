@@ -49,9 +49,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from "vue";
-import type { ComponentPublicInstance } from "vue";
 import LoginPage from "./views/LoginPage.vue";
 import SubmitRun from "./components/SubmitRun.vue";
 import RunRecords from "./components/RunRecords.vue";
@@ -63,17 +62,13 @@ import api from "./utils/api";
 
 const isLogin = ref(!!localStorage.getItem("token"));
 const activeTab = ref(localStorage.getItem("activeTab") || "submit");
-const userInfo = ref<any>(null);
-const runInfo = ref<any>(null);
-const runStandard = ref<any>(null);
-const activityInfo = ref<any>(null);
+const userInfo = ref(null);
+const runInfo = ref(null);
+const runStandard = ref(null);
+const activityInfo = ref(null);
 const profileLoading = ref(true);
 
-// 修改 Message 组件的类型
-interface MessageInstance extends ComponentPublicInstance {
-  show: (message: string, type?: string) => void;
-}
-const messageRef = ref<MessageInstance | null>(null);
+const messageRef = ref(null);
 
 const fetchUserData = async () => {
   profileLoading.value = true; // 开始加载
@@ -147,8 +142,7 @@ const logout = () => {
   window.location.reload();
 };
 
-
-const switchTab = (tab: string) => {
+const switchTab = (tab) => {
   activeTab.value = tab;
   localStorage.setItem("activeTab", tab); // 保存当前标签页到本地存储
 };
@@ -176,14 +170,14 @@ onMounted(() => {
 
 // 添加全局消息方法
 const showMessage = (
-  message: string,
-  type: "success" | "error" | "info" | "warning" = "info"
+  message,
+  type = "info"
 ) => {
   messageRef.value?.show(message, type);
 };
 </script>
 
-<script lang="ts">
+<script>
 export default {
   name: "App",
 };

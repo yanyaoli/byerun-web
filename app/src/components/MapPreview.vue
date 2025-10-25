@@ -5,25 +5,30 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 import { config } from '../utils/config';
 
-const props = defineProps<{ track?: string | null }>();
+const props = defineProps({
+  track: {
+    type: [String, null],
+    default: null
+  }
+});
 
 // Read AMap key from Vite env, fall back to empty string
-const API_KEY = config.key.amapKey as string | undefined;
-const SECURITY = config.key.amapSecurity as string | undefined;
+const API_KEY = config.key.amapKey;
+const SECURITY = config.key.amapSecurity;
 
 const apiKey = API_KEY || '';
-const mapContainer = ref<HTMLDivElement | null>(null);
-let map: any = null;
-let polyline: any = null;
-let startMarker: any = null;
-let endMarker: any = null;
+const mapContainer = ref(null);
+let map = null;
+let polyline = null;
+let startMarker = null;
+let endMarker = null;
 
-function loadAmapScript(): Promise<void> {
-  if (!(window as any).AMap) {
+function loadAmapScript() {
+  if (!window.AMap) {
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.ToolBar&securityJsCode=${SECURITY}`;
@@ -36,12 +41,12 @@ function loadAmapScript(): Promise<void> {
   return Promise.resolve();
 }
 
-function parseTrack(trackStr?: string | null) {
-  if (!trackStr) return [] as [number, number][];
-  let arr: string[] = [];
+function parseTrack(trackStr) {
+  if (!trackStr) return [];
+  let arr = [];
   try {
     const parsed = JSON.parse(trackStr);
-    if (Array.isArray(parsed)) arr = parsed as string[];
+    if (Array.isArray(parsed)) arr = parsed;
   } catch (e) {
     // try comma-separated
     return [];
@@ -53,14 +58,14 @@ function parseTrack(trackStr?: string | null) {
       const lat = Number(parts[1]);
       return [lng, lat];
     })
-    .filter((p) => Array.isArray(p) && p.length >= 2 && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) as [number, number][];
+    .filter((p) => Array.isArray(p) && p.length >= 2 && !Number.isNaN(p[0]) && !Number.isNaN(p[1]));
   return coords;
 }
 
 async function ensureMap() {
   if (!apiKey) return;
   await loadAmapScript();
-  const AMap = (window as any).AMap;
+  const AMap = window.AMap;
   if (!map && mapContainer.value) {
     map = new AMap.Map(mapContainer.value, {
       zoom: 15,
@@ -71,7 +76,7 @@ async function ensureMap() {
   }
 }
 
-function drawTrack(trackStr?: string | null) {
+function drawTrack(trackStr) {
   if (!map) return;
   const coords = parseTrack(trackStr);
   // clear previous
@@ -89,7 +94,7 @@ function drawTrack(trackStr?: string | null) {
   }
   if (coords.length === 0) return;
   // AMap expects [lng, lat]
-  polyline = new (window as any).AMap.Polyline({
+  polyline = new window.AMap.Polyline({
     path: coords,
     showDir: false,
     strokeColor: '#3b9eff',
@@ -100,12 +105,12 @@ function drawTrack(trackStr?: string | null) {
 
   const start = coords[0];
   const end = coords[coords.length - 1];
-  startMarker = new (window as any).AMap.Marker({
+  startMarker = new window.AMap.Marker({
     position: start,
     title: '起点',
     content: '<div class="amap-marker-start">起</div>',
   });
-  endMarker = new (window as any).AMap.Marker({
+  endMarker = new window.AMap.Marker({
     position: end,
     title: '终点',
     content: '<div class="amap-marker-end">终</div>',
