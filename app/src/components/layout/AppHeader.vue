@@ -72,9 +72,9 @@ onUnmounted(() => {
   left: 50%;
   top: 12px;
   transform: translateX(-50%);
-  width: auto;
-  min-width: 140px;
-  max-width: 220px;
+  padding: 0 16px;
+  width: 100%;
+  max-width: 420px;
   height: 36px;
   z-index: 1000;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -84,13 +84,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   height: 100%;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(30px) saturate(200%);
-  -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #fff;
+  border: 1px solid #e3e6e8;
   border-radius: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
   padding: 0 12px;
   gap: 8px;
   transition: inherit;
@@ -174,29 +170,6 @@ onUnmounted(() => {
 
   .page-title {
     font-size: 14px;
-  }
-}
-
-/* 深色模式 */
-@media (prefers-color-scheme: dark) {
-  .header-container {
-    background: rgba(30, 30, 32, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  .page-title {
-    color: rgba(235, 235, 245, 0.9);
-  }
-
-  .logo-image {
-    filter: brightness(0) invert(1) saturate(0%) contrast(100%); /* 深色模式下的黑白反转 */
-    opacity: 0.7;
-  }
-
-  .header-container:hover .logo-image {
-    opacity: 0.9;
   }
 }
 

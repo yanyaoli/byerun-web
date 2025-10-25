@@ -44,11 +44,12 @@ defineProps({
 .bottom-tab-bar {
   position: fixed;
   left: 50%;
-  bottom: 20px;
+  bottom: 10px;
   transform: translateX(-50%);
-  width: calc(100% - 40px);
-  max-width: 280px;
-  height: 60px;
+  width: 100%;
+  padding: 0 16px;
+  max-width: 420px;
+  height: 50px;
   z-index: 1000;
 }
 
@@ -58,10 +59,10 @@ defineProps({
   justify-content: space-around;
   height: 100%;
   padding: 0 20px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(30px) saturate(200%);
+  background: #fff;
+  backdrop-filter: blur(12px) saturate(200%);
   -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid #e3e6e8;
   border-radius: 30px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -84,7 +85,8 @@ defineProps({
 }
 
 .tab-item.active {
-  background: rgba(0, 122, 255, 0.15);
+  color: #000;
+  /* background: rgba(0, 122, 255, 0.15); */
 }
 
 .tab-icon {
@@ -105,24 +107,6 @@ defineProps({
     width: calc(100% - 32px);
     bottom: 16px;
     max-width: 260px;
-  }
-}
-
-/* 深色模式 */
-@media (prefers-color-scheme: dark) {
-  .tab-bar-container {
-    background: rgba(30, 30, 32, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-
-  .tab-item {
-    color: rgba(235, 235, 245, 0.7);
-  }
-
-  .tab-item.active {
-    background: rgba(10, 132, 255, 0.2);
   }
 }
 

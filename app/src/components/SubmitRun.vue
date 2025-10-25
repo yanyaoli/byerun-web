@@ -158,17 +158,7 @@
             @click="onRandomFill"
             :disabled="submitting"
           >
-            随机填充
-          </button>
-          <button
-            type="submit"
-            class="submit-btn"
-            :disabled="submitting || !paceLimit"
-            :class="{ submitting: submitting }"
-          >
-            <span class="btn-icon" v-if="!submitting"> </span>
-            <span class="loader" v-else></span>
-            {{ submitting ? "提交中..." : "提交记录" }}
+            <i class="fa-solid fa-dice"></i>
           </button>
           <button
             type="button"
@@ -179,6 +169,17 @@
             title="定时任务配置"
           >
             <i class="fa-solid fa-alarm-clock"></i>
+          </button>
+          <button
+            type="submit"
+            class="submit-btn"
+            :disabled="submitting || !paceLimit"
+            :class="{ submitting: submitting }"
+          >
+            <i class="fa-solid fa-check"></i>
+            <span class="btn-icon" v-if="!submitting"> </span>
+            <span class="loader" v-else></span>
+            {{ submitting ? "提交中..." : "提交记录" }}
           </button>
         </div>
       </div>
@@ -879,6 +880,7 @@ onMounted(async () => {
   gap: 12px;
   margin-top: 20px;
 }
+.random-btn,
 .autorun-setting-btn {
   background: #f0f2f5;
   border: none;
@@ -889,7 +891,7 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s;
 }
-.random-btn,
+
 .submit-btn {
   flex: 1;
   padding: 8px 0;
@@ -900,10 +902,12 @@ onMounted(async () => {
   outline: none;
   cursor: pointer;
   transition: all 0.2s;
+  gap: 6px;
 }
 .random-btn {
   background: #f0f2f5;
   color: #4f6d7a;
+  gap: 6px;
 }
 .random-btn:active {
   background: #e3e6e8;
