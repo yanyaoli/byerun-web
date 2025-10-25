@@ -1,7 +1,7 @@
 <template>
   <div v-if="visibleRef" class="auto-modal-backdrop" @click.self="close">
     <div class="auto-modal" :aria-busy="loading">
-      <div class="form card">
+      <div class="form-card">
         <!-- 骨架屏 -->
         <div v-if="loading" class="skeleton-container">
           <div class="skeleton-title"></div>
@@ -38,9 +38,7 @@
               <select
                 v-model="map_id"
                 class="select"
-                :disabled="
-                  submitting || !mapsLoaded || availableMaps.length === 0
-                "
+                :disabled="submitting || !mapsLoaded || availableMaps.length === 0"
               >
                 <option value="" disabled v-if="!mapsLoaded">
                   加载地图中...
@@ -104,9 +102,7 @@
                 <input
                   type="checkbox"
                   v-model="enabled"
-                  :disabled="
-                    submitting || !mapsLoaded || availableMaps.length === 0
-                  "
+                  :disabled="submitting || !mapsLoaded || availableMaps.length === 0"
                 />
                 <span class="slider">
                   <i class="fa-solid on-icon fa-check"></i>
@@ -121,9 +117,7 @@
               class="btn primary save-btn"
               :class="buttonState"
               @click="submit"
-              :disabled="
-                submitting || !mapsLoaded || availableMaps.length === 0
-              "
+              :disabled="submitting || !mapsLoaded || availableMaps.length === 0"
             >
               <i
                 v-if="buttonState === 'idle'"
@@ -161,14 +155,14 @@
 <script setup>
 import { ref, onMounted, toRef, watch, computed } from "vue";
 import { config } from "../utils/config";
-import { loadMapFiles } from "../utils/map"; // 导入轨迹工具
+import { loadMapFiles } from "../utils/map";
 
 const props = defineProps({ visible: Boolean });
 const emit = defineEmits(["update:visible", "saved"]);
 
 const visibleRef = toRef(props, "visible");
 const token = ref("");
-const map_id = ref(""); // 初始为空，等待加载
+const map_id = ref("");
 const min_distance_m = ref(2000);
 const timeStr = ref("08:00");
 const hour = ref(8);
@@ -178,8 +172,6 @@ const enabled = ref(false);
 const loading = ref(false);
 const submitting = ref(false);
 const buttonState = ref("idle");
-
-// 新增：存储可用地图列表
 const availableMaps = ref([]);
 const mapsLoaded = ref(false);
 const mapMetadata = ref({});
@@ -206,7 +198,6 @@ watch(visibleRef, async (v) => {
 
   loading.value = true;
   try {
-    // 先加载地图文件
     if (!mapsLoaded.value) {
       await loadMaps();
     }
@@ -225,68 +216,49 @@ watch(visibleRef, async (v) => {
   }
 });
 
-/**
- * 加载地图文件
- */
 async function loadMaps() {
   try {
     const mapIds = await loadMapFiles();
     availableMaps.value = mapIds;
     mapsLoaded.value = true;
-
-    // 加载地图元数据
     await loadMapMetadata();
 
-    // 设置默认地图（第一个可用地图）
     if (mapIds.length > 0 && !map_id.value) {
       map_id.value = mapIds[0];
     }
-
-    console.log("成功加载地图列表:", mapIds);
   } catch (error) {
     console.error("加载地图文件失败:", error);
     availableMaps.value = [];
   }
 }
 
-// 加载地图元数据
 async function loadMapMetadata() {
   try {
-    // 遍历所有地图文件，获取元数据
     const metadataPromises = availableMaps.value.map(async (mapId) => {
       try {
         const response = await fetch(`/data/maps/${mapId}.json`);
-        if (!response.ok)
-          throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const mapFileData = await response.json();
-
-        // 存储地图元数据
         mapMetadata.value[mapId] = {
           mapId: mapFileData.mapId,
           mapName: mapFileData.mapName,
         };
-
         return { mapId, success: true };
       } catch (error) {
         console.error(`加载地图元数据失败: ${mapId}`, error);
         return { mapId, success: false, error };
       }
     });
-
     await Promise.all(metadataPromises);
   } catch (error) {
     console.error("加载地图元数据时发生错误:", error);
   }
 }
 
-// 修改 getMapDisplayName 函数
 function getMapDisplayName(mapId) {
-  // 优先使用从地图文件加载的元数据
   if (mapMetadata.value[mapId] && mapMetadata.value[mapId].mapName) {
     return mapMetadata.value[mapId].mapName;
   }
-
-  // 备用方案：如果无法获取地图名称，使用默认映射
   const displayNames = {
     cuit_hkg: "成都信息工程大学（航空港校区）",
     cuit_lqy: "成都信息工程大学（龙泉驿校区）",
@@ -294,7 +266,6 @@ function getMapDisplayName(mapId) {
     ncwsxx: "南充卫生学校",
     sctbc: "四川工商职业技术学院",
   };
-
   return displayNames[mapId] || mapId;
 }
 
@@ -309,25 +280,13 @@ async function fetchConfig() {
     base.replace(/\/$/, "") + "/api/autorun/config" + params,
     { method: "GET", headers }
   );
-
-  if (res.ok) {
-    return await res.json();
-  }
-  return null;
+  return res.ok ? await res.json() : null;
 }
 
 function applyConfig(json) {
-  if (json.map_id) {
-    // 验证地图ID是否在可用列表中
-    if (availableMaps.value.includes(json.map_id)) {
-      map_id.value = json.map_id;
-    } else if (availableMaps.value.length > 0) {
-      // 如果配置的地图不存在，使用第一个可用地图
-      map_id.value = availableMaps.value[0];
-      console.warn(`地图 ${json.map_id} 不存在，使用默认地图: ${map_id.value}`);
-    }
+  if (json.map_id && availableMaps.value.includes(json.map_id)) {
+    map_id.value = json.map_id;
   } else if (availableMaps.value.length > 0) {
-    // 如果没有配置地图，使用第一个可用地图
     map_id.value = availableMaps.value[0];
   }
 
@@ -394,13 +353,11 @@ async function submit() {
 }
 
 function validateForm() {
-  // 验证地图选择
   if (!map_id.value || !availableMaps.value.includes(map_id.value)) {
     alert("请选择有效的地图");
     return false;
   }
 
-  // 验证距离
   if (
     !Number.isInteger(Number(min_distance_m.value)) ||
     min_distance_m.value < 1 ||
@@ -410,7 +367,6 @@ function validateForm() {
     return false;
   }
 
-  // 验证时间
   if (!timeStr.value || !/^\d{2}:\d{2}$/.test(timeStr.value)) {
     alert("时间格式不正确");
     return false;
@@ -461,7 +417,6 @@ async function saveConfig(body) {
   });
 
   if (!res.ok) throw new Error("network");
-
   const resp = await res.json();
   return resp && resp.ok === true;
 }
@@ -470,104 +425,115 @@ async function saveConfig(body) {
 <style scoped>
 .auto-modal-backdrop {
   position: fixed;
-  left: 0;
   top: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  z-index: 10001;
   padding: 20px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-sizing: border-box;
 }
 
 .auto-modal {
   width: 100%;
   max-width: 380px;
-  max-height: calc(100vh - 40px);
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.15),
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  animation: modal-appear 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card {
-  background: #ffffff;
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.form-card {
+  background: transparent;
   border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  width: 100%;
-  max-height: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 骨架屏样式 */
 .skeleton-container {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
   padding: 24px;
 }
 
 .skeleton-title {
   height: 24px;
-  background: linear-gradient(90deg, #f2f2f7 25%, #e5e5ea 50%, #f2f2f7 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   border-radius: 8px;
-  animation: skeleton-loading 1.5s infinite;
+  margin-bottom: 8px;
   width: 60%;
-  margin: 0 auto;
+  animation: skeleton-loading 1.5s infinite;
 }
 
 .skeleton-subtitle {
   height: 16px;
-  background: linear-gradient(90deg, #f2f2f7 25%, #e5e5ea 50%, #f2f2f7 75%);
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   border-radius: 6px;
-  animation: skeleton-loading 1.5s infinite;
+  margin-bottom: 20px;
   width: 80%;
-  margin: -8px auto 8px;
+  animation: skeleton-loading 1.5s infinite;
 }
 
 .skeleton-field {
-  height: 52px;
-  background: linear-gradient(90deg, #f2f2f7 25%, #e5e5ea 50%, #f2f2f7 75%);
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  border-radius: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
   animation: skeleton-loading 1.5s infinite;
 }
 
 .skeleton-switch {
-  height: 32px;
-  background: linear-gradient(90deg, #f2f2f7 25%, #e5e5ea 50%, #f2f2f7 75%);
+  height: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  border-radius: 16px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  width: 50%;
   animation: skeleton-loading 1.5s infinite;
-  width: 52px;
-  align-self: flex-start;
 }
 
 .skeleton-buttons {
   display: flex;
   gap: 12px;
-  margin-top: 16px;
 }
 
 .skeleton-button {
-  flex: 1;
-  height: 50px;
-  background: linear-gradient(90deg, #f2f2f7 25%, #e5e5ea 50%, #f2f2f7 75%);
-  background-size: 200% 100%;
+  height: 44px;
   border-radius: 12px;
+  flex: 1;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
 }
 
 .skeleton-button.primary {
-  background: linear-gradient(90deg, #e5e5ea 25%, #d1d1d6 50%, #e5e5ea 75%);
+  background: linear-gradient(90deg, #e0e0e0 25%, #d0d0d0 50%, #e0e0e0 75%);
   background-size: 200% 100%;
 }
 
@@ -580,138 +546,147 @@ async function saveConfig(body) {
   }
 }
 
-/* 内容区域样式 */
+/* 内容容器 */
 .content-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  padding: 0;
 }
 
 .modal-header {
   padding: 24px 24px 16px;
-  border-bottom: 1px solid #f2f2f7;
-  text-align: center;
+  border-bottom: none;
+  margin-bottom: 8px;
 }
 
 .modal-title-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .modal-title {
-  margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #000;
-  letter-spacing: -0.2px;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: -0.1px;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.3px;
 }
 
 .badge.beta {
-  background: rgba(0, 122, 255, 0.1);
-  color: #007aff;
-  border: 1px solid rgba(0, 122, 255, 0.2);
+  background: linear-gradient(135deg, #8e8e93, #636366);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .modal-subtitle {
-  margin: 0;
   font-size: 14px;
-  color: #8e8e93;
-  text-align: center;
-  line-height: 1.4;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+  opacity: 0.8;
 }
 
+/* 表单区域 */
 .form-section {
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  flex: 1;
+  padding: 0 24px;
 }
 
 .form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin-bottom: 20px;
 }
 
 .form-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin-bottom: 10px;
   font-size: 15px;
-  font-weight: 500;
-  color: #000;
-  letter-spacing: -0.1px;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
 .icon {
-  color: #007aff;
   width: 16px;
   text-align: center;
-  font-size: 14px;
+  color: #666;
+  opacity: 0.8;
 }
 
-.label-text {
-  flex: 1;
+.loading-badge {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007aff;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: auto;
 }
 
-.switch-field {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 8px;
-}
-
-.input,
+/* 输入控件 */
 .select,
+.input,
 .time-picker {
   width: 100%;
   padding: 14px 16px;
-  border: 1.5px solid #c6c6c8;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
   border-radius: 12px;
-  background: #fff;
   font-size: 16px;
-  color: #000;
-  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1a1a1a;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.input:focus,
 .select:focus,
+.input:focus,
 .time-picker:focus {
   outline: none;
   border-color: #007aff;
+  background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
-.input:disabled,
 .select:disabled,
+.input:disabled,
 .time-picker:disabled {
-  background: #f2f2f7;
-  color: #c6c6c8;
+  background: rgba(248, 248, 248, 0.8);
+  color: #8e8e93;
+  border-color: rgba(0, 0, 0, 0.05);
   cursor: not-allowed;
 }
 
-/* 开关样式优化 */
+/* 帮助文本 */
+.help-text {
+  font-size: 13px;
+  color: #666;
+  margin-top: 6px;
+  opacity: 0.7;
+}
+
+.help-text.error {
+  color: #ff3b30;
+  opacity: 0.9;
+}
+
+/* 开关字段 */
+.switch-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 8px 0;
+}
+
 .switch {
   position: relative;
   display: inline-block;
-  width: 52px;
+  width: 54px;
   height: 32px;
 }
 
@@ -728,97 +703,92 @@ async function saveConfig(body) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #e5e5ea;
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(120, 120, 128, 0.3);
+  transition: .3s;
+  border-radius: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px;
+  padding: 0 8px;
+  box-sizing: border-box;
 }
 
-.slider .on-icon,
-.slider .off-icon {
-  font-size: 10px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 1;
-}
-
-.slider .on-icon {
-  color: #fff;
-  opacity: 0;
-  transform: scale(0.8);
-}
-
-.slider .off-icon {
-  color: #8e8e93;
-  opacity: 1;
-  transform: scale(0.8);
-}
-
-.switch input:checked + .slider {
-  background: #007aff;
-}
-
-.switch input:checked + .slider .on-icon {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.switch input:checked + .slider .off-icon {
-  opacity: 0;
-  transform: scale(0.6);
-}
-
-.slider::after {
-  content: "";
+.slider:before {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  content: "";
+  height: 28px;
+  width: 28px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .3s;
   border-radius: 50%;
-  background: #fff;
-  top: 4px;
-  left: 4px;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.switch input:checked + .slider::after {
-  transform: translateX(20px);
+input:checked + .slider {
+  background-color: #007aff;
 }
 
-.switch input:disabled + .slider {
-  opacity: 0.5;
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+.on-icon,
+.off-icon {
+  font-size: 10px;
+  color: #fff;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.on-icon {
+  opacity: 0;
+}
+
+.off-icon {
+  opacity: 1;
+}
+
+input:checked + .slider .on-icon {
+  opacity: 1;
+}
+
+input:checked + .slider .off-icon {
+  opacity: 0;
+}
+
+input:disabled + .slider {
+  background-color: rgba(120, 120, 128, 0.2);
   cursor: not-allowed;
 }
 
-/* 按钮样式 */
+/* 操作按钮 */
 .actions {
   display: flex;
   gap: 12px;
   padding: 20px 24px 24px;
-  border-top: 1px solid #f2f2f7;
-  background: #f8f8f8;
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  background: rgba(248, 248, 248, 0.5);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .btn {
   flex: 1;
   padding: 14px 20px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  transition: all 0.2s ease;
-  min-height: 50px;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  letter-spacing: -0.1px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 48px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .btn:disabled {
@@ -827,128 +797,204 @@ async function saveConfig(body) {
   transform: none !important;
 }
 
-.btn:not(:disabled):active {
-  transform: scale(0.98);
-}
-
 .btn.primary {
-  background: #007aff;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+  background: rgba(0, 122, 255, 0.9);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
 }
 
 .btn.primary:not(:disabled):hover {
-  background: #0056cc;
+  background: rgba(0, 122, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+}
+
+.btn.primary:not(:disabled):active {
+  transform: translateY(0);
 }
 
 .btn.secondary {
-  background: #fff;
-  color: #007aff;
-  border: 1.5px solid #c6c6c8;
+  background: rgba(255, 255, 255, 0.8);
+  color: #1a1a1a;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
 }
 
 .btn.secondary:not(:disabled):hover {
-  background: #f2f2f7;
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
-/* 保存按钮状态 */
-.save-btn.loading {
-  background: #007aff;
+.btn.secondary:not(:disabled):active {
+  transform: translateY(0);
 }
 
-.save-btn.success {
-  background: #34c759;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+.save-text {
+  font-weight: 600;
 }
 
-.save-btn.error {
-  background: #ff3b30;
-  box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+/* 按钮状态 */
+.btn.primary.loading {
+  background: rgba(0, 122, 255, 0.7);
+}
+
+.btn.primary.success {
+  background: rgba(52, 199, 89, 0.9);
+  box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+}
+
+.btn.primary.error {
+  background: rgba(255, 59, 48, 0.9);
+  box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
 }
 
 /* 移动端适配 */
 @media (max-width: 480px) {
   .auto-modal-backdrop {
     padding: 16px;
-    align-items: center;
   }
-
+  
   .auto-modal {
-    max-width: none;
-    max-height: calc(100vh - 32px);
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 18px;
   }
-
-  .card {
-    border-radius: 20px;
-  }
-
+  
   .modal-header {
-    padding: 20px 20px 16px;
+    padding: 20px 20px 12px;
   }
-
+  
   .form-section {
-    padding: 16px 20px;
+    padding: 0 20px;
   }
-
+  
   .actions {
     padding: 16px 20px 20px;
+    flex-direction: column;
   }
-
-  .modal-title {
-    font-size: 18px;
-  }
-
-  .input,
-  .select,
-  .time-picker {
-    padding: 16px;
-    font-size: 16px;
-  }
-
+  
   .btn {
     min-height: 52px;
-    font-size: 16px;
   }
-}
-
-@media (max-width: 360px) {
-  .modal-header {
-    padding: 16px 16px 12px;
-  }
-
-  .form-section {
-    padding: 12px 16px;
-    gap: 16px;
-  }
-
-  .actions {
-    padding: 16px;
-    flex-direction: column;
-    gap: 10px;
-  }
-
+  
   .switch-field {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
+  
+  .switch {
+    align-self: flex-end;
+  }
 }
 
-/* 滚动条样式 */
-.card::-webkit-scrollbar {
-  width: 4px;
+@media (max-width: 360px) {
+  .modal-title {
+    font-size: 18px;
+  }
+  
+  .modal-subtitle {
+    font-size: 13px;
+  }
+  
+  .form-label {
+    font-size: 14px;
+  }
+  
+  .select,
+  .input,
+  .time-picker {
+    font-size: 15px;
+    padding: 12px 14px;
+  }
 }
 
-.card::-webkit-scrollbar-track {
-  background: transparent;
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .auto-modal {
+    background: rgba(30, 30, 32, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 20px 60px rgba(0, 0, 0, 0.4),
+      0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .modal-title {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .modal-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .form-label {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .icon {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .select,
+  .input,
+  .time-picker {
+    background: rgba(44, 44, 46, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  .select:focus,
+  .input:focus,
+  .time-picker:focus {
+    background: rgba(44, 44, 46, 0.9);
+    border-color: #0a84ff;
+  }
+  
+  .select:disabled,
+  .input:disabled,
+  .time-picker:disabled {
+    background: rgba(44, 44, 46, 0.5);
+    color: rgba(255, 255, 255, 0.4);
+  }
+  
+  .help-text {
+    color: rgba(255, 255, 255, 0.6);
+  }
+  
+  .actions {
+    background: rgba(44, 44, 46, 0.5);
+    border-top-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn.secondary {
+    background: rgba(44, 44, 46, 0.8);
+    color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn.secondary:not(:disabled):hover {
+    background: rgba(44, 44, 46, 0.9);
+  }
 }
 
-.card::-webkit-scrollbar-thumb {
-  background: #c6c6c8;
-  border-radius: 2px;
+/* 安全区域适配 */
+@supports (padding: max(0px)) {
+  .auto-modal-backdrop {
+    padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  }
 }
 
-.card::-webkit-scrollbar-thumb:hover {
-  background: #8e8e93;
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .auto-modal,
+  .btn,
+  .slider,
+  .select,
+  .input,
+  .time-picker {
+    transition: none;
+    animation: none;
+  }
 }
 </style>

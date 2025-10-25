@@ -115,15 +115,14 @@
       </div>
     </div>
   </div>
-  <Message ref="messageRef" />
 </template>
 
 <script setup>
-import Message from "./Message.vue";
-import { ref, reactive, onMounted, defineProps } from "vue";
+import { ref, reactive, onMounted, inject } from "vue";
 import api from "../utils/api";
 
-const messageRef = ref(null);
+// 注入全局消息方法
+const showMessage = inject("showMessage");
 
 defineProps({
   runInfo: {
@@ -242,10 +241,10 @@ const loadMoreRecords = async () => {
       pagination.current = nextPage;
     } else {
       // 没有更多数据时显示提示
-      messageRef.value?.show("没有更多数据了", "info");
+      showMessage("没有更多数据了", "info");
     }
   } catch (error) {
-    messageRef.value?.show("加载更多记录失败", "error");
+    showMessage("加载更多记录失败", "error");
   } finally {
     isLoading.value = false;
   }
@@ -266,6 +265,7 @@ onMounted(() => {
   background: #f6f7f9;
   height: 100%;
   position: relative;
+  padding: 0 16px;
 }
 
 /* 内容区包装器 */
@@ -273,13 +273,10 @@ onMounted(() => {
   flex: 1;
   position: relative;
   overflow: hidden;
-  padding: 16px 0;
-  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 /* 可滚动列表 */
 .scrollable-list {
-  height: 100%;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -289,67 +286,35 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 16px;
-  padding-bottom: 70px; /* 预留底部导航栏的空间 */
 }
 
-/* 通用顶部标题栏 */
-.page-header {
+/* 统一骨架与卡片的基础样式，减少重复 */
+.record-list-card,
+.skeleton-record {
+  padding: 0 0 8px 0;
+  margin-bottom: 16px;
   background: #fff;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e3e6e8;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  border-radius: 10px;
+  border: 1px solid #e3e6e8;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3a3f;
-  margin: 0;
-}
-
-/* 移除不再使用的样式 */
 .skeleton-list {
   padding: 0 16px;
 }
-.skeleton-record {
-  background: #fff;
-  border-radius: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #e3e6e8;
-  /* 保持与 record-item 一致 */
-  overflow: hidden;
-}
+
+/* 统一的骨架块样式（仅此一份定义） */
 .skeleton-block {
   display: inline-block;
   background: #e3e6e8;
   border-radius: 4px;
-  min-height: 16px;
+  min-height: 14px;
   animation: pulse 1.5s infinite;
 }
-.skeleton-date {
-  width: 100px;
-  height: 18px;
-  margin-bottom: 4px;
-}
-.skeleton-arrow {
-  width: 16px;
-  height: 16px;
-  background: #e3e6e8;
-  border-radius: 50%;
-  display: inline-block;
-  animation: pulse 1.5s infinite;
-}
-.skeleton-label {
-  height: 16px;
-  margin-right: 8px;
-}
-.skeleton-value {
-  height: 16px;
-}
+
 @keyframes pulse {
   0% {
     opacity: 1;
@@ -362,49 +327,8 @@ onMounted(() => {
   }
 }
 
-/* 移除不需要的样式 */
-.records-container {
-  min-height: unset;
-  margin: 0;
-}
-
 .records-content {
   padding-bottom: 0;
-}
-
-/* 确保底部有足够空间 */
-@supports (padding: max(0px)) {
-  .records-content-wrapper {
-    padding-bottom: max(70px, calc(70px + env(safe-area-inset-bottom)));
-  }
-}
-
-.records-content-wrapper {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: #f6f7f9;
-  padding: 16px 0;
-}
-
-.records-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0 auto;
-  padding: 0 16px;
-  background: #f6f7f9;
-  width: 100%;
-}
-
-.scrollable-list {
-  flex: 1;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  height: calc(100vh - 100px); /* 减去头部和底部导航的高度 */
-  padding-bottom: 20px;
 }
 
 .record-item {
@@ -569,17 +493,6 @@ onMounted(() => {
   padding: 10px 4px;
 }
 
-/* 列表卡片样式 */
-.record-list-card {
-  padding: 0 0 8px 0;
-  margin-bottom: 16px;
-  background: #fff;
-  border-radius: 10px;
-  border: 1px solid #e3e6e8;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-}
 .record-list-title {
   font-size: 16px;
   font-weight: 600;
@@ -595,7 +508,8 @@ onMounted(() => {
   background: #f6f7fa;
   border-bottom: 1px solid #e3e6e8;
   border-radius: 10px 10px 0 0;
-  padding: 14px 16px 10px 16px;
+  /* 与 .record-list-title 保持一致的 padding，确保骨架和真实卡片一致 */
+  padding: 16px 16px 8px 16px;
   margin-bottom: 0;
 }
 .record-list-title-left {
@@ -632,24 +546,6 @@ onMounted(() => {
   font-weight: 500;
   text-align: right;
   min-width: 60px;
-}
-
-/* skeleton-list 卡片适配 */
-.skeleton-record {
-  padding: 0 0 8px 0;
-  margin-bottom: 16px;
-  background: #fff;
-  border-radius: 10px;
-  border: 1px solid #e3e6e8;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-}
-.skeleton-block {
-  background: #e3e6e8;
-  border-radius: 4px;
-  min-height: 14px;
-  animation: pulse 1.5s infinite;
 }
 
 /* 适配移动端表格 */

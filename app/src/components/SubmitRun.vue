@@ -142,12 +142,7 @@
               </div>
               <transition name="fade">
                 <div v-if="!paceLimit" class="pace-error">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path
-                      fill="currentColor"
-                      d="M13,13H11V7H13M13,17H11V15H13M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"
-                    />
-                  </svg>
+                  <i class="fa-solid fa-circle-exclamation"></i>
                   {{ getPaceLimitErrorText() }}
                 </div>
               </transition>
@@ -195,7 +190,6 @@
       <MapPreview :track="generatedTrack" />
     </div>
 
-    <Message ref="messageRef" />
     <AutoConfig
       :visible="showAutoModal"
       @update:visible="updateAutoVisible"
@@ -210,12 +204,14 @@ import {
   computed,
   watch,
   onMounted,
-  defineProps,
+  inject,
   defineAsyncComponent,
 } from "vue";
 import api from "../utils/api";
 import { genTrackPoints } from "../utils/map";
-import Message from "./Message.vue";
+
+// 注入全局消息方法
+const showMessage = inject("showMessage");
 
 // 异步组件
 const MapPreview = defineAsyncComponent(() => import("./MapPreview.vue"));
@@ -238,7 +234,6 @@ const LOCAL_STORAGE_DISTANCE_KEY = "submitRunDistance";
 const LOCAL_STORAGE_DURATION_KEY = "submitRunDuration";
 
 // Refs
-const messageRef = ref(null);
 const mapsLoaded = ref(false);
 const routeOptions = ref({});
 const form = ref({
@@ -382,8 +377,7 @@ function updateAutoVisible(v) {
 }
 
 function onAutoSaved() {
-  if (messageRef.value?.show)
-    messageRef.value.show("定时任务配置已保存", "success");
+  showMessage("定时任务配置已保存", "success");
 }
 
 function selectRoute(route) {
@@ -423,12 +417,12 @@ async function loadMaps() {
 
 const handleSubmit = async () => {
   if (!paceLimit.value) {
-    messageRef.value?.show("配速不能小于6分钟/公里", "error");
+    showMessage("配速不能小于6分钟/公里", "error");
     return;
   }
 
   if (!Number.isInteger(form.value.distance) || form.value.distance <= 0) {
-    messageRef.value?.show("跑步里程必须为正整数", "error");
+    showMessage("跑步里程必须为正整数", "error");
     return;
   }
 
@@ -436,7 +430,7 @@ const handleSubmit = async () => {
   const studentId = localStorage.getItem("studentId");
   const schoolId = localStorage.getItem("schoolId");
   if (!userId || !studentId || !schoolId) {
-    messageRef.value?.show("请先登录", "error");
+    showMessage("请先登录", "error");
     return;
   }
 
@@ -482,15 +476,15 @@ const handleSubmit = async () => {
     console.debug("Server response for run submit:", data);
 
     if (data && data.code === 10000) {
-      messageRef.value?.show(data.response.resultDesc, "success");
+      showMessage(data.response.resultDesc, "success");
       triggerProgressAnimation();
       emit("submitted");
     } else {
-      messageRef.value?.show(data?.msg || "提交失败", "error");
+      showMessage(data?.msg || "提交失败", "error");
     }
   } catch (e) {
     console.error("Submit run error:", e);
-    messageRef.value?.show("提交异常", "error");
+    showMessage("提交异常", "error");
   } finally {
     submitting.value = false;
   }
@@ -629,25 +623,7 @@ onMounted(async () => {
   background: #f6f7f9;
   height: 100%;
   position: relative;
-  padding: 16px 16px;
-}
-
-/* 通用顶部标题栏 */
-.page-header {
-  background: #fff;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e3e6e8;
-  text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3a3f;
-  margin: 0;
+  padding: 0 16px;
 }
 
 .stats-table {
@@ -939,7 +915,6 @@ onMounted(async () => {
 }
 .submit-btn {
   background: #000;
-  border: 2px solid #000;
   color: white;
   box-shadow: 0 2px 6px rgba(59, 158, 255, 0.2);
 }

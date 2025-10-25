@@ -155,12 +155,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, inject } from "vue";
 import Artalk from "artalk";
 import "artalk/dist/Artalk.css";
 import MaleAvatar from "./Avatar/MaleAvatar.vue";
 import FemaleAvatar from "./Avatar/FemaleAvatar.vue";
-import Message from "./Message.vue";
 import { config } from "../utils/config";
 
 defineProps({
@@ -168,13 +167,14 @@ defineProps({
   loading: Boolean
 });
 
-const messageRef = ref(null);
+// 注入全局消息方法
+const showMessage = inject('showMessage');
 const artalkContainer = ref(null);
 
 const emit = defineEmits(['logout']);
 
 const handleLogout = () => {
-  messageRef.value?.show("已退出登录");
+  showMessage("已退出登录", "info");
   emit("logout");
 };
 
@@ -191,19 +191,13 @@ onMounted(() => {
 });
 </script>
 
-<script>
-export default {
-  name: "Profile",
-};
-</script>
-
 <style scoped>
 .profile-page {
   background: #f6f7f9;
 }
 
 .profile-container {
-  padding: 0px 20px;
+  padding: 0px 16px;
 }
 
 .profile-card {

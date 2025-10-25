@@ -5,17 +5,11 @@
     </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 import { ref } from "vue";
 import Login from "../components/Login.vue";
 import ResetPassword from "../components/ResetPassword.vue";
 
-// LoginPage purely composes Login and ResetPassword and manages their local visibility state.
 const isLogin = ref(false);
 const showResetPassword = ref(false);
-</script>
-<script lang="ts">
-export default {
-  name: "LoginPage",
-};
 </script>

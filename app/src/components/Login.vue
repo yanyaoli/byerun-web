@@ -39,21 +39,21 @@
         >
       </div>
     </div>
-    <Message ref="messageRef" type="error" />
   </div>
 </template>
 
 
 <script setup>
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import api from "../utils/api";
 import { getLoginParams } from "../utils/config";
 import CryptoJS from "crypto-js";
-import Message from "./Message.vue";
 
 defineEmits(['showReset']);
 
-const messageRef = ref(null);
+// 注入 App.vue 的全局消息方法
+const showMessage = inject('showMessage');
+
 const form = ref({
   userPhone: "",
   password: "",
@@ -81,10 +81,10 @@ const handleLogin = async () => {
       localStorage.setItem("schoolId", data.response.schoolId);
       window.location.reload();
     } else {
-      messageRef.value?.show(data.msg);
+      showMessage(data.msg, "error");
     }
   } catch (e) {
-    messageRef.value?.show("登录失败");
+    showMessage("登录失败", "error");
   } finally {
     loading.value = false;
   }

@@ -63,45 +63,43 @@
           >返回登录</a
         >
       </div>
-      <div v-if="msg" class="message">{{ msg }}</div>
     </div>
   </div>
-  <Message ref="messageRef" />
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import api from "../utils/api";
 import CryptoJS from "crypto-js";
-import Message from "./Message.vue";
 
 defineEmits(['backToLogin']);
+
+// 注入全局消息方法
+const showMessage = inject('showMessage');
 
 const phone = ref("");
 const password = ref("");
 const code = ref("");
-const msg = ref("");
 const sending = ref(false);
 const submitting = ref(false);
 
 const sendCode = async () => {
   if (!phone.value) {
-    msg.value = "请输入手机号";
+    showMessage("请输入手机号", "error");
     return;
   }
   sending.value = true;
-  msg.value = "";
   try {
     const { data } = await api.get("/auth/sendSmsForPassWord", {
       params: { phoneNum: phone.value },
     });
     if (data.code === 10000) {
-      msg.value = "验证码已发送";
+      showMessage("验证码已发送", "success");
     } else {
-      msg.value = data.msg || "发送失败";
+      showMessage(data.msg || "发送失败", "error");
     }
   } catch (e) {
-    msg.value = "发送异常";
+    showMessage("发送异常", "error");
   } finally {
     sending.value = false;
   }
@@ -109,11 +107,10 @@ const sendCode = async () => {
 
 const handleReset = async () => {
   if (!phone.value || !password.value || !code.value) {
-    msg.value = "请填写完整信息";
+    showMessage("请填写完整信息", "error");
     return;
   }
   submitting.value = true;
-  msg.value = "";
   try {
     const hashed = CryptoJS.MD5(password.value).toString();
     const payload = {
@@ -124,18 +121,21 @@ const handleReset = async () => {
     };
     const { data } = await api.post("/auth/updateUserPassWord", payload);
     if (data.code === 10000) {
-      msg.value = "密码重置成功，请返回登录";
+      showMessage("密码重置成功，请返回登录", "success");
+      // 清空表单
+      phone.value = "";
+      password.value = "";
+      code.value = "";
     } else {
-      msg.value = data.msg || "重置失败";
+      showMessage(data.msg || "重置失败", "error");
     }
   } catch (e) {
-    msg.value = "重置异常";
+    showMessage("重置异常", "error");
   } finally {
     submitting.value = false;
   }
 };
 </script>
-
 
 <style scoped>
 /* 重置密码界面 - 与登录页风格统一 */
