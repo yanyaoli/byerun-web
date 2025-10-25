@@ -40,7 +40,7 @@ export const API_URLS = {
 };
 
 /**
- * 获取登录参数的基础配置（使用简单的默认参数）
+ * 获取登录参数的基础配置
  */
 export function getLoginParams() {
   return {

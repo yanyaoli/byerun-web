@@ -209,7 +209,7 @@ import {
   defineAsyncComponent,
 } from "vue";
 import api from "../utils/api";
-import { genTrackPoints } from "../utils/map";
+import { loadMapFiles, genTrackPoints } from "../utils/map";
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
@@ -395,8 +395,7 @@ function selectRoute(route) {
 // 主要业务函数
 async function loadMaps() {
   try {
-    const trackUtils = await import("../utils/map");
-    const mapIds = await trackUtils.loadMapFiles();
+    const mapIds = await loadMapFiles();
 
     const options = {};
     for (const mapId of mapIds) {
