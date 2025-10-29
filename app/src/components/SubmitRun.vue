@@ -803,8 +803,8 @@ onMounted(async () => {
   overflow-y: auto;
 }
 .route-option {
-  padding: 12px 16px;
-  font-size: 15px;
+  padding: 8px 16px;
+  font-size: 13px;
   color: #4f6d7a;
   cursor: pointer;
   transition: all 0.2s;

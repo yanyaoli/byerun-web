@@ -107,14 +107,6 @@ export function getDistance(start, end) {
   return R * c; // 返回最终距离（米）
 }
 
-/**
- * 生成默认定位精度
- * @returns 定位精度（字符串格式，保留1位小数，范围1.0-5.0米）
- * 注：该函数会在genTrackPoints中根据转弯情况被重写，以实现动态精度调整
- */
-function randAccuracy() {
-  return (Math.random() * 4 + 1).toFixed(1); // 默认生成1.0-5.0米的精度
-}
 
 /**
  * 轨迹生成算法
@@ -127,101 +119,49 @@ export function genTrackPoints(distance, mapChoice = "default") {
   if (!locations || locations.length === 0) return "[]";
 
   // 轨迹生成控制参数
-  const baseSpacing = 8; // 基础点间距（米）
-  const minSpacing = 3; // 最小点间距（米）
-  const maxSpacing = 15; // 最大点间距（米）
-  const curveSmoothness = 0.3; // 曲线平滑度（0-1，越高越平滑）
-  const maxPointsPerSegment = 150; // 每段最大点数
+  const baseSpacing = 12; // 基础点间距（米）——增大可减少点数
+  const maxPointsPerSegment = 80; // 每段最大点数（防止单段过密）
+  const maxTotalPoints = 5000; // 全局点数上限，防止生成过多点
 
   let generatedDistance = 0;
   let startTime = Date.now() - 30 * 60 * 1000;
   const result = [];
 
-  // 米转经纬度偏移的辅助函数
-  const metersToLngLat = (dxMeters, dyMeters, lat) => {
-    const metersPerDegLat = 111320;
-    const metersPerDegLng = ((Math.PI / 180) * 6378137 * Math.cos((lat * Math.PI) / 180)) / (Math.PI / 180);
-    return [dxMeters / metersPerDegLng, dyMeters / metersPerDegLat];
+  // 小幅度经纬度抖动工具（默认 ±0.000001 度）
+  const DEFAULT_JITTER = 0.000001;
+  const smallJitter = () => (Math.random() - 0.5) * 2 * DEFAULT_JITTER;
+  // 生成默认定位精度（内联，单位：米，保留1位小数）
+  const randAccuracy = () => (Math.random() * 4 + 1).toFixed(1);
+  // 额外参数：曲线平滑度和直线判断阈值（角度）
+  const curveSmoothness = 0.3;
+  const straightAngleThreshold = 8; // 低于此角度视为直线（度）
+  const clamp = (v, a, b) => {
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+    return Math.max(lo, Math.min(v, hi));
   };
 
-  /**
-   * 三次贝塞尔曲线插值
-   * @param p0 起点
-   * @param p1 控制点1
-   * @param p2 控制点2
-   * @param p3 终点
-   * @param t 插值参数（0-1）
-   * @returns 插值点坐标
-   */
-  const cubicBezier = (p0, p1, p2, p3, t) => {
-    const u = 1 - t;
-    const tt = t * t;
-    const uu = u * u;
-    const uuu = uu * u;
-    const ttt = tt * t;
+  const arePointsEqual = (p1, p2, epsilon = 1e-9) =>
+    Math.abs(p1[0] - p2[0]) <= epsilon && Math.abs(p1[1] - p2[1]) <= epsilon;
 
-    const x = uuu * p0[0] + 3 * uu * t * p1[0] + 3 * u * tt * p2[0] + ttt * p3[0];
-    const y = uuu * p0[1] + 3 * uu * t * p1[1] + 3 * u * tt * p2[1] + ttt * p3[1];
+  const coords = locations
+    .map((point) => point.split(",").map(Number))
+    .filter((pair) => pair.length === 2 && pair.every((num) => !Number.isNaN(num)));
 
-    return [x, y];
-  };
+  if (coords.length < 2) return "[]";
 
-  /**
-   * 计算贝塞尔曲线的控制点
-   * @param prev 前一点
-   * @param current 当前点
-   * @param next 下一点
-   * @param nextNext 下下点
-   * @returns [控制点1, 控制点2]
-   */
-  const calculateControlPoints = (prev, current, next, nextNext) => {
-    if (!prev) prev = current;
-    if (!nextNext) nextNext = next;
-
-    // 计算切线方向
-    const tangent1 = [
-      (current[0] - prev[0]) * curveSmoothness,
-      (current[1] - prev[1]) * curveSmoothness
-    ];
-    
-    const tangent2 = [
-      (nextNext[0] - next[0]) * curveSmoothness,
-      (nextNext[1] - next[1]) * curveSmoothness
-    ];
-
-    // 控制点基于当前点和切线计算
-    const cp1 = [
-      current[0] + tangent1[0],
-      current[1] + tangent1[1]
-    ];
-    
-    const cp2 = [
-      next[0] - tangent2[0],
-      next[1] - tangent2[1]
-    ];
-
-    return [cp1, cp2];
-  };
-
-  /**
-   * 自适应计算插值点数
-   * @param segDist 段距离
-   * @param turnAngle 转弯角度
-   * @returns 插值点数
-   */
-  const calculateInterpolationPoints = (segDist, turnAngle) => {
-    // 基础点数基于距离
-    let points = Math.max(2, Math.ceil(segDist / baseSpacing));
-    
-    // 转弯时增加点数
-    if (turnAngle > 30) {
-      points = Math.min(maxPointsPerSegment, points * 2);
-    } else if (turnAngle > 15) {
-      points = Math.min(maxPointsPerSegment, Math.ceil(points * 1.5));
+  // 去除重复的连续点以及收尾重复
+  const sanitized = [];
+  coords.forEach((pt, idx) => {
+    if (idx === 0 || !arePointsEqual(pt, coords[idx - 1])) {
+      sanitized.push(pt);
     }
-    
-    return Math.min(maxPointsPerSegment, points);
-  };
+  });
+  if (sanitized.length > 1 && arePointsEqual(sanitized[0], sanitized[sanitized.length - 1])) {
+    sanitized.pop();
+  }
+
+  if (sanitized.length < 2) return "[]";
 
   /**
    * 计算两点间的转弯角度
@@ -246,101 +186,148 @@ export function genTrackPoints(distance, mapChoice = "default") {
     return Math.acos(cosAngle) * (180 / Math.PI);
   };
 
-  // 处理初始点
-  let [lng, lat] = locations[0].split(",").map(Number);
-  const initialJitter = metersToLngLat(
-    (Math.random() - 0.5) * 1.5,
-    (Math.random() - 0.5) * 1.5,
-    lat
-  );
-  lng += initialJitter[0];
-  lat += initialJitter[1];
-  
+  // 三次贝塞尔曲线插值（用于弯曲段）
+  const cubicBezier = (p0, p1, p2, p3, t) => {
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+    const uuu = uu * u;
+    const ttt = tt * t;
+
+    const x = uuu * p0[0] + 3 * uu * t * p1[0] + 3 * u * tt * p2[0] + ttt * p3[0];
+    const y = uuu * p0[1] + 3 * uu * t * p1[1] + 3 * u * tt * p2[1] + ttt * p3[1];
+
+    return [x, y];
+  };
+
+  // 计算简单的控制点（基于邻点方向）
+  const calculateControlPoints = (prev, current, next) => {
+    if (!prev) prev = current;
+    if (!next) next = current;
+
+    const v1 = [current[0] - prev[0], current[1] - prev[1]];
+    const v2 = [next[0] - current[0], next[1] - current[1]];
+
+    // 控制点距离依赖于曲线平滑度与邻向量长度
+    const cp1 = [current[0] + v1[0] * curveSmoothness, current[1] + v1[1] * curveSmoothness];
+    const cp2 = [current[0] + v2[0] * -curveSmoothness, current[1] + v2[1] * -curveSmoothness];
+    return [cp1, cp2];
+  };
+
+  // 处理初始点：随机选择起点并应用轻微抖动以避免固定起点
+  let currentIdx = Math.floor(Math.random() * sanitized.length);
+  const startNextIdx = (currentIdx + 1) % sanitized.length;
+  const startPoint = sanitized[currentIdx];
+  const startNextPoint = sanitized[startNextIdx];
+  // 在起点附近做小抖动，并限制在起点与下一个点的包围盒附近，避免越界
+  let lng = startPoint[0] + smallJitter();
+  let lat = startPoint[1] + smallJitter();
+  lng = clamp(lng, Math.min(startPoint[0], startNextPoint[0]) - 0.00001, Math.max(startPoint[0], startNextPoint[0]) + 0.00001);
+  lat = clamp(lat, Math.min(startPoint[1], startNextPoint[1]) - 0.00001, Math.max(startPoint[1], startNextPoint[1]) + 0.00001);
+
   result.push(`${lng}-${lat}-${startTime}-${randAccuracy()}`);
 
   let prevSpeed = Math.random() * (2.6 - 1.7) + 1.7;
-  let idx = 0;
+  let lastOut = [lng, lat];
 
   while (generatedDistance < distance) {
-    const nextIdx = (idx + 1) % locations.length;
-    const [nextLngRaw, nextLatRaw] = locations[nextIdx].split(",").map(Number);
-    
-    // 对终点添加随机偏移
-    const endpointJitter = metersToLngLat(
-      (Math.random() - 0.5) * 1.5,
-      (Math.random() - 0.5) * 1.5,
-      nextLatRaw
-    );
-    const nextLng = nextLngRaw + endpointJitter[0];
-    const nextLat = nextLatRaw + endpointJitter[1];
+    const nextIdx = (currentIdx + 1) % sanitized.length;
+    const currOriginal = sanitized[currentIdx];
+    const nextOriginal = sanitized[nextIdx];
 
-    const segDist = getDistance([lng, lat], [nextLng, nextLat]);
-    if (segDist <= 0.5) {
-      idx = nextIdx;
-      lng = nextLng;
-      lat = nextLat;
+    const segmentDistance = getDistance(currOriginal, nextOriginal);
+    if (segmentDistance <= 0.5) {
+      currentIdx = nextIdx;
       continue;
     }
 
-    // 获取前后点信息用于曲线计算
-    const prevIdx = idx > 0 ? idx - 1 : locations.length - 1;
-    const nextNextIdx = (nextIdx + 1) % locations.length;
-    
-    const [prevLng, prevLat] = locations[prevIdx].split(",").map(Number);
-    const [nextNextLng, nextNextLat] = locations[nextNextIdx].split(",").map(Number);
+    const prevIdx = currentIdx > 0 ? currentIdx - 1 : sanitized.length - 1;
+    const nextNextIdx = (nextIdx + 1) % sanitized.length;
+    const prevPoint = sanitized[prevIdx];
+    const nextNext = sanitized[nextNextIdx];
 
-    // 计算转弯角度
-    const turnAngle = calculateTurnAngle([prevLng, prevLat], [lng, lat], [nextLng, nextLat]);
+    const turnAngle = calculateTurnAngle(prevPoint, currOriginal, nextOriginal);
+  const isStraight = Math.abs(turnAngle) <= straightAngleThreshold;
 
-    // 计算控制点
-    const [cp1, cp2] = calculateControlPoints(
-      [prevLng, prevLat],
-      [lng, lat],
-      [nextLng, nextLat],
-      [nextNextLng, nextNextLat]
-    );
+    // 决定步数：曲线段适当增加点数以保证平滑
+    let steps = Math.max(1, Math.round(segmentDistance / baseSpacing));
+  if (!isStraight) steps = Math.min(maxPointsPerSegment, Math.round(steps * 2));
+    else steps = Math.min(maxPointsPerSegment, steps);
 
-    // 自适应计算插值点数
-    const n = calculateInterpolationPoints(segDist, turnAngle);
+    let segmentCompleted = false;
+    const dx = nextOriginal[0] - currOriginal[0];
+    const dy = nextOriginal[1] - currOriginal[1];
+    const perp = [-dy, dx];
+    const perpLen = Math.sqrt(perp[0] * perp[0] + perp[1] * perp[1]) || 1;
+    const perpUnit = [perp[0] / perpLen, perp[1] / perpLen];
 
-    let lastOut = [lng, lat];
-    
-    for (let i = 1; i <= n; i++) {
-      const t = i / n;
-      
-      // 使用贝塞尔曲线插值
-      const [ix, iy] = cubicBezier(
-        [lng, lat],
-        cp1,
-        cp2,
-        [nextLng, nextLat],
-        t
-      );
+    const maxLateral = DEFAULT_JITTER * 2; // 默认 2x jitter
+    const lateralMag = (Math.random() - 0.5) * 2 * maxLateral;
 
-      // 添加自然偏移（比原来更小的偏移量）
-      const lateralFactor = Math.min(0.008, segDist * 0.0001);
-      const lateralMax = Math.min(4, Math.max(0.3, segDist * lateralFactor));
-      const lateral = (Math.random() - 0.5) * 2 * lateralMax * Math.sin(Math.PI * t);
+    for (let step = 1; step <= steps; step++) {
+      const t = step / steps;
+      let point;
 
-      // 计算垂直方向向量
-      const dx = nextLng - lng;
-      const dy = nextLat - lat;
-      const perp = [-dy, dx];
-      const perpLen = Math.sqrt(perp[0] * perp[0] + perp[1] * perp[1]) || 1;
-      const perpUnit = [perp[0] / perpLen, perp[1] / perpLen];
+      if (isStraight) {
+        let lngInterp = currOriginal[0] + dx * t;
+        let latInterp = currOriginal[1] + dy * t;
 
-      // 应用偏移
-      const lateralDeg = metersToLngLat(
-        perpUnit[0] * lateral,
-        perpUnit[1] * lateral,
-        iy
-      );
-      
-      const outLng = ix + lateralDeg[0];
-      const outLat = iy + lateralDeg[1];
+        const lateralFactor = Math.sin(Math.PI * t); // 在中间最大
+        lngInterp += perpUnit[0] * lateralMag * lateralFactor;
+        latInterp += perpUnit[1] * lateralMag * lateralFactor;
 
-      // 计算时间和速度
-      const segMeters = getDistance(lastOut, [outLng, outLat]);
+        lngInterp += smallJitter() * 0.2;
+        latInterp += smallJitter() * 0.2;
+
+        lngInterp = clamp(lngInterp, Math.min(currOriginal[0], nextOriginal[0]) - 0.00001, Math.max(currOriginal[0], nextOriginal[0]) + 0.00001);
+        latInterp = clamp(latInterp, Math.min(currOriginal[1], nextOriginal[1]) - 0.00001, Math.max(currOriginal[1], nextOriginal[1]) + 0.00001);
+
+        point = [lngInterp, latInterp];
+      } else {
+        const segMeters = segmentDistance;
+        const degPerMeter = 1 / 111320; // 约 8.983e-6 度/米
+        const padDeg = Math.min(0.00002, Math.max(0.000003, segMeters * degPerMeter * 0.25));
+
+        const prevV = [currOriginal[0] - prevPoint[0], currOriginal[1] - prevPoint[1]];
+        const nextV = [nextOriginal[0] - currOriginal[0], nextOriginal[1] - currOriginal[1]];
+
+        // 初步控制点（基于邻向量）
+        let cp1 = [
+          currOriginal[0] + prevV[0] * curveSmoothness + nextV[0] * (curveSmoothness / 2),
+          currOriginal[1] + prevV[1] * curveSmoothness + nextV[1] * (curveSmoothness / 2)
+        ];
+        let cp2 = [
+          nextOriginal[0] - (nextNext[0] - nextOriginal[0]) * curveSmoothness - nextV[0] * (curveSmoothness / 2),
+          nextOriginal[1] - (nextNext[1] - nextOriginal[1]) * curveSmoothness - nextV[1] * (curveSmoothness / 2)
+        ];
+
+        // 限制控制点偏移，确保控制点不会距对应端点超过 padDeg
+        cp1[0] = clamp(cp1[0], currOriginal[0] - padDeg, currOriginal[0] + padDeg);
+        cp1[1] = clamp(cp1[1], currOriginal[1] - padDeg, currOriginal[1] + padDeg);
+        cp2[0] = clamp(cp2[0], nextOriginal[0] - padDeg, nextOriginal[0] + padDeg);
+        cp2[1] = clamp(cp2[1], nextOriginal[1] - padDeg, nextOriginal[1] + padDeg);
+
+        // lateralMag 限制到 padDeg 的量级，避免过度偏移
+        const lateralLimited = Math.max(-padDeg, Math.min(padDeg, lateralMag));
+
+        // 把 lateral 应用到控制点（相同 lateralLimited，方向为 perpUnit）
+        cp1[0] += perpUnit[0] * lateralLimited * 0.6;
+        cp1[1] += perpUnit[1] * lateralLimited * 0.6;
+        cp2[0] += perpUnit[0] * lateralLimited * 0.6;
+        cp2[1] += perpUnit[1] * lateralLimited * 0.6;
+
+        const bez = cubicBezier(currOriginal, cp1, cp2, nextOriginal, t);
+
+        // 少量抖动以避免过于规则，但幅度很小
+        const lngVal = bez[0] + smallJitter() * 0.08;
+        const latVal = bez[1] + smallJitter() * 0.08;
+
+        const lngClamped = clamp(lngVal, Math.min(currOriginal[0], nextOriginal[0]) - padDeg, Math.max(currOriginal[0], nextOriginal[0]) + padDeg);
+        const latClamped = clamp(latVal, Math.min(currOriginal[1], nextOriginal[1]) - padDeg, Math.max(currOriginal[1], nextOriginal[1]) + padDeg);
+        point = [lngClamped, latClamped];
+      }
+
+      const segMeters = getDistance(lastOut, point);
       const targetSpeed = Math.random() * (2.6 - 1.7) + 1.7;
       const speed = prevSpeed * 0.85 + targetSpeed * 0.15;
       prevSpeed = speed;
@@ -348,21 +335,23 @@ export function genTrackPoints(distance, mapChoice = "default") {
       const timeInc = (segMeters / Math.max(0.5, speed)) * 1000;
       startTime += Math.round(timeInc);
 
-      // 生成精度（转弯时精度稍低）
       const accuracy = (Math.random() * (turnAngle > 20 ? 5 : 3) + 0.5).toFixed(1);
 
-      result.push(`${outLng}-${outLat}-${startTime}-${accuracy}`);
+      result.push(`${point[0]}-${point[1]}-${startTime}-${accuracy}`);
       generatedDistance += segMeters;
-      lastOut = [outLng, outLat];
+      lastOut = point;
 
-      if (generatedDistance >= distance) break;
+      if (result.length >= maxTotalPoints || generatedDistance >= distance) {
+        segmentCompleted = true;
+        break;
+      }
     }
 
-    idx = nextIdx;
-    lng = nextLng;
-    lat = nextLat;
+    currentIdx = nextIdx;
 
-    if (result.length > 20000) break;
+    if (segmentCompleted || result.length >= maxTotalPoints) {
+      break;
+    }
   }
 
   return JSON.stringify(result);
