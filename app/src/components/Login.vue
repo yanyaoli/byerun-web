@@ -69,8 +69,8 @@ const handleLogin = async () => {
     const baseParams = getLoginParams();
     const params = {
       ...baseParams,
-      // password: CryptoJS.MD5(form.value.password).toString(),
-      password: form.value.password,
+      password: CryptoJS.MD5(form.value.password).toString(),
+      // password: form.value.password,
       userPhone: form.value.userPhone,
     };
 
