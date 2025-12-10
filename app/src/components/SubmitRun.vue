@@ -211,6 +211,7 @@ import {
 import api from "../utils/api";
 import { loadMapFiles } from "../utils/map";
 import { genTrackPoints } from "../utils/track";
+import { getDeviceInfo } from "../utils/device";
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
@@ -436,43 +437,43 @@ const handleSubmit = async () => {
   }
 
   submitting.value = true;
+  
+  // 生成轨迹点（新格式：只有经纬度）
   const trackPoints = genTrackPoints(
     form.value.distance,
-    form.value.route,
-    form.value.duration
+    form.value.route
   );
 
-  const now = new Date(form.value.date);
-  const pad = (n) => n.toString().padStart(2, "0");
-  const recordDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(
-    now.getDate()
-  )} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  // 获取设备信息
+  const deviceInfo = getDeviceInfo();
 
+  // 获取学期信息
   let yearSemester;
   if (props.runStandard && props.runStandard.semesterYear) {
     yearSemester = props.runStandard.semesterYear;
   } else {
+    const now = new Date();
     const year = now.getFullYear();
     const semester = now.getMonth() + 1 < 8 ? "1" : "2";
     yearSemester = `${year}${semester}`;
   }
 
+  // 构造请求体（按官方示例格式）
   const payload = {
-    againRunStatus: "0",
-    againRunTime: 0,
-    appVersions: "1.8.3",
-    brand: "iPhone",
-    mobileType: "iPhone 15 Pro Max",
-    sysVersions: "17.0",
-    trackPoints,
-    distanceTimeStatus: "1",
-    innerSchool: "1",
-    runDistance: Math.round(form.value.distance),
-    runTime: Math.round(form.value.duration),
-    userId: Number(userId),
     vocalStatus: "1",
+    mobileType: deviceInfo.mobileType,
+    runDistance: Math.round(form.value.distance),
+    brand: deviceInfo.brand,
+    sysVersions: deviceInfo.sysVersions,
+    trackPoints,
+    userId: Number(userId),
+    innerSchool: "0",
+    distanceTimeStatus: "1",
+    againRunTime: "0",
+    runTime: Math.round(form.value.duration),
+    againRunStatus: "0",
     yearSemester,
-    recordDate,
+    appVersions: "1.8.2",
   };
 
   try {
@@ -574,13 +575,12 @@ watch(
 );
 
 watch(
-  () => [form.value.route, form.value.distance, form.value.duration],
+  () => [form.value.route, form.value.distance],
   () => {
     try {
       generatedTrack.value = genTrackPoints(
         Number(form.value.distance),
-        form.value.route,
-        Number(form.value.duration)
+        form.value.route
       );
     } catch (e) {
       generatedTrack.value = null;
@@ -592,6 +592,13 @@ watch(
 // Lifecycle
 onMounted(async () => {
   await loadMaps();
+
+  // 打印用户设备信息
+  const deviceInfo = getDeviceInfo();
+  console.log("用户设备信息:", deviceInfo);
+  console.log("- 品牌:", deviceInfo.brand);
+  console.log("- 设备型号:", deviceInfo.mobileType);
+  console.log("- 系统版本:", deviceInfo.sysVersions);
 
   try {
     const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);

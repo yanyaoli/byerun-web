@@ -14,7 +14,7 @@ const arePointsEqual = (p1, p2, epsilon = 1e-9) =>
  * @param distance 目标跑步距离（单位：米）
  * @param mapChoice 地图名称（默认 "default"）
  * @param durationMinutes 跑步总时长（分钟，可选，缺省时按 7-9 分钟/公里估算）
- * @returns 轨迹点JSON字符串（格式：["经度-纬度-时间戳-定位精度", ...]）
+ * @returns 轨迹点JSON字符串（格式：["经度-纬度", ...]）
  */
 export function genTrackPoints(distance, mapChoice = "default", durationMinutes) {
   const targetDistance = Number(distance);
@@ -100,7 +100,7 @@ export function genTrackPoints(distance, mapChoice = "default", durationMinutes)
   let generatedDistance = 0;
   let currentSpeed = baseSpeed;
 
-  const result = [`${lastPoint[0]}-${lastPoint[1]}-${currentTime}-${(Math.random() * 2 + 3).toFixed(1)}`];
+  const result = [`${lastPoint[0]}-${lastPoint[1]}`];
 
   while (generatedDistance < targetDistance && result.length < maxTotalPoints) {
     const remainingDistance = targetDistance - generatedDistance;
@@ -139,10 +139,8 @@ export function genTrackPoints(distance, mapChoice = "default", durationMinutes)
 
     const stepTime = (traveled / Math.max(0.5, currentSpeed)) * 1000;
     elapsedMs += stepTime;
-    currentTime += Math.round(stepTime);
 
-    const accuracy = (Math.random() * 2.5 + 2.5).toFixed(1);
-    result.push(`${point[0]}-${point[1]}-${currentTime}-${accuracy}`);
+    result.push(`${point[0]}-${point[1]}`);
     lastPoint = point;
   }
 

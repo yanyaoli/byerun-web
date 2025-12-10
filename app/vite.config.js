@@ -18,13 +18,5 @@ export default defineConfig({
     allowedHosts: 'all',
     hostCheck: false,
     cors: true,
-    hmr: {
-      enabled: true,
-      host: '0.0.0.0',
-      port: 5173,
-      clientPort: 5173,
-      path: '/ws',
-      protocol: 'ws'
-    }
   }
 })
