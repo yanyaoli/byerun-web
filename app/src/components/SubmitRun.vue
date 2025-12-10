@@ -209,7 +209,8 @@ import {
   defineAsyncComponent,
 } from "vue";
 import api from "../utils/api";
-import { loadMapFiles, genTrackPoints } from "../utils/map";
+import { loadMapFiles } from "../utils/map";
+import { genTrackPoints } from "../utils/track";
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
@@ -435,7 +436,11 @@ const handleSubmit = async () => {
   }
 
   submitting.value = true;
-  const trackPoints = genTrackPoints(form.value.distance, form.value.route);
+  const trackPoints = genTrackPoints(
+    form.value.distance,
+    form.value.route,
+    form.value.duration
+  );
 
   const now = new Date(form.value.date);
   const pad = (n) => n.toString().padStart(2, "0");
@@ -569,12 +574,13 @@ watch(
 );
 
 watch(
-  () => [form.value.route, form.value.distance],
+  () => [form.value.route, form.value.distance, form.value.duration],
   () => {
     try {
       generatedTrack.value = genTrackPoints(
         Number(form.value.distance),
-        form.value.route
+        form.value.route,
+        Number(form.value.duration)
       );
     } catch (e) {
       generatedTrack.value = null;
