@@ -1,43 +1,30 @@
 <template>
-  <div class="login-container">
-    <div class="login-content">
-      <div class="app-logo">
-        <div class="logo-icon">
-          <img src="../assets/logo.png" alt="App Logo" />
+  <div class="min-h-screen flex flex-col justify-center items-center bg-[#f7f8fa] relative">
+    <div class="form-card">
+      <div class="form-header">
+        <div class="h-[24px] w-[24px] ">
+          <img src="../assets/logo.png" alt="App Logo" class="w-full h-full object-contain brightness-0 opacity-90" />
         </div>
+        <a href="#" @click.prevent="$emit('showReset')" class="reset-link text-black">忘记密码？</a>
       </div>
-
-      <div class="form-card">
-        <form @submit.prevent="handleLogin">
-          <div class="form-group">
-            <label>手机号</label>
-            <input
-              v-model="form.userPhone"
-              placeholder="请输入手机号"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label>密码</label>
-            <input
-              v-model="form.password"
-              type="password"
-              placeholder="请输入密码"
-              required
-            />
-          </div>
-          <button type="submit" :disabled="loading" class="login-button">
+      <hr class="form-divider" />
+      <form @submit.prevent="handleLogin">
+        <div class="form-group">
+          <label>手机号</label>
+          <input v-model="form.userPhone" placeholder="请输入手机号" required />
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input v-model="form.password" type="password" placeholder="请输入密码" required />
+        </div>
+        <div>
+          <button type="submit" :disabled="loading"
+            class="bg-white/90 text-md text-black hover:bg-white/100 w-full min-h-12 border border-neutral-300 rounded-lg px-4 py-8 font-medium transition-all duration-200 flex items-center justify-center">
             <span v-if="!loading">登录</span>
             <div v-else class="loading-spinner"></div>
           </button>
-        </form>
-      </div>
-
-      <div class="form-footer">
-        <a href="#" @click.prevent="$emit('showReset')" class="reset-link"
-          >忘记密码？</a
-        >
-      </div>
+        </div>
+      </form>
     </div>
   </div>
 </template>
@@ -93,15 +80,6 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* 登录页面 - 与App风格统一 */
-.login-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f7f8fa;
-  position: relative;
-}
-
 .login-content {
   flex: 1;
   display: flex;
@@ -109,29 +87,6 @@ const handleLogin = async () => {
   align-items: center;
   padding: 16px;
   padding-top: 32px;
-}
-
-.app-logo {
-  margin: 32px 0;
-  text-align: center;
-}
-
-.logo-icon {
-  width: 80px;
-  height: 80px;
-  background: none;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  margin: 0 auto;
-}
-
-.logo-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .form-card {
@@ -143,6 +98,20 @@ const handleLogin = async () => {
   border: 1px solid #e3e6e8;
   box-shadow: none;
 }
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.form-divider {
+  border: none;
+  border-top: 1px solid #e3e6e8;
+  margin: 0 0 15px 0;
+}
+
 
 .form-group {
   margin-bottom: 16px;
@@ -180,32 +149,6 @@ input::placeholder {
   color: #aaa;
 }
 
-button {
-  width: 100%;
-  padding: 13px 16px;
-  background: #007aff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  margin-top: 16px;
-}
-
-button:hover {
-  background: #0056d3;
-}
-
-button:active {
-  transform: translateY(1px);
-}
-
-button:disabled {
-  background: #71b5ff;
-  cursor: not-allowed;
-}
 
 .loading-spinner {
   width: 20px;
@@ -217,58 +160,4 @@ button:disabled {
   margin: 0 auto;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.form-footer {
-  text-align: center;
-  margin-top: 5px;
-}
-
-.reset-link {
-  color: #007aff;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 8px 12px;
-  transition: all 0.2s ease;
-}
-
-.reset-link:hover {
-  text-decoration: underline;
-}
-
-/* 响应式适配 */
-@media (max-width: 375px) {
-  .login-content {
-    padding: 12px;
-  }
-
-  .app-logo {
-    margin: 24px 0;
-  }
-
-  .logo-icon {
-    width: 70px;
-    height: 70px;
-  }
-
-  .form-card {
-    padding: 16px;
-  }
-}
-
-/* 安全区域适配 */
-@supports (padding: max(0px)) {
-  .login-container {
-    padding-top: max(0px, env(safe-area-inset-top));
-    padding-bottom: max(0px, env(safe-area-inset-bottom));
-  }
-}
 </style>

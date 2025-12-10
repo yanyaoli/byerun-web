@@ -92,7 +92,7 @@ onUnmounted(() => {
   padding: 0 12px;
   gap: 8px;
   transition: inherit;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
 }
 
 /* Logo 样式 - 左侧 */

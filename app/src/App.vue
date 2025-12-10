@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="bg-white font-sans text-zinc-950 antialiased selection:bg-zinc-900 selection:text-white">
     <div v-if="!isLogin">
       <LoginPage />
     </div>
@@ -18,7 +18,6 @@ import Message from "./components/Message.vue";
 
 const isLogin = ref(!!localStorage.getItem("token"));
 const messageRef = ref(null);
-const pageTitle = ref("提交记录");
 
 // 全局消息方法
 const showMessage = (message, type = "info") => {

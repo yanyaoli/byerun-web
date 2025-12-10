@@ -1,70 +1,66 @@
 <template>
-  <div class="reset-password">
-    <div class="reset-content">
-      <div class="app-logo">
-        <div class="logo-icon">
-          <img
-            class="logo-image"
-            key=""
-            src="../assets/logo.png"
-            alt="App Logo"
-          />
+  <div class="min-h-screen flex flex-col justify-center items-center bg-[#f7f8fa] relative">
+    <div class="form-card">
+      <div class="form-header">
+        <div class="h-[24px] w-[24px] ">
+          <img src="../assets/logo.png" alt="App Logo" class="w-full h-full object-contain brightness-0 opacity-90" />
         </div>
       </div>
-      <div class="form-card">
-        <form @submit.prevent="handleReset">
-          <div class="form-group">
-            <label>手机号</label>
-            <div class="input-with-button">
-              <input
-                v-model="phone"
-                type="text"
-                placeholder="请输入手机号"
-                required
-              />
-              <button
-                type="button"
-                class="send-code-btn"
-                @click="sendCode"
-                :disabled="sending"
-              >
-                <div v-if="sending" class="loading-spinner"></div>
-                <span v-else>发送验证码</span>
-              </button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>验证码</label>
+      <hr class="form-divider" />
+            <form @submit.prevent="handleReset">
+        <div class="form-group">
+          <label>手机号</label>
+          <div class="input-with-button">
             <input
-              v-model="code"
+              v-model="phone"
               type="text"
-              placeholder="请输入短信验证码"
+              placeholder="请输入手机号"
               required
             />
+            <button
+              type="button"
+              class="send-code-btn"
+              @click="sendCode"
+              :disabled="sending"
+            >
+              <div v-if="sending" class="loading-spinner"></div>
+              <span v-else>发送验证码</span>
+            </button>
           </div>
-          <div class="form-group">
-            <label>新密码</label>
-            <input
-              v-model="password"
-              type="password"
-              placeholder="请设置新密码"
-              required
-            />
-          </div>
-          <button type="submit" :disabled="submitting" class="submit-btn">
-            <div v-if="submitting" class="loading-spinner"></div>
-            <span v-else>重置密码</span>
+        </div>
+        <div class="form-group">
+          <label>验证码</label>
+          <input
+            v-model="code"
+            type="text"
+            placeholder="请输入短信验证码"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label>新密码</label>
+          <input
+            v-model="password"
+            type="password"
+            placeholder="请设置新密码"
+            required
+          />
+        </div>
+        <div>
+          <button type="submit" :disabled="submitting" class="bg-white/90 text-md text-black hover:bg-white/100 w-full min-h-12 border border-neutral-300 rounded-lg px-4 py-8 font-medium transition-all duration-200 flex items-center justify-center">
+            <span v-if="!submitting">重置密码</span>
+            <div v-else class="loading-spinner"></div>
           </button>
-        </form>
-      </div>
-
+        </div>
+      </form>
       <div class="form-footer">
         <a href="#" @click.prevent="$emit('backToLogin')" class="back-link"
           >返回登录</a
         >
       </div>
     </div>
-  </div>
+
+    </div>
 </template>
 
 <script setup>
@@ -138,16 +134,7 @@ const handleReset = async () => {
 </script>
 
 <style scoped>
-/* 重置密码界面 - 与登录页风格统一 */
-.reset-password {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f7f8fa;
-  position: relative;
-}
-
-.reset-content {
+.login-content {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -156,30 +143,8 @@ const handleReset = async () => {
   padding-top: 32px;
 }
 
-.app-logo {
-  margin: 32px 0;
-  text-align: center;
-}
-
-.logo-icon {
-  width: 80px;
-  height: 80px;
-  background: none;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  margin: 0 auto;
-}
-
-.logo-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
 .form-card {
+  min-width: 340px;
   background: #fff;
   border-radius: 10px;
   padding: 20px;
@@ -187,6 +152,21 @@ const handleReset = async () => {
   border: 1px solid #e3e6e8;
   box-shadow: none;
 }
+
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.form-divider {
+  border: none;
+  border-top: 1px solid #e3e6e8;
+  margin: 0 0 15px 0;
+}
+
 
 .form-group {
   margin-bottom: 16px;
@@ -230,9 +210,9 @@ input:focus {
 
 .send-code-btn {
   padding: 0 12px;
-  background: #007aff;
-  color: #fff;
-  border: none;
+  background: #fff;
+  color: #333;
+  border: 1px solid #e5e5ea;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
