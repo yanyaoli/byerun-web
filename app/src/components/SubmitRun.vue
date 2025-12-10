@@ -111,45 +111,6 @@
           </div>
         </div>
 
-        <!-- 跑步时长输入 -->
-        <div class="form-group">
-          <label>跑步时长</label>
-          <div class="input-wrapper">
-            <input
-              v-model.number="form.duration"
-              type="number"
-              step="1"
-              placeholder="输入时长"
-              required
-              style="box-shadow: none; outline: none"
-            />
-            <span class="unit">分钟</span>
-          </div>
-        </div>
-
-        <!-- 配速计算 -->
-        <div class="form-group">
-          <div class="pace-display">
-            <div class="pace-card" :class="{ error: !paceLimit }">
-              <div class="pace-label">当前配速：</div>
-              <div class="pace-value">
-                {{
-                  form.distance && form.distance > 0
-                    ? formatPace(form.duration, form.distance)
-                    : "0:00"
-                }}
-                <span class="pace-unit">分钟/公里</span>
-              </div>
-              <transition name="fade">
-                <div v-if="!paceLimit" class="pace-error">
-                  <i class="fa-solid fa-circle-exclamation"></i>
-                  {{ getPaceLimitErrorText() }}
-                </div>
-              </transition>
-            </div>
-          </div>
-        </div>
-
         <!-- AutoRun配置区域 -->
         <div class="action-buttons">
           <button
@@ -176,8 +137,7 @@
             :disabled="submitting || !paceLimit"
             :class="{ submitting: submitting }"
           >
-            <i class="fa-solid fa-check"></i>
-            <span class="btn-icon" v-if="!submitting"> </span>
+            <i v-if="!submitting" class="fa-solid fa-check"></i>
             <span class="loader" v-else></span>
             {{ submitting ? "提交中..." : "提交记录" }}
           </button>
@@ -188,7 +148,7 @@
     <!-- 路线预览部分 -->
     <div class="route-preview-section">
       <h3 class="section-title">路线预览</h3>
-      <MapPreview :track="generatedTrack" />
+      <MapPreview :track="generatedTrack" :ready="mapReady" />
     </div>
 
     <AutoConfig
@@ -234,14 +194,13 @@ const emit = defineEmits(["submitted"]);
 // 常量定义
 const LOCAL_STORAGE_ROUTE_KEY = "submitRunRoute";
 const LOCAL_STORAGE_DISTANCE_KEY = "submitRunDistance";
-const LOCAL_STORAGE_DURATION_KEY = "submitRunDuration";
 
 // Refs
 const mapsLoaded = ref(false);
 const routeOptions = ref({});
 const form = ref({
-  distance: 2000,
-  duration: 20,
+  distance: null,
+  duration: 0,
   route: "",
   date: new Date().toISOString().split("T")[0],
 });
@@ -250,6 +209,7 @@ const showAutoModal = ref(false);
 const showRouteOptions = ref(false);
 const animateProgress = ref(false);
 const generatedTrack = ref(null);
+const mapReady = ref(false);
 
 // Computed Properties - 统计数据
 const completedActivities = computed(() => {
@@ -352,6 +312,14 @@ function formatPace(duration, distance) {
   return `${min}:${sec}`;
 }
 
+function computeDurationFromDistance(distanceMeters) {
+  const dist = Number(distanceMeters);
+  if (!Number.isFinite(dist) || dist <= 0) return 0;
+  const paceMinPerKm = 6 + Math.random() * 4; // 6-10 min/km
+  const minutes = (dist / 1000) * paceMinPerKm;
+  return Math.max(1, Math.round(minutes));
+}
+
 function getPaceLimitErrorText() {
   if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
     return "";
@@ -392,6 +360,10 @@ function selectRoute(route) {
   try {
     localStorage.setItem(LOCAL_STORAGE_ROUTE_KEY, route);
   } catch (e) {}
+}
+
+function syncDurationToDistance() {
+  form.value.duration = computeDurationFromDistance(form.value.distance);
 }
 
 // 主要业务函数
@@ -446,6 +418,7 @@ const handleSubmit = async () => {
 
   // 获取设备信息
   const deviceInfo = getDeviceInfo();
+  const recordDate = form.value.date;
 
   // 获取学期信息
   let yearSemester;
@@ -458,22 +431,22 @@ const handleSubmit = async () => {
     yearSemester = `${year}${semester}`;
   }
 
-  // 构造请求体（按官方示例格式）
   const payload = {
-    vocalStatus: "1",
-    mobileType: deviceInfo.mobileType,
-    runDistance: Math.round(form.value.distance),
-    brand: deviceInfo.brand,
-    sysVersions: deviceInfo.sysVersions,
-    trackPoints,
-    userId: Number(userId),
-    innerSchool: "0",
-    distanceTimeStatus: "1",
-    againRunTime: "0",
-    runTime: Math.round(form.value.duration),
     againRunStatus: "0",
+    againRunTime: 0,
+    appVersions: "1.8.3",
+    brand: deviceInfo.brand || "iPhone",
+    mobileType: deviceInfo.mobileType || "iPhone 16",
+    sysVersions: deviceInfo.sysVersions || "18.5",
+    trackPoints,
+    distanceTimeStatus: "1",
+    innerSchool: "1",
+    runDistance: Math.round(form.value.distance),
+    runTime: Math.round(form.value.duration),
+    userId: Number(userId),
+    vocalStatus: "1",
     yearSemester,
-    appVersions: "1.8.2",
+    recordDate,
   };
 
   try {
@@ -497,53 +470,12 @@ const handleSubmit = async () => {
 };
 
 const onRandomFill = () => {
-  const minDistance = 1000,
-    maxDistance = 7500,
-    minTime = 6,
-    maxTime = 75;
-  const minPace = 6,
-    maxPace = 10;
-  let randomDistance = 0,
-    randomDuration = 0,
-    pace = 0;
-  let tryCount = 0;
-
-  while (true) {
-    randomDistance =
-      Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
-    const minDuration = Math.max(
-      minTime,
-      Math.ceil((randomDistance / 1000) * minPace)
-    );
-    const maxDuration = Math.min(
-      maxTime,
-      Math.floor((randomDistance / 1000) * maxPace)
-    );
-
-    if (minDuration > maxDuration) {
-      tryCount++;
-      if (tryCount > 100) break;
-      continue;
-    }
-
-    randomDuration =
-      Math.floor(Math.random() * (maxDuration - minDuration + 1)) + minDuration;
-    pace = randomDuration / (randomDistance / 1000);
-
-    if (
-      randomDistance > 0 &&
-      randomDuration > 0 &&
-      pace >= minPace &&
-      pace <= maxPace
-    ) {
-      break;
-    }
-    tryCount++;
-    if (tryCount > 100) break;
-  }
-
+  const minDistance = 1000;
+  const maxDistance = 7500;
+  const randomDistance =
+    Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
   form.value.distance = randomDistance;
-  form.value.duration = randomDuration;
+  syncDurationToDistance();
   triggerProgressAnimation();
 };
 
@@ -554,15 +486,7 @@ watch(
     try {
       localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
     } catch (e) {}
-  }
-);
-
-watch(
-  () => form.value.duration,
-  (val) => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_DURATION_KEY, String(val));
-    } catch (e) {}
+    syncDurationToDistance();
   }
 );
 
@@ -578,12 +502,17 @@ watch(
   () => [form.value.route, form.value.distance],
   () => {
     try {
-      generatedTrack.value = genTrackPoints(
-        Number(form.value.distance),
-        form.value.route
-      );
+      const distanceNum = Number(form.value.distance);
+      if (Number.isFinite(distanceNum) && distanceNum > 0) {
+        generatedTrack.value = genTrackPoints(distanceNum, form.value.route);
+        mapReady.value = true;
+      } else {
+        generatedTrack.value = null;
+        mapReady.value = false;
+      }
     } catch (e) {
       generatedTrack.value = null;
+      mapReady.value = false;
     }
   },
   { immediate: true }
@@ -611,15 +540,8 @@ onMounted(async () => {
       form.value.route = Object.keys(routeOptions.value)[0];
     }
 
-    const savedDistance = localStorage.getItem(LOCAL_STORAGE_DISTANCE_KEY);
-    if (savedDistance && !isNaN(Number(savedDistance))) {
-      form.value.distance = Number(savedDistance);
-    }
-
-    const savedDuration = localStorage.getItem(LOCAL_STORAGE_DURATION_KEY);
-    if (savedDuration && !isNaN(Number(savedDuration))) {
-      form.value.duration = Number(savedDuration);
-    }
+    // 每次进入页面都生成随机距离
+    onRandomFill();
   } catch (e) {}
 
   setTimeout(() => {
@@ -829,62 +751,6 @@ onMounted(async () => {
 }
 
 /* 配速卡片 */
-.pace-display {
-  margin-bottom: 0;
-}
-.pace-card {
-  background: #f6f7f9;
-  border-radius: 8px;
-  border: 1px solid #e3e6e8;
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-.pace-card.error {
-  border-color: #f8500e;
-  background: #fff8f6;
-}
-.pace-label {
-  font-size: 14px;
-  color: #7b8a8b;
-  margin-right: 6px;
-}
-.pace-value {
-  font-size: 16px;
-  font-weight: 600;
-  color: #2d3a3f;
-}
-.pace-unit {
-  font-size: 14px;
-  color: #7b8a8b;
-  margin-left: 2px;
-}
-/* 配速错误提示样式优化，移动端适配 */
-.pace-error {
-  color: #f8500e;
-  font-size: 14px;
-  position: absolute;
-  right: 16px;
-  left: 16px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: pre-line;
-  word-break: break-all;
-  background: #fff8f6;
-  padding: 2px 6px;
-  border-radius: 4px;
-  z-index: 2;
-}
-@media (max-width: 500px) {
-  .pace-error {
-    font-size: 13px;
-    left: 8px;
-    right: 8px;
-    padding: 2px 2px;
-  }
-}
 
 /* 按钮区域 */
 .action-buttons {

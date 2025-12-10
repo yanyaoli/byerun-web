@@ -3,6 +3,8 @@
  * 提供随机生成手机设备信息的功能
  */
 
+const DEVICE_STORAGE_KEY = "deviceInfo";
+
 // 预设手机设备列表
 const DEVICE_POOL = [
   // iPhone 设备
@@ -30,6 +32,33 @@ const DEVICE_POOL = [
   { brand: "samsung", mobileType: "SM-S9180", sysVersions: "14.0" },           // 三星 Galaxy S24 Ultra
 ];
 
+function loadStoredDevice() {
+  try {
+    const raw = localStorage.getItem(DEVICE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (
+      parsed &&
+      typeof parsed.brand === "string" &&
+      typeof parsed.mobileType === "string" &&
+      typeof parsed.sysVersions === "string"
+    ) {
+      return parsed;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return null;
+}
+
+function persistDevice(device) {
+  try {
+    localStorage.setItem(DEVICE_STORAGE_KEY, JSON.stringify(device));
+  } catch (e) {
+    // ignore
+  }
+}
+
 /**
  * 从设备池中随机选择一个设备
  * @returns {Object} 包含 brand, mobileType, sysVersions 的对象
@@ -44,8 +73,12 @@ function getRandomDevice() {
  * @returns {Object} 包含 brand, mobileType, sysVersions 的对象
  */
 export function getDeviceInfo() {
+  const cached = loadStoredDevice();
+  if (cached) return cached;
+
   const device = getRandomDevice();
-  console.log('从设备池随机选择:', device);
+  persistDevice(device);
+  console.log("从设备池随机选择:", device);
   return device;
 }
 

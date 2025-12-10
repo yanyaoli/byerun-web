@@ -38,7 +38,8 @@
           </div>
         </div>
         <button class="logout-button logout-plain" @click="handleLogout">
-          登出
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out" aria-hidden="true"><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path></svg>
+        登出
         </button>
       </div>
     </div>
@@ -201,12 +202,14 @@ onMounted(() => {
 }
 
 .profile-card {
-  background: #fff;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 30px;
   padding: 15px 20px;
   margin-bottom: 15px;
-  border: 1px solid #e3e6e8;
-  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .profile-header {
@@ -271,20 +274,26 @@ onMounted(() => {
 
 /* plain风格 */
 .logout-plain {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgb(254 242 242);
+  color: rgb(220 38 38);
+  padding: 0.75rem 2rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), text-decoration-color 150ms cubic-bezier(0.4, 0, 0.2, 1), fill 150ms cubic-bezier(0.4, 0, 0.2, 1), stroke 150ms cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
-  color: #e57373;
-  border: 1px solid #e57373;
-  border-radius: 20px;
-  padding: 6px 16px;
-  margin-left: 24px;
+  cursor: pointer;
+  outline: none;
   align-self: center;
   box-shadow: none;
 }
 .logout-plain:hover,
 .logout-plain:focus {
-  background: #ffeaea;
-  color: #c62828;
+  background-color: rgb(254 226 226);
+  color: rgb(185 28 28);
+  transform: none;
 }
 
 /* profile-header左右布局 */
@@ -308,28 +317,32 @@ onMounted(() => {
 }
 
 .info-list {
-  background: #fff;
-  border-radius: 0 0 10px 10px;
+  border-radius: 0 0 30px 30px;
   overflow: hidden;
-  border: 1px solid #e3e6e8;
+  border: none;
   border-top: none;
   box-shadow: none;
+  background: transparent;
 }
 
 .info-table-card {
   display: flex;
   flex-direction: column;
-  border-radius: 10px;
+  border-radius: 30px;
   overflow: hidden;
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .info-table-header {
-  background: #f6f7fa;
+  background: rgba(255, 255, 255, 0.05);
   padding: 14px 16px 10px 16px;
-  border: 1px solid #e3e6e8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-bottom: none;
-  border-radius: 10px 10px 0 0;
+  border-radius: 30px 30px 0 0;
 }
 
 .info-item {
@@ -484,13 +497,15 @@ onMounted(() => {
   border-radius: 50%;
   color: #4f6d7a;
   transition: all 0.3s ease;
-  background: #f6f7f9;
-  border: 1px solid #e3e6e8;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .social-link:hover {
   color: #3b9eff;
-  transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   background: #fff;
 }
@@ -525,7 +540,12 @@ onMounted(() => {
 
 .artalk-container {
   padding: 20px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .atk-avatar img {

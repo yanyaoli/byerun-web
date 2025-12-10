@@ -9,6 +9,7 @@
         <div class="tab-icon">
           <i class="fa-solid fa-square-poll-vertical"></i>
         </div>
+        <div class="tab-label">记录</div>
       </button>
 
       <button
@@ -19,6 +20,7 @@
         <div class="tab-icon">
           <i class="fa-solid fa-square-plus"></i>
         </div>
+        <div class="tab-label">新增</div>
       </button>
 
       <button
@@ -29,6 +31,7 @@
         <div class="tab-icon">
           <i class="fa-solid fa-user"></i>
         </div>
+        <div class="tab-label">我的</div>
       </button>
     </div>
   </nav>
@@ -49,7 +52,7 @@ defineProps({
   width: 100%;
   padding: 0 16px;
   max-width: 420px;
-  height: 50px;
+  height: 60px;
   z-index: 1000;
 }
 
@@ -59,17 +62,17 @@ defineProps({
   justify-content: space-around;
   height: 100%;
   padding: 0 20px;
-  background: #fff;
-  backdrop-filter: blur(12px) saturate(200%);
-  -webkit-backdrop-filter: blur(30px) saturate(200%);
-  border: 1px solid #e3e6e8;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 30px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .tab-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: none;
@@ -99,6 +102,17 @@ defineProps({
 
 .tab-icon i {
   font-size: 20px;
+}
+
+.tab-label {
+  font-size: 10px;
+  color: rgba(60, 60, 67, 0.7);
+  margin-top: 2px;
+  text-align: center;
+}
+
+.tab-item.active .tab-label {
+  color: #000;
 }
 
 /* 移动端适配 */

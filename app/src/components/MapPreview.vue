@@ -12,8 +12,12 @@ import { config } from '../utils/config';
 const props = defineProps({
   track: {
     type: [String, null],
-    default: null
-  }
+    default: null,
+  },
+  ready: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Read AMap key from Vite env, fall back to empty string
@@ -77,7 +81,7 @@ async function ensureMap() {
 }
 
 function drawTrack(trackStr) {
-  if (!map) return;
+  if (!map || !props.ready) return;
   const coords = parseTrack(trackStr);
   // clear previous
   if (polyline) {
@@ -129,20 +133,23 @@ onMounted(async () => {
   if (!apiKey) return;
   try {
     await ensureMap();
-    drawTrack(props.track);
+    if (props.ready) drawTrack(props.track);
   } catch (e) {
     // console.warn('Map load error', e);
   }
 });
 
-watch(() => props.track, (v) => {
-  if (!apiKey) return;
-  if (!map) {
-    ensureMap().then(() => drawTrack(v));
-  } else {
-    drawTrack(v);
+watch(
+  () => [props.track, props.ready],
+  ([v, ready]) => {
+    if (!apiKey || !ready) return;
+    if (!map) {
+      ensureMap().then(() => drawTrack(v));
+    } else {
+      drawTrack(v);
+    }
   }
-});
+);
 
 onBeforeUnmount(() => {
   if (map) {

@@ -84,12 +84,15 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   height: 100%;
-  background: #fff;
-  border: 1px solid #e3e6e8;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 30px;
   padding: 0 12px;
   gap: 8px;
   transition: inherit;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Logo 样式 - 左侧 */

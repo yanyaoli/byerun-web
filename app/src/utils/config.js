@@ -1,3 +1,5 @@
+import { getDeviceInfo } from "./device";
+
 export const config = {
   key: {
     amapKey: import.meta.env.VITE_AMAP_KEY,
@@ -43,12 +45,13 @@ export const API_URLS = {
  * 获取登录参数的基础配置
  */
 export function getLoginParams() {
+  const device = getDeviceInfo();
   return {
     appVersion: config.device.appVersion,
-    brand: config.device.brand,
+    brand: device.brand || config.device.brand,
     deviceToken: config.device.deviceToken,
     deviceType: config.device.deviceType,
-    mobileType: config.device.mobileType,
-    sysVersion: config.device.sysVersion,
+    mobileType: device.mobileType || config.device.mobileType,
+    sysVersion: device.sysVersions || config.device.sysVersion,
   };
 }
