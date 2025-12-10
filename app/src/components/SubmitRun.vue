@@ -167,6 +167,7 @@ import {
   onMounted,
   inject,
   defineAsyncComponent,
+  nextTick,
 } from "vue";
 import api from "../utils/api";
 import { loadMapFiles } from "../utils/map";
@@ -275,12 +276,19 @@ const semesterYearText = computed(() => {
 });
 
 const paceLimit = computed(() => {
-  if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
+  const distance = Number(form.value.distance);
+  const duration = Number(form.value.duration);
+  
+  // 如果距离或时长无效，允许提交（验证会在提交时进行）
+  if (!distance || distance <= 0 || !duration || duration <= 0) {
     return true;
-  const pace = form.value.duration / (form.value.distance / 1000);
+  }
+  
+  const pace = duration / (distance / 1000);
   const minPace = 6;
   const maxPace = 10;
-  if (isNaN(pace)) return true;
+  
+  if (isNaN(pace) || !isFinite(pace)) return true;
   if (pace < minPace) return false;
   if (pace > maxPace) return false;
   return true;
@@ -362,8 +370,11 @@ function selectRoute(route) {
   } catch (e) {}
 }
 
-function syncDurationToDistance() {
-  form.value.duration = computeDurationFromDistance(form.value.distance);
+async function syncDurationToDistance() {
+  const newDuration = computeDurationFromDistance(form.value.distance);
+  form.value.duration = newDuration;
+  // 使用 nextTick 确保响应式更新完成
+  await nextTick();
 }
 
 // 主要业务函数
@@ -482,12 +493,21 @@ const onRandomFill = () => {
 // Watchers
 watch(
   () => form.value.distance,
-  (val) => {
+  async (val) => {
     try {
       localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
     } catch (e) {}
-    syncDurationToDistance();
+    await syncDurationToDistance();
   }
+);
+
+// 监听 form 对象的深层变化，确保所有字段更新都能触发重新计算
+watch(
+  () => form.value,
+  () => {
+    // 触发响应式更新
+  },
+  { deep: true }
 );
 
 watch(
