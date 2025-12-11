@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white font-sans text-zinc-950 antialiased selection:bg-zinc-900 selection:text-white">
+  <div class="app flex flex-col">
     <div v-if="!isLogin">
       <LoginPage />
     </div>
@@ -28,20 +28,34 @@ const showMessage = (message, type = "info") => {
 provide('showMessage', showMessage);
 </script>
 
-<style>
-/* 全局重置 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+<style scoped>
+.app {
+  min-height: 100vh;
+  background-color: rgb(255, 250, 250);
+  color: #333;
+    position: relative;
+  overflow: hidden;
 }
 
-body {
-  min-height: 100vh;
-  background: #f6f7f9;
-  font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
-  color: #2d3a3f;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+/* 柔和格子背景 */
+.app::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(180, 170, 150, 0.08) 25%, rgba(180, 170, 150, 0.08) 26%, transparent 27%, transparent 74%, rgba(180, 170, 150, 0.08) 75%, rgba(180, 170, 150, 0.08) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, rgba(180, 170, 150, 0.08) 25%, rgba(180, 170, 150, 0.08) 26%, transparent 27%, transparent 74%, rgba(180, 170, 150, 0.08) 75%, rgba(180, 170, 150, 0.08) 76%, transparent 77%, transparent);
+  background-size: 80px 80px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 内容区域 */
+.app>div {
+  position: relative;
+  z-index: 2;
 }
 </style>

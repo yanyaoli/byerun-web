@@ -6,7 +6,7 @@
 
       <!-- 主要内容区域 -->
       <main class="page-main">
-        <div class="main-scroll-area">
+        <div class="main-scroll-area" ref="mainScrollRef">
           <!-- 使用过渡效果实现页面切换 -->
           <transition name="fade-slide" mode="out-in">
             <div :key="activeTab">
@@ -42,14 +42,17 @@
       <!-- 底部导航栏 -->
       <BottomTabBar :active="activeTab" @switch="switchTab" />
     </div>
+    <!-- 全局消息提示 -->
+    <Message ref="messageRef" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, provide, nextTick } from "vue";
 import SubmitRun from "../components/SubmitRun.vue";
 import RunRecords from "../components/RunRecords.vue";
 import Profile from "../components/Profile.vue";
+import Message from "../components/Message.vue";
 import AppHeader from "../components/layout/AppHeader.vue";
 import BottomTabBar from "../components/layout/BottomTabBar.vue";
 import api from "../utils/api";
@@ -60,6 +63,23 @@ const runInfo = ref(null);
 const runStandard = ref(null);
 const activityInfo = ref(null);
 const profileLoading = ref(true);
+const messageRef = ref(null);
+const mainScrollRef = ref(null);
+
+// 存储各个页面的滚动位置
+const scrollPositions = ref({
+  records: 0,
+  submit: 0,
+  profile: 0,
+});
+
+// 全局消息方法
+const showMessage = (message, type = "info") => {
+  messageRef.value?.show(message, type);
+};
+
+// 提供给子组件使用
+provide('showMessage', showMessage);
 
 const fetchUserData = async () => {
   profileLoading.value = true;
@@ -134,8 +154,20 @@ const logout = () => {
 };
 
 const switchTab = (tab) => {
+  // 保存当前页面的滚动位置
+  if (mainScrollRef.value) {
+    scrollPositions.value[activeTab.value] = mainScrollRef.value.scrollTop;
+  }
+  
   activeTab.value = tab;
   localStorage.setItem("activeTab", tab);
+  
+  // 切换后恢复新页面的滚动位置
+  nextTick(() => {
+    if (mainScrollRef.value) {
+      mainScrollRef.value.scrollTop = scrollPositions.value[tab] || 0;
+    }
+  });
 };
 
 // 页面标题的计算属性
@@ -158,7 +190,8 @@ const pageTitle = computed(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f6f7f9;
+  background: transparent;
+  overflow: hidden;
 }
 
 .app-layout {
@@ -169,28 +202,28 @@ const pageTitle = computed(() => {
   max-width: 420px;
   margin: 0 auto;
   position: relative;
-  background: #f6f7f9;
-  border-right: 1px solid #e3e6e8;
-  border-left: 1px solid #e3e6e8;
+  background: transparent;
   --app-header-height: 48px;
   --app-bottom-height: 72px;
+  overflow: hidden;
 }
 
 .page-main {
   flex: 1;
   position: relative;
-  background: #f6f7f9;
+  background: transparent;
   width: 100%;
   max-width: 100%;
   padding-top: var(--app-header-height);
   padding-bottom: var(--app-bottom-height);
   min-height: 100vh;
+  overflow: hidden;
 }
 
 .main-scroll-area {
   height: 100%;
   min-height: calc(100vh - var(--app-header-height) - var(--app-bottom-height));
-  overflow-y: auto;
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
   width: 100%;
   box-sizing: border-box;

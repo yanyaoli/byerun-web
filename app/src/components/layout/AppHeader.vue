@@ -1,12 +1,11 @@
 <template>
   <header
     class="page-header"
-    :class="{ 'header-hidden': !isVisible, 'header-visible': isVisible }"
   >
     <div class="header-container">
       <!-- Logo -->
-      <div class="logo-wrapper">
-        <img src="/logo.png" alt="App Logo" class="logo-image" />
+      <div class="logo">
+        <img src="/logo.png" alt="App Logo"/>
       </div>
 
       <!-- 标题 -->
@@ -76,7 +75,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 420px;
   height: 36px;
-  z-index: 1000;
+  z-index: 998;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -92,29 +91,24 @@ onUnmounted(() => {
   padding: 0 12px;
   gap: 8px;
   transition: inherit;
-  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 /* Logo 样式 - 左侧 */
-.logo-wrapper {
+.logo {
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  order: 1; /* 确保在左侧 */
 }
 
-.logo-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: brightness(0) saturate(100%) contrast(100%);
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
+.logo img {
+    display: inline-block;
+  height: 24px;
+  width: auto;
+  margin-right: 8px;
+  filter: saturate(1.18) contrast(1.06) brightness(1.02);
+  transition: transform 0.28s ease, filter 0.28s ease;
 }
-
 .header-container:hover .logo-image {
   opacity: 1;
 }

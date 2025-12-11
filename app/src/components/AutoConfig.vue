@@ -58,9 +58,6 @@
                   >
                     {{ getMapDisplayName(mapId) }}
                   </option>
-                  <option value="" disabled v-if="availableMaps.length === 0">
-                    无可用地图
-                  </option>
                 </select>
               </div>
             </div>
@@ -161,11 +158,13 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2147483647;
+  z-index: 999;
   padding: 16px;
   box-sizing: border-box;
 }
@@ -174,9 +173,11 @@
   position: relative;
   width: 100%;
   max-width: 320px;
-  background: #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.6);
+  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   animation: modal-appear 0.2s ease-out;
 }
 
@@ -196,21 +197,23 @@
   position: absolute;
   top: 12px;
   right: 12px;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: none;
-  background: none;
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 1;
-  font-size: 14px;
-  color: #666;
+  font-size: 16px;
+  color: #000;
+  transition: all 0.2s;
 }
 
 .close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
   color: #000;
 }
 
@@ -234,22 +237,25 @@
 .skeleton-title {
   height: 20px;
   width: 120px;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
 }
 
 .skeleton-badge {
   height: 16px;
   width: 40px;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 8px;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
 }
 
 .skeleton-subtitle {
   height: 14px;
   width: 180px;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
 }
 
 .skeleton-list {
@@ -260,8 +266,9 @@
 
 .skeleton-item {
   height: 20px;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
 }
 
 .skeleton-buttons {
@@ -274,11 +281,22 @@
   height: 40px;
   border-radius: 8px;
   flex: 1;
-  background: #f0f0f0;
+  background: rgba(255, 255, 255, 0.15);
+  animation: skeleton-loading 1.5s ease-in-out infinite;
 }
 
 .skeleton-button.primary {
-  background: #e0e0e0;
+  background: rgba(255, 255, 255, 0.2);
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+  0%, 100% {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 /* 实际内容 */
@@ -296,18 +314,19 @@
 
 .content-title {
   font-size: 18px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: #000;
   margin: 0;
 }
 
 .badge.beta {
-  background: #030303;
+  background: #000;
   color: #fff;
-  padding: 2px 8px;
+  padding: 3px 10px;
   border-radius: 10px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .content-subtitle {
@@ -336,14 +355,15 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #333;
+  color: #000;
+  font-weight: 500;
   flex-shrink: 0;
 }
 
 .icon {
   width: 14px;
   text-align: center;
-  color: #666;
+  color: #333;
   font-size: 12px;
 }
 
@@ -359,34 +379,49 @@
 .list-input,
 .list-time {
   padding: 6px 8px;
-  border: 1px solid #e0e0e0;
   border-radius: 6px;
   font-size: 13px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: #333;
   min-width: 0;
+  appearance: none;
   -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(51,51,51,0.6)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  padding-right: 28px;
+}
+
+.list-select {
+  cursor: pointer;
 }
 
 .list-select:focus,
 .list-input:focus,
 .list-time:focus {
   outline: none;
-  border-color: #007aff;
+  background-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgba(51,51,51,0.9)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .list-select:disabled,
 .list-input:disabled,
 .list-time:disabled {
-  background: #f8f8f8;
+  background: rgba(255, 255, 255, 0.08);
   color: #999;
   cursor: not-allowed;
 }
 
 .unit {
   font-size: 12px;
-  color: #666;
+  color: #333;
   white-space: nowrap;
+  font-weight: 500;
 }
 
 /* 开关 */
@@ -410,9 +445,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #e0e0e0;
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   transition: 0.2s;
   border-radius: 24px;
+  /* border: 1px solid rgba(255, 255, 255, 0.3); */
 }
 
 .switch-slider:before {
@@ -429,7 +467,10 @@
 }
 
 input:checked + .switch-slider {
-  background-color: #007aff;
+  background-color: rgba(3, 3, 3, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 input:checked + .switch-slider:before {
@@ -437,8 +478,9 @@ input:checked + .switch-slider:before {
 }
 
 input:disabled + .switch-slider {
-  background-color: #f0f0f0;
+  background-color: rgba(255, 255, 255, 0.08);
   cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 /* 操作按钮 */
@@ -447,10 +489,10 @@ input:disabled + .switch-slider {
 }
 
 .action-btn {
-  height: 20px;
+  height: 40px;
   width: 100%;
   border: none;
-  border-radius: 20px;
+  border-radius: 25px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -465,12 +507,15 @@ input:disabled + .switch-slider {
 }
 
 .action-btn.primary {
-  background: #030303;
+  background: #000;
   color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .action-btn.primary:not(:disabled):hover {
-  background: #0056d3;
+  background: #1a1a1a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* 移动端适配 */
@@ -609,7 +654,7 @@ async function loadMapMetadata() {
         };
         return { mapId, success: true };
       } catch (error) {
-        console.error(`加载地图元数据失败: ${mapId}`, error);
+        // console.error(`加载地图元数据失败: ${mapId}`, error);
         return { mapId, success: false, error };
       }
     });

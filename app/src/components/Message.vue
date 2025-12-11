@@ -1,7 +1,10 @@
 <template>
-  <transition name="message-fade">
-    <div v-if="visible" :class="['message', type]">
-      <div class="message-content">
+  <transition
+    enter-active-class="animate-in fade-in slide-in-from-top-2 duration-300"
+    leave-active-class="animate-out fade-out slide-out-to-top-2 duration-200"
+  >
+    <div v-if="visible" class="fixed left-1/2 -translate-x-1/2 top-4 z-[99999] pointer-events-auto">
+      <div :class="messageClasses[messageType]">
         {{ content }}
       </div>
     </div>
@@ -16,140 +19,91 @@ const props = defineProps({
     type: Number,
     default: 2000,
   },
-  type: {
-    type: String,
-    default: "info",
-  },
 });
 
 const visible = ref(false);
 const content = ref("");
+const messageType = ref("info");
 
-// 显示消息
-const show = (message) => {
+const messageClasses = {
+  success: "message-box message-success",
+  error: "message-box message-error",
+  warning: "message-box message-warning",
+  info: "message-box message-info",
+};
+
+const show = (message, type = "info") => {
   content.value = message;
+  messageType.value = type;
   visible.value = true;
   setTimeout(() => {
     visible.value = false;
   }, props.duration);
 };
 
-// 暴露方法给外部使用
 defineExpose({
   show,
 });
 </script>
 
 <style scoped>
-.message {
-  position: fixed;
-  left: 50%;
-  top: 12px;
-  transform: translateX(-50%);
-  width: auto;
-  min-width: 120px;
-  max-width: 200px;
-  height: 32px;
-  z-index: 10001; /* 确保在 header 之上 */
-  pointer-events: none;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.message-content {
-  display: flex;
+.message-box {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  padding: 0 16px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 25px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: -0.2px;
+  z-index: 1000;
 }
 
-/* 根据类型设置不同的文字颜色 */
-.message.success .message-content {
-  color: #10b981;
+.message-box::before {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-right: 0.25rem;
 }
 
-.message.error .message-content {
+.message-success {
+  color: #166534;
+}
+
+.message-success::before {
+  content: "✓";
+  color: #22c55e;
+}
+
+.message-error {
+  color: #991b1b;
+}
+
+.message-error::before {
+  content: "✕";
   color: #ef4444;
 }
 
-.message.warning .message-content {
-  color: #f59e0b;
+.message-warning {
+  color: #92400e;
 }
 
-.message.info .message-content {
+.message-warning::before {
+  content: "⚠";
+  color: #eab308;
+}
+
+.message-info {
+  color: #1e40af;
+}
+
+.message-info::before {
+  content: "ℹ";
   color: #3b82f6;
-}
-
-/* 移动端适配 */
-@media (max-width: 375px) {
-  .message {
-    top: 10px;
-    min-width: 100px;
-    max-width: 160px;
-  }
-
-  .message-content {
-    padding: 0 12px;
-    font-size: 14px;
-  }
-}
-
-/* 深色模式 */
-@media (prefers-color-scheme: dark) {
-  .message-content {
-    background: rgba(30, 30, 32, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  }
-}
-
-/* 安全区域适配 */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .message {
-    top: calc(12px + env(safe-area-inset-top));
-  }
-}
-
-/* 过渡动画 */
-.message-fade-enter-from {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-10px);
-}
-
-.message-fade-leave-to {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-20px);
-}
-
-.message-fade-enter-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.message-fade-leave-active {
-  transition: all 0.25s cubic-bezier(0.4, 0, 1, 1);
-}
-
-/* 减少动画偏好 */
-@media (prefers-reduced-motion: reduce) {
-  .message,
-  .message-fade-enter-active,
-  .message-fade-leave-active {
-    transition: opacity 0.3s ease;
-  }
 }
 </style>

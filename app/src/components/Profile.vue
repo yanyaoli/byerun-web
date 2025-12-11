@@ -38,87 +38,11 @@
           </div>
         </div>
         <button class="logout-button logout-plain" @click="handleLogout">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out" aria-hidden="true"><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out" aria-hidden="true"><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path></svg>
         登出
         </button>
       </div>
     </div>
-    <!-- 个人信息区块 -->
-    <!-- <div class="info-section">
-      <div class="info-table-card">
-        <div class="info-table-header">
-          <h3 class="section-title">个人信息</h3>
-        </div>
-        <div class="info-list info-table">
-          <template v-if="loading">
-            <div class="info-item" v-for="n in 3" :key="n">
-              <span class="info-label">{{ getPersonalInfoLabel(n) }}</span>
-              <span class="skeleton-value"></span>
-            </div>
-          </template>
-          <template v-else>
-            <div class="info-item">
-              <span class="info-label">性别</span>
-              <span class="info-value">{{
-                userInfo?.gender == "1"
-                  ? "男"
-                  : userInfo?.gender == "2"
-                  ? "女"
-                  : "-"
-              }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">生日</span>
-              <span class="info-value">{{ userInfo?.birthday || "-" }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">地址</span>
-              <span class="info-value">{{ userInfo?.addrDetail || "-" }}</span>
-            </div>
-          </template>
-        </div>
-      </div>
-    </div> -->
-    <!-- 学校信息区块 -->
-    <!-- <div class="info-section">
-      <div class="info-table-card">
-        <div class="info-table-header">
-          <h3 class="section-title">学校信息</h3>
-        </div>
-        <div class="info-list info-table">
-          <template v-if="loading">
-            <div class="info-item" v-for="n in 5" :key="n">
-              <span class="info-label">{{ getSchoolInfoLabel(n) }}</span>
-              <span class="skeleton-value"></span>
-            </div>
-          </template>
-          <template v-else>
-            <div class="info-item">
-              <span class="info-label">学校</span>
-              <span class="info-value">{{ userInfo?.schoolName || "-" }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">学院</span>
-              <span class="info-value">{{ userInfo?.collegeName || "-" }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">专业</span>
-              <span class="info-value">{{ userInfo?.majorName || "-" }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">班级</span>
-              <span class="info-value">{{ userInfo?.className || "-" }}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">入学年份</span>
-              <span class="info-value"
-                >{{ userInfo?.startSchool || "-" }}年</span
-              >
-            </div>
-          </template>
-        </div>
-      </div>
-    </div> -->
     <!-- 社交链接 -->
     <div class="social-links">
       <a
@@ -146,9 +70,6 @@
     <!-- 评论区 -->
     <div class="comments-section">
       <div class="info-table-card">
-        <div class="info-table-header">
-          <h3 class="section-title">评论区</h3>
-        </div>
         <div class="artalk-container" ref="artalkContainer"></div>
       </div>
     </div>
@@ -199,6 +120,8 @@ onMounted(() => {
 
 .profile-container {
   padding: 0px 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-card {
@@ -208,8 +131,8 @@ onMounted(() => {
   border-radius: 30px;
   padding: 15px 20px;
   margin-bottom: 15px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .profile-header {
@@ -251,22 +174,21 @@ onMounted(() => {
 }
 
 .profile-name {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #2d3a3f;
-  margin-bottom: 4px;
+  margin-bottom: 1px;
 }
 
 .profile-id {
-  font-size: 15px;
+  font-size: 14px;
   color: #7b8a8b;
 }
 
 /* 退出登录按钮 */
 
 .logout-button {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
   outline: none;
@@ -279,9 +201,9 @@ onMounted(() => {
   gap: 0.5rem;
   background-color: rgb(254 242 242);
   color: rgb(220 38 38);
-  padding: 0.75rem 2rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 9999px;
-  font-weight: 700;
+  font-weight: 600;
   transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), text-decoration-color 150ms cubic-bezier(0.4, 0, 0.2, 1), fill 150ms cubic-bezier(0.4, 0, 0.2, 1), stroke 150ms cubic-bezier(0.4, 0, 0.2, 1);
   border: none;
   cursor: pointer;
@@ -485,7 +407,14 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   gap: 24px;
-  padding: 10px 0 30px 0;
+  padding: 10px 0;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 30px;
 }
 
 .social-link {
@@ -501,7 +430,7 @@ onMounted(() => {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .social-link:hover {

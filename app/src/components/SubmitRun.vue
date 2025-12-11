@@ -542,13 +542,6 @@ watch(
 onMounted(async () => {
   await loadMaps();
 
-  // 打印用户设备信息
-  const deviceInfo = getDeviceInfo();
-  console.log("用户设备信息:", deviceInfo);
-  console.log("- 品牌:", deviceInfo.brand);
-  console.log("- 设备型号:", deviceInfo.mobileType);
-  console.log("- 系统版本:", deviceInfo.sysVersions);
-
   try {
     const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
     if (
@@ -575,10 +568,11 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f6f7f9;
   height: 100%;
   position: relative;
   padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .stats-table {
@@ -588,6 +582,8 @@ onMounted(async () => {
   margin-bottom: 20px;
   border: 1px solid #e3e6e8;
   box-shadow: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 /* 完成情况表头 */
 .stats-table-header {
@@ -615,6 +611,8 @@ onMounted(async () => {
   flex-direction: row;
   gap: 10px;
   padding: 10px 0px 0px 0px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .stats-card {
   flex: 1;
@@ -655,6 +653,13 @@ onMounted(async () => {
   margin-bottom: 14px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   border: 1px solid #e3e6e8;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+form {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .section-title {
@@ -723,6 +728,8 @@ onMounted(async () => {
   cursor: pointer;
   position: relative;
   user-select: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 .selected-route {
   display: flex;
@@ -782,7 +789,7 @@ onMounted(async () => {
 .autorun-setting-btn {
   background: #f0f2f5;
   border: none;
-  border-radius: 25px;
+  border-radius: 15px;
   padding: 14px;
   font-size: 16px;
   color: #4f6d7a;
@@ -790,18 +797,7 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 
-.submit-btn {
-  flex: 1;
-  padding: 8px 0;
-  border-radius: 25px;
-  font-size: 15px;
-  font-weight: 600;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  gap: 6px;
-}
+
 .random-btn {
   background: #f0f2f5;
   color: #4f6d7a;
@@ -816,13 +812,24 @@ onMounted(async () => {
   cursor: not-allowed;
 }
 .submit-btn {
-  background: #000;
-  color: white;
-  box-shadow: 0 2px 6px rgba(59, 158, 255, 0.2);
+  flex: 1;
+  padding: 2px 0;
+  border-radius: 25px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  gap: 6px;
+  background: #161616;
+  color: #fff;
+
 }
+.submit-btn:hover,
 .submit-btn:active {
-  background: #2b8ff0;
-  transform: translateY(1px);
+  background: #030303;
+  transform: none;
 }
 .submit-btn:disabled {
   background: #b0b0b0;

@@ -26,6 +26,7 @@ dist-ssr
 .env*
 !.env.example
 
-.history*
+.history/
 
-server/*
+server/
+__pycache__/

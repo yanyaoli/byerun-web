@@ -2,74 +2,26 @@
   <div class="records-container">
     <!-- 内容区包装器 -->
     <div class="records-content-wrapper">
-      <!-- 骨架屏加载状态 -->
-      <div v-if="loading" class="skeleton-list">
-        <div v-for="i in 5" :key="i" class="record-item skeleton-record">
-          <div class="record-list-title-bar">
-            <div class="record-list-title-left">
-              <div
-                class="skeleton-block"
-                style="width: 120px; height: 18px"
-              ></div>
-            </div>
-            <div class="record-list-title-right">
-              <div
-                class="skeleton-block"
-                style="width: 60px; height: 24px; border-radius: 12px"
-              ></div>
-            </div>
-          </div>
-          <div class="record-list-row">
-            <div
-              class="record-list-label skeleton-block"
-              style="width: 60px; height: 14px"
-            ></div>
-            <div
-              class="record-list-value skeleton-block"
-              style="width: 80px; height: 14px"
-            ></div>
-          </div>
-          <div class="record-list-row">
-            <div
-              class="record-list-label skeleton-block"
-              style="width: 60px; height: 14px"
-            ></div>
-            <div
-              class="record-list-value skeleton-block"
-              style="width: 80px; height: 14px"
-            ></div>
-          </div>
-          <div class="record-list-row">
-            <div
-              class="record-list-label skeleton-block"
-              style="width: 60px; height: 14px"
-            ></div>
-            <div
-              class="record-list-value skeleton-block"
-              style="width: 80px; height: 14px"
-            ></div>
-          </div>
-        </div>
-      </div>
-
       <!-- 记录列表（每条为一个卡片，列表形式，表头左右布局） -->
       <div
-        v-else-if="records.length > 0"
+        v-if="records.length > 0 || loading"
         class="records-content scrollable-list"
         ref="scrollableListRef"
       >
         <div class="records-list">
           <div
-            v-for="record in records"
-            :key="record.key"
+            v-for="(record, index) in loading ? Array(5).fill(null) : records"
+            :key="loading ? index : record.key"
             class="record-item record-list-card"
           >
             <div class="record-list-title record-list-title-bar">
               <div class="record-list-title-left">
-                {{ formatCreateTime(record.createTime) }}
+                <span v-if="!loading">{{ formatCreateTime(record.createTime) }}</span>
+                <div v-else class="skeleton-block" style="width: 140px; height: 20px"></div>
               </div>
               <div class="record-list-title-right">
                 <span
+                  v-if="!loading"
                   class="defeated-info"
                   :class="[
                     record.runStatus === '1'
@@ -78,22 +30,28 @@
                   ]"
                   >{{ record.defeatedInfo }}</span
                 >
+                <div v-else class="skeleton-block" style="width: 60px; height: 20px; border-radius: 12px"></div>
               </div>
             </div>
             <div class="record-list-row">
               <div class="record-list-label">跑步里程</div>
               <div class="record-list-value">
-                {{ (record.runDistance / 1000).toFixed(2) }}km
+                <span v-if="!loading">{{ (record.runDistance / 1000).toFixed(2) }}km</span>
+                <div v-else class="skeleton-block" style="width: 80px; height: 16px"></div>
               </div>
             </div>
             <div class="record-list-row">
               <div class="record-list-label">跑步时长</div>
-              <div class="record-list-value">{{ record.runTime }}分钟</div>
+              <div class="record-list-value">
+                <span v-if="!loading">{{ record.runTime }}分钟</span>
+                <div v-else class="skeleton-block" style="width: 80px; height: 16px"></div>
+              </div>
             </div>
             <div class="record-list-row">
               <div class="record-list-label">平均配速</div>
               <div class="record-list-value">
-                {{ formatPaceDetail(record.runTime, record.runDistance) }}
+                <span v-if="!loading">{{ formatPaceDetail(record.runTime, record.runDistance) }}</span>
+                <div v-else class="skeleton-block" style="width: 80px; height: 16px"></div>
               </div>
             </div>
           </div>
@@ -262,10 +220,11 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #f6f7f9;
   height: 100%;
   position: relative;
   padding: 0 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* 内容区包装器 */
@@ -288,30 +247,11 @@ onMounted(() => {
   gap: 12px;
 }
 
-/* 统一骨架与卡片的基础样式，减少重复 */
-.record-list-card,
-.skeleton-record {
-  padding: 0 0 8px 0;
-  margin-bottom: 16px;
-  background: #fff;
-  border-radius: 10px;
-  border: 1px solid #e3e6e8;
-  box-shadow: none;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.skeleton-list {
-  padding: 0 16px;
-}
-
-/* 统一的骨架块样式（仅此一份定义） */
+/* 骨架屏块样式 */
 .skeleton-block {
   display: inline-block;
   background: #e3e6e8;
   border-radius: 4px;
-  min-height: 14px;
   animation: pulse 1.5s infinite;
 }
 
@@ -336,8 +276,11 @@ onMounted(() => {
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid #e3e6e8;
-  margin-bottom: 0;
+  margin-bottom: 16px;
   transition: box-shadow 0.2s;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .record-main {

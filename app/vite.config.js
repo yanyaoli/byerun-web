@@ -22,5 +22,6 @@ export default defineConfig({
     allowedHosts: 'all',
     hostCheck: false,
     cors: true,
-  }
+  },
+  hot: true
 })
