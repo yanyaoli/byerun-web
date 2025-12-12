@@ -1,15 +1,21 @@
 <template>
-  <header
-    class="page-header"
-  >
-    <div class="header-container">
+  <header class="fixed left-1/2 top-3 -translate-x-1/2 px-4 w-full max-w-[420px] h-9 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
+    <div class="flex items-center justify-between h-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-[30px] px-3 gap-2 transition-inherit shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
       <!-- Logo -->
-      <div class="logo">
-        <img src="/logo.png" alt="App Logo"/>
+      <div class="flex flex-row items-center">
+        <img src="/logo.png" alt="App Logo" class="inline-block h-6 w-auto mr-2 filter-[saturate(1.18)_contrast(1.06)_brightness(1.02)] transition-[transform_0.28s_ease,filter_0.28s_ease]" />
       </div>
 
-      <!-- 标题 -->
-      <h1 class="page-title">{{ title }}</h1>
+      <!-- 社交链接 -->
+      <div class="flex gap-3">
+        <a v-for="link in socialLinks" :key="link.href" :href="link.href"
+          :target="link.href.startsWith('http') ? '_blank' : undefined"
+          :rel="link.href.startsWith('http') ? 'noopener noreferrer' : undefined"
+          class="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 transition-all duration-300 text-sm hover:text-blue-500 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:bg-white"
+          :title="link.title">
+          <i :class="link.icon"></i>
+        </a>
+      </div>
     </div>
   </header>
 </template>
@@ -20,6 +26,19 @@ import { ref, onMounted, onUnmounted } from "vue";
 const props = defineProps({
   title: { type: String, default: "" },
 });
+
+const socialLinks = [
+  {
+    href: "https://github.com/yanyaoli/byerun-web",
+    title: "GitHub 仓库",
+    icon: "fa-brands fa-github"
+  },
+  {
+    href: "https://redirect.where.nyc.mn/byerun-qqgroup",
+    title: "加入QQ群",
+    icon: "fa-brands fa-qq"
+  }
+];
 
 const isVisible = ref(true);
 const lastScrollY = ref(0);
@@ -66,114 +85,4 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.page-header {
-  position: fixed;
-  left: 50%;
-  top: 12px;
-  transform: translateX(-50%);
-  padding: 0 16px;
-  width: 100%;
-  max-width: 420px;
-  height: 36px;
-  z-index: 998;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.header-container {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 30px;
-  padding: 0 12px;
-  gap: 8px;
-  transition: inherit;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-/* Logo 样式 - 左侧 */
-.logo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-.logo img {
-    display: inline-block;
-  height: 24px;
-  width: auto;
-  margin-right: 8px;
-  filter: saturate(1.18) contrast(1.06) brightness(1.02);
-  transition: transform 0.28s ease, filter 0.28s ease;
-}
-.header-container:hover .logo-image {
-  opacity: 1;
-}
-
-/* 标题样式 - 右侧 */
-.page-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #2d3a3f;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: -0.2px;
-  line-height: 1;
-  transition: inherit;
-  flex: 1;
-  min-width: 0;
-  order: 2; /* 确保在右侧 */
-  text-align: right; /* 改为右对齐 */
-  margin-left: auto; /* 添加这个让标题靠右 */
-}
-
-/* 显示状态 */
-.header-visible {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-  pointer-events: auto;
-}
-
-/* 隐藏状态 */
-.header-hidden {
-  opacity: 0;
-  transform: translateX(-50%) translateY(-20px);
-  pointer-events: none;
-}
-
-/* 移动端适配 */
-@media (max-width: 375px) {
-  .page-header {
-    top: 10px;
-    min-width: 130px;
-    max-width: 200px;
-    height: 34px;
-  }
-
-  .header-container {
-    padding: 0 10px;
-    gap: 6px;
-  }
-
-  .logo-wrapper {
-    width: 18px;
-    height: 18px;
-  }
-
-  .page-title {
-    font-size: 14px;
-  }
-}
-
-/* 安全区域适配 */
-@supports (padding-top: env(safe-area-inset-top)) {
-  .page-header {
-    top: calc(12px + env(safe-area-inset-top));
-  }
-}
 </style>

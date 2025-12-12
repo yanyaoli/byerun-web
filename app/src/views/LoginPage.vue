@@ -1,5 +1,5 @@
 <template>
-    <div class="login-page">
+    <div class="flex items-center justify-center min-h-screen ">
         <Login v-if="!isLogin && !showResetPassword" @showReset="showResetPassword = true" />
         <ResetPassword v-else-if="!isLogin && showResetPassword" @backToLogin="showResetPassword = false" />
     </div>

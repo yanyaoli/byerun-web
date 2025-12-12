@@ -1,27 +1,31 @@
 <template>
-  <div class="min-h-screen flex flex-col justify-center items-center bg-[#f7f8fa] relative">
-    <div class="form-card">
-      <div class="form-header">
+  <div class="min-h-screen flex flex-col justify-center items-center relative">
+    <div class="min-w-[340px] p-6 border border-dashed border-gray-600 rounded-lg">
+      <div class="flex justify-between items-center mb-4 ">
         <div class="h-[24px] w-[24px] ">
-          <img src="../assets/logo.png" alt="App Logo" class="w-full h-full object-contain brightness-0 opacity-90" />
+          <img src="../assets/logo.png" alt="App Logo"
+            class="w-full h-full object-contain brightness-10 opacity-80 hover:brightness-10 hover:opacity-90" />
         </div>
-        <a href="#" @click.prevent="$emit('showReset')" class="reset-link text-black">忘记密码？</a>
+        <a href="#" @click.prevent="$emit('showReset')"
+          class="reset-link text-sm text-gray-600 hover:text-gray-900">忘记密码？</a>
       </div>
-      <hr class="form-divider" />
+      <div class="border border-dashed border-gray-600 mb-4"></div>
       <form @submit.prevent="handleLogin">
-        <div class="form-group">
-          <label>手机号</label>
-          <input v-model="form.userPhone" placeholder="请输入手机号" required />
+        <div class="mb-4">
+          <label class="block text-sm text-gray-600 mb-2">手机号</label>
+          <input v-model="form.userPhone" placeholder="请输入手机号" required
+            class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600" />
         </div>
-        <div class="form-group">
-          <label>密码</label>
-          <input v-model="form.password" type="password" placeholder="请输入密码" required />
+        <div class="mb-4">
+          <label class="block text-sm text-gray-600 mb-2">密码</label>
+          <input v-model="form.password" type="password" placeholder="请输入密码" required
+            class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600" />
         </div>
-        <div>
+        <div class="flex justify-end">
           <button type="submit" :disabled="loading"
-            class="bg-white/90 text-md text-black hover:bg-white/100 w-full min-h-12 border border-neutral-300 rounded-lg px-4 py-8 font-medium transition-all duration-200 flex items-center justify-center">
-            <span v-if="!loading">登录</span>
-            <div v-else class="loading-spinner"></div>
+            class="bg-black/80 hover:bg-black/90 text-md text-gray-200 rounded-lg py-2 px-4 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <span v-if="!loading" class="">登录</span>
+            <div v-else class="w-5 h-5 border-2 border-white/30 rounded-full border-t-white animate-spin mx-auto"></div>
           </button>
         </div>
       </form>
@@ -78,86 +82,3 @@ const handleLogin = async () => {
   }
 };
 </script>
-
-<style scoped>
-.login-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px;
-  padding-top: 32px;
-}
-
-.form-card {
-  min-width: 340px;
-  background: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #e3e6e8;
-  box-shadow: none;
-}
-
-.form-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.form-divider {
-  border: none;
-  border-top: 1px solid #e3e6e8;
-  margin: 0 0 15px 0;
-}
-
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 6px;
-  font-weight: 500;
-}
-
-input {
-  display: block;
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #e5e5ea;
-  border-radius: 8px;
-  font-size: 15px;
-  background: #fff;
-  color: #333;
-  transition: all 0.2s ease;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-input:focus {
-  outline: none;
-  border-color: #007aff;
-  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
-}
-
-input::placeholder {
-  color: #aaa;
-}
-
-
-.loading-spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #fff;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto;
-}
-
-</style>
