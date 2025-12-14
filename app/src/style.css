@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 
 @layer base {
+	* {
+		transform: none;
+	}
 	button,
 	input,
 	textarea,
@@ -8,7 +11,7 @@
 	a,
 	img,
 	[role='button'] {
-		transition: all 550ms ease-in-out;
+		transition: all 350ms ease-in-out;
 	}
 }
 

@@ -1,6 +1,3 @@
-// 静态导入地图文件
-import mapIndex from "../assets/maps/index.json";
-
 // 动态导入所有地图文件
 const mapModules = import.meta.glob("../assets/maps/*.json", { eager: true });
 
@@ -12,12 +9,8 @@ let mapDataCollection = {
 // 存储所有可用地图ID的数组
 let availableMapIds = [];
 
-/**
- * 获取maps文件夹下的所有JSON文件列表
- */
-function getMapFileList() {
-  return mapIndex; // 直接返回导入的索引
-}
+// 存储地图ID到名称的映射
+let mapNameCollection = {};
 
 /**
  * 动态加载地图文件
@@ -27,20 +20,17 @@ export async function loadMapFiles() {
     // 清空现有数据
     mapDataCollection = {};
     availableMapIds = [];
+    mapNameCollection = {};
 
-    // 从静态导入的地图模块加载数据
-    const fileList = getMapFileList();
-
-    fileList.forEach((fileName) => {
-      const modulePath = `../assets/maps/${fileName}`;
-      if (mapModules[modulePath]) {
-        const mapFileData = mapModules[modulePath].default;
-        mapDataCollection[mapFileData.mapId] = mapFileData.mapData;
-        availableMapIds.push(mapFileData.mapId);
-        console.log(
-          `成功加载地图: ${mapFileData.mapId} (${mapFileData.mapName})`
-        );
-      }
+    // 从动态导入的地图模块加载数据
+    Object.keys(mapModules).forEach((modulePath) => {
+      const mapFileData = mapModules[modulePath].default;
+      mapDataCollection[mapFileData.mapId] = mapFileData.mapData;
+      availableMapIds.push(mapFileData.mapId);
+      mapNameCollection[mapFileData.mapId] = mapFileData.mapName;
+      console.log(
+        `成功加载地图: ${mapFileData.mapId} (${mapFileData.mapName})`
+      );
     });
 
     // 设置默认地图
@@ -124,4 +114,12 @@ export function getDate() {
   now.setMinutes(now.getMinutes() - 30); // 将当前时间减去30分钟
   // 转换为ISO格式（如"2024-05-20T14:30:00.000Z"），替换"T"为空格，截取前19位（去掉毫秒和时区）
   return now.toISOString().replace("T", " ").substring(0, 19);
+}
+
+/**
+ * 获取地图ID到名称的映射
+ * @returns 地图ID到名称的对象
+ */
+export function getMapNames() {
+  return { ...mapNameCollection };
 }

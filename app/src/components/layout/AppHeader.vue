@@ -1,9 +1,12 @@
 <template>
-  <header class="fixed left-1/2 top-3 -translate-x-1/2 px-4 w-full max-w-[420px] h-9 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
-    <div class="flex items-center justify-between h-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-[30px] px-3 gap-2 transition-inherit shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
+  <header
+    class="fixed left-1/2 top-3 -translate-x-1/2 px-4 w-full max-w-[420px] h-9 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
+    <div
+      class="flex items-center justify-between h-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-[30px] px-3 gap-2 transition-inherit shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
       <!-- Logo -->
       <div class="flex flex-row items-center">
-        <img src="/logo.png" alt="App Logo" class="inline-block h-6 w-auto mr-2 filter-[saturate(1.18)_contrast(1.06)_brightness(1.02)] transition-[transform_0.28s_ease,filter_0.28s_ease]" />
+        <img src="/logo.png" alt="App Logo"
+          class="inline-block h-5 w-auto mr-2 brightness-20 opacity-70 hover:brightness-10 hover:opacity-90" />
       </div>
 
       <!-- 社交链接 -->
@@ -84,5 +87,4 @@ onUnmounted(() => {
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

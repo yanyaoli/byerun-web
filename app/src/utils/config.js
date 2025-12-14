@@ -12,6 +12,7 @@ export const config = {
     artalkServer: import.meta.env.VITE_ARTALK_SERVER,
     artalkSite: import.meta.env.VITE_ARTALK_SITE,
     autorunServerBase: import.meta.env.VITE_AUTORUN_SERVER_BASE,
+    autorunEnabled: import.meta.env.VITE_AUTORUN_ENABLED !== 'false',
   },
   device: {
     appVersion: "1.8.3",

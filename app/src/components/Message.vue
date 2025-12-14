@@ -26,10 +26,10 @@ const content = ref("");
 const messageType = ref("info");
 
 const messageClasses = {
-  success: "message-box message-success",
-  error: "message-box message-error",
-  warning: "message-box message-warning",
-  info: "message-box message-info",
+  success: "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium leading-relaxed backdrop-blur text-gray-50 bg-green-800 shadow-2xl whitespace-nowrap z-[99999]",
+  error: "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium leading-relaxed backdrop-blur text-gray-50 bg-red-800 shadow-2xl whitespace-nowrap z-[99999]",
+  warning: "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium leading-relaxed backdrop-blur text-gray-50 bg-yellow-800 shadow-2xl whitespace-nowrap z-[99999]",
+  info: "inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium leading-relaxed backdrop-blur text-gray-50 bg-blue-800 shadow-2xl whitespace-nowrap z-[99999]",
 };
 
 const show = (message, type = "info") => {
@@ -46,64 +46,4 @@ defineExpose({
 });
 </script>
 
-<style scoped>
-.message-box {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: 25px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  line-height: 1.4;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
-  z-index: 1000;
-}
 
-.message-box::before {
-  flex-shrink: 0;
-  font-weight: 600;
-  font-size: 1rem;
-  margin-right: 0.25rem;
-}
-
-.message-success {
-  color: #166534;
-}
-
-.message-success::before {
-  content: "✓";
-  color: #22c55e;
-}
-
-.message-error {
-  color: #991b1b;
-}
-
-.message-error::before {
-  content: "✕";
-  color: #ef4444;
-}
-
-.message-warning {
-  color: #92400e;
-}
-
-.message-warning::before {
-  content: "⚠";
-  color: #eab308;
-}
-
-.message-info {
-  color: #1e40af;
-}
-
-.message-info::before {
-  content: "ℹ";
-  color: #3b82f6;
-}
-</style>

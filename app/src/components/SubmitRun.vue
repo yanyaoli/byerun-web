@@ -44,50 +44,35 @@
     <!-- 数据输入表单 -->
     <form @submit.prevent="handleSubmit">
       <div class="form-section">
-        <h3 class="section-title">提交记录</h3>
-
+        <div class="stats-table-header">
+          <h3 class="stats-header-title">提交记录</h3>
+          <div class="stats-header-semester"> <button type="button" class="p-4 text-sm text-gray-600 cursor-pointer"
+              :class="{ active: showAutoModal }" @click="showAutoModal = !showAutoModal" :aria-pressed="showAutoModal"
+              title="定时任务配置">
+              <i class="fa-solid fa-alarm-clock"></i>
+            </button></div>
+        </div>
         <!-- 跑步路线选择 -->
         <!-- 修改路由选择部分 -->
         <div class="form-group">
           <label>选择地图</label>
-          <div
-            class="route-dropdown"
-            @click="
-              mapsLoaded && !submitting
-                ? (showRouteOptions = !showRouteOptions)
-                : null
-            "
-          >
-            <div
-              class="selected-route"
-              :class="{ disabled: !mapsLoaded || submitting }"
-            >
+          <div class="route-dropdown" @click="
+            mapsLoaded && !submitting
+              ? (showRouteOptions = !showRouteOptions)
+              : null
+            ">
+            <div class="selected-route" :class="{ disabled: !mapsLoaded || submitting }">
               <span v-if="!mapsLoaded">加载地图中...</span>
               <span v-else>{{ getRouteName(form.route) }}</span>
-              <div
-                class="dropdown-arrow"
-                :class="{ active: showRouteOptions && mapsLoaded }"
-                v-if="mapsLoaded"
-              ></div>
+              <div class="dropdown-arrow" :class="{ active: showRouteOptions && mapsLoaded }" v-if="mapsLoaded"></div>
             </div>
             <transition name="dropdown">
-              <div
-                v-show="showRouteOptions && mapsLoaded"
-                class="route-options"
-              >
-                <div
-                  v-for="(name, value) in routeOptions"
-                  :key="value"
-                  class="route-option"
-                  :class="{ selected: form.route === value }"
-                  @click.stop="selectRoute(value)"
-                >
+              <div v-show="showRouteOptions && mapsLoaded" class="route-options">
+                <div v-for="(name, value) in routeOptions" :key="value" class="route-option"
+                  :class="{ selected: form.route === value }" @click.stop="selectRoute(value)">
                   {{ name }}
                 </div>
-                <div
-                  v-if="Object.keys(routeOptions).length === 0"
-                  class="route-option disabled"
-                >
+                <div v-if="Object.keys(routeOptions).length === 0" class="route-option disabled">
                   无可用地图
                 </div>
               </div>
@@ -98,45 +83,21 @@
         <!-- 跑步里程输入 -->
         <div class="form-group">
           <label>跑步里程</label>
-          <div class="input-wrapper">
-            <input
-              v-model.number="form.distance"
-              type="number"
-              step="1"
-              placeholder="输入里程"
-              required
-              style="box-shadow: none; outline: none"
-            />
-            <span class="unit">米</span>
+          <div class="input-container">
+            <div class="input-wrapper">
+              <input v-model.number="form.distance" type="number" step="1" placeholder="输入里程" required
+                style="box-shadow: none; outline: none" />
+              <span class="unit">米</span>
+            </div>
+            <button type="button" class="p-2 bg-gray-100 text-sm text-gray-600 cursor-pointer active:bg-gray-800 diabled:cursor-not-allowed rounded-full" @click="onRandomFill" :disabled="submitting">
+              <i class="fa-solid fa-dice"></i>
+            </button>
           </div>
         </div>
 
-        <!-- AutoRun配置区域 -->
         <div class="action-buttons">
-          <button
-            type="button"
-            class="random-btn"
-            @click="onRandomFill"
-            :disabled="submitting"
-          >
-            <i class="fa-solid fa-dice"></i>
-          </button>
-          <button
-            type="button"
-            class="autorun-setting-btn"
-            :class="{ active: showAutoModal }"
-            @click="showAutoModal = !showAutoModal"
-            :aria-pressed="showAutoModal"
-            title="定时任务配置"
-          >
-            <i class="fa-solid fa-alarm-clock"></i>
-          </button>
-          <button
-            type="submit"
-            class="submit-btn"
-            :disabled="submitting || !paceLimit"
-            :class="{ submitting: submitting }"
-          >
+          <button type="submit" class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200" :disabled="submitting || !paceLimit || !isDistanceValid"
+            :class="{ submitting: submitting }">
             <i v-if="!submitting" class="fa-solid fa-check"></i>
             <span class="loader" v-else></span>
             {{ submitting ? "提交中..." : "提交记录" }}
@@ -151,11 +112,7 @@
       <MapPreview :track="generatedTrack" :ready="mapReady" />
     </div>
 
-    <AutoConfig
-      :visible="showAutoModal"
-      @update:visible="updateAutoVisible"
-      @saved="onAutoSaved"
-    />
+    <AutoConfig :visible="showAutoModal" @update:visible="updateAutoVisible" @saved="onAutoSaved" />
   </div>
 </template>
 
@@ -170,7 +127,7 @@ import {
   nextTick,
 } from "vue";
 import api from "../utils/api";
-import { loadMapFiles } from "../utils/map";
+import { loadMapFiles, getMapNames } from "../utils/map";
 import { genTrackPoints } from "../utils/track";
 import { getDeviceInfo } from "../utils/device";
 
@@ -199,6 +156,7 @@ const LOCAL_STORAGE_DISTANCE_KEY = "submitRunDistance";
 // Refs
 const mapsLoaded = ref(false);
 const routeOptions = ref({});
+const mapDisplayNames = ref({});
 const form = ref({
   distance: null,
   duration: 0,
@@ -278,32 +236,30 @@ const semesterYearText = computed(() => {
 const paceLimit = computed(() => {
   const distance = Number(form.value.distance);
   const duration = Number(form.value.duration);
-  
+
   // 如果距离或时长无效，允许提交（验证会在提交时进行）
   if (!distance || distance <= 0 || !duration || duration <= 0) {
     return true;
   }
-  
+
   const pace = duration / (distance / 1000);
   const minPace = 6;
   const maxPace = 10;
-  
+
   if (isNaN(pace) || !isFinite(pace)) return true;
   if (pace < minPace) return false;
   if (pace > maxPace) return false;
   return true;
 });
 
+const isDistanceValid = computed(() => {
+  const distance = Number(form.value.distance);
+  return distance >= 1000 && Number.isInteger(distance);
+});
+
 // 工具函数
 function getMapDisplayName(mapId) {
-  const displayNames = {
-    cuit_hkg: "成都信息工程大学（航空港校区）",
-    cuit_lqy: "成都信息工程大学（龙泉驿校区）",
-    cdutcm_wj: "成都中医药大学（温江校区）",
-    ncwsxx: "南充卫生学校",
-    sctbc: "四川工商职业技术学院",
-  };
-  return displayNames[mapId] || mapId;
+  return mapDisplayNames.value[mapId] || mapId;
 }
 
 function getRouteName(routeValue) {
@@ -367,7 +323,7 @@ function selectRoute(route) {
   showRouteOptions.value = false;
   try {
     localStorage.setItem(LOCAL_STORAGE_ROUTE_KEY, route);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 async function syncDurationToDistance() {
@@ -382,9 +338,12 @@ async function loadMaps() {
   try {
     const mapIds = await loadMapFiles();
 
+    const names = getMapNames();
+    mapDisplayNames.value = names;
+
     const options = {};
     for (const mapId of mapIds) {
-      options[mapId] = getMapDisplayName(mapId);
+      options[mapId] = names[mapId];
     }
 
     routeOptions.value = options;
@@ -406,8 +365,8 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (!Number.isInteger(form.value.distance) || form.value.distance <= 0) {
-    showMessage("跑步里程必须为正整数", "error");
+  if (!Number.isInteger(form.value.distance) || form.value.distance < 1000) {
+    showMessage("跑步里程必须为不小于1000米的正整数", "error");
     return;
   }
 
@@ -420,7 +379,7 @@ const handleSubmit = async () => {
   }
 
   submitting.value = true;
-  
+
   // 生成轨迹点（新格式：只有经纬度）
   const trackPoints = genTrackPoints(
     form.value.distance,
@@ -496,7 +455,7 @@ watch(
   async (val) => {
     try {
       localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
-    } catch (e) {}
+    } catch (e) { }
     await syncDurationToDistance();
   }
 );
@@ -555,7 +514,7 @@ onMounted(async () => {
 
     // 每次进入页面都生成随机距离
     onRandomFill();
-  } catch (e) {}
+  } catch (e) { }
 
   setTimeout(() => {
     animateProgress.value = true;
@@ -585,6 +544,7 @@ onMounted(async () => {
   width: 100%;
   box-sizing: border-box;
 }
+
 /* 完成情况表头 */
 .stats-table-header {
   display: flex;
@@ -593,12 +553,14 @@ onMounted(async () => {
   background: #fff;
   border-bottom: 1px solid #e3e6e8;
 }
+
 .stats-header-title {
   font-size: 15px;
   font-weight: 600;
   color: #2d3a3f;
   margin: 0 0 5px 0;
 }
+
 .stats-header-semester {
   font-size: 14px;
   color: #7b8a8b;
@@ -614,6 +576,7 @@ onMounted(async () => {
   width: 100%;
   box-sizing: border-box;
 }
+
 .stats-card {
   flex: 1;
   background: #f0f2f5;
@@ -623,12 +586,14 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
 }
+
 .stats-percentage {
   font-size: 20px;
   font-weight: 600;
   color: #323538;
   margin-bottom: 6px;
 }
+
 .stats-title {
   font-size: 14px;
   font-weight: 500;
@@ -639,6 +604,7 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
 .stats-ratio {
   font-size: 13px;
   color: #7b8a8b;
@@ -673,6 +639,16 @@ form {
 
 .form-group {
   margin-bottom: 16px;
+}
+
+.input-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.input-wrapper {
+  flex: 1;
 }
 
 .form-group label {
@@ -731,6 +707,7 @@ form {
   width: 100%;
   box-sizing: border-box;
 }
+
 .selected-route {
   display: flex;
   align-items: center;
@@ -738,6 +715,7 @@ form {
   font-size: 15px;
   color: #2d3a3f;
 }
+
 .dropdown-arrow {
   width: 0;
   height: 0;
@@ -747,9 +725,11 @@ form {
   margin-left: 8px;
   transition: transform 0.2s;
 }
+
 .dropdown-arrow.active {
   transform: rotate(180deg);
 }
+
 .route-options {
   position: absolute;
   left: 0;
@@ -764,6 +744,7 @@ form {
   max-height: 200px;
   overflow-y: auto;
 }
+
 .route-option {
   padding: 8px 16px;
   font-size: 13px;
@@ -771,6 +752,7 @@ form {
   cursor: pointer;
   transition: all 0.2s;
 }
+
 .route-option.selected,
 .route-option:hover {
   background: #f0f7ff;
@@ -785,32 +767,8 @@ form {
   gap: 12px;
   margin-top: 20px;
 }
-.random-btn,
-.autorun-setting-btn {
-  background: #f0f2f5;
-  border: none;
-  border-radius: 15px;
-  padding: 14px;
-  font-size: 16px;
-  color: #4f6d7a;
-  cursor: pointer;
-  transition: all 0.2s;
-}
 
 
-.random-btn {
-  background: #f0f2f5;
-  color: #4f6d7a;
-  gap: 6px;
-}
-.random-btn:active {
-  background: #e3e6e8;
-}
-.random-btn:disabled {
-  background: #f0f0f0;
-  color: #b0b0b0;
-  cursor: not-allowed;
-}
 .submit-btn {
   flex: 1;
   padding: 2px 0;
@@ -822,25 +780,23 @@ form {
   cursor: pointer;
   transition: all 0.2s;
   gap: 6px;
-  background: #161616;
-  color: #fff;
+  background: #f0f2f5;
+  padding: 10px;
 
 }
-.submit-btn:hover,
-.submit-btn:active {
-  background: #030303;
-  transform: none;
-}
+
 .submit-btn:disabled {
   background: #b0b0b0;
   box-shadow: none;
   color: #fff;
   cursor: not-allowed;
 }
+
 .submit-btn.submitting {
   background: #7b8a8b;
   color: #fff;
 }
+
 .loader {
   display: inline-block;
   width: 18px;
@@ -852,10 +808,12 @@ form {
   vertical-align: middle;
   margin-right: 6px;
 }
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -865,7 +823,8 @@ form {
   background: #f6f7f9;
   border: 1px dashed #e3e6e8;
   border-radius: 8px;
-  height: 140px; /* 减少高度，节省空间 */
+  height: 140px;
+  /* 减少高度，节省空间 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -889,11 +848,13 @@ form {
   box-shadow: none;
   transition: all 0.2s;
 }
+
 .message-box.error {
   background: #fff2e6;
   border-color: #ffcca5;
   color: #f8500e;
 }
+
 .message-text {
   font-size: 15px;
 }
@@ -902,31 +863,40 @@ form {
   .stats-header {
     padding: 14px 12px 6px 12px;
   }
+
   .stats-header-title {
     font-size: 15px;
   }
+
   .stats-header-semester {
     font-size: 13px;
   }
+
   .stats-section {
     padding: 16px 12px 6px 12px;
     gap: 8px;
   }
+
   .stats-card {
     padding: 12px 8px 10px;
   }
+
   .stats-title {
     font-size: 12px;
   }
+
   .stats-percentage {
     font-size: 18px;
   }
+
   .stats-ratio {
     font-size: 12px;
   }
+
   .route-dropdown {
     padding: 8px 8px;
   }
+
   .modal-container {
     width: 98vw;
     padding: 0 0 8px 0;
