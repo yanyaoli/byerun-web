@@ -10,15 +10,15 @@
           class="reset-link text-sm text-gray-600 hover:text-gray-900">忘记密码？</a>
       </div>
       <div class="border border-dashed border-gray-600 mb-4"></div>
-      <form @submit.prevent="handleLogin">
+      <form @submit.prevent="doLogin">
         <div class="mb-4">
           <label class="block text-sm text-gray-600 mb-2">手机号</label>
-          <input v-model="form.userPhone" placeholder="请输入手机号" required
+          <input v-model="phone" placeholder="请输入手机号" required
             class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600" />
         </div>
         <div class="mb-4">
           <label class="block text-sm text-gray-600 mb-2">密码</label>
-          <input v-model="form.password" type="password" placeholder="请输入密码" required
+          <input v-model="password" type="password" placeholder="请输入密码" required
             class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600" />
         </div>
         <div class="flex justify-end">
@@ -36,36 +36,27 @@
 
 <script setup>
 import { ref, inject } from "vue";
-import api from "../utils/api";
-import { getLoginParams } from "../utils/config";
-import CryptoJS from "crypto-js";
+import { api } from "@/composables/useApi";
 
 defineEmits(['showReset']);
 
 // 注入 App.vue 的全局消息方法
 const showMessage = inject('showMessage');
 
-const form = ref({
-  userPhone: "",
-  password: "",
-});
+const phone = ref("");
+const password = ref("");
+
 const loading = ref(false);
 
-const handleLogin = async () => {
+const doLogin = async () => {
   if (loading.value) return;
 
   loading.value = true;
   try {
-    // 使用自动检测的设备信息
-    const baseParams = getLoginParams();
-    const params = {
-      ...baseParams,
-      password: CryptoJS.MD5(form.value.password).toString(),
-      // password: form.value.password,
-      userPhone: form.value.userPhone,
-    };
-
-    const { data } = await api.post("/auth/login/password", params);
+    const { data } = await api.login(
+      phone.value,
+      password.value
+    );
     if (data.code === 10000) {
       localStorage.setItem("token", data.response.oauthToken.token);
       localStorage.setItem("userId", data.response.userId);
@@ -76,6 +67,7 @@ const handleLogin = async () => {
       showMessage(data.msg, "error");
     }
   } catch (e) {
+    console.error(e);
     showMessage("登录失败", "error");
   } finally {
     loading.value = false;

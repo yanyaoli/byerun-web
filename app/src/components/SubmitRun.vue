@@ -126,10 +126,11 @@ import {
   defineAsyncComponent,
   nextTick,
 } from "vue";
-import api from "../utils/api";
 import { loadMapFiles, getMapNames } from "../utils/map";
 import { genTrackPoints } from "../utils/track";
 import { getDeviceInfo } from "../utils/device";
+import { api } from "@/composables/useApi";
+
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
@@ -169,7 +170,6 @@ const showRouteOptions = ref(false);
 const animateProgress = ref(false);
 const generatedTrack = ref(null);
 const mapReady = ref(false);
-
 // Computed Properties - 统计数据
 const completedActivities = computed(() => {
   return props.activityInfo ? props.activityInfo.joinNum : 0;
@@ -266,37 +266,12 @@ function getRouteName(routeValue) {
   return routeOptions.value[routeValue] || "选择路线";
 }
 
-function formatPace(duration, distance) {
-  if (!distance) return "0:00";
-  const pace = duration / (distance / 1000);
-  const min = Math.floor(pace);
-  const sec = Math.round((pace - min) * 60)
-    .toString()
-    .padStart(2, "0");
-  return `${min}:${sec}`;
-}
-
 function computeDurationFromDistance(distanceMeters) {
   const dist = Number(distanceMeters);
   if (!Number.isFinite(dist) || dist <= 0) return 0;
   const paceMinPerKm = 6 + Math.random() * 4; // 6-10 min/km
   const minutes = (dist / 1000) * paceMinPerKm;
   return Math.max(1, Math.round(minutes));
-}
-
-function getPaceLimitErrorText() {
-  if (!form.value.distance || !form.value.duration || form.value.distance <= 0)
-    return "";
-  const pace = form.value.duration / (form.value.distance / 1000);
-  const minPace = 6;
-  const maxPace = 10;
-  if (pace < minPace) {
-    return `配速过快，不能快于6:00分钟/公里`;
-  }
-  if (pace > maxPace) {
-    return `配速过慢，不能慢于10:00分钟/公里`;
-  }
-  return "配速不符合要求";
 }
 
 function triggerProgressAnimation() {
@@ -401,27 +376,10 @@ const handleSubmit = async () => {
     yearSemester = `${year}${semester}`;
   }
 
-  const payload = {
-    againRunStatus: "0",
-    againRunTime: 0,
-    appVersions: "1.8.3",
-    brand: deviceInfo.brand || "iPhone",
-    mobileType: deviceInfo.mobileType || "iPhone 16",
-    sysVersions: deviceInfo.sysVersions || "18.5",
-    trackPoints,
-    distanceTimeStatus: "1",
-    innerSchool: "1",
-    runDistance: Math.round(form.value.distance),
-    runTime: Math.round(form.value.duration),
-    userId: Number(userId),
-    vocalStatus: "1",
-    yearSemester,
-    recordDate,
-  };
-
   try {
-    console.debug("Submitting run payload:", payload);
-    const { data } = await api.post("/unirun/save/run/record/new", payload);
+    const runDistance = form.value.distance;
+    const runTime = form.value.duration;
+    const { data } = await api.saveNewRecord(trackPoints, runDistance, runTime, userId, recordDate, yearSemester);
     console.debug("Server response for run submit:", data);
 
     if (data && data.code === 10000) {

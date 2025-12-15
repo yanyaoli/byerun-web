@@ -28,5 +28,4 @@ dist-ssr
 
 .history/
 
-server/
 __pycache__/

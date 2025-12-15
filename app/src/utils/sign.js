@@ -1,9 +1,9 @@
 import { MD5 } from 'crypto-js';
-import { config } from './config';
+import { appConfig } from './config';
 
 export function genSign(query = null, body = null) {
-  const appKey = config.api.appKey;
-  const appSecret = config.api.appSecret;
+  const appKey = appConfig.auth.appKey;
+  const appSecret = appConfig.auth.appSecret;
   let signStr = "";
   // 处理查询参数
   if (query !== null) {

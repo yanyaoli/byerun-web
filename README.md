@@ -7,60 +7,80 @@
 <h1 align="center"/>Byerun <sup><em>web</em></sup></h1>
 
 <p align="center">
-Goodbye Unirun - Campus Running Assistant Web Version🏃‍♂️
+Goodbye Unirun - 校园跑助手网页版🏃‍♂️
 </p>
 
+## 支持的地图
 
-## Supported Maps
-
-| School List |
+| 学校名称 |
 | --- |
-| [Chengdu University of Information Technology](https://cuit.edu.cn/) |
-| [Chengdu University of Traditional Chinese Medicine](https://cdutcm.edu.cn/) |
-| [Nanchong Health School of Sichuan Province](http://www.ncwsxx.com/) |
-| ... |
+| [成都信息工程大学](https://cuit.edu.cn/) |
+| [成都中医药大学](https://cdutcm.edu.cn/) |
+| [四川邮电职业技术学院](https://www.sptc.edu.cn/) |
+| [四川工商职业技术学院](https://www.sctbc.net/) |
+| [四川南充卫生学校](http://www.ncwsxx.com/) |
+| [...]()|
+
+### 地图数据
+[高德地图坐标拾取](https://lbs.amap.com/tools/picker)
 
 
 ## Demo
 
-| Deployment Platform | Byerun | Unirun |
+| 部署平台 |  |  |
 | --- | --- | --- |
 | Cloudflare | [Byerun](https://byerun.pages.dev) | [Unirun](https://unirun.pages.dev) |
 | Vercel | [Byerun](https://byerun.vercel.app) | [Unirun](https://unirun.vercel.app) |
 
 
-## Build
+## 本地构建
 
-Enter the project folder:
+进入项目文件夹:
 
 ```bash
 cd app
 ```
 
-Install dependencies:
+安装依赖:
 
 ```bash
-npm install-all
+npm install
 ```
 
-Run for development:
+开发调试:
 
 ```bash
-npm run start
+npm run dev
 ```
 
-Build for production:
+构建:
 
 ```bash
 npm run build
 ```
 
+## 代理
 
-## Server
+进入代理文件夹:
 
-Supports deployment of the server backend on Vercel and Cloudflare.
+```bash
+cd server
+```
 
-Function: Avoid cross-origin restrictions of the source server.
+安装依赖:
+
+```bash
+npm install
+```
+
+启动代理:
+
+```bash
+npm run start
+```
+
+
+**支持在 Cloudflare 和 Vercel 上部署代理，避免源服务器的跨域限制。**
 
 ```mermaid
 graph TD;
@@ -84,7 +104,8 @@ graph TD;
     C --> |Response Returned| A
 ```
 
-#### Cloudflare Worker
+### Cloudflare Worker
+
 ```
 export default {
   async fetch(request, env) {
@@ -132,20 +153,15 @@ async function handleRequest(request, env) {
 }
 ```
 
-## Disclaimer
+## 声明
 
-This project is for learning and research purposes only and shall not be used for any commercial or illegal purposes. If you need to experience the full functionality, please use the official App.
+本项目仅供学习研究使用，不得用于任何商业或非法用途。如需体验完整功能，请使用官方应用。
 
-Any direct or indirect risk damage of any nature caused by the use of this project shall be borne by the user, and the developer shall not bear any responsibility for the user's illegal behavior.
-
-If the official believes that this project is inappropriate, please contact us through Issues and we will modify or remove it.
-
-## Acknowledgements
+## 致谢
 
 [@msojocs/AutoRun](https://github.com/msojocs/AutoRun)
 
-## License
-Byerun is released under the [CC BY-NC License, Version 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
+## 许可
 
-
+Byerun 基于 [CC BY-NC License, Version 4.0](https://creativecommons.org/licenses/by-nc/4.0/) 发布。
 

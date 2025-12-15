@@ -7,7 +7,7 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
-import { config } from '../utils/config';
+import { amapConfig } from '@/utils/config';
 
 const props = defineProps({
   track: {
@@ -21,8 +21,8 @@ const props = defineProps({
 });
 
 // Read AMap key from Vite env, fall back to empty string
-const API_KEY = config.key.amapKey;
-const SECURITY = config.key.amapSecurity;
+const API_KEY = amapConfig.jsApiKey;
+const SECURITY = amapConfig.securityJsCode;
 
 const apiKey = API_KEY || '';
 const mapContainer = ref(null);

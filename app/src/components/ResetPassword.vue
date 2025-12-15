@@ -48,8 +48,8 @@
 
 <script setup>
 import { ref, inject } from "vue";
-import api from "../utils/api";
-import CryptoJS from "crypto-js";
+import { api } from "@/composables/useApi";
+
 
 defineEmits(['backToLogin']);
 
@@ -69,9 +69,7 @@ const sendCode = async () => {
   }
   sending.value = true;
   try {
-    const { data } = await api.get("/auth/sendSmsForPassWord", {
-      params: { phoneNum: phone.value },
-    });
+    const { data } = await api.sendVerifyCode(phone.value);
     if (data.code === 10000) {
       showMessage("验证码已发送", "success");
     } else {
@@ -91,14 +89,7 @@ const handleReset = async () => {
   }
   submitting.value = true;
   try {
-    const hashed = CryptoJS.MD5(password.value).toString();
-    const payload = {
-      password: hashed,
-      passwordRes: hashed,
-      userPhone: Number(phone.value),
-      code: Number(code.value),
-    };
-    const { data } = await api.post("/auth/updateUserPassWord", payload);
+    const { data } = await api.updatePassword( phone.value, password.value, code.value);
     if (data.code === 10000) {
       showMessage("密码重置成功，请返回登录", "success");
       // 清空表单
