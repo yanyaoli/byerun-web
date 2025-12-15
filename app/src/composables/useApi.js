@@ -69,6 +69,11 @@ export const api = {
 		});
 	},
 
+	// 获取令牌信息
+	getToken: async () => {
+		return req.get(appConfig.api.endpoints.token);
+	},
+
 	// 获取跑步记录
 	getRunRecords: async (pageNum, pageSize) => {
 		return req.get(appConfig.api.endpoints.runRecord, {
@@ -102,6 +107,35 @@ export const api = {
 			vocalStatus: '1',
 			yearSemester,
 			recordDate,
+		});
+	},
+
+	// 获取活动信息
+	getJoinNum: async (schoolId, studentId) => {
+		return req.get(appConfig.api.endpoints.joinNum, {
+			params: {
+				schoolId,
+				studentId,
+			},
+		});
+	},
+
+	// 获取跑步标准
+	getRunStandard: async (schoolId) => {
+		return req.get(appConfig.api.endpoints.runStandard, {
+			params: {
+				schoolId,
+			},
+		});
+	},
+
+	// 获取跑步信息
+	getRunInfo: async (userId) => {
+		return req.get(appConfig.api.endpoints.runInfo, {
+			params: {
+				userId,
+				yearSemester: 1,
+			},
 		});
 	},
 };

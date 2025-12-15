@@ -8,33 +8,10 @@
       <main class="page-main">
         <div class="main-scroll-area" ref="mainScrollRef">
           <!-- 使用过渡效果实现页面切换 -->
-          <transition name="fade-slide" mode="out-in">
-            <div :key="activeTab">
-              <!-- 记录页 -->
-              <RunRecords
-                v-if="activeTab === 'records'"
-                :userInfo="userInfo"
-                :runInfo="runInfo"
-                :runStandard="runStandard"
-                :activityInfo="activityInfo"
-                :profileLoading="profileLoading"
-              />
-              <!-- 提交页 -->
-              <SubmitRun
-                v-else-if="activeTab === 'submit'"
-                :userInfo="userInfo"
-                :runStandard="runStandard"
-                :activityInfo="activityInfo"
-                @submitted="fetchUserData"
-              />
-              <!-- 我的（个人信息）页 -->
-              <Profile
-                v-else-if="activeTab === 'profile'"
-                :userInfo="userInfo"
-                :loading="profileLoading"
-                @logout="logout"
-              />
-            </div>
+          <transition name="fade-slide">
+            <keep-alive>
+              <component :is="currentComponent" v-bind="currentProps" v-on="currentListeners" />
+            </keep-alive>
           </transition>
         </div>
       </main>
@@ -48,14 +25,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, provide, nextTick } from "vue";
+import { ref, computed, onMounted, provide, nextTick, markRaw } from "vue";
 import SubmitRun from "../components/SubmitRun.vue";
 import RunRecords from "../components/RunRecords.vue";
 import Profile from "../components/Profile.vue";
 import Message from "../components/Message.vue";
 import AppHeader from "../components/layout/AppHeader.vue";
 import BottomTabBar from "../components/layout/BottomTabBar.vue";
-import req from "@/utils/request";
+import { api } from "@/composables/useApi";
 
 const activeTab = ref(localStorage.getItem("activeTab") || "submit");
 const userInfo = ref(null);
@@ -81,10 +58,51 @@ const showMessage = (message, type = "info") => {
 // 提供给子组件使用
 provide('showMessage', showMessage);
 
+// 动态组件配置
+const components = {
+  records: markRaw(RunRecords),
+  submit: markRaw(SubmitRun),
+  profile: markRaw(Profile),
+};
+
+const currentComponent = computed(() => components[activeTab.value]);
+
+const currentProps = computed(() => {
+  if (activeTab.value === 'records') {
+    return {
+      userInfo: userInfo.value,
+      runInfo: runInfo.value,
+      runStandard: runStandard.value,
+      activityInfo: activityInfo.value,
+      profileLoading: profileLoading.value
+    };
+  } else if (activeTab.value === 'submit') {
+    return {
+      userInfo: userInfo.value,
+      runStandard: runStandard.value,
+      activityInfo: activityInfo.value
+    };
+  } else {
+    return {
+      userInfo: userInfo.value,
+      loading: profileLoading.value
+    };
+  }
+});
+
+const currentListeners = computed(() => {
+  if (activeTab.value === 'submit') {
+    return { submitted: fetchUserData };
+  } else if (activeTab.value === 'profile') {
+    return { logout: logout };
+  }
+  return {};
+});
+
 const fetchUserData = async () => {
   profileLoading.value = true;
   try {
-    const userRes = await req.get("/auth/query/token");
+    const userRes = await api.getToken();
     if (userRes.data.code === 10000) {
       userInfo.value = userRes.data.response;
       profileLoading.value = false;
@@ -92,10 +110,7 @@ const fetchUserData = async () => {
       const { schoolId, userId, studentId } = userInfo.value;
 
       // 跑步标准
-      req
-        .get("/unirun/query/runStandard", {
-          params: { schoolId },
-        })
+      api.getRunStandard(schoolId)
         .then((standardRes) => {
           if (standardRes.data.code === 10000) {
             runStandard.value = standardRes.data.response;
@@ -103,13 +118,7 @@ const fetchUserData = async () => {
         });
 
       // 跑步信息
-      req
-        .get("/unirun/query/runInfo", {
-          params: {
-            userId,
-            yearSemester: 1,
-          },
-        })
+      api.getRunInfo(userId)
         .then((runRes) => {
           if (runRes.data.code === 10000) {
             runInfo.value = runRes.data.response;
@@ -117,13 +126,7 @@ const fetchUserData = async () => {
         });
 
       // 活动信息
-      req
-        .get("/clubactivity/getJoinNum", {
-          params: {
-            schoolId,
-            studentId,
-          },
-        })
+      api.getJoinNum(schoolId, studentId)
         .then((activityRes) => {
           if (activityRes.data.code === 10000) {
             activityInfo.value = activityRes.data.response;
@@ -158,10 +161,10 @@ const switchTab = (tab) => {
   if (mainScrollRef.value) {
     scrollPositions.value[activeTab.value] = mainScrollRef.value.scrollTop;
   }
-  
+
   activeTab.value = tab;
   localStorage.setItem("activeTab", tab);
-  
+
   // 切换后恢复新页面的滚动位置
   nextTick(() => {
     if (mainScrollRef.value) {

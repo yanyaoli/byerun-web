@@ -5,8 +5,8 @@ export const appConfig = {
     baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.default.com',
     endpoints: {
       login: '/auth/login/password',
-      user: '/auth/query/token',
-      activity: '/clubactivity/getJoinNum',
+      token: '/auth/query/token',
+      joinNum: '/clubactivity/getJoinNum',
       runStandard: '/unirun/query/runStandard',
       runInfo: '/unirun/query/runInfo',
       runRecord: '/unirun/query/student/all/run/record',
