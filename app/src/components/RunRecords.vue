@@ -77,7 +77,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, inject } from "vue";
-import api from "../utils/api";
+import { api } from "@/composables/useApi";
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
@@ -120,12 +120,10 @@ const fetchRecords = async () => {
   loading.value = true;
   pagination.current = 1; // 保证第一页
   try {
-    const { data } = await api.get("/unirun/query/student/all/run/record", {
-      params: {
-        pageNum: pagination.current,
-        pageSize: pagination.pageSize,
-      },
-    });
+    const { data } = await api.getRunRecords(
+      pagination.current,
+      pagination.pageSize
+    );
 
     const recordsList = Array.isArray(data.response)
       ? data.response
@@ -174,12 +172,10 @@ const loadMoreRecords = async () => {
 
   try {
     const nextPage = pagination.current + 1;
-    const { data } = await api.get("/unirun/query/student/all/run/record", {
-      params: {
-        pageNum: nextPage,
-        pageSize: pagination.pageSize,
-      },
-    });
+    const { data } = await api.runRecord.getRecords(
+      pagination.current,
+      pagination.pageSize
+    );
 
     const recordsList = Array.isArray(data.response)
       ? data.response

@@ -137,7 +137,7 @@
 
 <script setup>
 import { ref, toRef, watch, computed, inject } from "vue";
-import { config } from "../utils/config";
+import { scheduledTaskConfig } from "@/utils/config";
 import { loadMapFiles } from "../utils/map";
 
 const props = defineProps({ visible: Boolean });
@@ -177,7 +177,7 @@ const saveButtonText = computed(() => {
 });
 
 // 常量
-const API_BASE = config.api.autorunServerBase || "http://localhost:8080";
+const API_BASE = scheduledTaskConfig.apiBaseUrl;
 
 // 方法
 const loadMaps = async () => {
@@ -397,6 +397,4 @@ watch(visibleRef, async (v) => {
 });
 </script>
 
-<style scoped>
-/* 无额外自定义样式，全部使用 Tailwind */
-</style>
+<style scoped></style>

@@ -33,16 +33,6 @@
         </button>
       </div>
     </div>
-    <!-- 社交链接 -->
-    <!-- <div class="flex justify-center gap-6 rounded-3xl p-4 mb-4">
-      <a v-for="link in socialLinks" :key="link.href" :href="link.href"
-        :target="link.href.startsWith('http') ? '_blank' : undefined"
-        :rel="link.href.startsWith('http') ? 'noopener noreferrer' : undefined"
-        class="flex items-center justify-center rounded-full text-gray-600 transition-all duration-300 bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl hover:text-blue-500 hover:shadow-lg hover:bg-white "
-        :title="link.title">
-        <i :class="link.icon + ' w-6 h-6 sm:w-5 sm:h-5'"></i>
-      </a>
-    </div> -->
     <!-- 评论区 -->
     <div class="artalk-container" ref="artalkContainer"></div>
 
@@ -55,7 +45,7 @@ import Artalk from "artalk";
 import "artalk/dist/Artalk.css";
 import MaleAvatar from "./Avatar/MaleAvatar.vue";
 import FemaleAvatar from "./Avatar/FemaleAvatar.vue";
-import { config } from "../utils/config";
+import { artalkConfig } from "@/utils/config";
 
 defineProps({
   userInfo: Object,
@@ -79,8 +69,8 @@ onMounted(() => {
       el: artalkContainer.value,
       pageKey: "/profile",
       pageTitle: "个人主页",
-      server: config.api.artalkServer || "https://artalk.example.com",
-      site: config.api.artalkSite || "Byerun",
+      server: artalkConfig.baseUrl,
+      site: artalkConfig.siteName,
     });
   }
 });

@@ -1,17 +1,17 @@
 import axios from 'axios';
 import { genSign } from './sign.js';
-import { config } from './config.js';
+import { appConfig } from './config.js';
 
-const api = axios.create({
-  baseURL: config.api.baseURL,
+const req = axios.create({
+  baseURL: appConfig.api.baseUrl,
   timeout: 15000,
   headers: {
+    appKey: appConfig.auth.appKey,
     'Content-Type': 'application/json',
-    appKey: config.api.appKey,
   },
 });
 
-api.interceptors.request.use(config => {
+req.interceptors.request.use(config => {
   // token
   const token = localStorage.getItem('token');
   if (token) config.headers['token'] = token;
@@ -23,4 +23,4 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-export default api;
+export default req;

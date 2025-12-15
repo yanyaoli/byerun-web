@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { config } from '../utils/config'
+import { scheduledTaskConfig } from '@/utils/config'
 
 export function useAutoConfig() {
   const loading = ref(false)
@@ -10,7 +10,7 @@ export function useAutoConfig() {
   const fetchConfig = async () => {
     const userId = localStorage.getItem('userId')
     const token = localStorage.getItem('token')
-    const base = config.api.autorunServerBase || 'http://localhost:8080'
+    const base = scheduledTaskConfig.apiBaseUrl
     const headers = { 'content-type': 'application/json' }
     if (token) headers['Token'] = token
     const params = userId ? `?userid=${encodeURIComponent(userId)}` : ''
@@ -30,7 +30,7 @@ export function useAutoConfig() {
   // 保存配置
   const saveConfig = async (configData) => {
     const token = localStorage.getItem('token')
-    const base = config.api.autorunServerBase || 'http://localhost:8080'
+    const base = scheduledTaskConfig.apiBaseUrl
     const headers = { 'content-type': 'application/json' }
     if (token) headers['Token'] = token
 

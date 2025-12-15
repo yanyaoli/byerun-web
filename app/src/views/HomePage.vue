@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="app-layout">
       <!-- 顶部标题栏 -->
-      <AppHeader :title="pageTitle" />
+      <AppHeader />
 
       <!-- 主要内容区域 -->
       <main class="page-main">
@@ -55,7 +55,7 @@ import Profile from "../components/Profile.vue";
 import Message from "../components/Message.vue";
 import AppHeader from "../components/layout/AppHeader.vue";
 import BottomTabBar from "../components/layout/BottomTabBar.vue";
-import api from "../utils/api";
+import req from "@/utils/request";
 
 const activeTab = ref(localStorage.getItem("activeTab") || "submit");
 const userInfo = ref(null);
@@ -84,7 +84,7 @@ provide('showMessage', showMessage);
 const fetchUserData = async () => {
   profileLoading.value = true;
   try {
-    const userRes = await api.get("/auth/query/token");
+    const userRes = await req.get("/auth/query/token");
     if (userRes.data.code === 10000) {
       userInfo.value = userRes.data.response;
       profileLoading.value = false;
@@ -92,7 +92,7 @@ const fetchUserData = async () => {
       const { schoolId, userId, studentId } = userInfo.value;
 
       // 跑步标准
-      api
+      req
         .get("/unirun/query/runStandard", {
           params: { schoolId },
         })
@@ -103,7 +103,7 @@ const fetchUserData = async () => {
         });
 
       // 跑步信息
-      api
+      req
         .get("/unirun/query/runInfo", {
           params: {
             userId,
@@ -117,7 +117,7 @@ const fetchUserData = async () => {
         });
 
       // 活动信息
-      api
+      req
         .get("/clubactivity/getJoinNum", {
           params: {
             schoolId,
@@ -169,20 +169,6 @@ const switchTab = (tab) => {
     }
   });
 };
-
-// 页面标题的计算属性
-const pageTitle = computed(() => {
-  switch (activeTab.value) {
-    case "records":
-      return "跑步记录";
-    case "submit":
-      return "提交记录";
-    case "profile":
-      return "我的信息";
-    default:
-      return "";
-  }
-});
 </script>
 
 <style scoped>

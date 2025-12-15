@@ -1,58 +1,51 @@
-import { getDeviceInfo } from "./device";
-
-export const config = {
-  key: {
-    amapKey: import.meta.env.VITE_AMAP_KEY,
-    amapSecurity: import.meta.env.VITE_AMAP_SECURITY,
-  },
+// 主要应用配置
+export const appConfig = {
+  appVersion: '1.8.3',
   api: {
-    baseURL: import.meta.env.VITE_API_BASE_URL,
-    appKey: "389885588s0648fa",
-    appSecret: "56E39A1658455588885690425C0FD16055A21676",
-    artalkServer: import.meta.env.VITE_ARTALK_SERVER,
-    artalkSite: import.meta.env.VITE_ARTALK_SITE,
-    autorunServerBase: import.meta.env.VITE_AUTORUN_SERVER_BASE,
-    autorunEnabled: import.meta.env.VITE_AUTORUN_ENABLED !== 'false',
+    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.default.com',
+    endpoints: {
+      login: '/auth/login/password',
+      user: '/auth/query/token',
+      activity: '/clubactivity/getJoinNum',
+      runStandard: '/unirun/query/runStandard',
+      runInfo: '/unirun/query/runInfo',
+      runRecord: '/unirun/query/student/all/run/record',
+      saveNewRecord: '/unirun/save/run/record/new',
+      sendVerifyCode: '/auth/sendSmsForPassWord',
+      updatePassword: '/auth/updateUserPassWord',
+      schoolBound: '/unirun/querySchoolBound',
+      club: '/clubactivity/querySemesterClubActivity',
+      myClub: '/clubactivity/queryMyActivityList',
+      myTask: '/clubactivity/queryMySemesterClubActivity',
+      joinClub: '/clubactivity/joinOrCancelSchoolSemesterActivity',
+    },
   },
-  device: {
-    appVersion: "1.8.3",
-    brand: "iPhone",
-    deviceToken: "",
-    deviceType: "2",
-    mobileType: "iPhone 16",
-    sysVersion: "18.5",
-  },
-  urls: {
-    home: "https://byerun.pages.dev/",
-    notice: "https://unirun-notice.where.nyc.mn/",
-    github: "https://github.com/yanyaoli/byerun-web",
+  auth: {
+    appKey: import.meta.env.VITE_APP_KEY || '389885588s0648fa',
+    appSecret: import.meta.env.VITE_APP_SECRET || '56E39A1658455588885690425C0FD16055A21676',
   },
 };
 
-export const API_URLS = {
-  login: "/auth/login/password",
-  user: "/auth/query/token",
-  activity: "/clubactivity/getJoinNum",
-  runStandard: "/unirun/query/runStandard",
-  runInfo: "/unirun/query/runInfo",
-  runRecord: "/unirun/query/student/all/run/record",
-  newActivity: "/unirun/save/run/record/new",
-  sendSms: "/auth/sendSmsForPassWord",
-  updatePassword: "/auth/updateUserPassWord",
-  schoolBound: "/unirun/querySchoolBound",
+// 定时任务配置
+export const scheduledTaskConfig = {
+  apiBaseUrl: import.meta.env.VITE_AUTORUN_SERVER_BASE || '',
+  isAutomationEnabled: import.meta.env.VITE_AUTORUN_ENABLED !== 'false',
 };
 
-/**
- * 获取登录参数的基础配置
- */
-export function getLoginParams() {
-  const device = getDeviceInfo();
-  return {
-    appVersion: config.device.appVersion,
-    brand: device.brand || config.device.brand,
-    deviceToken: config.device.deviceToken,
-    deviceType: config.device.deviceType,
-    mobileType: device.mobileType || config.device.mobileType,
-    sysVersion: device.sysVersions || config.device.sysVersion,
-  };
-}
+// ArTalk评论系统配置
+export const artalkConfig = {
+  baseUrl: import.meta.env.VITE_ARTALK_SERVER || '',
+  siteName: import.meta.env.VITE_ARTALK_SITE || 'Byerun',
+};
+
+// 高德地图SDK配置
+export const amapConfig = {
+  jsApiKey: import.meta.env.VITE_AMAP_KEY || '',
+  securityJsCode: import.meta.env.VITE_AMAP_SECURITY || '',
+};
+
+// 外部链接
+export const urls = {
+  notice: 'https://unirun-notice.where.nyc.mn/',
+  github: 'https://github.com/yanyaoli/byerun-web',
+};
