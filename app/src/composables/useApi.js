@@ -85,17 +85,18 @@ export const api = {
 		recordDate,
 		yearSemester
 	) => {
+		const device = getDeviceInfo();
 		return req.post(appConfig.api.endpoints.saveNewRecord, {
 			againRunStatus: '0',
 			againRunTime: 0,
 			appVersions: appConfig.appVersion,
 			brand: device.brand,
 			mobileType: device.mobileType,
-			sysVersions: device.sysVersions,
+			sysVersions: device.sysVersion,
 			trackPoints,
 			distanceTimeStatus: '1',
 			innerSchool: '1',
-			runDistance: runDistance,
+			runDistance: Math.round(runDistance),
 			runTime: Math.round(runTime),
 			userId: Number(userId),
 			vocalStatus: '1',

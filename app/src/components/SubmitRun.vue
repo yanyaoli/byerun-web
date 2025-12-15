@@ -126,10 +126,11 @@ import {
   defineAsyncComponent,
   nextTick,
 } from "vue";
-import api from "../utils/request";
 import { loadMapFiles, getMapNames } from "../utils/map";
 import { genTrackPoints } from "../utils/track";
 import { getDeviceInfo } from "../utils/device";
+import { api } from "@/composables/useApi";
+
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
@@ -378,7 +379,6 @@ const handleSubmit = async () => {
   try {
     const runDistance = form.value.distance;
     const runTime = form.value.duration;
-    console.debug("Submitting run payload:", payload);
     const { data } = await api.saveNewRecord(trackPoints, runDistance, runTime, userId, recordDate, yearSemester);
     console.debug("Server response for run submit:", data);
 
