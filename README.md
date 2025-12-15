@@ -8,8 +8,9 @@
 
 <p align="center">
 Goodbye Unirun - Campus Running Assistant Web Version🏃‍♂️
+<br>
+<a href="docs/README_zh.md">简体中文</a>
 </p>
-
 
 ## Supported Maps
 
@@ -20,14 +21,12 @@ Goodbye Unirun - Campus Running Assistant Web Version🏃‍♂️
 | [Nanchong Health School of Sichuan Province](http://www.ncwsxx.com/) |
 | ... |
 
-
 ## Demo
 
 | Deployment Platform | Byerun | Unirun |
 | --- | --- | --- |
 | Cloudflare | [Byerun](https://byerun.pages.dev) | [Unirun](https://unirun.pages.dev) |
 | Vercel | [Byerun](https://byerun.vercel.app) | [Unirun](https://unirun.vercel.app) |
-
 
 ## Build
 
@@ -54,7 +53,6 @@ Build for production:
 ```bash
 npm run build
 ```
-
 
 ## Server
 
@@ -85,6 +83,7 @@ graph TD;
 ```
 
 #### Cloudflare Worker
+
 ```
 export default {
   async fetch(request, env) {
@@ -145,7 +144,5 @@ If the official believes that this project is inappropriate, please contact us t
 [@msojocs/AutoRun](https://github.com/msojocs/AutoRun)
 
 ## License
+
 Byerun is released under the [CC BY-NC License, Version 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
-
-
-
