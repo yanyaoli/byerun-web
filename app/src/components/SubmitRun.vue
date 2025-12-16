@@ -53,8 +53,7 @@
             </button></div>
         </div>
         <!-- 跑步路线选择 -->
-        <!-- 修改路由选择部分 -->
-        <div class="form-group">
+        <div class="form-group mt-4">
           <label>选择地图</label>
           <div class="route-dropdown" @click="
             mapsLoaded && !submitting
