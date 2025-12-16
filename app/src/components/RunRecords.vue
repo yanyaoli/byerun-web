@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, inject } from "vue";
+import { ref, reactive, onMounted, inject, onUnmounted } from "vue";
 import { api } from "@/composables/useApi";
 
 // 注入全局消息方法
@@ -207,6 +207,15 @@ const loadMoreRecords = async () => {
 // 生命周期
 onMounted(() => {
   fetchRecords();
+  try {
+    window.addEventListener("run-submitted", fetchRecords);
+  } catch (e) {}
+});
+
+onUnmounted(() => {
+  try {
+    window.removeEventListener("run-submitted", fetchRecords);
+  } catch (e) {}
 });
 </script>
 

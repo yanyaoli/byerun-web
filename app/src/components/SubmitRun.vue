@@ -385,6 +385,9 @@ const handleSubmit = async () => {
       showMessage(data.response.resultDesc, "success");
       triggerProgressAnimation();
       emit("submitted");
+      try {
+        window.dispatchEvent(new Event("run-submitted"));
+      } catch (e) {}
     } else {
       showMessage(data?.msg || "提交失败", "error");
     }
