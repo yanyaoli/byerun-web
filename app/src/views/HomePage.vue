@@ -7,12 +7,9 @@
       <!-- 主要内容区域 -->
       <main class="page-main">
         <div class="main-scroll-area" ref="mainScrollRef">
-          <!-- 使用过渡效果实现页面切换 -->
-          <transition name="fade-slide">
-            <keep-alive>
-              <component :is="currentComponent" v-bind="currentProps" v-on="currentListeners" />
-            </keep-alive>
-          </transition>
+          <keep-alive>
+            <component :is="currentComponent" :key="activeTab" v-bind="currentProps" v-on="currentListeners" />
+          </keep-alive>
         </div>
       </main>
 
@@ -26,12 +23,13 @@
 
 <script setup>
 import { ref, computed, onMounted, provide, nextTick, markRaw } from "vue";
-import SubmitRun from "../components/SubmitRun.vue";
-import RunRecords from "../components/RunRecords.vue";
-import Profile from "../components/Profile.vue";
-import Message from "../components/Message.vue";
-import AppHeader from "../components/layout/AppHeader.vue";
-import BottomTabBar from "../components/layout/BottomTabBar.vue";
+import SubmitRun from "@/components/SubmitRun.vue";
+import RunRecords from "@/components/RunRecords.vue";
+import Profile from "@/components/Profile.vue";
+import Message from "@/components/Message.vue";
+import AppHeader from "@/components/layout/AppHeader.vue";
+import BottomTabBar from "@/components/layout/BottomTabBar.vue";
+import Club from "@/components/Club.vue";
 import { api } from "@/composables/useApi";
 
 const activeTab = ref(localStorage.getItem("activeTab") || "submit");
@@ -60,6 +58,7 @@ provide('showMessage', showMessage);
 
 // 动态组件配置
 const components = {
+  club: markRaw(Club),
   records: markRaw(RunRecords),
   submit: markRaw(SubmitRun),
   profile: markRaw(Profile),
@@ -68,7 +67,11 @@ const components = {
 const currentComponent = computed(() => components[activeTab.value]);
 
 const currentProps = computed(() => {
-  if (activeTab.value === 'records') {
+  if (activeTab.value === 'club') {
+    return {
+      userInfo: userInfo.value
+    };
+  } else if (activeTab.value === 'records') {
     return {
       userInfo: userInfo.value,
       runInfo: runInfo.value,
@@ -156,6 +159,8 @@ const logout = () => {
   handleLogout();
 };
 
+
+
 const switchTab = (tab) => {
   // 保存当前页面的滚动位置
   if (mainScrollRef.value) {
@@ -210,24 +215,15 @@ const switchTab = (tab) => {
 }
 
 .main-scroll-area {
+  position: relative;
   height: 100%;
   min-height: calc(100vh - var(--app-header-height) - var(--app-bottom-height));
-  overflow-y: scroll;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   width: 100%;
   box-sizing: border-box;
   padding: 10px 0;
 }
 
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.2s ease-out;
-  position: relative;
-  overflow: hidden;
-}
 
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-}
 </style>

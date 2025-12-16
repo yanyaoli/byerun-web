@@ -1,57 +1,76 @@
 <template>
   <nav class="bottom-tab-bar">
-    <div class="tab-bar-container">
+    <div class="tab-bar-container" ref="containerRef">
       <div class="active-background" :style="activeBackgroundStyle"></div>
-      <button
+            <button
+        v-for="item in tabs"
+        :key="item.key"
         class="tab-item"
-        :class="{ active: active === 'records' }"
-        @click="$emit('switch', 'records')"
+        :class="{ active: active === item.key }"
+        @click="$emit('switch', item.key)"
       >
         <div class="tab-icon">
-          <i class="fa-solid fa-square-poll-vertical"></i>
+          <i :class="item.icon"></i>
         </div>
-        <div class="tab-label">记录</div>
-      </button>
-
-      <button
-        class="tab-item"
-        :class="{ active: active === 'submit' }"
-        @click="$emit('switch', 'submit')"
-      >
-        <div class="tab-icon">
-          <i class="fa-solid fa-square-plus"></i>
-        </div>
-        <div class="tab-label">新增</div>
-      </button>
-
-      <button
-        class="tab-item"
-        :class="{ active: active === 'profile' }"
-        @click="$emit('switch', 'profile')"
-      >
-        <div class="tab-icon">
-          <i class="fa-solid fa-user"></i>
-        </div>
-        <div class="tab-label">我的</div>
+        <div class="tab-label">{{ item.label }}</div>
       </button>
     </div>
   </nav>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 
 const props = defineProps({
-  active: { type: String, default: "submit" },
+  active: { type: String, default: 'submit' },
+  tabs: { type: Array, default: () => ([
+    { key: 'club', label: '俱乐部', icon: 'fa-solid fa-baseball' },
+    { key: 'records', label: '记录', icon: 'fa-solid fa-square-poll-vertical' },
+    { key: 'submit', label: '新增', icon: 'fa-solid fa-square-plus' },
+    { key: 'profile', label: '我的', icon: 'fa-solid fa-user' },
+  ]) }
 });
 
-const tabs = ['records', 'submit', 'profile'];
-const activeIndex = computed(() => tabs.indexOf(props.active));
+const activeIndex = computed(() => props.tabs.findIndex(t => t.key === props.active));
+
+// DOM refs
+const containerRef = ref(null);
+const tabCenters = ref([]);
+
+function updatePositions() {
+  const container = containerRef.value;
+  if (!container) return;
+  const items = container.querySelectorAll('.tab-item');
+  const containerRect = container.getBoundingClientRect();
+  tabCenters.value = Array.from(items).map(item => {
+    const rect = item.getBoundingClientRect();
+    const center = rect.left - containerRect.left + rect.width / 2;
+    // subtract half background width (30px) to center the background
+    return `${center - 30}px`;
+  });
+}
+
+onMounted(() => {
+  nextTick(updatePositions);
+  window.addEventListener('resize', updatePositions);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updatePositions);
+});
+
+watch(() => props.active, () => {
+  nextTick(updatePositions);
+});
+
+watch(() => props.tabs, () => {
+  nextTick(updatePositions);
+}, { deep: true });
+
 const activeBackgroundStyle = computed(() => {
-  const tabPositions = ['20px', 'calc(50% - 30px)', 'calc(100% - 80px)'];
-  return {
-    left: tabPositions[activeIndex.value],
-  };
+  const idx = activeIndex.value >= 0 ? activeIndex.value : 0;
+  const left = tabCenters.value[idx] || '20px';
+  return { left };
 });
 </script>
 

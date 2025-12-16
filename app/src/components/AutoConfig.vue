@@ -28,6 +28,15 @@
             <span class="px-2 py-0.5 text-xs font-semibold bg-gray-800 text-white rounded-full">Beta</span>
           </div>
 
+          <!-- 任务运行状态（仅展示今日是否完成） -->
+          <div class="mt-2 text-sm text-gray-600">
+            <div v-if="statusLoading">状态加载中...</div>
+            <div v-else-if="statusError" class="text-red-500">获取状态失败</div>
+            <div v-else>
+              <div>今日已完成: <span class="font-medium">{{ todayDone ? '是' : '否' }}</span></div>
+            </div>
+          </div>
+
           <!-- 配置列表 -->
           <div class="space-y-4">
             <!-- 地图选择 -->
@@ -136,7 +145,7 @@
 </template>
 
 <script setup>
-import { ref, toRef, watch, computed, inject } from "vue";
+import { ref, toRef, watch, computed, inject, onMounted } from "vue";
 import { scheduledTaskConfig } from "@/utils/config";
 import { loadMapFiles } from "../utils/map";
 
@@ -165,6 +174,58 @@ const availableMaps = ref([]);
 const mapsLoaded = ref(false);
 const mapMetadata = ref({});
 
+// 运行状态
+const runStatus = ref(null);
+const statusLoading = ref(false);
+const statusError = ref(null);
+
+const fetchRunStatus = async () => {
+  statusLoading.value = true;
+  statusError.value = null;
+  runStatus.value = null;
+  try {
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("token");
+    const headers = { "content-type": "application/json" };
+    if (token) headers["Token"] = token;
+    const params = userId ? `?userid=${encodeURIComponent(userId)}` : "";
+
+    const statusUrl = `${API_BASE.replace(/\/$/, "")}/api/autorun/run/status${params}`;
+    console.log("AutoConfig: fetching run status ->", statusUrl);
+    const res = await fetch(statusUrl, {
+      method: "GET",
+      headers,
+    });
+
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    runStatus.value = data;
+  } catch (err) {
+    console.warn("获取任务状态失败", err);
+    statusError.value = err;
+  } finally {
+    statusLoading.value = false;
+  }
+};
+
+// 仅展示今天是否完成
+const todayDone = computed(() => {
+  if (!runStatus.value || !runStatus.value.last_run_at) return false;
+  const datePart = String(runStatus.value.last_run_at).slice(0, 10);
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return datePart === `${yyyy}-${mm}-${dd}`;
+});
+
+// 当组件被挂载到页面时也尝试加载地图和状态（处理作为页面而非弹窗的场景）
+onMounted(() => {
+  console.log("AutoConfig mounted: starting loadMaps and fetchRunStatus");
+  loadMaps();
+  fetchRunStatus();
+});
+
 // 计算属性
 const saveButtonText = computed(() => {
   const texts = {
@@ -180,14 +241,71 @@ const saveButtonText = computed(() => {
 const API_BASE = scheduledTaskConfig.apiBaseUrl;
 
 // 方法
-const loadMaps = async () => {
-  try {
-    const mapIds = await loadMapFiles();
-    availableMaps.value = mapIds;
-    mapsLoaded.value = true;
-    await loadMapMetadata();
-    if (mapIds.length > 0 && !form.value.map_id) {
-      form.value.map_id = mapIds[0];
+const fetchMapsFromApi = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { "content-type": "application/json" };
+      if (token) headers["Token"] = token;
+
+      const mapsUrl = `${API_BASE.replace(/\/$/, "")}/api/autorun/maps`;
+      console.log("AutoConfig: fetching maps ->", mapsUrl);
+      const res = await fetch(mapsUrl, {
+        method: "GET",
+        headers,
+      });
+
+      if (!res.ok) {
+        console.warn("AutoConfig: maps endpoint returned non-ok status", res.status);
+        return null;
+      }
+      const data = await res.json();
+      console.log("AutoConfig: maps response ->", data);
+      if (!data || !Array.isArray(data.maps)) return null;
+
+      const mapIds = data.maps.map((m) => m.id);
+      availableMaps.value = mapIds;
+
+      data.maps.forEach((m) => {
+        if (m && m.id) {
+          mapMetadata.value[m.id] = {
+            mapId: m.id,
+            mapName: m.name || m.id,
+          };
+        }
+      });
+
+      mapsLoaded.value = true;
+
+      // If backend provided a default map, use it; otherwise pick first
+      if (!form.value.map_id) {
+        if (data.default && availableMaps.value.includes(data.default)) {
+          form.value.map_id = data.default;
+        } else if (mapIds.length > 0) {
+          form.value.map_id = mapIds[0];
+        }
+      }
+
+      return mapIds;
+    } catch (err) {
+      console.warn("获取地图列表失败，回退到本地文件", err);
+      return null;
+    }
+  };
+
+  const loadMaps = async () => {
+    try {
+      // 优先尝试从后端获取地图列表，失败后回退到本地文件
+      const mapIds = (await fetchMapsFromApi()) || (await loadMapFiles());
+      console.log("AutoConfig: loadMaps got mapIds ->", mapIds);
+      if (Array.isArray(mapIds)) {
+        availableMaps.value = mapIds;
+        mapsLoaded.value = true;
+        await loadMapMetadata();
+        if (mapIds.length > 0 && !form.value.map_id) {
+          form.value.map_id = mapIds[0];
+        }
+      } else {
+        availableMaps.value = [];
     }
   } catch (error) {
     console.error("加载地图文件失败:", error);
@@ -198,6 +316,8 @@ const loadMaps = async () => {
 const loadMapMetadata = async () => {
   try {
     const metadataPromises = availableMaps.value.map(async (mapId) => {
+      // 如果已经有 mapName（例如后端返回），则跳过额外请求
+      if (mapMetadata.value[mapId]?.mapName) return { mapId, success: true };
       try {
         const response = await fetch(`/data/maps/${mapId}.json`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -378,9 +498,27 @@ watch(visibleRef, async (v) => {
 
   loading.value = true;
   try {
-    if (!mapsLoaded.value) {
-      await loadMaps();
+    // 打开时优先刷新后端地图列表，失败回退到本地文件
+    const backendMapIds = await fetchMapsFromApi();
+    if (!Array.isArray(backendMapIds)) {
+      const localMapIds = await loadMapFiles();
+      if (Array.isArray(localMapIds)) {
+        availableMaps.value = localMapIds;
+        mapsLoaded.value = true;
+        await loadMapMetadata();
+        if (localMapIds.length > 0 && !form.value.map_id) {
+          form.value.map_id = localMapIds[0];
+        }
+      } else {
+        availableMaps.value = [];
+      }
+    } else {
+      // 后端已返回列表，确保元数据已加载（有时需要从本地文件获取名称）
+      await loadMapMetadata();
     }
+
+    // 立即获取运行状态
+    await fetchRunStatus();
 
     const configData = await fetchConfig();
     if (configData) {
