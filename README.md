@@ -19,6 +19,7 @@ Goodbye Unirun - 校园跑助手网页版🏃‍♂️
 | [四川邮电职业技术学院](https://www.sptc.edu.cn/) |
 | [四川工商职业技术学院](https://www.sctbc.net/) |
 | [四川南充卫生学校](http://www.ncwsxx.com/) |
+| [广安职业技术学院](https://www.gavtc.edu.cn/) |
 | [...]()|
 
 ### 地图数据
