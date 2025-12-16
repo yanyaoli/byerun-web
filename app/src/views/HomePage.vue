@@ -7,12 +7,9 @@
       <!-- 主要内容区域 -->
       <main class="page-main">
         <div class="main-scroll-area" ref="mainScrollRef">
-          <!-- 使用过渡效果实现页面切换 -->
-          <transition name="fade-slide">
-            <keep-alive>
-              <component :is="currentComponent" v-bind="currentProps" v-on="currentListeners" />
-            </keep-alive>
-          </transition>
+          <keep-alive>
+            <component :is="currentComponent" :key="activeTab" v-bind="currentProps" v-on="currentListeners" />
+          </keep-alive>
         </div>
       </main>
 
@@ -162,6 +159,8 @@ const logout = () => {
   handleLogout();
 };
 
+
+
 const switchTab = (tab) => {
   // 保存当前页面的滚动位置
   if (mainScrollRef.value) {
@@ -216,24 +215,15 @@ const switchTab = (tab) => {
 }
 
 .main-scroll-area {
+  position: relative;
   height: 100%;
   min-height: calc(100vh - var(--app-header-height) - var(--app-bottom-height));
-  overflow-y: scroll;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   width: 100%;
   box-sizing: border-box;
   padding: 10px 0;
 }
 
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: opacity 0.2s ease-out;
-  position: relative;
-  overflow: hidden;
-}
 
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-}
 </style>
