@@ -26,12 +26,13 @@
 
 <script setup>
 import { ref, computed, onMounted, provide, nextTick, markRaw } from "vue";
-import SubmitRun from "../components/SubmitRun.vue";
-import RunRecords from "../components/RunRecords.vue";
-import Profile from "../components/Profile.vue";
-import Message from "../components/Message.vue";
-import AppHeader from "../components/layout/AppHeader.vue";
-import BottomTabBar from "../components/layout/BottomTabBar.vue";
+import SubmitRun from "@/components/SubmitRun.vue";
+import RunRecords from "@/components/RunRecords.vue";
+import Profile from "@/components/Profile.vue";
+import Message from "@/components/Message.vue";
+import AppHeader from "@/components/layout/AppHeader.vue";
+import BottomTabBar from "@/components/layout/BottomTabBar.vue";
+import Club from "@/components/Club.vue";
 import { api } from "@/composables/useApi";
 
 const activeTab = ref(localStorage.getItem("activeTab") || "submit");
@@ -60,6 +61,7 @@ provide('showMessage', showMessage);
 
 // 动态组件配置
 const components = {
+  club: markRaw(Club),
   records: markRaw(RunRecords),
   submit: markRaw(SubmitRun),
   profile: markRaw(Profile),
@@ -68,7 +70,11 @@ const components = {
 const currentComponent = computed(() => components[activeTab.value]);
 
 const currentProps = computed(() => {
-  if (activeTab.value === 'records') {
+  if (activeTab.value === 'club') {
+    return {
+      userInfo: userInfo.value
+    };
+  } else if (activeTab.value === 'records') {
     return {
       userInfo: userInfo.value,
       runInfo: runInfo.value,

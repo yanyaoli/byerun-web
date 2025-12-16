@@ -138,4 +138,41 @@ export const api = {
 			},
 		});
 	},
+
+	// 查询指定星期的俱乐部信息
+	queryClubInfo: async (weekDay) => {
+		return req.get(appConfig.api.endpoints.clubInfo, {
+			params: {
+				pageNo: 1,
+				pageSize: 15,
+				weekDay
+			}
+		})
+	},
+
+	// 查询我的俱乐部活动记录
+	queryMyClubRecord: async (studentId) => {
+		return req.get(appConfig.api.endpoints.myClubRecord, {
+			params: {
+				pageNo: 1,
+				pageSize: 15,
+				studentId
+			}
+		})
+	},
+
+	// 查询我的俱乐部任务
+	queryMyClubTask: async () => {
+		return req.get(appConfig.api.endpoints.myClubTask)
+	},
+
+	// 加入俱乐部/退出俱乐部
+	joinClub: async (configurationId, type) => {
+		return req.get(appConfig.api.endpoints.joinClub, {
+			params: {
+				configurationId,
+				type
+			}
+		})
+	}
 };
