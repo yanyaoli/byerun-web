@@ -119,29 +119,19 @@ const fetchUserData = async () => {
           if (standardRes.data.code === 10000) {
             runStandard.value = standardRes.data.response;
             const semesterFromStandard = runStandard.value && runStandard.value.semesterYear;
-            if (semesterFromStandard) {
-              api.getRunInfo(Number(userId), semesterFromStandard)
-                .then((runRes) => {
-                  if (runRes.data.code === 10000) {
-                    runInfo.value = runRes.data.response;
-                  }
-                })
-                .catch(() => {});
-            }
-          }
-        })
-        .catch(() => {});
+            const now = new Date();
+            const year = now.getFullYear();
+            const semester = now.getMonth() + 1 < 8 ? "1" : "2";
+            const fallbackYearSemester = `${year}${semester}`;
 
-      const now = new Date();
-      const year = now.getFullYear();
-      const semester = now.getMonth() + 1 < 8 ? "1" : "2";
-      const fallbackYearSemester = `${year}${semester}`;
-
-      // 跑步信息
-      api.getRunInfo(Number(userId), fallbackYearSemester)
-        .then((runRes) => {
-          if (runRes.data.code === 10000) {
-            runInfo.value = runRes.data.response;
+            const finalSemester = semesterFromStandard || fallbackYearSemester;
+            api.getRunInfo(Number(userId), finalSemester)
+              .then((runRes) => {
+                if (runRes.data.code === 10000) {
+                  runInfo.value = runRes.data.response;
+                }
+              })
+              .catch(() => {});
           }
         })
         .catch(() => {});
@@ -211,7 +201,7 @@ const switchTab = (tab) => {
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
-  max-width: 420px;
+  max-width: 1200px;
   margin: 0 auto;
   position: relative;
   background: transparent;
@@ -242,6 +232,4 @@ const switchTab = (tab) => {
   box-sizing: border-box;
   padding: 10px 0;
 }
-
-
 </style>

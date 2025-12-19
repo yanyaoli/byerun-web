@@ -82,7 +82,7 @@ const activeBackgroundStyle = computed(() => {
   transform: translateX(-50%);
   width: 100%;
   padding: 0 16px;
-  max-width: 420px;
+  max-width: 1200px;
   height: 60px;
   z-index: 998;
 }
@@ -92,7 +92,7 @@ const activeBackgroundStyle = computed(() => {
   align-items: center;
   justify-content: space-between;
   height: 100%;
-  padding: 0 20px;
+  padding: 0 10px;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);

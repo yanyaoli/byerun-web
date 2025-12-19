@@ -1,12 +1,12 @@
 <template>
   <header
-    class="fixed left-1/2 top-3 -translate-x-1/2 px-4 w-full max-w-[420px] h-9 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
+    class="fixed left-1/2 top-3 -translate-x-1/2 px-4 w-full max-w-[1200px] h-11 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
     <div
       class="flex items-center justify-between h-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-[30px] px-3 gap-2 transition-inherit shadow-[0_8px_32px_rgba(0,0,0,0.05)]">
       <!-- Logo -->
       <div class="flex flex-row items-center">
         <img src="/logo.png" alt="App Logo"
-          class="inline-block h-5 w-auto mr-2 brightness-20 opacity-70 hover:brightness-10 hover:opacity-90" />
+          class="inline-block h-6 w-auto brightness-20 opacity-70 hover:brightness-10 hover:opacity-90 ml-2" />
       </div>
 
       <!-- 社交链接 -->
@@ -14,9 +14,9 @@
         <a v-for="link in socialLinks" :key="link.href" :href="link.href"
           :target="link.href.startsWith('http') ? '_blank' : undefined"
           :rel="link.href.startsWith('http') ? 'noopener noreferrer' : undefined"
-          class="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 transition-all duration-300 text-sm hover:text-blue-500 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:bg-white"
+          class="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 transition-all duration-300 text-sm hover:text-blue-500 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:bg-white mr-2"
           :title="link.title">
-          <i :class="link.icon"></i>
+          <i :class="[link.icon, 'inline-block text-[18px] align-middle text-gray-600 brightness-20 opacity-70 transition-all duration-300 group-hover:brightness-10 group-hover:opacity-90']"></i>
         </a>
       </div>
     </div>

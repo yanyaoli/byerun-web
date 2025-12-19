@@ -3,7 +3,7 @@
     <div class="stats-table">
       <div class="stats-table-header">
         <div class="stats-header-title">完成情况</div>
-        <div class="stats-header-semester">{{ semesterYearText }}学期</div>
+        <div class="stats-header-semester"><i class="fa-solid fa-hourglass-end"></i> {{ semesterEndDateText }}</div>
       </div>
       <!-- 三个卡片表格布局 -->
       <div class="stats-table-row">
@@ -46,7 +46,7 @@
       <div class="form-section">
         <div class="stats-table-header">
           <h3 class="stats-header-title">提交记录</h3>
-          <div class="stats-header-semester"> <button type="button" class="p-4 text-sm text-gray-600 cursor-pointer"
+          <div class="stats-header-semester"> <button type="button" class="text-gray-600 cursor-pointer hover:text-gray-800"
               :class="{ active: showAutoModal }" @click="showAutoModal = !showAutoModal" :aria-pressed="showAutoModal"
               title="定时任务配置">
               <i class="fa-solid fa-alarm-clock"></i>
@@ -227,11 +227,16 @@ const distancePercentage = computed(() => {
   return Math.min(100, (current / target) * 100);
 });
 
-const semesterYearText = computed(() => {
-  if (props.runStandard && props.runStandard.semesterYear) {
-    return props.runStandard.semesterYear || "当前";
+const semesterEndDateText = computed(() => {
+  const rs = props.runStandard || {};
+  const inst = String(rs.instanceSemester || "");
+  if (inst === "1") {
+    return rs.firstSemesterDateEnd || "";
   }
-  return "当前";
+  if (inst === "2") {
+    return rs.secondSemesterDateEnd || "";
+  }
+  return "";
 });
 
 const paceLimit = computed(() => {
@@ -543,14 +548,14 @@ onMounted(async () => {
   flex: 1;
   background: #f0f2f5;
   border-radius: 12px;
-  padding: 10px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .stats-percentage {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
   color: #323538;
   margin-bottom: 6px;
