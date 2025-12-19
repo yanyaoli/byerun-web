@@ -83,7 +83,8 @@ const currentProps = computed(() => {
     return {
       userInfo: userInfo.value,
       runStandard: runStandard.value,
-      activityInfo: activityInfo.value
+      activityInfo: activityInfo.value,
+      runInfo: runInfo.value
     };
   } else {
     return {
@@ -121,7 +122,7 @@ const fetchUserData = async () => {
         });
 
       // 跑步信息
-      api.getRunInfo(userId)
+      api.getRunInfo()
         .then((runRes) => {
           if (runRes.data.code === 10000) {
             runInfo.value = runRes.data.response;

@@ -201,7 +201,9 @@ const runCompletionRate = computed(() => {
 
 const totalDistanceKm = computed(() => {
   if (props.runInfo && props.runInfo.runValidDistance) {
-    return (Number(props.runInfo.runValidDistance) / 1000).toFixed(1);
+    const km = Number(props.runInfo.runValidDistance) / 1000;
+    const truncated = Math.floor(km * 10) / 10;
+    return truncated.toFixed(1);
   }
   return "0.0";
 });

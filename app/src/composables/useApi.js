@@ -130,13 +130,8 @@ export const api = {
 	},
 
 	// 获取跑步信息
-	getRunInfo: async (userId) => {
-		return req.get(appConfig.api.endpoints.runInfo, {
-			params: {
-				userId,
-				yearSemester: 1,
-			},
-		});
+	getRunInfo: async () => {
+		return req.get(appConfig.api.endpoints.runInfo);
 	},
 
 	// 查询指定星期的俱乐部信息
