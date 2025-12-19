@@ -118,16 +118,33 @@ const fetchUserData = async () => {
         .then((standardRes) => {
           if (standardRes.data.code === 10000) {
             runStandard.value = standardRes.data.response;
+            const semesterFromStandard = runStandard.value && runStandard.value.semesterYear;
+            if (semesterFromStandard) {
+              api.getRunInfo(Number(userId), semesterFromStandard)
+                .then((runRes) => {
+                  if (runRes.data.code === 10000) {
+                    runInfo.value = runRes.data.response;
+                  }
+                })
+                .catch(() => {});
+            }
           }
-        });
+        })
+        .catch(() => {});
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const semester = now.getMonth() + 1 < 8 ? "1" : "2";
+      const fallbackYearSemester = `${year}${semester}`;
 
       // 跑步信息
-      api.getRunInfo()
+      api.getRunInfo(Number(userId), fallbackYearSemester)
         .then((runRes) => {
           if (runRes.data.code === 10000) {
             runInfo.value = runRes.data.response;
           }
-        });
+        })
+        .catch(() => {});
 
       // 活动信息
       api.getJoinNum(schoolId, studentId)

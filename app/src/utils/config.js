@@ -8,7 +8,7 @@ export const appConfig = {
       token: '/auth/query/token',
       joinNum: '/clubactivity/getJoinNum',
       runStandard: '/unirun/query/runStandard',
-      runInfo: '/unirun/query/student/run/info',
+      runInfo: '/unirun/query/runInfo',
       runRecord: '/unirun/query/student/all/run/record',
       saveNewRecord: '/unirun/save/run/record/new',
       sendVerifyCode: '/auth/sendSmsForPassWord',
