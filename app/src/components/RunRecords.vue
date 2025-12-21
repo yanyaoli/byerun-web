@@ -172,8 +172,8 @@ const loadMoreRecords = async () => {
 
   try {
     const nextPage = pagination.current + 1;
-    const { data } = await api.runRecord.getRecords(
-      pagination.current,
+    const { data } = await api.getRunRecords(
+      nextPage,
       pagination.pageSize
     );
 
