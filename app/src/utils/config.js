@@ -1,8 +1,10 @@
+const vBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+
 // 主要应用配置
 export const appConfig = {
   appVersion: '1.8.3',
   api: {
-    baseUrl: import.meta.env.VITE_API_BASE_URL || 'https://api.default.com',
+    baseUrl: vBaseUrl || '/devproxy',
     endpoints: {
       login: '/auth/login/password',
       token: '/auth/query/token',
