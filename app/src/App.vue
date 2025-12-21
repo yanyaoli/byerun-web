@@ -1,10 +1,14 @@
 <template>
   <div class="app flex flex-col min-h-100vh relative overflow-hidden bg-gray-50">
-    <div v-if="!isLogin">
-      <LoginPage />
-    </div>
-    <div v-else>
-      <HomePage />
+    <div class="app-container">
+      <!-- 顶部标题栏 -->
+      <AppHeader />
+      <div v-if="!isLogin">
+        <LoginPage />
+      </div>
+      <div v-else>
+        <HomePage />
+      </div>
     </div>
     <Message ref="messageRef" />
   </div>
@@ -15,6 +19,8 @@ import { ref, provide } from "vue";
 import LoginPage from "./views/LoginPage.vue";
 import HomePage from "./views/HomePage.vue";
 import Message from "./components/Message.vue";
+import AppHeader from "@/components/layout/AppHeader.vue";
+import BottomTabBar from "@/components/layout/BottomTabBar.vue";
 
 const isLogin = ref(!!localStorage.getItem("token"));
 const messageRef = ref(null);
@@ -29,4 +35,15 @@ provide('showMessage', showMessage);
 </script>
 
 <style scoped>
+.app-container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    max-width: 480px;
+  }
+}
 </style>

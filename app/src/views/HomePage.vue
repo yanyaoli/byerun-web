@@ -1,9 +1,6 @@
 <template>
   <div class="app-container">
     <div class="app-layout">
-      <!-- 顶部标题栏 -->
-      <AppHeader />
-
       <!-- 主要内容区域 -->
       <main class="page-main">
         <div class="main-scroll-area" ref="mainScrollRef">
@@ -13,9 +10,10 @@
         </div>
       </main>
 
-      <!-- 底部导航栏 -->
-      <BottomTabBar :active="activeTab" @switch="switchTab" />
+
     </div>
+    <!-- 底部导航栏 -->
+    <BottomTabBar :active="activeTab" @switch="switchTab" />
     <!-- 全局消息提示 -->
     <Message ref="messageRef" />
   </div>
@@ -27,9 +25,8 @@ import SubmitRun from "@/components/SubmitRun.vue";
 import RunRecords from "@/components/RunRecords.vue";
 import Profile from "@/components/Profile.vue";
 import Message from "@/components/Message.vue";
-import AppHeader from "@/components/layout/AppHeader.vue";
-import BottomTabBar from "@/components/layout/BottomTabBar.vue";
 import Club from "@/components/Club.vue";
+import BottomTabBar from "@/components/layout/BottomTabBar.vue";
 import { api } from "@/composables/useApi";
 
 const activeTab = ref(localStorage.getItem("activeTab") || "submit");
@@ -199,10 +196,9 @@ const switchTab = (tab) => {
 .app-layout {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
   width: 100%;
-  max-width: 1200px;
   margin: 0 auto;
+  padding: 0;
   position: relative;
   background: transparent;
   --app-header-height: 48px;
@@ -215,10 +211,8 @@ const switchTab = (tab) => {
   position: relative;
   background: transparent;
   width: 100%;
-  max-width: 100%;
   padding-top: var(--app-header-height);
   padding-bottom: var(--app-bottom-height);
-  min-height: 100vh;
   overflow: hidden;
 }
 
@@ -230,6 +224,6 @@ const switchTab = (tab) => {
   -webkit-overflow-scrolling: touch;
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 0;
+  padding: 15px 0;
 }
 </style>
