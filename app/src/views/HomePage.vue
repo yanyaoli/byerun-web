@@ -1,5 +1,7 @@
 <template>
   <div class="app-container">
+    <!-- 顶部标题栏 -->
+    <AppHeader />
     <div class="app-layout">
       <!-- 主要内容区域 -->
       <main class="page-main">
@@ -26,6 +28,7 @@ import RunRecords from "@/components/RunRecords.vue";
 import Profile from "@/components/Profile.vue";
 import Message from "@/components/Message.vue";
 import Club from "@/components/Club.vue";
+import AppHeader from "@/components/layout/AppHeader.vue";
 import BottomTabBar from "@/components/layout/BottomTabBar.vue";
 import { api } from "@/composables/useApi";
 

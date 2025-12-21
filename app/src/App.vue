@@ -1,8 +1,6 @@
 <template>
   <div class="app flex flex-col min-h-100vh relative overflow-hidden bg-gray-50">
     <div class="app-container">
-      <!-- 顶部标题栏 -->
-      <AppHeader />
       <div v-if="!isLogin">
         <LoginPage />
       </div>
@@ -19,8 +17,6 @@ import { ref, provide } from "vue";
 import LoginPage from "./views/LoginPage.vue";
 import HomePage from "./views/HomePage.vue";
 import Message from "./components/Message.vue";
-import AppHeader from "@/components/layout/AppHeader.vue";
-import BottomTabBar from "@/components/layout/BottomTabBar.vue";
 
 const isLogin = ref(!!localStorage.getItem("token"));
 const messageRef = ref(null);

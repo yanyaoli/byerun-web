@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full px-4">
+  <div class="w-full">
     <!-- 用户信息卡片 -->
     <div class="border border-black/8 rounded-3xl p-4 mb-6 ">
       <div class="flex justify-between items-center gap-[16]">
