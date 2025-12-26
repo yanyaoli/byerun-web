@@ -152,10 +152,10 @@ const fetchUserData = async () => {
 };
 
 const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("studentId");
-  localStorage.removeItem("schoolId");
+  localStorage.removeItem("unirun_token");
+  localStorage.removeItem("unirun_userId");
+  localStorage.removeItem("unirun_studentId");
+  localStorage.removeItem("unirun_schoolId");
   window.location.reload();
 };
 

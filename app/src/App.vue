@@ -18,7 +18,7 @@ import LoginPage from "./views/LoginPage.vue";
 import HomePage from "./views/HomePage.vue";
 import Message from "./components/Message.vue";
 
-const isLogin = ref(!!localStorage.getItem("token"));
+const isLogin = ref(!!localStorage.getItem("unirun_token"));
 const messageRef = ref(null);
 
 // 全局消息方法

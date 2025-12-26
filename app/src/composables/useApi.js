@@ -17,7 +17,7 @@ const req = axios.create({
 // 请求拦截器
 req.interceptors.request.use((config) => {
 	// token
-	const token = localStorage.getItem('token');
+	const token = localStorage.getItem('unirun_token');
 	if (token) config.headers['token'] = token;
 
 	// 生成 sign，query 为 config.params，body 为 config.data

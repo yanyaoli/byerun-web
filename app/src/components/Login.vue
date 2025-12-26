@@ -58,10 +58,10 @@ const doLogin = async () => {
       password.value
     );
     if (data.code === 10000) {
-      localStorage.setItem("token", data.response.oauthToken.token);
-      localStorage.setItem("userId", data.response.userId);
-      localStorage.setItem("studentId", data.response.studentId);
-      localStorage.setItem("schoolId", data.response.schoolId);
+      localStorage.setItem("unirun_token", data.response.oauthToken.token);
+      localStorage.setItem("unirun_userId", data.response.userId);
+      localStorage.setItem("unirun_studentId", data.response.studentId);
+      localStorage.setItem("unirun_schoolId", data.response.schoolId);
       window.location.reload();
     } else {
       showMessage(data.msg, "error");
