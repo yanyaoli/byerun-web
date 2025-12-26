@@ -184,8 +184,8 @@ const fetchRunStatus = async () => {
   statusError.value = null;
   runStatus.value = null;
   try {
-    const userId = localStorage.getItem("userId");
-    const token = localStorage.getItem("token");
+    const userId = localStorage.getItem("unirun_userId");
+    const token = localStorage.getItem("unirun_token");
     const headers = { "content-type": "application/json" };
     if (token) headers["Token"] = token;
     const params = userId ? `?userid=${encodeURIComponent(userId)}` : "";
@@ -243,7 +243,7 @@ const API_BASE = scheduledTaskConfig.apiBaseUrl;
 // 方法
 const fetchMapsFromApi = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("unirun_token");
       const headers = { "content-type": "application/json" };
       if (token) headers["Token"] = token;
 
@@ -352,8 +352,8 @@ const getMapDisplayName = (mapId) => {
 };
 
 const fetchConfig = async () => {
-  const userId = localStorage.getItem("userId");
-  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("unirun_userId");
+  const token = localStorage.getItem("unirun_token");
   const headers = { "content-type": "application/json" };
   if (token) headers["Token"] = token;
   const params = userId ? `?userid=${encodeURIComponent(userId)}` : "";
@@ -447,7 +447,7 @@ const buildRequestBody = () => {
 };
 
 const saveConfig = async (body) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("unirun_token");
   const headers = { "content-type": "application/json" };
   if (token) headers["Token"] = token;
 

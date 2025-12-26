@@ -8,8 +8,8 @@ export function useAutoConfig() {
 
   // 获取配置
   const fetchConfig = async () => {
-    const userId = localStorage.getItem('userId')
-    const token = localStorage.getItem('token')
+    const userId = localStorage.getItem('unirun_userId')
+    const token = localStorage.getItem('unirun_token')
     const base = scheduledTaskConfig.apiBaseUrl
     const headers = { 'content-type': 'application/json' }
     if (token) headers['Token'] = token
@@ -29,7 +29,7 @@ export function useAutoConfig() {
 
   // 保存配置
   const saveConfig = async (configData) => {
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('unirun_token')
     const base = scheduledTaskConfig.apiBaseUrl
     const headers = { 'content-type': 'application/json' }
     if (token) headers['Token'] = token

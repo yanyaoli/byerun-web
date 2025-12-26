@@ -150,8 +150,8 @@ const props = defineProps({
 const emit = defineEmits(["submitted"]);
 
 // 常量定义
-const LOCAL_STORAGE_ROUTE_KEY = "submitRunRoute";
-const LOCAL_STORAGE_DISTANCE_KEY = "submitRunDistance";
+const LOCAL_STORAGE_ROUTE_KEY = "unirun_submitRunRoute";
+const LOCAL_STORAGE_DISTANCE_KEY = "unirun_submitRunDistance";
 
 // Refs
 const mapsLoaded = ref(false);
@@ -229,11 +229,14 @@ const distancePercentage = computed(() => {
 
 const semesterEndDateText = computed(() => {
   const rs = props.runStandard || {};
-  const inst = String(rs.instanceSemester || "");
-  if (inst === "1") {
+  // 仅使用 semesterYear 的最后一位判断学期（"1" 或 "2"），不回退到 instanceSemester
+  const semYear = String(rs.semesterYear || "");
+  const last = semYear ? semYear.slice(-1) : "";
+
+  if (last === "1") {
     return rs.firstSemesterDateEnd || "";
   }
-  if (inst === "2") {
+  if (last === "2") {
     return rs.secondSemesterDateEnd || "";
   }
   return "";
@@ -351,9 +354,9 @@ const handleSubmit = async () => {
     return;
   }
 
-  const userId = localStorage.getItem("userId");
-  const studentId = localStorage.getItem("studentId");
-  const schoolId = localStorage.getItem("schoolId");
+  const userId = localStorage.getItem("unirun_userId");
+  const studentId = localStorage.getItem("unirun_studentId");
+  const schoolId = localStorage.getItem("unirun_schoolId");
   if (!userId || !studentId || !schoolId) {
     showMessage("请先登录", "error");
     return;

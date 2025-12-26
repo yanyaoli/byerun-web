@@ -2,7 +2,7 @@
  * 设备信息模块
  */
 
-const STORAGE_KEY = 'device_info';
+const STORAGE_KEY = 'unirun_device_info';
 
 // iPhone 设备列表
 const IPHONE_DEVICES = [
