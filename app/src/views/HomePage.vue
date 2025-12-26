@@ -32,7 +32,7 @@ import AppHeader from "@/components/layout/AppHeader.vue";
 import BottomTabBar from "@/components/layout/BottomTabBar.vue";
 import { api } from "@/composables/useApi";
 
-const activeTab = ref(localStorage.getItem("activeTab") || "submit");
+const activeTab = ref(localStorage.getItem("unirun_activeTab") || "submit");
 const userInfo = ref(null);
 const runInfo = ref(null);
 const runStandard = ref(null);
@@ -176,7 +176,7 @@ const switchTab = (tab) => {
   }
 
   activeTab.value = tab;
-  localStorage.setItem("activeTab", tab);
+  localStorage.setItem("unirun_activeTab", tab);
 
   // 切换后恢复新页面的滚动位置
   nextTick(() => {
