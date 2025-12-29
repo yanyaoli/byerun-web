@@ -130,7 +130,7 @@ export const api = {
 	},
 
 	// 获取跑步信息
-	getRunInfo: async (userId = null, yearSemester = null) => {
+	getRunInfo: async (userId, yearSemester) => {
 		return req.get(appConfig.api.endpoints.runInfo, {
 			params: { userId, yearSemester },
 		});

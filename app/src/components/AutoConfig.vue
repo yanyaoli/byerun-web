@@ -496,6 +496,14 @@ const handleSubmit = async () => {
 watch(visibleRef, async (v) => {
   if (!v) return;
 
+  if (!isAutomationEnabled) {
+    loading.value = false;
+    mapsLoaded.value = false;
+    availableMaps.value = [];
+    statusError.value = new Error('自动任务已被禁用');
+    return;
+  }
+
   loading.value = true;
   try {
     // 打开时优先刷新后端地图列表，失败回退到本地文件
