@@ -1,6 +1,6 @@
 <template>
   <header
-    class="fixed left-0 right-0 top-3 px-4 h-11 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
+    class="fixed left-0 right-0 top-3 h-11 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
     <div
       class="flex items-center justify-between h-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl px-3 gap-2 transition-inherit shadow-[0_8px_32px_rgba(0,0,0,0.05)] max-w-[480px] mx-auto w-full">
       <!-- Logo -->

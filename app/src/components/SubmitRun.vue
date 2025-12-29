@@ -1,40 +1,46 @@
 <template>
-  <div class="submit-container">
-    <div class="stats-table">
-      <div class="stats-table-header">
-        <div class="stats-header-title">完成情况</div>
-        <div class="stats-header-semester"><i class="fa-solid fa-hourglass-end"></i> {{ semesterEndDateText }}</div>
+  <div class="flex-1 flex flex-col h-full relative w-full box-border">
+    <div class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border">
+      <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
+        <div class="text-sm font-semibold text-gray-800">完成情况</div>
+        <div class="text-sm text-gray-500">
+          <i class="fa-solid fa-hourglass-end"></i> {{ semesterEndDateText }}
+        </div>
       </div>
       <!-- 三个卡片表格布局 -->
-      <div class="stats-table-row">
-        <div class="stats-card club-activity">
-          <div class="stats-percentage">
+      <div class="flex gap-2 pt-2 w-full">
+        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center club-activity">
+          <div class="text-lg font-semibold text-gray-800 mb-1">
             {{
               totalActivities === 0
-                ? "0%"
-                : Math.round(clubCompletionRate) + "%"
+                ? '0%'
+                : Math.round(clubCompletionRate) + '%'
             }}
           </div>
-          <div class="stats-title">俱乐部活动</div>
-          <div class="stats-ratio">
-            {{ completedActivities + "/" + totalActivities }}
+          <div class="text-sm font-medium text-gray-800 mb-1 truncate">
+            俱乐部活动
+          </div>
+          <div class="text-sm text-gray-500 mb-2">
+            {{ completedActivities + '/' + totalActivities }}
           </div>
         </div>
-        <div class="stats-card run-completion">
-          <div class="stats-percentage">{{ runCompletionRate }}%</div>
-          <div class="stats-title">跑步次数</div>
-          <div class="stats-ratio">
+        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center run-completion">
+          <div class="text-lg font-semibold text-gray-800 mb-1">
+            {{ runCompletionRate }}%
+          </div>
+          <div class="text-sm font-medium text-gray-800 mb-1">跑步次数</div>
+          <div class="text-sm text-gray-500 mb-2">
             {{ completedRuns }}/{{ totalRequiredRuns }}
           </div>
         </div>
-        <div class="stats-card distance-stats">
-          <div class="stats-percentage">
+        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center distance-stats">
+          <div class="text-lg font-semibold text-gray-800 mb-1">
             {{ Math.round(distancePercentage) }}%
           </div>
-          <div class="stats-title">跑步里程</div>
-          <div class="stats-ratio">
+          <div class="text-sm font-medium text-gray-800 mb-1">跑步里程</div>
+          <div class="text-sm text-gray-500 mb-2">
             {{ totalDistanceKm }}/{{
-              Number(targetDistanceKm) ? targetDistanceKm : "0"
+              Number(targetDistanceKm) ? targetDistanceKm : '0'
             }}
           </div>
         </div>
@@ -43,24 +49,29 @@
 
     <!-- 数据输入表单 -->
     <form @submit.prevent="handleSubmit">
-      <div class="form-section">
-        <div class="stats-table-header">
-          <h3 class="stats-header-title">提交记录</h3>
-          <div class="stats-header-semester"> <button type="button" class="text-gray-600 cursor-pointer hover:text-gray-800"
+      <div class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border">
+        <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
+          <div class="text-sm font-semibold text-gray-800">提交记录</div>
+          <div class="text-sm text-gray-500">
+            <button type="button" class="text-gray-600 cursor-pointer hover:text-gray-800"
               :class="{ active: showAutoModal }" @click="showAutoModal = !showAutoModal" :aria-pressed="showAutoModal"
               title="定时任务配置">
               <i class="fa-solid fa-alarm-clock"></i>
-            </button></div>
+            </button>
+          </div>
         </div>
         <!-- 跑步路线选择 -->
         <div class="form-group mt-4">
-          <label>选择地图</label>
-          <div class="route-dropdown" @click="
-            mapsLoaded && !submitting
-              ? (showRouteOptions = !showRouteOptions)
-              : null
-            ">
-            <div class="selected-route" :class="{ disabled: !mapsLoaded || submitting }">
+          <label class="block text-sm text-gray-500 mb-2 font-medium">选择地图</label>
+          <div
+            class="route-dropdown bg-gray-100 border border-gray-200 rounded-md p-2 cursor-pointer relative w-full box-border"
+            @click="
+              mapsLoaded && !submitting
+                ? (showRouteOptions = !showRouteOptions)
+                : null
+              ">
+            <div class="selected-route flex items-center justify-between text-sm text-gray-800"
+              :class="{ disabled: !mapsLoaded || submitting }">
               <span v-if="!mapsLoaded">加载地图中...</span>
               <span v-else>{{ getRouteName(form.route) }}</span>
               <div class="dropdown-arrow" :class="{ active: showRouteOptions && mapsLoaded }" v-if="mapsLoaded"></div>
@@ -81,34 +92,40 @@
 
         <!-- 跑步里程输入 -->
         <div class="form-group">
-          <label>跑步里程</label>
-          <div class="input-container">
-            <div class="input-wrapper">
+          <label class="block text-sm text-gray-500 mt-2 mb-2 font-medium">跑步里程</label>
+          <div class="input-container flex items-center">
+            <div class="input-wrapper flex-1 flex items-center bg-gray-100 border border-gray-200 rounded-md px-3">
               <input v-model.number="form.distance" type="number" step="1" placeholder="输入里程" required
-                style="box-shadow: none; outline: none" />
-              <span class="unit">米</span>
+                class="flex-1 py-2 text-sm bg-transparent outline-none pr-2" />
+              <span class="unit text-sm text-gray-500 pl-2">米</span>
             </div>
-            <button type="button" class="p-2 bg-gray-100 text-sm text-gray-600 cursor-pointer active:bg-gray-800 diabled:cursor-not-allowed rounded-full" @click="onRandomFill" :disabled="submitting">
+            <button type="button"
+              class="ml-3 px-3 py-2 bg-gray-100 text-sm text-gray-600 cursor-pointer hover:bg-gray-200 disabled:opacity-50 rounded-md"
+              @click="onRandomFill" :disabled="submitting" aria-label="随机里程">
               <i class="fa-solid fa-dice"></i>
             </button>
           </div>
         </div>
 
-        <div class="action-buttons">
-          <button type="submit" class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200" :disabled="submitting || !paceLimit || !isDistanceValid"
-            :class="{ submitting: submitting }">
+        <div class="flex gap-3 mt-5">
+          <button type="submit"
+            class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
+            :disabled="submitting || !paceLimit || !isDistanceValid" :class="{ submitting: submitting }">
             <i v-if="!submitting" class="fa-solid fa-check"></i>
             <span class="loader" v-else></span>
-            {{ submitting ? "提交中..." : "提交记录" }}
+            {{ submitting ? '提交中...' : '提交记录' }}
           </button>
         </div>
       </div>
     </form>
 
     <!-- 路线预览部分 -->
-    <div class="route-preview-section">
-      <h3 class="section-title">路线预览</h3>
-      <MapPreview :track="generatedTrack" :ready="mapReady" />
+    <div class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border">
+      <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
+        <div class="text-sm font-semibold text-gray-800">路线预览</div>
+        <div class="text-sm text-gray-500"></div>
+      </div>
+      <MapPreview :track="generatedTrack" :ready="mapReady" class="pt-2 w-full" />
     </div>
 
     <AutoConfig :visible="showAutoModal" @update:visible="updateAutoVisible" @saved="onAutoSaved" />
@@ -124,19 +141,18 @@ import {
   inject,
   defineAsyncComponent,
   nextTick,
-} from "vue";
-import { loadMapFiles, getMapNames } from "../utils/map";
-import { genTrackPoints } from "../utils/track";
-import { getDeviceInfo } from "../utils/device";
-import { api } from "@/composables/useApi";
-
+} from 'vue';
+import { submitRun as submitRunApi } from '@/composables/useRunSubmission';
+import { computeDurationFromDistance, isPaceWithinLimits } from '@/utils/distance';
+import { randomIntNonThousand } from '@/utils/random';
+import { useRouteGenerator } from '@/composables/useRouteGenerator';
 
 // 注入全局消息方法
-const showMessage = inject("showMessage");
+const showMessage = inject('showMessage');
 
 // 异步组件
-const MapPreview = defineAsyncComponent(() => import("./MapPreview.vue"));
-const AutoConfig = defineAsyncComponent(() => import("./AutoConfig.vue"));
+const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
+const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
 
 // Props
 const props = defineProps({
@@ -147,28 +163,68 @@ const props = defineProps({
 });
 
 // Emits
-const emit = defineEmits(["submitted"]);
+const emit = defineEmits(['submitted']);
 
-// 常量定义
-const LOCAL_STORAGE_ROUTE_KEY = "unirun_submitRunRoute";
-const LOCAL_STORAGE_DISTANCE_KEY = "unirun_submitRunDistance";
-
-// Refs
-const mapsLoaded = ref(false);
-const routeOptions = ref({});
-const mapDisplayNames = ref({});
+// 将表单状态与非接口逻辑写回组件（更简单、可控）
 const form = ref({
   distance: null,
   duration: 0,
-  route: "",
-  date: new Date().toISOString().split("T")[0],
+  route: '',
+  date: new Date().toISOString().split('T')[0],
 });
 const submitting = ref(false);
+
+const isDistanceValid = computed(() => {
+  const d = Number(form.value.distance);
+  return d >= 1000 && Number.isInteger(d);
+});
+
+const paceLimit = computed(() =>
+  isPaceWithinLimits(form.value.distance, form.value.duration)
+);
+
+async function syncDurationToDistance() {
+  form.value.duration = computeDurationFromDistance(form.value.distance);
+  await nextTick();
+}
+
+function onRandomFill() {
+  const min = 1000,
+    max = 7500;
+  form.value.distance = randomIntNonThousand(min, max);
+  syncDurationToDistance();
+}
+
+// 持久化里程到 localStorage
+watch(
+  () => form.value.distance,
+  (val) => {
+    try {
+      localStorage.setItem('unirun_submitRunDistance', String(val));
+    } catch (e) { }
+    syncDurationToDistance();
+  }
+);
+
+const {
+  mapsLoaded,
+  routeOptions,
+  mapDisplayNames,
+  selectedRoute,
+  load: loadMaps,
+  selectRoute: selectMapRoute,
+  getRouteName,
+  generatedTrack,
+  mapReady,
+  regenerate,
+} = useRouteGenerator(
+  computed(() => form.value.distance),
+  computed(() => form.value.route)
+);
+
 const showAutoModal = ref(false);
 const showRouteOptions = ref(false);
 const animateProgress = ref(false);
-const generatedTrack = ref(null);
-const mapReady = ref(false);
 // Computed Properties - 统计数据
 const completedActivities = computed(() => {
   return props.activityInfo ? props.activityInfo.joinNum : 0;
@@ -205,19 +261,19 @@ const totalDistanceKm = computed(() => {
     const truncated = Math.floor(km * 10) / 10;
     return truncated.toFixed(1);
   }
-  return "0.0";
+  return '0.0';
 });
 
 const targetDistanceKm = computed(() => {
   if (props.runStandard && props.userInfo) {
     const gender = props.userInfo.gender;
-    if (gender === "1") {
+    if (gender === '1') {
       return (Number(props.runStandard.boyAllRunDistance) / 1000).toFixed(1);
-    } else if (gender === "2") {
+    } else if (gender === '2') {
       return (Number(props.runStandard.girlAllRunDistance) / 1000).toFixed(1);
     }
   }
-  return "0.0";
+  return '0.0';
 });
 
 const distancePercentage = computed(() => {
@@ -229,59 +285,17 @@ const distancePercentage = computed(() => {
 
 const semesterEndDateText = computed(() => {
   const rs = props.runStandard || {};
-  // 仅使用 semesterYear 的最后一位判断学期（"1" 或 "2"），不回退到 instanceSemester
-  const semYear = String(rs.semesterYear || "");
-  const last = semYear ? semYear.slice(-1) : "";
+  const semYear = String(rs.semesterYear || '');
+  const last = semYear ? semYear.slice(-1) : '';
 
-  if (last === "1") {
-    return rs.firstSemesterDateEnd || "";
+  if (last === '1') {
+    return rs.firstSemesterDateEnd || '';
   }
-  if (last === "2") {
-    return rs.secondSemesterDateEnd || "";
+  if (last === '2') {
+    return rs.secondSemesterDateEnd || '';
   }
-  return "";
+  return '';
 });
-
-const paceLimit = computed(() => {
-  const distance = Number(form.value.distance);
-  const duration = Number(form.value.duration);
-
-  // 如果距离或时长无效，允许提交（验证会在提交时进行）
-  if (!distance || distance <= 0 || !duration || duration <= 0) {
-    return true;
-  }
-
-  const pace = duration / (distance / 1000);
-  const minPace = 6;
-  const maxPace = 10;
-
-  if (isNaN(pace) || !isFinite(pace)) return true;
-  if (pace < minPace) return false;
-  if (pace > maxPace) return false;
-  return true;
-});
-
-const isDistanceValid = computed(() => {
-  const distance = Number(form.value.distance);
-  return distance >= 1000 && Number.isInteger(distance);
-});
-
-// 工具函数
-function getMapDisplayName(mapId) {
-  return mapDisplayNames.value[mapId] || mapId;
-}
-
-function getRouteName(routeValue) {
-  return routeOptions.value[routeValue] || "选择路线";
-}
-
-function computeDurationFromDistance(distanceMeters) {
-  const dist = Number(distanceMeters);
-  if (!Number.isFinite(dist) || dist <= 0) return 0;
-  const paceMinPerKm = 6 + Math.random() * 4; // 6-10 min/km
-  const minutes = (dist / 1000) * paceMinPerKm;
-  return Math.max(1, Math.round(minutes));
-}
 
 function triggerProgressAnimation() {
   animateProgress.value = false;
@@ -296,139 +310,47 @@ function updateAutoVisible(v) {
 }
 
 function onAutoSaved() {
-  showMessage("定时任务配置已保存", "success");
+  showMessage('定时任务配置已保存', 'success');
 }
 
 function selectRoute(route) {
   if (!Object.prototype.hasOwnProperty.call(routeOptions.value, route)) {
     return;
   }
+  selectMapRoute(route);
   form.value.route = route;
   showRouteOptions.value = false;
-  try {
-    localStorage.setItem(LOCAL_STORAGE_ROUTE_KEY, route);
-  } catch (e) { }
-}
-
-async function syncDurationToDistance() {
-  const newDuration = computeDurationFromDistance(form.value.distance);
-  form.value.duration = newDuration;
-  // 使用 nextTick 确保响应式更新完成
-  await nextTick();
 }
 
 // 主要业务函数
-async function loadMaps() {
-  try {
-    const mapIds = await loadMapFiles();
-
-    const names = getMapNames();
-    mapDisplayNames.value = names;
-
-    const options = {};
-    for (const mapId of mapIds) {
-      options[mapId] = names[mapId];
-    }
-
-    routeOptions.value = options;
-    mapsLoaded.value = true;
-
-    console.log("成功加载地图选项:", options);
-  } catch (error) {
-    console.error("加载地图失败:", error);
-    routeOptions.value = {
-      cdutcm_wj: "成都中医药大学（温江校区）",
-    };
-    mapsLoaded.value = true;
-  }
-}
-
 const handleSubmit = async () => {
   if (!paceLimit.value) {
-    showMessage("配速不能小于6分钟/公里", "error");
+    showMessage('配速不能小于6分钟/公里', 'error');
     return;
   }
 
   if (!Number.isInteger(form.value.distance) || form.value.distance < 1000) {
-    showMessage("跑步里程必须为不小于1000米的正整数", "error");
-    return;
-  }
-
-  const userId = localStorage.getItem("unirun_userId");
-  const studentId = localStorage.getItem("unirun_studentId");
-  const schoolId = localStorage.getItem("unirun_schoolId");
-  if (!userId || !studentId || !schoolId) {
-    showMessage("请先登录", "error");
+    showMessage('跑步里程必须为不小于1000米的正整数', 'error');
     return;
   }
 
   submitting.value = true;
-
-  // 生成轨迹点（新格式：只有经纬度）
-  const trackPoints = genTrackPoints(
-    form.value.distance,
-    form.value.route
-  );
-
-  // 获取设备信息
-  const deviceInfo = getDeviceInfo();
-  const recordDate = form.value.date;
-
-  // 获取学期信息
-  let yearSemester;
-  if (props.runStandard && props.runStandard.semesterYear) {
-    yearSemester = props.runStandard.semesterYear;
-  } else {
-    const now = new Date();
-    const year = now.getFullYear();
-    const semester = now.getMonth() + 1 < 8 ? "1" : "2";
-    yearSemester = `${year}${semester}`;
-  }
-
   try {
-    const runDistance = form.value.distance;
-    const runTime = form.value.duration;
-    const { data } = await api.saveNewRecord(trackPoints, runDistance, runTime, userId, recordDate, yearSemester);
-    console.debug("Server response for run submit:", data);
-
-    if (data && data.code === 10000) {
-      showMessage(data.response.resultDesc, "success");
-      triggerProgressAnimation();
-      emit("submitted");
-      try {
-        window.dispatchEvent(new Event("run-submitted"));
-      } catch (e) {}
-    } else {
-      showMessage(data?.msg || "提交失败", "error");
+    const res = await submitRunApi({ distance: form.value.distance });
+    if (!res.ok) {
+      const msg = res.msg === 'not_login' ? '请先登录' : (res.data?.msg || res.error?.message || '提交失败，请重试');
+      showMessage(msg, 'error');
+      return;
     }
-  } catch (e) {
-    console.error("Submit run error:", e);
-    showMessage("提交异常", "error");
+
+    showMessage(res.data?.response?.resultDesc || '提交成功', 'success');
+    triggerProgressAnimation();
+    emit('submitted');
+
   } finally {
     submitting.value = false;
   }
 };
-
-const onRandomFill = () => {
-  const minDistance = 1000;
-  const maxDistance = 7500;
-  const randomDistance =
-    Math.floor(Math.random() * (maxDistance - minDistance + 1)) + minDistance;
-  form.value.distance = randomDistance;
-  syncDurationToDistance();
-  triggerProgressAnimation();
-};
-
-// Watchers
-watch(
-  () => form.value.distance,
-  async (val) => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_DISTANCE_KEY, String(val));
-    } catch (e) { }
-    await syncDurationToDistance();
-  }
-);
 
 // 监听 form 对象的深层变化，确保所有字段更新都能触发重新计算
 watch(
@@ -447,43 +369,26 @@ watch(
   { deep: true }
 );
 
-watch(
-  () => [form.value.route, form.value.distance],
-  () => {
-    try {
-      const distanceNum = Number(form.value.distance);
-      if (Number.isFinite(distanceNum) && distanceNum > 0) {
-        generatedTrack.value = genTrackPoints(distanceNum, form.value.route);
-        mapReady.value = true;
-      } else {
-        generatedTrack.value = null;
-        mapReady.value = false;
-      }
-    } catch (e) {
-      generatedTrack.value = null;
-      mapReady.value = false;
-    }
-  },
-  { immediate: true }
-);
-
 // Lifecycle
 onMounted(async () => {
-  await loadMaps();
-
   try {
-    const savedRoute = localStorage.getItem(LOCAL_STORAGE_ROUTE_KEY);
-    if (
-      savedRoute &&
-      Object.prototype.hasOwnProperty.call(routeOptions.value, savedRoute)
-    ) {
-      form.value.route = savedRoute;
+    await loadMaps();
+
+    // composable 会在 load 时恢复 saved route 或选择第一个 route
+    if (selectedRoute.value) {
+      form.value.route = selectedRoute.value;
     } else if (Object.keys(routeOptions.value).length > 0) {
       form.value.route = Object.keys(routeOptions.value)[0];
     }
 
-    // 每次进入页面都生成随机距离
-    onRandomFill();
+    // 恢复上次保存的里程（若存在），否则生成随机距离
+    const saved = localStorage.getItem('unirun_submitRunDistance');
+    if (saved) {
+      form.value.distance = Number(saved);
+      await syncDurationToDistance();
+    } else {
+      onRandomFill();
+    }
   } catch (e) { }
 
   setTimeout(() => {
@@ -493,196 +398,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.submit-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.stats-table {
-  background: #fff;
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  border: 1px solid #e3e6e8;
-  box-shadow: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* 完成情况表头 */
-.stats-table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #fff;
-  border-bottom: 1px solid #e3e6e8;
-}
-
-.stats-header-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #2d3a3f;
-  margin: 0 0 5px 0;
-}
-
-.stats-header-semester {
-  font-size: 14px;
-  color: #7b8a8b;
-  margin: 0 0 5px 0;
-}
-
-/* 三卡片表格布局 */
-.stats-table-row {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  padding: 10px 0px 0px 0px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.stats-card {
-  flex: 1;
-  background: #f0f2f5;
-  border-radius: 12px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stats-percentage {
-  font-size: 15px;
-  font-weight: 600;
-  color: #323538;
-  margin-bottom: 6px;
-}
-
-.stats-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: #2d3a3f;
-  margin: 0 0 6px 0;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.stats-ratio {
-  font-size: 13px;
-  color: #7b8a8b;
-  margin-bottom: 8px;
-}
-
-.form-section,
-.route-preview-section {
-  background: #fff;
-  border-radius: 12px;
-  padding: 14px;
-  margin-bottom: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e3e6e8;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-form {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #2d3a3f;
-  margin: 0 0 12px 0;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f2f5;
-}
-
-.form-group {
-  margin-bottom: 16px;
-}
-
-.input-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.input-wrapper {
-  flex: 1;
-}
-
-.form-group label {
-  display: block;
-  font-size: 14px;
-  color: #7b8a8b;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
-
-.form-group-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.form-group.half {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.input-wrapper {
-  display: flex;
-  align-items: center;
-  background: #f6f7f9;
-  border: 1px solid #e3e6e8;
-  border-radius: 8px;
-  padding: 0 12px;
-}
-
-.input-wrapper input {
-  flex: 1;
-  padding: 10px 0;
-  border: none;
-  font-size: 15px;
-  background: transparent;
-  outline: none;
-  color: #2d3a3f;
-}
-
-.input-wrapper .unit {
-  color: #7b8a8b;
-  font-size: 14px;
-  padding-left: 4px;
-}
-
-/* 路线选择 */
 .route-dropdown {
-  background: #f6f7f9;
-  border: 1px solid #e3e6e8;
-  border-radius: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
   position: relative;
   user-select: none;
-  width: 100%;
   box-sizing: border-box;
-}
-
-.selected-route {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 15px;
-  color: #2d3a3f;
 }
 
 .dropdown-arrow {
@@ -728,44 +447,6 @@ form {
   color: #3b9eff;
 }
 
-/* 配速卡片 */
-
-/* 按钮区域 */
-.action-buttons {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-
-.submit-btn {
-  flex: 1;
-  padding: 2px 0;
-  border-radius: 25px;
-  font-size: 15px;
-  font-weight: 600;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  gap: 6px;
-  background: #f0f2f5;
-  padding: 10px;
-
-}
-
-.submit-btn:disabled {
-  background: #b0b0b0;
-  box-shadow: none;
-  color: #fff;
-  cursor: not-allowed;
-}
-
-.submit-btn.submitting {
-  background: #7b8a8b;
-  color: #fff;
-}
-
 .loader {
   display: inline-block;
   width: 18px;
@@ -779,96 +460,14 @@ form {
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
-.route-preview-placeholder {
-  background: #f6f7f9;
-  border: 1px dashed #e3e6e8;
-  border-radius: 8px;
-  height: 140px;
-  /* 减少高度，节省空间 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder-text {
-  color: #7b8a8b;
-  font-size: 14px;
-}
-
-/* 消息提示 */
-.message-box {
-  margin: 16px;
-  background: #e6f4ff;
-  border-radius: 8px;
-  border: 1px solid #a8d8ff;
-  color: #3b9eff;
-  font-size: 15px;
-  padding: 14px;
-  text-align: center;
-  box-shadow: none;
-  transition: all 0.2s;
-}
-
-.message-box.error {
-  background: #fff2e6;
-  border-color: #ffcca5;
-  color: #f8500e;
-}
-
-.message-text {
-  font-size: 15px;
-}
-
 @media (max-width: 375px) {
-  .stats-header {
-    padding: 14px 12px 6px 12px;
-  }
-
-  .stats-header-title {
-    font-size: 15px;
-  }
-
-  .stats-header-semester {
-    font-size: 13px;
-  }
-
-  .stats-section {
-    padding: 16px 12px 6px 12px;
-    gap: 8px;
-  }
-
-  .stats-card {
-    padding: 12px 8px 10px;
-  }
-
-  .stats-title {
-    font-size: 12px;
-  }
-
-  .stats-percentage {
-    font-size: 18px;
-  }
-
-  .stats-ratio {
-    font-size: 12px;
-  }
-
   .route-dropdown {
-    padding: 8px 8px;
-  }
-
-  .modal-container {
-    width: 98vw;
-    padding: 0 0 8px 0;
+    padding: 8px;
   }
 }
 </style>

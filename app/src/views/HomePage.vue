@@ -1,11 +1,11 @@
 <template>
-  <div class="app-container">
+  <div class="h-screen flex flex-col bg-transparent overflow-hidden">
     <!-- 顶部标题栏 -->
     <AppHeader />
-    <div class="app-layout">
+    <div class="flex flex-col w-full mx-auto p-0 relative bg-transparent">
       <!-- 主要内容区域 -->
-      <main class="page-main">
-        <div class="main-scroll-area" ref="mainScrollRef">
+      <main class="flex-1 relative bg-transparent w-full pt-[48px] pb-[72px] overflow-hidden">
+        <div class="main-scroll-area relative h-full min-h-[calc(100vh-48px-72px)] overflow-y-auto w-full box-border py-5" ref="mainScrollRef">
           <keep-alive>
             <component :is="currentComponent" :key="activeTab" v-bind="currentProps" v-on="currentListeners" />
           </keep-alive>
@@ -167,8 +167,6 @@ const logout = () => {
   handleLogout();
 };
 
-
-
 const switchTab = (tab) => {
   // 保存当前页面的滚动位置
   if (mainScrollRef.value) {
@@ -188,45 +186,9 @@ const switchTab = (tab) => {
 </script>
 
 <style scoped>
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  overflow: hidden;
-}
-
-.app-layout {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-  position: relative;
-  background: transparent;
-  --app-header-height: 48px;
-  --app-bottom-height: 72px;
-  overflow: hidden;
-}
-
-.page-main {
-  flex: 1;
-  position: relative;
-  background: transparent;
-  width: 100%;
-  padding-top: var(--app-header-height);
-  padding-bottom: var(--app-bottom-height);
-  overflow: hidden;
-}
-
 .main-scroll-area {
-  position: relative;
-  height: 100%;
-  min-height: calc(100vh - var(--app-header-height) - var(--app-bottom-height));
+  height: calc(100vh - 48px - 72px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 15px 0;
 }
 </style>
