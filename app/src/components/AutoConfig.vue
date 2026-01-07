@@ -1,546 +1,234 @@
 <template>
-  <div v-if="visibleRef" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/25 backdrop-blur-sm" @click.self="close">
-    <div class="relative w-full max-w-xs bg-gray-500/30 backdrop-blur-2xl rounded-xl shadow-lg border border-gray-300">
-      <!-- 关闭按钮 -->
-      <button class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors" @click="close">
+  <div v-if="visible" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" @click.self="close">
+    <div class="relative w-full max-w-[300px] bg-stone-950 border border-white/10 rounded-[2rem] shadow-2xl transition-all overflow-hidden">
+
+      <div v-if="pinging" class="py-16 flex flex-col items-center justify-center space-y-4">
+        <i class="fa-brands fa-connectdevelop text-white text-3xl animate-bounce"></i>
+        <p class="text-[10px] text-stone-600 font-black tracking-[0.3em] uppercase">连接服务中</p>
+      </div>
+
+      <div v-else-if="initError" class="py-16 flex flex-col items-center justify-center space-y-4">
+        <div class="relative">
+          <i class="fa-solid fa-bomb text-red-500 text-4xl animate-pulse"></i>
+          <div class="absolute -inset-2 bg-red-500/20 blur-xl rounded-full"></div>
+        </div>
+        <div class="text-center px-6">
+          <p class="text-stone-200 text-xs font-bold">连接失败</p>
+          <p class="text-stone-500 text-[10px] mt-1 line-clamp-2">{{ initError }}</p>
+        </div>
+        <button @click="init" class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 text-[10px] font-bold rounded-xl transition-colors">
+          重新尝试
+        </button>
+      </div>
+
+      <div v-else class="p-6 space-y-5">
+        <div class="flex justify-between items-center pr-8">
+          <div class="space-y-0.5">
+            <h2 class="text-sm font-black text-stone-200 uppercase tracking-widest">定时任务</h2>
+            <p class="text-[9px] text-stone-700 font-mono">v20260107 BETA</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-3 bg-stone-900/40 border border-white/5 rounded-2xl">
+          <span class="text-[11px] font-bold text-stone-500">今日完成状态</span>
+          <span :class="['text-[11px] font-black', status?.executed ? 'text-emerald-500' : 'text-orange-500 text-shadow-sm']">
+            {{ status?.executed ? '已完成' : '待执行' }}
+          </span>
+        </div>
+
+        <div class="space-y-4">
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">学校地图</label>
+            <div class="relative">
+              <div @click="showMapList = !showMapList" class="flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:border-white/10 transition-all">
+                <span class="text-[12px] text-stone-200 font-medium">{{ currentMapName }}</span>
+                <i :class="['fa-solid fa-chevron-down text-[10px] text-stone-600 transition-transform', showMapList ? 'rotate-180' : '']"></i>
+              </div>
+              <div v-if="showMapList" class="absolute z-50 w-full mt-1 bg-stone-900 border border-white/10 rounded-xl shadow-2xl py-1 max-h-[120px] overflow-y-auto">
+                <div v-for="map in maps" :key="map.id" @click="selectMap(map)" class="px-4 py-2 text-[12px] text-stone-400 hover:bg-white/5 hover:text-white cursor-pointer transition-colors">
+                  {{ map.name }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">运行时间</label>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1">
+                <select v-model="timeObj.h" class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1">
+                  <option v-for="h in 24" :key="h-1" :value="h-1" class="bg-stone-900 text-white">{{ String(h-1).padStart(2, '0') }}</option>
+                </select>
+                <span class="text-[9px] text-stone-600 pr-2 italic">H</span>
+              </div>
+              <span class="text-stone-800 font-bold">:</span>
+              <div class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1">
+                <select v-model="timeObj.m" class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1">
+                  <option v-for="m in 60" :key="m-1" :value="m-1" class="bg-stone-900 text-white">{{ String(m-1).padStart(2, '0') }}</option>
+                </select>
+                <span class="text-[9px] text-stone-600 pr-2 italic">M</span>
+              </div>
+            </div>
+          </div>
+
+          <div @click="form.enabled = !form.enabled" class="flex items-center justify-between p-1 cursor-pointer group">
+            <span class="text-[11px] font-bold text-stone-500 group-hover:text-stone-300 transition-colors">开启定时</span>
+            <div :class="['w-9 h-5 rounded-full transition-all relative', form.enabled ? 'bg-stone-200' : 'bg-stone-800']">
+              <div :class="['absolute top-1 w-3 h-3 rounded-full transition-all', form.enabled ? 'left-5 bg-black' : 'left-1 bg-stone-500']"></div>
+            </div>
+          </div>
+        </div>
+
+        <button
+          @click="handleSave"
+          :disabled="submitting"
+          class="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2"
+        >
+          <i v-if="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>{{ submitting ? 'SYNCING' : '保存配置' }}</span>
+        </button>
+      </div>
+
+      <button @click="close" class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5 text-stone-600 hover:text-white transition-all">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
-
-      <div class="p-5 bg-white/90 rounded-xl">
-        <!-- 骨架屏 -->
-        <div v-if="loading" class="space-y-4">
-          <div class="flex items-center gap-2">
-            <div class="h-5 w-32 bg-gray-200 rounded animate-pulse"></div>
-            <div class="h-5 w-12 bg-gray-200 rounded-full animate-pulse"></div>
-          </div>
-          <div class="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
-          <div class="space-y-3">
-            <div v-for="i in 4" :key="i" class="h-10 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div class="h-10 bg-gray-300 rounded animate-pulse"></div>
-        </div>
-
-        <!-- 实际内容 -->
-        <div v-else class="space-y-6">
-          <!-- 标题区域 -->
-          <div class="flex items-center gap-2">
-            <h2 class="text-lg font-semibold text-gray-800">定时任务</h2>
-            <span class="px-2 py-0.5 text-xs font-semibold bg-gray-800 text-white rounded-full">Beta</span>
-          </div>
-
-          <!-- 任务运行状态（仅展示今日是否完成） -->
-          <div class="mt-2 text-sm text-gray-600">
-            <div v-if="statusLoading">状态加载中...</div>
-            <div v-else-if="statusError" class="text-red-500">获取状态失败</div>
-            <div v-else>
-              <div>今日已完成: <span class="font-medium">{{ todayDone ? '是' : '否' }}</span></div>
-            </div>
-          </div>
-
-          <!-- 配置列表 -->
-          <div class="space-y-4">
-            <!-- 地图选择 -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 text-gray-700 flex-shrink-0">
-                <i class="fa-solid fa-map text-gray-600 w-4"></i>
-                <span class="text-sm font-medium whitespace-nowrap">校区地图</span>
-              </div>
-              <div class="flex items-center gap-2 min-w-0">
-                <select
-                  v-model="form.map_id"
-                  class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed truncate max-w-[140px]"
-                  :disabled="submitting || !mapsLoaded || availableMaps.length === 0"
-                >
-                  <option value="" disabled v-if="!mapsLoaded">加载中...</option>
-                  <option
-                    v-for="mapId in availableMaps"
-                    :key="mapId"
-                    :value="mapId"
-                    class="truncate"
-                  >
-                    {{ getMapDisplayName(mapId) }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <!-- 里程设置 -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 text-gray-700 flex-shrink-0">
-                <i class="fa-solid fa-route text-gray-600 w-4"></i>
-                <span class="text-sm font-medium whitespace-nowrap">最低里程</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <input
-                  class="w-24 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                  type="number"
-                  v-model.number="form.min_distance_m"
-                  min="1"
-                  max="100000"
-                  :disabled="submitting"
-                />
-                <span class="text-sm text-gray-600 whitespace-nowrap">米</span>
-              </div>
-            </div>
-
-            <!-- 时间设置 -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 text-gray-700 flex-shrink-0">
-                <i class="fa-solid fa-clock text-gray-600 w-4"></i>
-                <span class="text-sm font-medium whitespace-nowrap">运行时间</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <input
-                  class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
-                  type="time"
-                  v-model="form.timeStr"
-                  :disabled="submitting"
-                />
-              </div>
-            </div>
-
-            <!-- 开关设置 -->
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 text-gray-700 flex-shrink-0">
-                <i class="fa-solid fa-power-off text-gray-600 w-4"></i>
-                <span class="text-sm font-medium whitespace-nowrap">启用任务</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    class="sr-only peer"
-                    v-model="form.enabled"
-                    :disabled="submitting || !mapsLoaded || availableMaps.length === 0"
-                  />
-                  <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- 操作按钮 -->
-          <div class="pt-2">
-            <button
-              class="w-full py-3 px-4 flex items-center justify-center gap-2 bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              :class="{
-                'bg-blue-600 hover:bg-blue-700 text-white': buttonState === 'success',
-                'bg-red-600 hover:bg-red-700 text-white': buttonState === 'error',
-                'bg-gray-400 hover:bg-gray-500 text-white': buttonState === 'loading',
-              }"
-              @click="handleSubmit"
-              :disabled="submitting || !mapsLoaded || availableMaps.length === 0"
-            >
-              <i v-if="buttonState === 'idle'" class="fa-solid fa-check"></i>
-              <i v-else-if="buttonState === 'loading'" class="fa-solid fa-spinner fa-spin"></i>
-              <i v-else-if="buttonState === 'success'" class="fa-solid fa-check"></i>
-              <i v-else-if="buttonState === 'error'" class="fa-solid fa-xmark"></i>
-              <span>{{ saveButtonText }}</span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, toRef, watch, computed, inject, onMounted } from "vue";
+import { ref, reactive, computed, watch, inject } from "vue";
 import { scheduledTaskConfig } from "@/utils/config";
-import { loadMapFiles } from "../utils/map";
 
 const props = defineProps({ visible: Boolean });
 const emit = defineEmits(["update:visible", "saved"]);
-const showMessage = inject("showMessage", (msg, type) => {
-  if (type === "error") alert(msg);
-  else console.log(msg);
-});
+const showMessage = inject("showMessage", (msg) => alert(msg));
 
-const visibleRef = toRef(props, "visible");
+const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, "");
+const userId = localStorage.getItem("unirun_userId");
+const token = localStorage.getItem("unirun_token");
 
-// 表单数据
-const form = ref({
-  map_id: "",
-  min_distance_m: 2000,
-  timeStr: "08:00",
-  enabled: false,
-});
-
-// 状态
-const loading = ref(false);
+const pinging = ref(true);
+const initError = ref(null); // 错误状态
 const submitting = ref(false);
-const buttonState = ref("idle"); // idle, loading, success, error
-const availableMaps = ref([]);
-const mapsLoaded = ref(false);
-const mapMetadata = ref({});
+const showMapList = ref(false);
 
-// 运行状态
-const runStatus = ref(null);
-const statusLoading = ref(false);
-const statusError = ref(null);
+const maps = ref([]);
+const status = ref(null);
+const form = ref({ map_id: "", enabled: false });
+const timeObj = reactive({ h: 8, m: 0 });
 
-const fetchRunStatus = async () => {
-  statusLoading.value = true;
-  statusError.value = null;
-  runStatus.value = null;
+const currentMapName = computed(() => {
+  const map = maps.value.find(m => m.id === form.value.map_id);
+  return map ? map.name : '加载中...';
+});
+
+const selectMap = (map) => {
+  form.value.map_id = map.id;
+  showMapList.value = false;
+};
+
+const request = async (path, options = {}) => {
+  const url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "Token": token || "",
+      ...options.headers
+    }
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || "请求失败");
+  return json.data;
+};
+
+const parseCronToTime = (cronExpr) => {
+  if (!cronExpr) return { h: 8, m: 0 };
+  const [min, hour] = cronExpr.split(' ');
+  return { h: parseInt(hour), m: parseInt(min) };
+};
+
+const init = async () => {
+  pinging.value = true;
+  initError.value = null; // 重置错误
   try {
-    const userId = localStorage.getItem("unirun_userId");
-    const token = localStorage.getItem("unirun_token");
-    const headers = { "content-type": "application/json" };
-    if (token) headers["Token"] = token;
-    const params = userId ? `?userid=${encodeURIComponent(userId)}` : "";
+    // 1. 基础服务检查 (必须成功)
+    await request("/ping");
 
-    const statusUrl = `${API_BASE.replace(/\/$/, "")}/api/autorun/run/status${params}`;
-    console.log("AutoConfig: fetching run status ->", statusUrl);
-    const res = await fetch(statusUrl, {
-      method: "GET",
-      headers,
-    });
+    // 2. 并发请求后续数据
+    const [mapsData, configData, statusData] = await Promise.all([
+      request("/api/autorun/maps"),
+      request(`/api/autorun/config?userid=${userId}`),
+      request(`/api/autorun/run/status?userid=${userId}`)
+    ]);
 
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    const data = await res.json();
-    runStatus.value = data;
+    // 赋值
+    maps.value = mapsData.maps;
+    form.value.map_id = configData.map_id || mapsData.default;
+    form.value.enabled = !!configData.enabled;
+    const { h, m } = parseCronToTime(configData.cron_expr);
+    timeObj.h = h;
+    timeObj.m = m;
+    status.value = statusData;
+
+    pinging.value = false;
   } catch (err) {
-    console.warn("获取任务状态失败", err);
-    statusError.value = err;
-  } finally {
-    statusLoading.value = false;
+    console.error("AutoRun Init Error:", err);
+    initError.value = err.message || "未知错误";
+    pinging.value = false; // 停止 pinging 状态以展示错误 UI
   }
 };
 
-// 仅展示今天是否完成
-const todayDone = computed(() => {
-  if (!runStatus.value || !runStatus.value.last_run_at) return false;
-  const datePart = String(runStatus.value.last_run_at).slice(0, 10);
-  const now = new Date();
-  const yyyy = now.getFullYear();
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  const dd = String(now.getDate()).padStart(2, "0");
-  return datePart === `${yyyy}-${mm}-${dd}`;
-});
-
-// 当组件被挂载到页面时也尝试加载地图和状态（处理作为页面而非弹窗的场景）
-onMounted(() => {
-  console.log("AutoConfig mounted: starting loadMaps and fetchRunStatus");
-  loadMaps();
-  fetchRunStatus();
-});
-
-// 计算属性
-const saveButtonText = computed(() => {
-  const texts = {
-    loading: "保存中...",
-    success: "保存成功",
-    error: "保存失败",
-    idle: "保存配置",
-  };
-  return texts[buttonState.value];
-});
-
-// 常量
-const API_BASE = scheduledTaskConfig.apiBaseUrl;
-
-// 方法
-const fetchMapsFromApi = async () => {
-    try {
-      const token = localStorage.getItem("unirun_token");
-      const headers = { "content-type": "application/json" };
-      if (token) headers["Token"] = token;
-
-      const mapsUrl = `${API_BASE.replace(/\/$/, "")}/api/autorun/maps`;
-      console.log("AutoConfig: fetching maps ->", mapsUrl);
-      const res = await fetch(mapsUrl, {
-        method: "GET",
-        headers,
-      });
-
-      if (!res.ok) {
-        console.warn("AutoConfig: maps endpoint returned non-ok status", res.status);
-        return null;
-      }
-      const data = await res.json();
-      console.log("AutoConfig: maps response ->", data);
-      if (!data || !Array.isArray(data.maps)) return null;
-
-      const mapIds = data.maps.map((m) => m.id);
-      availableMaps.value = mapIds;
-
-      data.maps.forEach((m) => {
-        if (m && m.id) {
-          mapMetadata.value[m.id] = {
-            mapId: m.id,
-            mapName: m.name || m.id,
-          };
-        }
-      });
-
-      mapsLoaded.value = true;
-
-      // If backend provided a default map, use it; otherwise pick first
-      if (!form.value.map_id) {
-        if (data.default && availableMaps.value.includes(data.default)) {
-          form.value.map_id = data.default;
-        } else if (mapIds.length > 0) {
-          form.value.map_id = mapIds[0];
-        }
-      }
-
-      return mapIds;
-    } catch (err) {
-      console.warn("获取地图列表失败，回退到本地文件", err);
-      return null;
-    }
-  };
-
-  const loadMaps = async () => {
-    try {
-      // 优先尝试从后端获取地图列表，失败后回退到本地文件
-      const mapIds = (await fetchMapsFromApi()) || (await loadMapFiles());
-      console.log("AutoConfig: loadMaps got mapIds ->", mapIds);
-      if (Array.isArray(mapIds)) {
-        availableMaps.value = mapIds;
-        mapsLoaded.value = true;
-        await loadMapMetadata();
-        if (mapIds.length > 0 && !form.value.map_id) {
-          form.value.map_id = mapIds[0];
-        }
-      } else {
-        availableMaps.value = [];
-    }
-  } catch (error) {
-    console.error("加载地图文件失败:", error);
-    availableMaps.value = [];
-  }
-};
-
-const loadMapMetadata = async () => {
+const handleSave = async () => {
+  submitting.value = true;
   try {
-    const metadataPromises = availableMaps.value.map(async (mapId) => {
-      // 如果已经有 mapName（例如后端返回），则跳过额外请求
-      if (mapMetadata.value[mapId]?.mapName) return { mapId, success: true };
-      try {
-        const response = await fetch(`/data/maps/${mapId}.json`);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const mapFileData = await response.json();
-        mapMetadata.value[mapId] = {
-          mapId: mapFileData.mapId,
-          mapName: mapFileData.mapName,
-        };
-        return { mapId, success: true };
-      } catch (error) {
-        return { mapId, success: false, error };
-      }
+    const targetDate = new Date();
+    targetDate.setHours(timeObj.h, timeObj.m, 0, 0);
+
+    await request("/api/autorun/register", {
+      method: "POST",
+      body: JSON.stringify({
+        map_id: form.value.map_id,
+        enabled: form.value.enabled ? 1 : 0,
+        timestamp: targetDate.getTime()
+      })
     });
-    await Promise.all(metadataPromises);
-  } catch (error) {
-    console.error("加载地图元数据时发生错误:", error);
+
+    status.value = await request(`/api/autorun/run/status?userid=${userId}`);
+    showMessage("设置已生效");
+  } catch (err) {
+    showMessage(err.message, "error");
+  } finally {
+    submitting.value = false;
   }
-};
-
-const getMapDisplayName = (mapId) => {
-  if (mapMetadata.value[mapId]?.mapName) {
-    return mapMetadata.value[mapId].mapName;
-  }
-  const displayNames = {
-    cuit_hkg: "成都信息工程大学（航空港校区）",
-    cuit_lqy: "成都信息工程大学（龙泉驿校区）",
-    cdutcm_wj: "成都中医药大学（温江校区）",
-    ncwsxx: "南充卫生学校",
-    sctbc: "四川工商职业技术学院",
-  };
-  return displayNames[mapId] || mapId;
-};
-
-const fetchConfig = async () => {
-  const userId = localStorage.getItem("unirun_userId");
-  const token = localStorage.getItem("unirun_token");
-  const headers = { "content-type": "application/json" };
-  if (token) headers["Token"] = token;
-  const params = userId ? `?userid=${encodeURIComponent(userId)}` : "";
-
-  const res = await fetch(
-    `${API_BASE.replace(/\/$/, "")}/api/autorun/config${params}`,
-    { method: "GET", headers }
-  );
-  return res.ok ? await res.json() : null;
-};
-
-const applyConfig = (json) => {
-  if (json.map_id && availableMaps.value.includes(json.map_id)) {
-    form.value.map_id = json.map_id;
-  } else if (availableMaps.value.length > 0) {
-    form.value.map_id = availableMaps.value[0];
-  }
-
-  if (typeof json.min_distance_m !== "undefined") {
-    form.value.min_distance_m = Number(json.min_distance_m) || form.value.min_distance_m;
-  }
-
-  if (json.cron) {
-    const parts = String(json.cron).split(/\s+/);
-    if (parts.length >= 2) {
-      const minute = parts[0] === "*" ? 0 : Number(parts[0]) || 0;
-      const hour = parts[1] === "*" ? 0 : Number(parts[1]) || 0;
-      const hh = String(hour).padStart(2, "0");
-      const mm = String(minute).padStart(2, "0");
-      form.value.timeStr = `${hh}:${mm}`;
-    }
-  }
-
-  if (typeof json.enabled !== "undefined") {
-    form.value.enabled = Number(json.enabled) === 1;
-  }
-};
-
-const setDefaultTime = () => {
-  const now = new Date();
-  form.value.timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes()
-  ).padStart(2, "0")}`;
 };
 
 const close = () => {
+  showMapList.value = false;
   emit("update:visible", false);
 };
 
-const validateForm = () => {
-  if (!form.value.map_id || !availableMaps.value.includes(form.value.map_id)) {
-    showMessage("请选择有效的地图", "error");
-    return false;
-  }
-
-  const distance = Number(form.value.min_distance_m);
-  if (!Number.isInteger(distance) || distance < 1 || distance > 100000) {
-    showMessage("距离必须在1-100000米之间", "error");
-    return false;
-  }
-
-  const timeRegex = /^\d{2}:\d{2}$/;
-  if (!form.value.timeStr || !timeRegex.test(form.value.timeStr)) {
-    showMessage("时间格式不正确", "error");
-    return false;
-  }
-
-  const [hhStr, mmStr] = form.value.timeStr.split(":");
-  const hh = Number(hhStr);
-  const mm = Number(mmStr);
-  if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
-    showMessage("时间必须在00:00-23:59之间", "error");
-    return false;
-  }
-
-  return true;
-};
-
-const buildRequestBody = () => {
-  const [hhStr, mmStr] = form.value.timeStr.split(":");
-  const hour = Number(hhStr);
-  const minute = Number(mmStr);
-  const cronStr = `${minute} ${hour} * * *`;
-
-  return {
-    cron: cronStr,
-    enabled: form.value.enabled ? 1 : 0,
-    map_id: form.value.map_id,
-    min_distance_m: Number(form.value.min_distance_m),
-  };
-};
-
-const saveConfig = async (body) => {
-  const token = localStorage.getItem("unirun_token");
-  const headers = { "content-type": "application/json" };
-  if (token) headers["Token"] = token;
-
-  const res = await fetch(`${API_BASE.replace(/\/$/, "")}/api/autorun/register`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) throw new Error("network");
-  const resp = await res.json();
-  return resp && resp.ok === true;
-};
-
-const handleSubmit = async () => {
-  if (!validateForm()) return;
-
-  submitting.value = true;
-  buttonState.value = "loading";
-
-  try {
-    const body = buildRequestBody();
-    const result = await saveConfig(body);
-
-    if (result) {
-      buttonState.value = "success";
-      showMessage("定时任务配置已保存", "success");
-      emit("saved");
-    } else {
-      buttonState.value = "error";
-      showMessage("保存失败，请重试", "error");
-    }
-  } catch (error) {
-    console.error(error);
-    buttonState.value = "error";
-    showMessage("网络错误，请检查连接", "error");
-  } finally {
-    submitting.value = false;
-    setTimeout(() => {
-      buttonState.value = "idle";
-    }, 1500);
-  }
-};
-
-// 监听 visible 变化
-watch(visibleRef, async (v) => {
-  if (!v) return;
-
-  if (!isAutomationEnabled) {
-    loading.value = false;
-    mapsLoaded.value = false;
-    availableMaps.value = [];
-    statusError.value = new Error('自动任务已被禁用');
-    return;
-  }
-
-  loading.value = true;
-  try {
-    // 打开时优先刷新后端地图列表，失败回退到本地文件
-    const backendMapIds = await fetchMapsFromApi();
-    if (!Array.isArray(backendMapIds)) {
-      const localMapIds = await loadMapFiles();
-      if (Array.isArray(localMapIds)) {
-        availableMaps.value = localMapIds;
-        mapsLoaded.value = true;
-        await loadMapMetadata();
-        if (localMapIds.length > 0 && !form.value.map_id) {
-          form.value.map_id = localMapIds[0];
-        }
-      } else {
-        availableMaps.value = [];
-      }
-    } else {
-      // 后端已返回列表，确保元数据已加载（有时需要从本地文件获取名称）
-      await loadMapMetadata();
-    }
-
-    // 立即获取运行状态
-    await fetchRunStatus();
-
-    const configData = await fetchConfig();
-    if (configData) {
-      applyConfig(configData);
-    } else {
-      setDefaultTime();
-    }
-  } catch (e) {
-    console.warn("获取定时任务配置失败", e);
-    setDefaultTime();
-  } finally {
-    loading.value = false;
-  }
-});
+watch(() => props.visible, (val) => val && init());
 </script>
 
-<style scoped></style>
+<style scoped>
+/* 保持原有样式 */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #292524;
+  border-radius: 10px;
+}
+option {
+  background-color: #0c0a09;
+  color: #e7e5e4;
+}
+</style>
