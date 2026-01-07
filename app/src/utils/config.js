@@ -30,7 +30,9 @@ export const appConfig = {
 
 // 定时任务配置
 export const scheduledTaskConfig = {
-  apiBaseUrl: import.meta.env.VITE_AUTORUN_SERVER_BASE || '',
+  apiBaseUrl: import.meta.env.DEV
+    ? '/autorunserver'
+    : (import.meta.env.VITE_AUTORUN_SERVER_BASE || ''),
   isAutomationEnabled: import.meta.env.VITE_AUTORUN_ENABLED !== 'false',
 };
 
