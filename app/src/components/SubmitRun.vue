@@ -146,6 +146,7 @@ import { submitRun as submitRunApi } from '@/composables/useRunSubmission';
 import { computeDurationFromDistance, isPaceWithinLimits } from '@/utils/distance';
 import { randomIntNonThousand } from '@/utils/random';
 import { useRouteGenerator } from '@/composables/useRouteGenerator';
+import { useDataStore } from '@/composables/useDataStore';
 
 // 注入全局消息方法
 const showMessage = inject('showMessage');
@@ -154,22 +155,24 @@ const showMessage = inject('showMessage');
 const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
 const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
 
-// Props
-const props = defineProps({
-  userInfo: { type: Object, default: null },
-  runStandard: { type: Object, default: null },
-  runInfo: { type: Object, default: null },
-  activityInfo: { type: Object, default: null },
-});
+const {
+  userInfo,
+  runStandard,
+  runInfo,
+  activityInfo,
+  submitRunDistance,
+  submitRunRoute,
+  loading: profileLoading
+} = useDataStore();
 
 // Emits
 const emit = defineEmits(['submitted']);
 
 // 将表单状态与非接口逻辑写回组件（更简单、可控）
 const form = ref({
-  distance: null,
+  distance: submitRunDistance.value,
   duration: 0,
-  route: '',
+  route: submitRunRoute.value,
   date: new Date().toISOString().split('T')[0],
 });
 const submitting = ref(false);
@@ -195,13 +198,11 @@ function onRandomFill() {
   syncDurationToDistance();
 }
 
-// 持久化里程到 localStorage
+// 持久化里程到 store
 watch(
   () => form.value.distance,
   (val) => {
-    try {
-      localStorage.setItem('unirun_submitRunDistance', String(val));
-    } catch (e) { }
+    submitRunDistance.value = val;
     syncDurationToDistance();
   }
 );
@@ -227,11 +228,11 @@ const showRouteOptions = ref(false);
 const animateProgress = ref(false);
 // Computed Properties - 统计数据
 const completedActivities = computed(() => {
-  return props.activityInfo ? props.activityInfo.joinNum : 0;
+  return activityInfo.value ? activityInfo.value.joinNum : 0;
 });
 
 const totalActivities = computed(() => {
-  return props.activityInfo ? props.activityInfo.totalNum : 0;
+  return activityInfo.value ? activityInfo.value.totalNum : 0;
 });
 
 const clubCompletionRate = computed(() => {
@@ -240,11 +241,19 @@ const clubCompletionRate = computed(() => {
 });
 
 const completedRuns = computed(() => {
-  return props.activityInfo ? props.activityInfo.runJoinNum : 0;
+  return runInfo.value ? runInfo.value.runValidCount : 0;
 });
 
 const totalRequiredRuns = computed(() => {
-  return props.activityInfo ? props.activityInfo.runTotalNum : 0;
+  if (runStandard.value && userInfo.value) {
+    const gender = userInfo.value.gender;
+    if (gender === '1') {
+      return runStandard.value.boyAllRunTime || 0;
+    } else if (gender === '2') {
+      return runStandard.value.girlAllRunTime || 0;
+    }
+  }
+  return 0;
 });
 
 const runCompletionRate = computed(() => {
@@ -256,8 +265,8 @@ const runCompletionRate = computed(() => {
 });
 
 const totalDistanceKm = computed(() => {
-  if (props.runInfo && props.runInfo.runValidDistance) {
-    const km = Number(props.runInfo.runValidDistance) / 1000;
+  if (runInfo.value && runInfo.value.runValidDistance) {
+    const km = Number(runInfo.value.runValidDistance) / 1000;
     const truncated = Math.floor(km * 10) / 10;
     return truncated.toFixed(1);
   }
@@ -265,12 +274,12 @@ const totalDistanceKm = computed(() => {
 });
 
 const targetDistanceKm = computed(() => {
-  if (props.runStandard && props.userInfo) {
-    const gender = props.userInfo.gender;
+  if (runStandard.value && userInfo.value) {
+    const gender = userInfo.value.gender;
     if (gender === '1') {
-      return (Number(props.runStandard.boyAllRunDistance) / 1000).toFixed(1);
+      return (Number(runStandard.value.boyAllRunDistance) / 1000).toFixed(1);
     } else if (gender === '2') {
-      return (Number(props.runStandard.girlAllRunDistance) / 1000).toFixed(1);
+      return (Number(runStandard.value.girlAllRunDistance) / 1000).toFixed(1);
     }
   }
   return '0.0';
@@ -284,7 +293,7 @@ const distancePercentage = computed(() => {
 });
 
 const semesterEndDateText = computed(() => {
-  const rs = props.runStandard || {};
+  const rs = runStandard.value || {};
   const semYear = String(rs.semesterYear || '');
   const last = semYear ? semYear.slice(-1) : '';
 
@@ -319,6 +328,7 @@ function selectRoute(route) {
   }
   selectMapRoute(route);
   form.value.route = route;
+  submitRunRoute.value = route;
   showRouteOptions.value = false;
 }
 
@@ -375,16 +385,18 @@ onMounted(async () => {
     await loadMaps();
 
     // composable 会在 load 时恢复 saved route 或选择第一个 route
-    if (selectedRoute.value) {
+    if (submitRunRoute.value) {
+      form.value.route = submitRunRoute.value;
+      selectMapRoute(submitRunRoute.value);
+    } else if (selectedRoute.value) {
       form.value.route = selectedRoute.value;
     } else if (Object.keys(routeOptions.value).length > 0) {
       form.value.route = Object.keys(routeOptions.value)[0];
     }
 
     // 恢复上次保存的里程（若存在），否则生成随机距离
-    const saved = localStorage.getItem('unirun_submitRunDistance');
-    if (saved) {
-      form.value.distance = Number(saved);
+    if (submitRunDistance.value) {
+      form.value.distance = Number(submitRunDistance.value);
       await syncDurationToDistance();
     } else {
       onRandomFill();

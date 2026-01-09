@@ -1,13 +1,13 @@
 <template>
   <div class="w-full">
     <!-- 用户信息卡片 -->
-    <div class="border border-black/8 rounded-3xl p-4 mb-6 ">
+    <div class="border border-black/8 rounded-xl p-4 mb-6 ">
       <div class="flex justify-between items-center gap-[16]">
         <div
           class="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center text-2xl font-bold text-white overflow-hidden relative transition-all duration-700 ease-in-out hover:rotate-[360deg] mr-4">
           <component :is="userInfo?.gender == '2' ? FemaleAvatar : userInfo?.gender == '1' ? MaleAvatar : null" />
           <span v-if="userInfo?.gender != '1' && userInfo?.gender != '2'">{{ userInfo?.studentName?.charAt(0) || "U"
-            }}</span>
+          }}</span>
         </div>
         <div class="flex-1">
           <h2 class="text-lg font-semibold text-gray-800 mb-1">
@@ -33,8 +33,18 @@
         </button>
       </div>
     </div>
-    <!-- 评论区 -->
-    <div class="artalk-container" ref="artalkContainer"></div>
+
+    <!-- 留言板 -->
+    <Comment />
+
+    <!-- 评论区 (Artalk) -->
+    <div class="mt-8 mb-4 px-2">
+      <h3 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-gray-400"></i>
+        评论区
+      </h3>
+    </div>
+    <div class="artalk-container bg-white border border-black/8 rounded-xl p-4" ref="artalkContainer"></div>
 
   </div>
 </template>
@@ -45,12 +55,11 @@ import Artalk from "artalk";
 import "artalk/dist/Artalk.css";
 import MaleAvatar from "./Avatar/MaleAvatar.vue";
 import FemaleAvatar from "./Avatar/FemaleAvatar.vue";
+import Comment from "./Comment.vue";
 import { artalkConfig } from "@/utils/config";
+import { useDataStore } from "@/composables/useDataStore";
 
-defineProps({
-  userInfo: Object,
-  loading: Boolean
-});
+const { userInfo, loading } = useDataStore();
 
 // 注入全局消息方法
 const showMessage = inject('showMessage');
@@ -76,5 +85,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

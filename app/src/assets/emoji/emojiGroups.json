@@ -1,0 +1,50 @@
+{
+  "smileys": [
+    { "char": "😀", "code": "1f600" },
+    { "char": "😂", "code": "1f602" },
+    { "char": "🤣", "code": "1f923" },
+    { "char": "😊", "code": "1f60a" },
+    { "char": "😍", "code": "1f60d" },
+    { "char": "😘", "code": "1f618" },
+    { "char": "😜", "code": "1f61c" },
+    { "char": "🤔", "code": "1f914" },
+    { "char": "🙄", "code": "1f644" },
+    { "char": "😭", "code": "1f62d" },
+    { "char": "😱", "code": "1f631" },
+    { "char": "😴", "code": "1f634" },
+    { "char": "😎", "code": "1f60e" },
+    { "char": "🥳", "code": "1f973" },
+    { "char": "🥺", "code": "1f97a" },
+    { "char": "🤡", "code": "1f921" }
+  ],
+  "gestures": [
+    { "char": "👍", "code": "1f44d" },
+    { "char": "👎", "code": "1f44e" },
+    { "char": "👌", "code": "1f44c" },
+    { "char": "✌️", "code": "270c" },
+    { "char": "🤞", "code": "1f91e" },
+    { "char": "👏", "code": "1f44f" },
+    { "char": "🙌", "code": "1f64c" },
+    { "char": "🙏", "code": "1f64f" }
+  ],
+  "hearts": [
+    { "char": "❤️", "code": "2764" },
+    { "char": "🧡", "code": "1f9e1" },
+    { "char": "💛", "code": "1f49b" },
+    { "char": "💚", "code": "1f49a" },
+    { "char": "💙", "code": "1f499" },
+    { "char": "💜", "code": "1f49c" },
+    { "char": "🖤", "code": "1f5a4" },
+    { "char": "🤍", "code": "1f90d" }
+  ],
+  "others": [
+    { "char": "🔥", "code": "1f525" },
+    { "char": "✨", "code": "2728" },
+    { "char": "🎉", "code": "1f389" },
+    { "char": "🚀", "code": "1f680" },
+    { "char": "🌈", "code": "1f308" },
+    { "char": "☀️", "code": "2600" },
+    { "char": "🌙", "code": "1f319" },
+    { "char": "💯", "code": "1f4af" }
+  ]
+}
