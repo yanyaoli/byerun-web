@@ -13,12 +13,14 @@
 </template>
 
 <script setup>
-import { ref, provide } from "vue";
+import { ref, provide, computed } from "vue";
 import LoginPage from "./views/LoginPage.vue";
 import HomePage from "./views/HomePage.vue";
 import Message from "./components/Message.vue";
+import { useDataStore } from "./composables/useDataStore";
 
-const isLogin = ref(!!localStorage.getItem("unirun_token"));
+const { token } = useDataStore();
+const isLogin = computed(() => !!token.value);
 const messageRef = ref(null);
 
 // 全局消息方法

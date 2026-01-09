@@ -21,9 +21,11 @@ export function useRouteGenerator(distanceRef, routeRef) {
       mapsLoaded.value = true;
 
       try {
-        const saved = localStorage.getItem('unirun_submitRunRoute');
-        if (saved && opts[saved]) selectedRoute.value = saved;
-        else if (Object.keys(opts).length) selectedRoute.value = Object.keys(opts)[0];
+        if (routeRef && routeRef.value && opts[routeRef.value]) {
+          selectedRoute.value = routeRef.value;
+        } else if (Object.keys(opts).length) {
+          selectedRoute.value = Object.keys(opts)[0];
+        }
       } catch (e) {}
     } catch (error) {
       console.error('加载地图失败:', error);
@@ -35,10 +37,11 @@ export function useRouteGenerator(distanceRef, routeRef) {
   function selectRoute(route) {
     if (!routeOptions.value[route]) return;
     selectedRoute.value = route;
-    try { localStorage.setItem(localKey, route); } catch (e) {}
   }
 
-  function getRouteName(v) { return routeOptions.value[v] || '选择路线'; }
+  function getRouteName(v) {
+    return routeOptions.value[v] || '选择路线';
+  }
 
   function regenerate() {
     try {

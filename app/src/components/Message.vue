@@ -1,14 +1,10 @@
 <template>
-  <transition
-    enter-active-class="transition duration-250 ease-out"
-    enter-from-class="translate-y-[-8px] opacity-0"
-    enter-to-class="translate-y-0 opacity-100"
-    leave-active-class="transition duration-200 ease-in"
-    leave-from-class="translate-y-0 opacity-100"
-    leave-to-class="translate-y-[-8px] opacity-0"
-  >
+  <transition enter-active-class="transition duration-250 ease-out" enter-from-class="translate-y-[-8px] opacity-0"
+    enter-to-class="translate-y-0 opacity-100" leave-active-class="transition duration-200 ease-in"
+    leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-[-8px] opacity-0">
     <div v-if="visible" class="fixed top-5 right-5 z-[99999] flex flex-col gap-2.5 pointer-events-none">
-      <div :class="['min-w-[200px] max-w-[360px] px-4 py-3 rounded-xl text-sm font-bold shadow-[0_8px_24px_rgba(0,0,0,0.45)] pointer-events-auto', messageClasses[messageType]]">
+      <div
+        :class="['min-w-[200px] max-w-[360px] px-4 py-3 rounded-xl text-sm font-bold shadow-[0_8px_24px_rgba(0,0,0,0.45)] pointer-events-auto whitespace-pre-wrap break-words', messageClasses[messageType]]">
         {{ content }}
       </div>
     </div>
@@ -49,5 +45,3 @@ defineExpose({
   show,
 });
 </script>
-
-

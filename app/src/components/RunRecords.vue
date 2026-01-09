@@ -67,32 +67,12 @@
 <script setup>
 import { ref, reactive, onMounted, inject, onUnmounted, watch } from "vue";
 import { useRunRecords } from "@/composables/useRunRecords";
+import { useDataStore } from "@/composables/useDataStore";
 
 // 注入全局消息方法
 const showMessage = inject("showMessage");
 
-const props = defineProps({
-  runInfo: {
-    type: Object,
-    default: null,
-  },
-  runStandard: {
-    type: Object,
-    default: null,
-  },
-  userInfo: {
-    type: Object,
-    default: null,
-  },
-  activityInfo: {
-    type: Object,
-    default: null,
-  },
-  profileLoading: {
-    type: Boolean,
-    default: false,
-  },
-});
+const { userInfo, runInfo, runStandard, activityInfo, loading: profileLoading } = useDataStore();
 
 // 使用 composable 管理记录逻辑
 const {
@@ -112,8 +92,8 @@ onMounted(() => {
   fetchRecords();
 });
 
-// 当父组件（HomePage）刷新用户数据后会结束 profileLoading，监听该变化来触发记录刷新
-watch(() => props.profileLoading, (v, oldV) => {
+// 当全局加载状态结束后刷新记录
+watch(() => profileLoading.value, (v, oldV) => {
   if (oldV === true && v === false) {
     fetchRecords();
   }
