@@ -22,7 +22,7 @@ const getStoredNativeData = () => {
   if (encrypted) {
     const data = decrypt(encrypted);
     if (data) return data;
-    // 如果解密失败（可能是密钥更换或数据损坏），清理损坏的数据
+    // 如果解密失败，清理数据
     localStorage.removeItem(STORAGE_KEY);
   }
 

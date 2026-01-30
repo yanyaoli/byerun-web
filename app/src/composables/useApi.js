@@ -136,7 +136,7 @@ export const api = {
   },
 
   // 获取跑步记录
-  getRunRecords: async (pageNum, pageSize) => {
+  getRunRecords: async (pageNum = 1, pageSize = 15) => {
     return req.get(appConfig.api.endpoints.runRecord, {
       params: { pageNum, pageSize },
     });
@@ -198,7 +198,7 @@ export const api = {
   },
 
   // 查询指定星期的俱乐部信息
-  queryClubInfo: async (weekDay) => {
+  queryClubInfo: async (weekDay = 1) => {
     return req.get(appConfig.api.endpoints.clubInfo, {
       params: {
         pageNo: 1,

@@ -6,12 +6,12 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, onBeforeUnmount } from 'vue';
 import { amapConfig } from '@/utils/config';
 
 const props = defineProps({
   track: {
-    type: [String, null],
+    type: [String, Array, null],
     default: null,
   },
   ready: {
@@ -20,138 +20,217 @@ const props = defineProps({
   },
 });
 
-// Read AMap key from Vite env, fall back to empty string
 const API_KEY = amapConfig.jsApiKey;
 const SECURITY = amapConfig.securityJsCode;
-
 const apiKey = API_KEY || '';
+
 const mapContainer = ref(null);
 let map = null;
-let polyline = null;
-let startMarker = null;
-let endMarker = null;
+let mapObjects = { polylines: [], markers: [], timer: null, animationResolve: null };
 
-function loadAmapScript() {
-  if (!window.AMap) {
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.ToolBar&securityJsCode=${SECURITY}`;
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('AMap script load failed'));
-      document.head.appendChild(script);
-    });
-  }
-  return Promise.resolve();
+// 加载高德地图脚本
+async function loadAmapScript() {
+  if (window.AMap) return;
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.ToolBar`;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
 }
 
+// 解析轨迹坐标
 function parseTrack(trackStr) {
-  if (!trackStr) return [];
-  let arr = [];
+  if (!trackStr || !window.AMap) return [];
+
   try {
-    const parsed = JSON.parse(trackStr);
-    if (Array.isArray(parsed)) arr = parsed;
-  } catch (e) {
-    // try comma-separated
+    const rawArr = typeof trackStr === 'string' ? JSON.parse(trackStr) : trackStr;
+    if (!Array.isArray(rawArr)) return [];
+
+    return rawArr
+      .map((item) => {
+        const [lng, lat] = String(item || '').split('-');
+        const lngNum = parseFloat(lng);
+        const latNum = parseFloat(lat);
+        return isFinite(lngNum) && isFinite(latNum) ? new window.AMap.LngLat(lngNum, latNum) : null;
+      })
+      .filter(Boolean);
+  } catch {
     return [];
   }
-  const coords = arr
-    .map((s) => {
-      const parts = String(s).split('-');
-      const lng = Number(parts[0]);
-      const lat = Number(parts[1]);
-      return [lng, lat];
-    })
-    .filter((p) => Array.isArray(p) && p.length >= 2 && !Number.isNaN(p[0]) && !Number.isNaN(p[1]));
-  return coords;
 }
 
-async function ensureMap() {
-  if (!apiKey) return;
+// 计算颜色（从浅到深）
+function getProgressColor(index, total) {
+  const progress = Math.min(index / Math.max(total - 1, 1), 1);
+  // 从 #90caf9（浅蓝） 到 #1565c0（深蓝）
+  const startColor = { r: 144, g: 202, b: 249 };
+  const endColor = { r: 21, g: 101, b: 192 };
+
+  const r = Math.round(startColor.r + (endColor.r - startColor.r) * progress);
+  const g = Math.round(startColor.g + (endColor.g - startColor.g) * progress);
+  const b = Math.round(startColor.b + (endColor.b - startColor.b) * progress);
+
+  return `rgb(${r},${g},${b})`;
+}
+
+// 检测重复区域，返回经过次数热力图
+function calculateHeatmap(coords) {
+  const heat = new Map();
+  coords.forEach((coord) => {
+    const key = `${coord.lng.toFixed(5)},${coord.lat.toFixed(5)}`;
+    heat.set(key, (heat.get(key) || 0) + 1);
+  });
+  return heat;
+}
+
+// 清理地图对象
+function clearMapObjects() {
+  if (mapObjects.timer) clearInterval(mapObjects.timer);
+  // 如果动画仍在进行，触发其 resolve，避免挂起的 Promise
+  if (mapObjects.animationResolve) {
+    try {
+      mapObjects.animationResolve();
+    } catch (e) {}
+  }
+  mapObjects.polylines.forEach((poly) => map && map.remove(poly));
+  mapObjects.markers.forEach((marker) => map && map.remove(marker));
+  mapObjects = { polylines: [], markers: [], timer: null, animationResolve: null };
+}
+
+// 初始化地图
+async function initMap() {
+  if (map || !apiKey) return;
+
+  if (SECURITY) {
+    window._AMapSecurityConfig = { securityJsCode: SECURITY };
+  }
+
   await loadAmapScript();
+  if (!mapContainer.value) return;
+
   const AMap = window.AMap;
-  if (!map && mapContainer.value) {
-    map = new AMap.Map(mapContainer.value, {
-      zoom: 15,
-      viewMode: '2D',
-      pitch: 0,
-      center: undefined,
-    });
-  }
+  map = new AMap.Map(mapContainer.value, {
+    zoom: 12,
+    viewMode: '2D',
+    center: [104.066541, 30.572269],
+  });
+
+  await new Promise((resolve) => map.on('complete', resolve));
 }
 
-function drawTrack(trackStr) {
-  if (!map || !props.ready) return;
-  const coords = parseTrack(trackStr);
-  // clear previous
-  if (polyline) {
-    map.remove(polyline);
-    polyline = null;
-  }
-  if (startMarker) {
-    map.remove(startMarker);
-    startMarker = null;
-  }
-  if (endMarker) {
-    map.remove(endMarker);
-    endMarker = null;
-  }
-  if (coords.length === 0) return;
-  // AMap expects [lng, lat]
-  polyline = new window.AMap.Polyline({
-    path: coords,
-    showDir: false,
-    strokeColor: '#3b9eff',
-    strokeWeight: 4,
-    strokeOpacity: 0.9,
-  });
-  map.add(polyline);
+// 绘制轨迹
+async function drawTrack(trackStr) {
+  if (!map || !props.ready || !window.AMap) return;
 
-  const start = coords[0];
-  const end = coords[coords.length - 1];
-  startMarker = new window.AMap.Marker({
-    position: start,
-    title: '起点',
-    content: '<div class="amap-marker-start">起</div>',
-  });
-  endMarker = new window.AMap.Marker({
-    position: end,
-    title: '终点',
-    content: '<div class="amap-marker-end">终</div>',
+  const coords = parseTrack(trackStr);
+  if (coords.length < 2) return;
+
+  clearMapObjects();
+  const AMap = window.AMap;
+  const heat = calculateHeatmap(coords);
+
+  // 用分段线条绘制，每段都有渐进颜色，重复区域更深
+  for (let i = 0; i < coords.length - 1; i++) {
+    const key = `${coords[i].lng.toFixed(5)},${coords[i].lat.toFixed(5)}`;
+    const repeatCount = heat.get(key) || 1;
+    const baseOpacity = 0.6;
+    const opacity = Math.min(baseOpacity + (repeatCount - 1) * 0.2, 1);
+
+    const polyline = new AMap.Polyline({
+      path: [coords[i], coords[i + 1]],
+      strokeColor: getProgressColor(i, coords.length),
+      strokeWeight: 5,
+      strokeOpacity: opacity,
+      lineJoin: 'round',
+      lineCap: 'round',
+    });
+    map.add(polyline);
+    mapObjects.polylines.push(polyline);
+  }
+
+  // 添加起点标记
+  const startMarker = new AMap.Marker({
+    position: coords[0],
+    zIndex: 101,
+    offset: new AMap.Pixel(-13, -30),
+    content: '<div class="custom-map-marker marker-start">起</div>',
   });
   map.add(startMarker);
-  map.add(endMarker);
+  mapObjects.markers.push(startMarker);
 
-  try {
-    map.setFitView([polyline, startMarker, endMarker], true);
-  } catch (e) {
-    // ignore
+  // 动画完成后再显示终点标记
+  await animateTrack(coords);
+  const endMarker = new AMap.Marker({
+    position: coords[coords.length - 1],
+    zIndex: 100,
+    offset: new AMap.Pixel(-13, -30),
+    content: '<div class="custom-map-marker marker-end">终</div>',
+  });
+  map.add(endMarker);
+  mapObjects.markers.push(endMarker);
+
+  // 适配视图
+  if (mapObjects.polylines.length > 0) {
+    map.setFitView(mapObjects.polylines, false, [60, 60, 60, 60]);
   }
+
+  // 简化的动画：只显示部分线条，逐步显示全部
+  // animateTrack 返回 Promise，已在 drawTrack 中 await
 }
 
-onMounted(async () => {
-  if (!apiKey) return;
-  try {
-    await ensureMap();
-    if (props.ready) drawTrack(props.track);
-  } catch (e) {
-    // console.warn('Map load error', e);
-  }
-});
+// 轨迹动画展示
+function animateTrack(coords) {
+  return new Promise((resolve) => {
+    let visibleCount = 1;
+    const totalSegments = coords.length - 1;
+    const step = Math.ceil(totalSegments / 60) || 1;
+
+    mapObjects.polylines.forEach((poly) => poly.hide());
+
+    // 保存 resolve，以便在 clearMapObjects 中取消时调用
+    mapObjects.animationResolve = () => {
+      mapObjects.animationResolve = null;
+      resolve();
+    };
+
+    mapObjects.timer = setInterval(() => {
+      if (visibleCount <= totalSegments) {
+        for (let i = 0; i < Math.min(visibleCount, mapObjects.polylines.length); i++) {
+          mapObjects.polylines[i].show();
+        }
+        visibleCount += step;
+      } else {
+        clearInterval(mapObjects.timer);
+        mapObjects.timer = null;
+        if (mapObjects.animationResolve) {
+          mapObjects.animationResolve();
+        } else {
+          resolve();
+        }
+      }
+    }, 30);
+  });
+}
 
 watch(
   () => [props.track, props.ready],
-  ([v, ready]) => {
+  async ([track, ready]) => {
     if (!apiKey || !ready) return;
+
     if (!map) {
-      ensureMap().then(() => drawTrack(v));
-    } else {
-      drawTrack(v);
+      await initMap();
     }
-  }
+    await drawTrack(track);
+  },
+  { immediate: true },
 );
 
 onBeforeUnmount(() => {
+  clearMapObjects();
   if (map) {
     map.destroy();
     map = null;
@@ -168,6 +247,7 @@ onBeforeUnmount(() => {
   height: 400px;
   border-radius: 8px;
   overflow: hidden;
+  background: #f0f2f5;
 }
 .map-missing {
   height: 160px;
@@ -179,13 +259,28 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   border: 1px dashed #e3e6e8;
 }
-.amap-marker-start, .amap-marker-end {
-  display: inline-block;
-  padding: 6px 8px;
+
+:deep(.custom-map-marker) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
   color: #fff;
-  font-weight: 600;
-  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 4px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  line-height: 22px;
+  text-align: center;
 }
-.amap-marker-start { background: #28c76f; }
-.amap-marker-end { background: #ff6b6b; }
+
+:deep(.marker-start) {
+  background: #28c76f;
+}
+
+:deep(.marker-end) {
+  background: #ff6b6b;
+}
 </style>

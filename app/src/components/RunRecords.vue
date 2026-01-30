@@ -1,7 +1,7 @@
 <template>
-  <div class="flex-1 flex flex-col h-full relative w-full box-border">
-    <div class="flex-1 relative flex flex-col overflow-hidden">
-      <div v-if="records.length > 0 || loading" class="overflow-y-auto flex-1" ref="scrollableListRef">
+  <div class="relative w-full box-border">
+    <div class="relative flex flex-col">
+      <div v-if="records.length > 0 || loading" class="w-full" ref="scrollableListRef">
         <div class="flex flex-col gap-3">
           <div v-for="(record, index) in loading ? Array(5).fill(null) : records" :key="loading ? index : record.key"
             class="bg-white rounded-lg overflow-hidden border border-gray-200 mb-4 transition-shadow p-0 flex flex-col">
@@ -57,7 +57,7 @@
       </div>
 
       <!-- 空状态 -->
-      <div v-else class="flex items-center justify-center flex-1">
+      <div v-else class="flex items-center justify-center py-10 w-full">
         <h3 class="text-gray-500 text-base">暂无跑步记录</h3>
       </div>
     </div>
@@ -84,7 +84,7 @@ const {
   loadMoreRecords,
   formatCreateTime,
   formatPaceDetail,
-} = useRunRecords({ pageSize: 10, onMessage: showMessage });
+} = useRunRecords({ onMessage: showMessage });
 
 // 生命周期
 onMounted(() => {

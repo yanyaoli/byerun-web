@@ -27,3 +27,8 @@ dist-ssr
 .env*
 !.env.example
 *.md
+
+debug/
+.history/
+.cache/
+coverage/

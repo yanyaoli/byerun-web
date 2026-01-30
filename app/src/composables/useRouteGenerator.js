@@ -10,6 +10,7 @@ export function useRouteGenerator(distanceRef, routeRef) {
 
   const generatedTrack = ref(null);
   const mapReady = ref(false);
+  let regenTimer = null;
 
   async function load() {
     try {
@@ -18,15 +19,15 @@ export function useRouteGenerator(distanceRef, routeRef) {
       const opts = {};
       for (const id of mapIds) opts[id] = mapDisplayNames.value[id];
       routeOptions.value = opts;
-      mapsLoaded.value = true;
 
-      try {
-        if (routeRef && routeRef.value && opts[routeRef.value]) {
-          selectedRoute.value = routeRef.value;
-        } else if (Object.keys(opts).length) {
-          selectedRoute.value = Object.keys(opts)[0];
-        }
-      } catch (e) {}
+      // 先设置好初始路线，再标记加载完成，减少触发次数
+      if (routeRef && routeRef.value && opts[routeRef.value]) {
+        selectedRoute.value = routeRef.value;
+      } else if (Object.keys(opts).length) {
+        selectedRoute.value = Object.keys(opts)[0];
+      }
+
+      mapsLoaded.value = true;
     } catch (error) {
       console.error('加载地图失败:', error);
       routeOptions.value = { cdutcm_wj: '成都中医药大学（温江校区）' };
@@ -44,26 +45,36 @@ export function useRouteGenerator(distanceRef, routeRef) {
   }
 
   function regenerate() {
-    try {
-      const d = Number(distanceRef?.value);
-      const route = routeRef?.value ?? selectedRoute.value;
-      if (Number.isFinite(d) && d > 0 && route) {
-        generatedTrack.value = genTrackPoints(d, route);
-        mapReady.value = true;
-      } else {
+    if (!mapsLoaded.value) return;
+    
+    // 使用 timer 防抖，避免初始化时多个响应式变量同时变化导致多次计算
+    if (regenTimer) clearTimeout(regenTimer);
+    regenTimer = setTimeout(() => {
+      try {
+        const d = Number(distanceRef?.value);
+        const route = routeRef?.value ?? selectedRoute.value;
+        if (Number.isFinite(d) && d > 100 && route) {
+          const track = genTrackPoints(d, route);
+          if (track && track !== '[]') {
+            generatedTrack.value = track;
+            mapReady.value = true;
+            return;
+          }
+        }
         generatedTrack.value = null;
         mapReady.value = false;
+      } catch (e) {
+        generatedTrack.value = null;
+        mapReady.value = false;
+      } finally {
+        regenTimer = null;
       }
-    } catch (e) {
-      generatedTrack.value = null;
-      mapReady.value = false;
-    }
+    }, 50);
   }
 
-  const watchTargets = [];
+  const watchTargets = [mapsLoaded, selectedRoute];
   if (distanceRef) watchTargets.push(distanceRef);
   if (routeRef) watchTargets.push(routeRef);
-  else watchTargets.push(selectedRoute);
 
   watch(watchTargets, regenerate, { immediate: true });
 
