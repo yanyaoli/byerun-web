@@ -1,134 +1,103 @@
 <template>
   <div class="h-screen flex flex-col bg-transparent overflow-hidden">
-    <!-- 顶部标题栏 -->
-    <AppHeader v-show="!isLayoutHidden" />
-    <div class="flex flex-col w-full mx-auto p-0 relative bg-transparent">
-      <!-- 主要内容区域 -->
-      <main class="flex-1 relative bg-transparent w-full transition-all duration-300"
-        :class="[isLayoutHidden ? 'pt-0 pb-0' : 'pt-[48px] pb-[72px]']">
-        <div
-          class="main-scroll-area relative h-full min-h-[calc(100vh-48px-72px)] overflow-y-auto w-full box-border py-5"
-          ref="mainScrollRef">
-          <div v-if="profileLoading && !userInfo"
-            class="flex flex-col items-center justify-center h-full py-20 bg-transparent">
-            <div class="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
-            <p class="mt-4 text-gray-500 text-sm">正在加载数据...</p>
-          </div>
-          <keep-alive v-else>
-            <component :is="currentComponent" :key="activeTab" v-on="currentListeners" />
+    <template v-if="activeKey !== 'chat'">
+      <AppHeader ref="appHeaderRef" class="fixed inset-x-4 top-4 z-50 max-w-3xl mx-auto" />
+      <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative bg-transparent">
+        <main
+          class="main-scroll-area relative overflow-y-auto w-full box-border px-4"
+          :style="{ paddingTop: headerHeight + 'px', paddingBottom: bottomBarHeight + 'px' }"
+          ref="mainScrollRef"
+        >
+          <keep-alive>
+            <RunRecords v-if="activeKey === 'records'" :key="'records'" />
+            <SubmitRun
+              v-else-if="activeKey === 'submit'"
+              :key="'submit'"
+              @submitted="fetchUserData"
+            />
           </keep-alive>
-        </div>
-      </main>
+        </main>
+      </div>
+      <BottomTabBar
+        :active="activeKey"
+        @update:active="setActiveKey"
+        class="fixed inset-x-4 bottom-4 z-50 max-w-3xl mx-auto"
+        ref="bottomBarRef"
+      />
+      <Message />
+    </template>
 
-
-    </div>
-    <!-- 底部导航栏 -->
-    <BottomTabBar v-show="!isLayoutHidden" :active="activeTab" @switch="switchTab" />
-    <!-- 全局消息提示 -->
-    <Message ref="messageRef" />
+    <template v-else>
+      <ChatPage />
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, provide, nextTick, markRaw } from "vue";
-import SubmitRun from "@/components/SubmitRun.vue";
-import RunRecords from "@/components/RunRecords.vue";
-import Profile from "@/components/Profile.vue";
-import Message from "@/components/Message.vue";
-import Club from "@/components/Club.vue";
-import AppHeader from "@/components/layout/AppHeader.vue";
-import BottomTabBar from "@/components/layout/BottomTabBar.vue";
-import { api } from "@/composables/useApi";
-import { useDataStore } from "@/composables/useDataStore";
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import RunRecords from '@/components/RunRecords.vue';
+import SubmitRun from '../components/SubmitRun.vue';
+import ChatPage from '@/views/ChatPage.vue';
+import AppHeader from '@/components/layout/AppHeader.vue';
+import BottomTabBar from '@/components/layout/BottomTabBar.vue';
+import Message from '@/components/Message.vue';
+import { useDataStore } from '@/composables/useDataStore';
 
-const {
-  userInfo,
-  runInfo,
-  runStandard,
-  activityInfo,
-  loading: profileLoading,
-  fetchUserData,
-  clearAllData,
-  activeTab
-} = useDataStore();
+const { fetchUserData } = useDataStore();
 
-const messageRef = ref(null);
+const appHeaderRef = ref(null);
+const bottomBarRef = ref(null);
 const mainScrollRef = ref(null);
-const isLayoutHidden = ref(false);
+const headerHeight = ref(56);
+const bottomBarHeight = ref(96);
+const activeKey = ref('submit');
 
-// 存储各个页面的滚动位置
-const scrollPositions = ref({
-  records: 0,
-  submit: 0,
-  profile: 0,
-});
-
-
-// 全局消息方法
-const showMessage = (message, type = "info") => {
-  messageRef.value?.show(message, type);
+const setActiveKey = (key) => {
+  activeKey.value = key;
 };
 
-// 提供给子组件使用
-provide('showMessage', showMessage);
-provide('setLayoutHidden', (hidden) => {
-  isLayoutHidden.value = hidden;
-});
-
-// 动态组件配置
-const components = {
-  club: markRaw(Club),
-  records: markRaw(RunRecords),
-  submit: markRaw(SubmitRun),
-  profile: markRaw(Profile),
-};
-
-const currentComponent = computed(() => components[activeTab.value]);
-
-const currentListeners = computed(() => {
-  if (activeTab.value === 'submit') {
-    return { submitted: fetchUserData };
-  } else if (activeTab.value === 'profile') {
-    return { logout: logout };
+function measureHeights() {
+  const headerEl = appHeaderRef.value && (appHeaderRef.value.$el || appHeaderRef.value);
+  const bottomEl = bottomBarRef.value && (bottomBarRef.value.$el || bottomBarRef.value);
+  if (headerEl && headerEl.getBoundingClientRect) {
+    const r = headerEl.getBoundingClientRect();
+    const topGap = Math.max(0, r.top || 0);
+    headerHeight.value = (r.height || 56) + topGap;
   }
-  return {};
-});
+  if (bottomEl && bottomEl.getBoundingClientRect) {
+    const r = bottomEl.getBoundingClientRect();
+    const bottomGap = Math.max(0, window.innerHeight - (r.bottom || window.innerHeight));
+    bottomBarHeight.value = (r.height || 96) + bottomGap;
+  }
+}
 
-const handleLogout = () => {
-  clearAllData();
-  window.location.reload();
-};
+const getScrollKey = () => `scroll_${activeKey.value}`;
 
 onMounted(() => {
-  fetchUserData().then(success => {
+  measureHeights();
+  window.addEventListener('resize', measureHeights);
+  nextTick(() => {
+    try {
+      const pos = Number(localStorage.getItem(getScrollKey()) || 0);
+      if (mainScrollRef.value) mainScrollRef.value.scrollTop = pos;
+    } catch (e) {}
   });
 });
 
-const logout = () => {
-  handleLogout();
-};
-
-const switchTab = (tab) => {
-  // 保存当前页面的滚动位置
-  if (mainScrollRef.value) {
-    scrollPositions.value[activeTab.value] = mainScrollRef.value.scrollTop;
-  }
-
-  activeTab.value = tab;
-
-  // 切换后恢复新页面的滚动位置
-  nextTick(() => {
+onUnmounted(() => {
+  window.removeEventListener('resize', measureHeights);
+  try {
     if (mainScrollRef.value) {
-      mainScrollRef.value.scrollTop = scrollPositions.value[tab] || 0;
+      localStorage.setItem(getScrollKey(), String(mainScrollRef.value.scrollTop || 0));
     }
-  });
-};
+  } catch (e) {}
+});
 </script>
 
 <style scoped>
 .main-scroll-area {
-  height: calc(100vh - 48px - 72px);
-  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
 }
 </style>

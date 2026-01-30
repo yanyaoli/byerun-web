@@ -80,16 +80,10 @@ class MessageClient {
    * 内部请求封装
    */
   async _fetch(path, opts = {}) {
-    const headers = Object.assign(
-      { 'Content-Type': 'application/json' },
-      opts.headers || {}
-    );
+    const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
     if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
 
-    const res = await fetch(
-      this.baseUrl + path,
-      Object.assign({}, opts, { headers })
-    );
+    const res = await fetch(this.baseUrl + path, Object.assign({}, opts, { headers }));
 
     // 统一处理 401
     if (res.status === 401) {
@@ -110,8 +104,8 @@ class MessageClient {
     }
 
     if (!json.success) {
-      const err = new Error(json.message || 'api_error');
-      err.code = json.code || 'api_error';
+      const err = new Error(json.message || 'upload_error');
+      err.code = json.code;
       err.payload = json;
       throw err;
     }
@@ -123,9 +117,9 @@ class MessageClient {
     return this._fetch('/health', { method: 'GET' });
   }
 
-  // --- Profile ---
+  // --- User ---
   /**
-   * 获取我的资料
+   * 获取当前登录用户的资料
    */
   async getProfile() {
     return this._fetch('/api/user/profile', { method: 'GET' });
@@ -143,7 +137,7 @@ class MessageClient {
 
   /**
    * 获取指定用户的公开资料
-   * @param {string} userid - 目标用户的 user_id (雪花 ID)
+   * @param {string} userid - 用户 ID
    */
   async getUserInfo(userid) {
     if (!userid) throw new Error('userid is required');
@@ -153,36 +147,105 @@ class MessageClient {
   }
 
   /**
-   * 获取头像地址
-   * @param {string} identifier - 应用内 user_id 或脱敏后的标识符
+   * 获取头像完整地址
+   * @param {string} identifier - 用户 ID
+   * @returns {string} 头像链接
    */
   getAvatarUrl(identifier) {
     if (!identifier) throw new Error('identifier is required');
-    return `${this.baseUrl}/api/avatar/${encodeURIComponent(
-      String(identifier)
-    )}`;
+    return `${this.baseUrl}/api/avatar/${encodeURIComponent(String(identifier))}`;
+  }
+
+  /**
+   * 获取聊天图片代理链接
+   * @param {string} fileKey - 图片存储 key
+   * @returns {string} 代理后的图片链接
+   */
+  getImageUrl(fileKey) {
+    if (!fileKey) throw new Error('fileKey is required');
+    return `${this.baseUrl}/api/image/${encodeURIComponent(String(fileKey))}`;
   }
 
   // --- Messages ---
+  /**
+   * 上传聊天图片
+   * @param {File|Blob} file - WebP 格式的图片文件（最大 2MB）
+   * @returns {Promise<{fileKey: string}>} 返回存储 key，用于发送消息
+   * @throws 若文件不是 WebP 格式，后端会返回 400 错误
+   * @description 前端需要先使用 canvas/sharp 等工具将其他图片格式转换为 WebP，然后上传
+   */
+  async uploadImage(file) {
+    if (file.type !== 'image/webp') {
+      throw new Error('仅支持 WebP 格式的图片文件');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const headers = {
+      Authorization: this.token ? `Bearer ${this.token}` : undefined,
+    };
+
+    const res = await fetch(this.baseUrl + '/api/message/upload', {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    const json = await res.json();
+    if (!json.success) {
+      const err = new Error(json.message || 'upload_error');
+      err.code = json.code;
+      err.payload = json;
+      throw err;
+    }
+    return json.data;
+  }
+
   /**
    * 分页获取消息列表，返回 { messages: Message[], hasNext: boolean }
    * @param {number} page
    * @param {number} size
    */
   async listMessages(page = 1, size = 20) {
-    const q = `?page=${encodeURIComponent(page)}&size=${encodeURIComponent(
-      size
-    )}`;
+    const q = `?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`;
     return this._fetch(`/api/message/list${q}`, { method: 'GET' });
   }
 
   /**
-   * 发送消息
-   * @param {string} content - 消息正文
-   * @param {string|null} parentId - 父消息 of the message_id
+   * 发送消息 - 支持混合内容
+   * 支持的内容片段类型：text、image、sticker
+   * @param {Array} content - 消息内容数组
+   *   - {type: 'text', value: '文本内容'}  - 纯文本（支持 Unicode 表情符号）
+   *   - {type: 'image', value: 'file_key'}  - 图片（WebP 格式）
+   *   - {type: 'sticker', value: 'sticker_id'}  - 表情包
+   * @param {string|null} parentId - 父消息的 message_id（可选，用于回复）
+   * @example
+   *   // 发送纯文本
+   *   await client.sendMessage([{ type: 'text', value: 'Hello!' }]);
+   *
+   *   // 发送文本 + 图片
+   *   await client.sendMessage([
+   *     { type: 'text', value: 'Check this:' },
+   *     { type: 'image', value: 'chat/abc123.webp' }
+   *   ]);
+   *
+   *   // 发送表情包
+   *   await client.sendMessage([{ type: 'sticker', value: 'sticker_happy_001' }]);
+   *
+   *   // 回复消息
+   *   await client.sendMessage(
+   *     [{ type: 'text', value: 'Thanks!' }],
+   *     parentMessageId
+   *   );
    */
   async sendMessage(content, parentId = null) {
-    const body = { content, parentId: parentId ? String(parentId) : null };
+    if (!Array.isArray(content)) {
+      throw new Error('content 必须是数组格式，例如：[{type:"text",value:"Hello"}]');
+    }
+    const body = {
+      content,
+      parentId: parentId ? String(parentId) : null,
+    };
     return this._fetch('/api/message/send', {
       method: 'POST',
       body: JSON.stringify(body),

@@ -1,5 +1,106 @@
 <template>
-  <div v-if="visible" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+  <div v-if="props.inline">
+    <div class="relative w-full bg-stone-950 border border-white/10 rounded-lg p-4">
+      <div v-if="pinging" class="py-8 flex flex-col items-center justify-center space-y-4">
+        <i class="fa-brands fa-connectdevelop text-white text-3xl animate-bounce"></i>
+        <p class="text-[10px] text-stone-600 font-black tracking-[0.3em] uppercase">连接服务中</p>
+      </div>
+
+      <div v-else-if="initError" class="py-8 flex flex-col items-center justify-center space-y-4">
+        <div class="relative">
+          <i class="fa-solid fa-bomb text-red-500 text-4xl animate-pulse"></i>
+          <div class="absolute -inset-2 bg-red-500/20 blur-xl rounded-full"></div>
+        </div>
+        <div class="text-center px-6">
+          <p class="text-stone-200 text-xs font-bold">连接失败</p>
+          <p class="text-stone-500 text-[10px] mt-1 line-clamp-2">{{ initError }}</p>
+        </div>
+        <button @click="init"
+          class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 text-[10px] font-bold rounded-xl transition-colors">
+          重新尝试
+        </button>
+      </div>
+
+      <div v-else class="p-4 space-y-4">
+        <div class="flex justify-between items-center">
+          <div class="space-y-0.5">
+            <h2 class="text-sm font-black text-stone-200 uppercase tracking-widest">定时任务</h2>
+            <p class="text-[9px] text-stone-700 font-mono">v20260107 BETA</p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-3 bg-stone-900/40 border border-white/5 rounded-2xl">
+          <span class="text-[11px] font-bold text-stone-500">今日完成状态</span>
+          <span
+            :class="['text-[11px] font-black', status?.executed ? 'text-emerald-500' : 'text-orange-500 text-shadow-sm']">
+            {{ status?.executed ? '已完成' : '待执行' }}
+          </span>
+        </div>
+
+        <div class="space-y-3">
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">学校地图</label>
+            <div class="relative">
+              <div @click="showMapList = !showMapList"
+                class="flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-3 py-2 cursor-pointer hover:border-white/10 transition-all">
+                <span class="text-[12px] text-stone-200 font-medium">{{ currentMapName }}</span>
+                <i
+                  :class="['fa-solid fa-chevron-down text-[10px] text-stone-600 transition-transform', showMapList ? 'rotate-180' : '']"></i>
+              </div>
+              <div v-if="showMapList"
+                class="absolute z-50 w-full mt-1 bg-stone-900 border border-white/10 rounded-xl shadow-2xl py-1 max-h-[120px] overflow-y-auto">
+                <div v-for="map in maps" :key="map.id" @click="selectMap(map)"
+                  class="px-4 py-2 text-[12px] text-stone-400 hover:bg-white/5 hover:text-white cursor-pointer transition-colors">
+                  {{ map.name }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">运行时间</label>
+            <div class="flex items-center gap-2">
+              <div class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1">
+                <select v-model="timeObj.h"
+                  class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1">
+                  <option v-for="h in 24" :key="h - 1" :value="h - 1" class="bg-stone-900 text-white">{{
+                    String(h - 1).padStart(2, '0') }}</option>
+                </select>
+                <span class="text-[9px] text-stone-600 pr-2 italic">H</span>
+              </div>
+              <span class="text-stone-800 font-bold">:</span>
+              <div class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1">
+                <select v-model="timeObj.m"
+                  class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1">
+                  <option v-for="m in 60" :key="m - 1" :value="m - 1" class="bg-stone-900 text-white">{{
+                    String(m - 1).padStart(2, '0') }}</option>
+                </select>
+                <span class="text-[9px] text-stone-600 pr-2 italic">M</span>
+              </div>
+            </div>
+          </div>
+
+          <div @click="form.enabled = !form.enabled" class="flex items-center justify-between p-1 cursor-pointer group">
+            <span class="text-[11px] font-bold text-stone-500 group-hover:text-stone-300 transition-colors">开启定时</span>
+            <div
+              :class="['w-9 h-5 rounded-full transition-all relative', form.enabled ? 'bg-stone-200' : 'bg-stone-800']">
+              <div
+                :class="['absolute top-1 w-3 h-3 rounded-full transition-all', form.enabled ? 'left-5 bg-black' : 'left-1 bg-stone-500']">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button @click="handleSave" :disabled="submitting"
+          class="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2">
+          <i v-if="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
+          <span>{{ submitting ? 'SYNCING' : '保存配置' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div v-else-if="props.visible" class="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
     @click.self="close">
     <div
       class="relative w-full max-w-[300px] bg-stone-950 border border-white/10 rounded-[2rem] shadow-2xl transition-all overflow-hidden">
@@ -110,11 +211,11 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, inject } from "vue";
+import { ref, reactive, computed, watch, inject, onMounted } from "vue";
 import { scheduledTaskConfig } from "@/utils/config";
 import { useDataStore } from "@/composables/useDataStore";
 
-const props = defineProps({ visible: Boolean });
+const props = defineProps({ visible: { type: Boolean, default: false }, inline: { type: Boolean, default: false } });
 const emit = defineEmits(["update:visible", "saved"]);
 const showMessage = inject("showMessage", (msg) => alert(msg));
 
@@ -219,6 +320,7 @@ const handleSave = async () => {
 
     await request(`/api/autorun/run/status?userid=${userId.value}`);
     showMessage("设置已更新");
+    emit('saved');
   } catch (err) {
     showMessage(err.message, "error");
   } finally {
@@ -232,6 +334,12 @@ const close = () => {
 };
 
 watch(() => props.visible, (val) => val && init());
+// 当以 inline 模式使用时也需要初始化
+watch(() => props.inline, (val) => val && init());
+
+onMounted(() => {
+  if (props.inline) init();
+});
 </script>
 
 <style scoped>

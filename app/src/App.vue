@@ -1,26 +1,16 @@
 <template>
   <div class="app flex flex-col min-h-100vh relative overflow-hidden bg-gray-50">
     <div class="app-container">
-      <div v-if="!isLogin">
-        <LoginPage />
+        <router-view />
       </div>
-      <div v-else>
-        <HomePage />
-      </div>
-    </div>
     <Message ref="messageRef" />
   </div>
 </template>
 
 <script setup>
-import { ref, provide, computed } from "vue";
-import LoginPage from "./views/LoginPage.vue";
-import HomePage from "./views/HomePage.vue";
+import { ref, provide } from "vue";
 import Message from "./components/Message.vue";
-import { useDataStore } from "./composables/useDataStore";
 
-const { token } = useDataStore();
-const isLogin = computed(() => !!token.value);
 const messageRef = ref(null);
 
 // 全局消息方法
@@ -36,7 +26,6 @@ provide('showMessage', showMessage);
 .app-container {
   width: 100%;
   margin: 0 auto;
-  padding: 0 12px;
 }
 
 @media (min-width: 768px) {

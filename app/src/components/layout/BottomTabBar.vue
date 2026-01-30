@@ -6,9 +6,9 @@
       <button v-for="item in tabs" :key="item.key" :class="[
         'relative flex flex-col items-center justify-center bg-none border-0 cursor-pointer rounded-full transition-all duration-[300ms] outline-none flex-1 h-full',
         active === item.key ? 'text-black' : 'text-[rgba(60,60,67,0.8)]'
-      ]" @click="$emit('switch', item.key)">
+      ]" @click="handleClick(item)">
         <div v-if="active === item.key"
-          class="absolute w-12 h-12 rounded-xl bg-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none">
+          class="absolute w-12 h-12 rounded-xl bg-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none">
         </div>
         <div class="flex items-center justify-center w-6 h-6 z-10">
           <i :class="item.icon" class="text-[20px]"></i>
@@ -21,16 +21,21 @@
 </template>
 
 <script setup>
+const emit = defineEmits(['update:active', 'switch']);
 const props = defineProps({
   active: { type: String, default: 'submit' },
   tabs: {
     type: Array,
     default: () => ([
-      // { key: 'club', label: '俱乐部', icon: 'fa-solid fa-baseball' },
-      { key: 'records', label: '记录', icon: 'fa-solid fa-square-poll-vertical' },
-      { key: 'submit', label: '新增', icon: 'fa-solid fa-square-plus' },
-      { key: 'profile', label: '我的', icon: 'fa-solid fa-user' },
+      { key: 'records', label: '记录', icon: 'ri-list-check' },
+      { key: 'submit', label: '管理', icon: 'ri-command-fill' },
+      { key: 'chat', label: '消息', icon: 'ri-message-3-line' },
     ])
   }
 });
+
+function handleClick(item) {
+  emit('update:active', item.key);
+  emit('switch', item.key);
+}
 </script>

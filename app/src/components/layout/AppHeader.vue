@@ -1,90 +1,67 @@
 <template>
-  <header class="fixed left-0 right-0 top-3 h-11 z-[998] transition-all duration-400 ease-[cubic-bezier(0.4,0,0.2,1)]">
-    <div
-      class="flex items-center justify-between h-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-full px-3 gap-2 transition-inherit shadow-[0_8px_32px_rgba(0,0,0,0.05)] max-w-[480px] mx-auto w-full">
-      <!-- Logo -->
-      <div class="flex flex-row items-center">
-        <img src="/logo.png" alt="App Logo"
-          class="inline-block h-6 w-auto brightness-20 opacity-70 hover:brightness-10 hover:opacity-90 ml-2" />
+  <div>
+    <header
+      class="fixed left-0 right-0 top-2 h-11 z-[998] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+    >
+      <div
+        class="flex items-center h-full bg-white/10 backdrop-blur-[16px] border border-white/50 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[480px] mx-auto w-[calc(100%_-_24px)]"
+      >
+        <!-- Logo -->
+        <div class="flex flex-row items-center">
+          <img
+            src="/logo.png"
+            alt="App Logo"
+            class="inline-block h-6 w-auto brightness-20 opacity-70 hover:brightness-10 hover:opacity-90 ml-4"
+          />
+        </div>
+        <!-- Logout Button -->
+        <button
+          class="inline-flex items-center justify-center h-6 w-6 p-0.5 text-[rgba(60,60,67,0.8)] rounded-full font-semibold transition-all duration-150 border-none outline-none shadow-none hover:bg-red-100 hover:text-red-700 ml-auto mr-4"
+          @click="handleLogout"
+          title="退出登录"
+        >
+          <i class="ri-logout-circle-r-line text-[16px]"></i>
+        </button>
       </div>
+    </header>
 
-      <!-- 社交链接 -->
-      <div class="flex gap-3">
-        <a v-for="link in socialLinks" :key="link.href" :href="link.href"
-          :target="link.href.startsWith('http') ? '_blank' : undefined"
-          :rel="link.href.startsWith('http') ? 'noopener noreferrer' : undefined"
-          class="flex items-center justify-center w-7 h-7 rounded-full text-gray-600 transition-all duration-300 text-sm hover:text-blue-500 hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:bg-white mr-2"
-          :title="link.title">
-          <i
-            :class="[link.icon, 'inline-block text-[18px] align-middle text-gray-600 brightness-20 opacity-70 transition-all duration-300 group-hover:brightness-10 group-hover:opacity-90']"></i>
-        </a>
-      </div>
-    </div>
-  </header>
+    <ConfirmDialog ref="confirmDialogRef" />
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, getCurrentInstance } from 'vue';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
-const props = defineProps({
-  title: { type: String, default: "" },
-});
+const emit = defineEmits(['logout']);
 
-const socialLinks = [
-  {
-    href: "https://github.com/yanyaoli/byerun-web",
-    title: "GitHub 仓库",
-    icon: "fa-brands fa-github"
-  },
-  {
-    href: "https://redirect.where.nyc.mn/byerun-qqgroup",
-    title: "加入QQ群",
-    icon: "fa-brands fa-qq"
-  }
-];
+const confirmDialogRef = ref(null);
 
-const isVisible = ref(true);
-const lastScrollY = ref(0);
-const scrollThreshold = 50;
+const handleLogout = async () => {
+  const confirmed = await confirmDialogRef.value?.show({
+    title: '退出登录',
+    message: '确定要退出登录吗？',
+  });
 
-const handleScroll = () => {
-  const currentScrollY = window.scrollY;
-
-  if (currentScrollY <= scrollThreshold) {
-    isVisible.value = true;
-  } else if (
-    currentScrollY > lastScrollY.value &&
-    currentScrollY > scrollThreshold
-  ) {
-    isVisible.value = false;
-  } else if (currentScrollY < lastScrollY.value) {
-    isVisible.value = true;
-  }
-
-  lastScrollY.value = currentScrollY;
-};
-
-const throttleScroll = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
-    if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        func(...args);
-        timeoutId = null;
-      }, delay);
+  if (confirmed) {
+    const instance = getCurrentInstance();
+    const hasListener = !!(
+      instance &&
+      instance.vnode &&
+      instance.vnode.props &&
+      (instance.vnode.props.onLogout || instance.vnode.props.onLogout === '')
+    );
+    // 如果父组件监听了 logout，则触发事件，否则执行默认退出（清理 localStorage 并刷新）
+    if (hasListener) {
+      emit('logout');
+    } else {
+      try {
+        localStorage.clear();
+      } catch (e) {}
+      window.location.reload();
     }
-  };
+  }
 };
-
-const throttledScroll = throttleScroll(handleScroll, 100);
-
-onMounted(() => {
-  window.addEventListener("scroll", throttledScroll, { passive: true });
-});
-
-onUnmounted(() => {
-  window.removeEventListener("scroll", throttledScroll);
-});
 </script>
 
 <style scoped></style>

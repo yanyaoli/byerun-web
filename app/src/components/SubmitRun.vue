@@ -1,5 +1,6 @@
 <template>
-  <div class="flex-1 flex flex-col h-full relative w-full box-border">
+  <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
+    <!-- 完成情况卡片（始终显示） -->
     <div class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border">
       <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
         <div class="text-sm font-semibold text-gray-800">完成情况</div>
@@ -9,151 +10,175 @@
       </div>
       <!-- 三个卡片表格布局 -->
       <div class="flex gap-2 pt-2 w-full">
-        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center club-activity">
+        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center">
           <div class="text-lg font-semibold text-gray-800 mb-1">
-            {{
-              totalActivities === 0
-                ? '0%'
-                : Math.round(clubCompletionRate) + '%'
-            }}
+            {{ totalActivities === 0 ? '0%' : Math.round(clubCompletionRate) + '%' }}
           </div>
-          <div class="text-sm font-medium text-gray-800 mb-1 truncate">
-            俱乐部活动
-          </div>
+          <div class="text-sm font-medium text-gray-800 mb-1 truncate">俱乐部活动</div>
           <div class="text-sm text-gray-500 mb-2">
             {{ completedActivities + '/' + totalActivities }}
           </div>
         </div>
-        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center run-completion">
-          <div class="text-lg font-semibold text-gray-800 mb-1">
-            {{ runCompletionRate }}%
-          </div>
+        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center">
+          <div class="text-lg font-semibold text-gray-800 mb-1">{{ runCompletionRate }}%</div>
           <div class="text-sm font-medium text-gray-800 mb-1">跑步次数</div>
-          <div class="text-sm text-gray-500 mb-2">
-            {{ completedRuns }}/{{ totalRequiredRuns }}
-          </div>
+          <div class="text-sm text-gray-500 mb-2">{{ completedRuns }}/{{ totalRequiredRuns }}</div>
         </div>
-        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center distance-stats">
+        <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center">
           <div class="text-lg font-semibold text-gray-800 mb-1">
             {{ Math.round(distancePercentage) }}%
           </div>
           <div class="text-sm font-medium text-gray-800 mb-1">跑步里程</div>
           <div class="text-sm text-gray-500 mb-2">
-            {{ totalDistanceKm }}/{{
-              Number(targetDistanceKm) ? targetDistanceKm : '0'
-            }}
+            {{ totalDistanceKm }}/{{ Number(targetDistanceKm) ? targetDistanceKm : '0' }}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 数据输入表单 -->
-    <form @submit.prevent="handleSubmit">
-      <div class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border">
-        <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
-          <div class="text-sm font-semibold text-gray-800">提交记录</div>
-          <div class="text-sm text-gray-500">
-            <button type="button" class="text-gray-600 cursor-pointer hover:text-gray-800"
-              :class="{ active: showAutoModal }" @click="showAutoModal = !showAutoModal" :aria-pressed="showAutoModal"
-              title="定时任务配置">
-              <i class="fa-solid fa-alarm-clock"></i>
-            </button>
-          </div>
-        </div>
-        <!-- 跑步路线选择 -->
-        <div class="form-group mt-4">
-          <label class="block text-sm text-gray-500 mb-2 font-medium">选择地图</label>
-          <div
-            class="route-dropdown bg-gray-100 border border-gray-200 rounded-md p-2 cursor-pointer relative w-full box-border"
-            @click="
-              mapsLoaded && !submitting
-                ? (showRouteOptions = !showRouteOptions)
-                : null
-              ">
-            <div class="selected-route flex items-center justify-between text-sm text-gray-800"
-              :class="{ disabled: !mapsLoaded || submitting }">
-              <span v-if="!mapsLoaded">加载地图中...</span>
-              <span v-else>{{ getRouteName(form.route) }}</span>
-              <div class="dropdown-arrow" :class="{ active: showRouteOptions && mapsLoaded }" v-if="mapsLoaded"></div>
-            </div>
-            <transition name="dropdown">
-              <div v-show="showRouteOptions && mapsLoaded" class="route-options">
-                <div v-for="(name, value) in routeOptions" :key="value" class="route-option"
-                  :class="{ selected: form.route === value }" @click.stop="selectRoute(value)">
-                  {{ name }}
-                </div>
-                <div v-if="Object.keys(routeOptions).length === 0" class="route-option disabled">
-                  无可用地图
-                </div>
-              </div>
-            </transition>
-          </div>
-        </div>
-
-        <!-- 跑步里程输入 -->
-        <div class="form-group">
-          <label class="block text-sm text-gray-500 mt-2 mb-2 font-medium">跑步里程</label>
-          <div class="input-container flex items-center">
-            <div class="input-wrapper flex-1 flex items-center bg-gray-100 border border-gray-200 rounded-md px-3">
-              <input v-model.number="form.distance" type="number" step="1" placeholder="输入里程" required
-                class="flex-1 py-2 text-sm bg-transparent outline-none pr-2" />
-              <span class="unit text-sm text-gray-500 pl-2">米</span>
-            </div>
-            <button type="button"
-              class="ml-3 px-3 py-2 bg-gray-100 text-sm text-gray-600 cursor-pointer hover:bg-gray-200 disabled:opacity-50 rounded-md"
-              @click="onRandomFill" :disabled="submitting" aria-label="随机里程">
-              <i class="fa-solid fa-dice"></i>
-            </button>
-          </div>
-        </div>
-
-        <div class="flex gap-3 mt-5">
-          <button type="submit"
-            class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
-            :disabled="submitting || !paceLimit || !isDistanceValid" :class="{ submitting: submitting }">
-            <i v-if="!submitting" class="fa-solid fa-check"></i>
-            <span class="loader" v-else></span>
-            {{ submitting ? '提交中...' : '提交记录' }}
+    <!-- 主卡片：Tab 与 表单共存 -->
+    <form @submit.prevent="handleSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
+      <div class="bg-white rounded-xl border border-gray-200 w-full box-border mb-5 p-5">
+        <!-- Tab 按钮行 -->
+        <div class="flex items-center mb-4 border-b border-gray-200 pb-2">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            type="button"
+            @click="activeTab = tab.key"
+            :class="[
+              'flex-1 text-sm font-semibold transition-all text-center',
+              activeTab === tab.key ? 'text-gray-800' : 'text-gray-500 hover:text-gray-700',
+            ]"
+          >
+            <i :class="tab.icon" class="mr-2"></i>{{ tab.label }}
           </button>
+        </div>
+
+        <div>
+          <!-- 提交记录表单 -->
+          <div v-show="activeTab === 'submit'">
+            <div class="form-group mb-4">
+              <label class="block text-sm text-gray-500 mb-2 font-medium">选择地图</label>
+              <div
+                class="route-dropdown bg-gray-100 border border-gray-200 rounded-md p-2 cursor-pointer relative w-full box-border"
+                @click="mapsLoaded && !submitting ? (showRouteOptions = !showRouteOptions) : null"
+              >
+                <div
+                  class="selected-route flex items-center justify-between text-sm text-gray-800"
+                  :class="{ disabled: !mapsLoaded || submitting }"
+                >
+                  <span v-if="!mapsLoaded">加载地图中...</span>
+                  <span v-else>{{ getRouteName(form.route) }}</span>
+                  <div
+                    class="dropdown-arrow"
+                    :class="{ active: showRouteOptions && mapsLoaded }"
+                    v-if="mapsLoaded"
+                  ></div>
+                </div>
+                <transition name="dropdown">
+                  <div v-show="showRouteOptions && mapsLoaded" class="route-options">
+                    <div
+                      v-for="(name, value) in routeOptions"
+                      :key="value"
+                      class="route-option"
+                      :class="{ selected: form.route === value }"
+                      @click.stop="selectRoute(value)"
+                    >
+                      {{ name }}
+                    </div>
+                    <div
+                      v-if="Object.keys(routeOptions).length === 0"
+                      class="route-option disabled"
+                    >
+                      无可用地图
+                    </div>
+                  </div>
+                </transition>
+              </div>
+            </div>
+
+            <div class="form-group mb-4">
+              <label class="block text-sm text-gray-500 mt-2 mb-2 font-medium">跑步里程</label>
+              <div class="input-container flex items-center">
+                <div
+                  class="input-wrapper flex-1 flex items-center bg-gray-100 border border-gray-200 rounded-md px-3"
+                >
+                  <input
+                    v-model.number="form.distance"
+                    type="number"
+                    step="1"
+                    placeholder="输入里程"
+                    required
+                    class="flex-1 py-2 text-sm bg-transparent outline-none pr-2"
+                  />
+                  <span class="unit text-sm text-gray-500 pl-2">米</span>
+                </div>
+                <button
+                  type="button"
+                  class="ml-3 px-3 py-2 bg-gray-100 text-sm text-gray-600 cursor-pointer hover:bg-gray-200 disabled:opacity-50 rounded-md"
+                  @click="onRandomFill"
+                  :disabled="submitting"
+                  aria-label="随机里程"
+                >
+                  <i class="fa-solid fa-dice"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button
+                type="submit"
+                class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
+                :disabled="submitting || !paceLimit || !isDistanceValid"
+              >
+                <i v-if="!submitting" class="fa-solid fa-check"></i>
+                <span class="loader" v-else></span>
+                {{ submitting ? '提交中...' : '提交记录' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 定时任务 -->
+          <div v-show="activeTab === 'schedule'" class="space-y-4">
+            <div>
+              <AutoConfig inline @saved="onAutoConfigSaved" />
+            </div>
+          </div>
         </div>
       </div>
     </form>
 
-    <!-- 路线预览部分 -->
-    <div class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border">
+    <!-- 路线预览 -->
+    <div
+      v-show="activeTab === 'submit'"
+      class="bg-white rounded-xl p-5 mb-5 border border-gray-200 w-full box-border"
+    >
       <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
         <div class="text-sm font-semibold text-gray-800">路线预览</div>
-        <div class="text-sm text-gray-500"></div>
       </div>
-      <MapPreview :track="generatedTrack" :ready="mapReady" class="pt-2 w-full" />
+      <MapPreview
+        :track="generatedTrack"
+        :ready="mapReady"
+        class="pt-2 w-full transition-all duration-300"
+      />
     </div>
-
-    <AutoConfig :visible="showAutoModal" @update:visible="updateAutoVisible" @saved="onAutoSaved" />
   </div>
 </template>
 
 <script setup>
-import {
-  ref,
-  computed,
-  watch,
-  onMounted,
-  inject,
-  defineAsyncComponent,
-  nextTick,
-} from 'vue';
+import { ref, reactive, computed, watch, inject, defineAsyncComponent } from 'vue';
 import { submitRun as submitRunApi } from '@/composables/useRunSubmission';
 import { computeDurationFromDistance, isPaceWithinLimits } from '@/utils/distance';
 import { randomIntNonThousand } from '@/utils/random';
 import { useRouteGenerator } from '@/composables/useRouteGenerator';
 import { useDataStore } from '@/composables/useDataStore';
-
-// 注入全局消息方法
-const showMessage = inject('showMessage');
+import { scheduledTaskConfig } from '@/utils/config';
 
 // 异步组件
 const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
-const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
+
+const showMessage = inject('showMessage');
 
 const {
   userInfo,
@@ -162,13 +187,20 @@ const {
   activityInfo,
   submitRunDistance,
   submitRunRoute,
-  loading: profileLoading
+  userId,
+  token,
 } = useDataStore();
 
-// Emits
 const emit = defineEmits(['submitted']);
 
-// 将表单状态与非接口逻辑写回组件（更简单、可控）
+const tabs = [
+  { key: 'submit', label: '提交记录', icon: 'ri-add-line' },
+  { key: 'schedule', label: '定时任务', icon: 'ri-calendar-schedule-line' },
+];
+
+const activeTab = ref('submit');
+
+// 提交记录相关
 const form = ref({
   distance: submitRunDistance.value,
   duration: 0,
@@ -176,19 +208,17 @@ const form = ref({
   date: new Date().toISOString().split('T')[0],
 });
 const submitting = ref(false);
+const showRouteOptions = ref(false);
 
 const isDistanceValid = computed(() => {
   const d = Number(form.value.distance);
   return d >= 1000 && Number.isInteger(d);
 });
 
-const paceLimit = computed(() =>
-  isPaceWithinLimits(form.value.distance, form.value.duration)
-);
+const paceLimit = computed(() => isPaceWithinLimits(form.value.distance, form.value.duration));
 
 async function syncDurationToDistance() {
   form.value.duration = computeDurationFromDistance(form.value.distance);
-  await nextTick();
 }
 
 function onRandomFill() {
@@ -198,13 +228,12 @@ function onRandomFill() {
   syncDurationToDistance();
 }
 
-// 持久化里程到 store
 watch(
   () => form.value.distance,
   (val) => {
     submitRunDistance.value = val;
     syncDurationToDistance();
-  }
+  },
 );
 
 const {
@@ -220,13 +249,10 @@ const {
   regenerate,
 } = useRouteGenerator(
   computed(() => form.value.distance),
-  computed(() => form.value.route)
+  computed(() => form.value.route),
 );
 
-const showAutoModal = ref(false);
-const showRouteOptions = ref(false);
-const animateProgress = ref(false);
-// Computed Properties - 统计数据
+// 统计数据
 const completedActivities = computed(() => {
   return activityInfo.value ? activityInfo.value.joinNum : 0;
 });
@@ -258,10 +284,7 @@ const totalRequiredRuns = computed(() => {
 
 const runCompletionRate = computed(() => {
   if (!totalRequiredRuns.value) return 0;
-  return Math.min(
-    100,
-    Math.round((completedRuns.value / totalRequiredRuns.value) * 100)
-  );
+  return Math.min(100, Math.round((completedRuns.value / totalRequiredRuns.value) * 100));
 });
 
 const totalDistanceKm = computed(() => {
@@ -306,22 +329,6 @@ const semesterEndDateText = computed(() => {
   return '';
 });
 
-function triggerProgressAnimation() {
-  animateProgress.value = false;
-  setTimeout(() => {
-    animateProgress.value = true;
-  }, 50);
-}
-
-// 事件处理函数
-function updateAutoVisible(v) {
-  showAutoModal.value = v;
-}
-
-function onAutoSaved() {
-  showMessage('定时任务配置已保存', 'success');
-}
-
 function selectRoute(route) {
   if (!Object.prototype.hasOwnProperty.call(routeOptions.value, route)) {
     return;
@@ -332,7 +339,6 @@ function selectRoute(route) {
   showRouteOptions.value = false;
 }
 
-// 主要业务函数
 const handleSubmit = async () => {
   if (!paceLimit.value) {
     showMessage('配速不能小于6分钟/公里', 'error');
@@ -348,64 +354,42 @@ const handleSubmit = async () => {
   try {
     const res = await submitRunApi({ distance: form.value.distance });
     if (!res.ok) {
-      const msg = res.msg === 'not_login' ? '请先登录' : (res.data?.msg || res.error?.message || '提交失败，请重试');
+      const msg =
+        res.msg === 'not_login'
+          ? '请先登录'
+          : res.data?.msg || res.error?.message || '提交失败，请重试';
       showMessage(msg, 'error');
       return;
     }
 
     showMessage(res.data?.response?.resultDesc || '提交成功', 'success');
-    triggerProgressAnimation();
     emit('submitted');
-
   } finally {
     submitting.value = false;
   }
 };
 
-// 监听 form 对象的深层变化，确保所有字段更新都能触发重新计算
-watch(
-  () => form.value,
-  () => {
-    // 触发响应式更新
-  },
-  { deep: true }
-);
+// 使用独立组件展示/管理定时任务（复用 AutoConfig.vue）
+import AutoConfig from './AutoConfig.vue';
+const onAutoConfigSaved = () => {
+  showMessage('设置已更新', 'success');
+};
 
-watch(
-  () => [form.value.distance, form.value.duration],
-  () => {
-    triggerProgressAnimation();
-  },
-  { deep: true }
-);
+// 初始化提交记录组件
+loadMaps().then(() => {
+  if (submitRunRoute.value) {
+    form.value.route = submitRunRoute.value;
+  } else if (selectedRoute.value) {
+    form.value.route = selectedRoute.value;
+  }
 
-// Lifecycle
-onMounted(async () => {
-  try {
-    await loadMaps();
+  if (submitRunDistance.value) {
+    form.value.distance = Number(submitRunDistance.value);
+  } else {
+    onRandomFill();
+  }
 
-    // composable 会在 load 时恢复 saved route 或选择第一个 route
-    if (submitRunRoute.value) {
-      form.value.route = submitRunRoute.value;
-      selectMapRoute(submitRunRoute.value);
-    } else if (selectedRoute.value) {
-      form.value.route = selectedRoute.value;
-    } else if (Object.keys(routeOptions.value).length > 0) {
-      form.value.route = Object.keys(routeOptions.value)[0];
-    }
-
-    // 恢复上次保存的里程（若存在），否则生成随机距离
-    if (submitRunDistance.value) {
-      form.value.distance = Number(submitRunDistance.value);
-      await syncDurationToDistance();
-    } else {
-      onRandomFill();
-    }
-  } catch (e) { }
-
-  setTimeout(() => {
-    animateProgress.value = true;
-  }, 500);
+  syncDurationToDistance();
 });
 </script>
 
@@ -414,6 +398,7 @@ onMounted(async () => {
   position: relative;
   user-select: none;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .dropdown-arrow {
@@ -438,7 +423,7 @@ onMounted(async () => {
   background: #fff;
   border: 1px solid #e3e6e8;
   border-radius: 8px;
-  z-index: 10;
+  z-index: 9999;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 4px 0;
   max-height: 200px;
@@ -477,9 +462,14 @@ onMounted(async () => {
   }
 }
 
-@media (max-width: 375px) {
-  .route-dropdown {
-    padding: 8px;
-  }
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: transparent;
+}
+
+option {
+  background-color: #ffffff;
+  color: #1f2937;
 }
 </style>

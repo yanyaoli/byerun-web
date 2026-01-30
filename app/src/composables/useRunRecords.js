@@ -1,7 +1,7 @@
 import { ref, reactive } from "vue";
 import { api } from "@/composables/useApi";
 
-export function useRunRecords({ pageSize = 10, onMessage } = {}) {
+export function useRunRecords({ pageSize = 15, onMessage } = {}) {
   const records = ref([]);
   const loading = ref(false);
   const pagination = reactive({ current: 1, pageSize, total: 0 });
