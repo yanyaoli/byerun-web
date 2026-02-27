@@ -23,23 +23,67 @@ const props = defineProps({
 const API_KEY = amapConfig.jsApiKey;
 const SECURITY = amapConfig.securityJsCode;
 const apiKey = API_KEY || '';
+const AMAP_SCRIPT_ID = 'byerun-amap-sdk';
+const AMAP_SCRIPT_PROMISE_KEY = '__byerunAmapScriptPromise__';
 
 const mapContainer = ref(null);
 let map = null;
+let mapInitPromise = null;
 let mapObjects = { polylines: [], markers: [], timer: null, animationResolve: null };
 
 // 加载高德地图脚本
 async function loadAmapScript() {
   if (window.AMap) return;
 
-  return new Promise((resolve, reject) => {
+  const existingPromise = window[AMAP_SCRIPT_PROMISE_KEY];
+  if (existingPromise) {
+    await existingPromise;
+    return;
+  }
+
+  const src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.ToolBar`;
+  const promise = new Promise((resolve, reject) => {
+    const cleanupOnError = (error) => {
+      window[AMAP_SCRIPT_PROMISE_KEY] = null;
+      reject(error);
+    };
+
+    const resolveIfReady = () => {
+      if (window.AMap) {
+        resolve();
+      } else {
+        cleanupOnError(new Error('AMap SDK load failed'));
+      }
+    };
+
+    const existingScript =
+      document.getElementById(AMAP_SCRIPT_ID) ||
+      document.querySelector('script[src*="webapi.amap.com/maps?v=2.0"]');
+    if (existingScript) {
+      if (window.AMap) {
+        resolve();
+        return;
+      }
+      existingScript.addEventListener('load', resolveIfReady, { once: true });
+      existingScript.addEventListener(
+        'error',
+        () => cleanupOnError(new Error('AMap SDK load failed')),
+        { once: true },
+      );
+      return;
+    }
+
     const script = document.createElement('script');
-    script.src = `https://webapi.amap.com/maps?v=2.0&key=${apiKey}&plugin=AMap.ToolBar`;
+    script.id = AMAP_SCRIPT_ID;
+    script.src = src;
     script.async = true;
-    script.onload = resolve;
-    script.onerror = reject;
+    script.onload = resolveIfReady;
+    script.onerror = () => cleanupOnError(new Error('AMap SDK load failed'));
     document.head.appendChild(script);
   });
+
+  window[AMAP_SCRIPT_PROMISE_KEY] = promise;
+  await promise;
 }
 
 // 解析轨迹坐标
@@ -104,22 +148,32 @@ function clearMapObjects() {
 // 初始化地图
 async function initMap() {
   if (map || !apiKey) return;
-
-  if (SECURITY) {
-    window._AMapSecurityConfig = { securityJsCode: SECURITY };
+  if (mapInitPromise) {
+    await mapInitPromise;
+    return;
   }
 
-  await loadAmapScript();
-  if (!mapContainer.value) return;
+  mapInitPromise = (async () => {
+    if (SECURITY) {
+      window._AMapSecurityConfig = { securityJsCode: SECURITY };
+    }
 
-  const AMap = window.AMap;
-  map = new AMap.Map(mapContainer.value, {
-    zoom: 12,
-    viewMode: '2D',
-    center: [104.066541, 30.572269],
+    await loadAmapScript();
+    if (!mapContainer.value || map) return;
+
+    const AMap = window.AMap;
+    map = new AMap.Map(mapContainer.value, {
+      zoom: 12,
+      viewMode: '2D',
+      center: [104.066541, 30.572269],
+    });
+
+    await new Promise((resolve) => map.on('complete', resolve));
+  })().finally(() => {
+    mapInitPromise = null;
   });
 
-  await new Promise((resolve) => map.on('complete', resolve));
+  await mapInitPromise;
 }
 
 // 绘制轨迹
@@ -231,6 +285,7 @@ watch(
 
 onBeforeUnmount(() => {
   clearMapObjects();
+  mapInitPromise = null;
   if (map) {
     map.destroy();
     map = null;

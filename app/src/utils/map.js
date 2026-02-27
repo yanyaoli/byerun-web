@@ -11,44 +11,59 @@ let availableMapIds = [];
 
 // 存储地图ID到名称的映射
 let mapNameCollection = {};
+let hasLoadedMapFiles = false;
+let mapFilesLoadingPromise = null;
 
 /**
  * 动态加载地图文件
  */
-export async function loadMapFiles() {
-  try {
-    // 清空现有数据
-    mapDataCollection = {};
-    availableMapIds = [];
-    mapNameCollection = {};
-
-    // 从动态导入的地图模块加载数据
-    Object.keys(mapModules).forEach((modulePath) => {
-      const mapFileData = mapModules[modulePath].default;
-      mapDataCollection[mapFileData.mapId] = mapFileData.mapData;
-      availableMapIds.push(mapFileData.mapId);
-      mapNameCollection[mapFileData.mapId] = mapFileData.mapName;
-      console.log(
-        `成功加载地图: ${mapFileData.mapId} (${mapFileData.mapName})`
-      );
-    });
-
-    // 设置默认地图
-    if (availableMapIds.length > 0) {
-      const firstMapId = availableMapIds[0];
-      mapDataCollection.default = mapDataCollection[firstMapId];
-      console.log(`默认地图设置为: ${firstMapId}`);
-    } else {
-      console.warn("未找到任何地图文件！");
-      mapDataCollection.default = [];
-    }
-
-    return availableMapIds;
-  } catch (error) {
-    console.error("加载地图文件时发生错误:", error);
-    mapDataCollection.default = [];
-    return [];
+export async function loadMapFiles(forceReload = false) {
+  if (hasLoadedMapFiles && !forceReload) {
+    return [...availableMapIds];
   }
+
+  if (mapFilesLoadingPromise && !forceReload) {
+    return mapFilesLoadingPromise;
+  }
+
+  mapFilesLoadingPromise = (async () => {
+    try {
+      // 清空现有数据
+      mapDataCollection = {};
+      availableMapIds = [];
+      mapNameCollection = {};
+
+      // 从动态导入的地图模块加载数据
+      Object.keys(mapModules).forEach((modulePath) => {
+        const mapFileData = mapModules[modulePath].default;
+        if (!mapFileData?.mapId || !Array.isArray(mapFileData?.mapData)) return;
+
+        mapDataCollection[mapFileData.mapId] = mapFileData.mapData;
+        availableMapIds.push(mapFileData.mapId);
+        mapNameCollection[mapFileData.mapId] = mapFileData.mapName || mapFileData.mapId;
+      });
+
+      // 设置默认地图
+      if (availableMapIds.length > 0) {
+        const firstMapId = availableMapIds[0];
+        mapDataCollection.default = mapDataCollection[firstMapId];
+      } else {
+        console.warn("未找到任何地图文件！");
+        mapDataCollection.default = [];
+      }
+
+      hasLoadedMapFiles = true;
+      return [...availableMapIds];
+    } catch (error) {
+      console.error("加载地图文件时发生错误:", error);
+      mapDataCollection.default = [];
+      return [];
+    } finally {
+      mapFilesLoadingPromise = null;
+    }
+  })();
+
+  return mapFilesLoadingPromise;
 }
 
 /**
