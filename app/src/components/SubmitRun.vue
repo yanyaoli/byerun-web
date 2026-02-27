@@ -5,32 +5,34 @@
       <div class="flex justify-between items-center bg-white border-b border-gray-200 pb-2">
         <div class="text-sm font-semibold text-gray-800">完成情况</div>
         <div class="text-sm text-gray-500">
-          <i class="fa-solid fa-hourglass-end"></i> {{ semesterEndDateText }}
+          <i class="fa-solid fa-hourglass-end"></i> {{ stats.semesterEndDateText }}
         </div>
       </div>
       <!-- 三个卡片表格布局 -->
       <div class="flex gap-2 pt-2 w-full">
         <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center">
           <div class="text-lg font-semibold text-gray-800 mb-1">
-            {{ totalActivities === 0 ? '0%' : Math.round(clubCompletionRate) + '%' }}
+            {{ stats.clubCompletionRateText }}
           </div>
           <div class="text-sm font-medium text-gray-800 mb-1 truncate">俱乐部活动</div>
           <div class="text-sm text-gray-500 mb-2">
-            {{ completedActivities + '/' + totalActivities }}
+            {{ stats.completedActivities + '/' + stats.totalActivities }}
           </div>
         </div>
         <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center">
-          <div class="text-lg font-semibold text-gray-800 mb-1">{{ runCompletionRate }}%</div>
+          <div class="text-lg font-semibold text-gray-800 mb-1">{{ stats.runCompletionRate }}%</div>
           <div class="text-sm font-medium text-gray-800 mb-1">跑步次数</div>
-          <div class="text-sm text-gray-500 mb-2">{{ completedRuns }}/{{ totalRequiredRuns }}</div>
+          <div class="text-sm text-gray-500 mb-2">
+            {{ stats.completedRuns }}/{{ stats.totalRequiredRuns }}
+          </div>
         </div>
         <div class="flex-1 bg-gray-100 rounded-xl p-3 flex flex-col items-center">
           <div class="text-lg font-semibold text-gray-800 mb-1">
-            {{ Math.round(distancePercentage) }}%
+            {{ stats.distancePercentageText }}
           </div>
           <div class="text-sm font-medium text-gray-800 mb-1">跑步里程</div>
           <div class="text-sm text-gray-500 mb-2">
-            {{ totalDistanceKm }}/{{ Number(targetDistanceKm) ? targetDistanceKm : '0' }}
+            {{ stats.totalDistanceKm }}/{{ stats.targetDistanceKmDisplay }}
           </div>
         </div>
       </div>
@@ -130,7 +132,7 @@
               <button
                 type="submit"
                 class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
-                :disabled="submitting || !paceLimit || !isDistanceValid"
+                :disabled="submitting || !isDistanceValid"
               >
                 <i v-if="!submitting" class="fa-solid fa-check"></i>
                 <span class="loader" v-else></span>
@@ -141,7 +143,7 @@
 
           <!-- 定时任务 -->
           <div v-show="activeTab === 'schedule'" class="space-y-4">
-            <div>
+            <div v-if="schedulePanelMounted">
               <AutoConfig inline @saved="onAutoConfigSaved" />
             </div>
           </div>
@@ -167,29 +169,20 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, inject, defineAsyncComponent } from 'vue';
+import { ref, computed, watch, inject, defineAsyncComponent } from 'vue';
 import { submitRun as submitRunApi } from '@/composables/useRunSubmission';
-import { computeDurationFromDistance, isPaceWithinLimits } from '@/utils/distance';
 import { randomIntNonThousand } from '@/utils/random';
 import { useRouteGenerator } from '@/composables/useRouteGenerator';
 import { useDataStore } from '@/composables/useDataStore';
-import { scheduledTaskConfig } from '@/utils/config';
 
 // 异步组件
 const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
+const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
 
 const showMessage = inject('showMessage');
 
-const {
-  userInfo,
-  runStandard,
-  runInfo,
-  activityInfo,
-  submitRunDistance,
-  submitRunRoute,
-  userId,
-  token,
-} = useDataStore();
+const { userInfo, runStandard, runInfo, activityInfo, submitRunDistance, submitRunRoute } =
+  useDataStore();
 
 const emit = defineEmits(['submitted']);
 
@@ -199,13 +192,22 @@ const tabs = [
 ];
 
 const activeTab = ref('submit');
+const schedulePanelMounted = ref(false);
+
+watch(
+  activeTab,
+  (tab) => {
+    if (tab === 'schedule') {
+      schedulePanelMounted.value = true;
+    }
+  },
+  { immediate: true },
+);
 
 // 提交记录相关
 const form = ref({
   distance: submitRunDistance.value,
-  duration: 0,
   route: submitRunRoute.value,
-  date: new Date().toISOString().split('T')[0],
 });
 const submitting = ref(false);
 const showRouteOptions = ref(false);
@@ -215,118 +217,94 @@ const isDistanceValid = computed(() => {
   return d >= 1000 && Number.isInteger(d);
 });
 
-const paceLimit = computed(() => isPaceWithinLimits(form.value.distance, form.value.duration));
-
-async function syncDurationToDistance() {
-  form.value.duration = computeDurationFromDistance(form.value.distance);
-}
-
 function onRandomFill() {
   const min = 1000,
     max = 7500;
   form.value.distance = randomIntNonThousand(min, max);
-  syncDurationToDistance();
 }
 
 watch(
   () => form.value.distance,
   (val) => {
     submitRunDistance.value = val;
-    syncDurationToDistance();
   },
 );
 
 const {
   mapsLoaded,
   routeOptions,
-  mapDisplayNames,
   selectedRoute,
   load: loadMaps,
   selectRoute: selectMapRoute,
   getRouteName,
   generatedTrack,
   mapReady,
-  regenerate,
 } = useRouteGenerator(
   computed(() => form.value.distance),
   computed(() => form.value.route),
 );
 
 // 统计数据
-const completedActivities = computed(() => {
-  return activityInfo.value ? activityInfo.value.joinNum : 0;
-});
+const stats = computed(() => {
+  const activity = activityInfo.value || {};
+  const run = runInfo.value || {};
+  const standard = runStandard.value || {};
+  const user = userInfo.value || {};
 
-const totalActivities = computed(() => {
-  return activityInfo.value ? activityInfo.value.totalNum : 0;
-});
+  const completedActivities = Number(activity.joinNum || 0);
+  const totalActivities = Number(activity.totalNum || 0);
+  const clubCompletionRate =
+    totalActivities > 0 ? (completedActivities / totalActivities) * 100 : 0;
+  const clubCompletionRateText =
+    totalActivities === 0 ? '0%' : `${Math.round(clubCompletionRate)}%`;
 
-const clubCompletionRate = computed(() => {
-  if (!totalActivities.value) return 0;
-  return (completedActivities.value / totalActivities.value) * 100;
-});
+  // Read semester targets by gender.
+  const totalRequiredRuns =
+    user.gender === '1'
+      ? Number(standard.boyAllRunTime || 0)
+      : user.gender === '2'
+        ? Number(standard.girlAllRunTime || 0)
+        : 0;
+  const completedRuns = Number(run.runValidCount || 0);
+  const runCompletionRate = totalRequiredRuns
+    ? Math.min(100, Math.round((completedRuns / totalRequiredRuns) * 100))
+    : 0;
 
-const completedRuns = computed(() => {
-  return runInfo.value ? runInfo.value.runValidCount : 0;
-});
+  const totalDistanceMeters = Number(run.runValidDistance || 0);
+  const totalDistanceKm = (Math.floor((totalDistanceMeters / 1000) * 10) / 10).toFixed(1);
+  const targetDistanceKm =
+    user.gender === '1'
+      ? (Number(standard.boyAllRunDistance || 0) / 1000).toFixed(1)
+      : user.gender === '2'
+        ? (Number(standard.girlAllRunDistance || 0) / 1000).toFixed(1)
+        : '0.0';
+  const targetDistanceNumber = Number(targetDistanceKm);
+  const currentDistanceNumber = Number(totalDistanceKm);
+  const distancePercentage = targetDistanceNumber
+    ? Math.min(100, (currentDistanceNumber / targetDistanceNumber) * 100)
+    : 0;
 
-const totalRequiredRuns = computed(() => {
-  if (runStandard.value && userInfo.value) {
-    const gender = userInfo.value.gender;
-    if (gender === '1') {
-      return runStandard.value.boyAllRunTime || 0;
-    } else if (gender === '2') {
-      return runStandard.value.girlAllRunTime || 0;
-    }
-  }
-  return 0;
-});
+  const semYear = String(standard.semesterYear || '');
+  const semesterFlag = semYear.slice(-1);
+  const semesterEndDateText =
+    semesterFlag === '1'
+      ? standard.firstSemesterDateEnd || ''
+      : semesterFlag === '2'
+        ? standard.secondSemesterDateEnd || ''
+        : '';
 
-const runCompletionRate = computed(() => {
-  if (!totalRequiredRuns.value) return 0;
-  return Math.min(100, Math.round((completedRuns.value / totalRequiredRuns.value) * 100));
-});
-
-const totalDistanceKm = computed(() => {
-  if (runInfo.value && runInfo.value.runValidDistance) {
-    const km = Number(runInfo.value.runValidDistance) / 1000;
-    const truncated = Math.floor(km * 10) / 10;
-    return truncated.toFixed(1);
-  }
-  return '0.0';
-});
-
-const targetDistanceKm = computed(() => {
-  if (runStandard.value && userInfo.value) {
-    const gender = userInfo.value.gender;
-    if (gender === '1') {
-      return (Number(runStandard.value.boyAllRunDistance) / 1000).toFixed(1);
-    } else if (gender === '2') {
-      return (Number(runStandard.value.girlAllRunDistance) / 1000).toFixed(1);
-    }
-  }
-  return '0.0';
-});
-
-const distancePercentage = computed(() => {
-  const target = Number(targetDistanceKm.value);
-  const current = Number(totalDistanceKm.value);
-  if (!target) return 0;
-  return Math.min(100, (current / target) * 100);
-});
-
-const semesterEndDateText = computed(() => {
-  const rs = runStandard.value || {};
-  const semYear = String(rs.semesterYear || '');
-  const last = semYear ? semYear.slice(-1) : '';
-
-  if (last === '1') {
-    return rs.firstSemesterDateEnd || '';
-  }
-  if (last === '2') {
-    return rs.secondSemesterDateEnd || '';
-  }
-  return '';
+  return {
+    semesterEndDateText,
+    completedActivities,
+    totalActivities,
+    clubCompletionRateText,
+    completedRuns,
+    totalRequiredRuns,
+    runCompletionRate,
+    totalDistanceKm,
+    targetDistanceKmDisplay: targetDistanceNumber > 0 ? targetDistanceKm : '0',
+    distancePercentageText: `${Math.round(distancePercentage)}%`,
+  };
 });
 
 function selectRoute(route) {
@@ -340,12 +318,7 @@ function selectRoute(route) {
 }
 
 const handleSubmit = async () => {
-  if (!paceLimit.value) {
-    showMessage('配速不能小于6分钟/公里', 'error');
-    return;
-  }
-
-  if (!Number.isInteger(form.value.distance) || form.value.distance < 1000) {
+  if (!isDistanceValid.value) {
     showMessage('跑步里程必须为不小于1000米的正整数', 'error');
     return;
   }
@@ -369,10 +342,8 @@ const handleSubmit = async () => {
   }
 };
 
-// 使用独立组件展示/管理定时任务（复用 AutoConfig.vue）
-import AutoConfig from './AutoConfig.vue';
 const onAutoConfigSaved = () => {
-  showMessage('设置已更新', 'success');
+  showMessage('保存成功', 'success');
 };
 
 // 初始化提交记录组件
@@ -388,8 +359,6 @@ loadMaps().then(() => {
   } else {
     onRandomFill();
   }
-
-  syncDurationToDistance();
 });
 </script>
 
@@ -460,16 +429,5 @@ loadMaps().then(() => {
   to {
     transform: rotate(360deg);
   }
-}
-
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background: transparent;
-}
-
-option {
-  background-color: #ffffff;
-  color: #1f2937;
 }
 </style>

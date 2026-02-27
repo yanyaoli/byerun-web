@@ -1,9 +1,7 @@
 <template>
-  <div class="w-full" style="height: 100dvh; width: 100%">
+  <div class="w-full" :style="{ height: viewportHeight, width: '100%' }">
     <div
-      ref="chatSectionRef"
-      class="chat-section flex flex-col w-full relative overflow-hidden bg-white border border-black/8 mb-6 shadow-sm transition-all duration-300 transform-gpu"
-      style="height: 100dvh"
+      class="chat-section h-full flex flex-col w-full relative overflow-hidden bg-white border border-black/8 shadow-sm transition-all duration-300 transform-gpu"
     >
       <div
         class="py-2.5 px-4 border-b border-zinc-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-20"
@@ -16,16 +14,6 @@
           >
             <i class="fa-solid fa-arrow-left text-sm"></i>
           </button>
-          <div>
-            <div class="flex items-center gap-1.5">
-              <button
-                @click="showPrivacyInfo = true"
-                class="h-8 px-3 flex items-center justify-center text-sm text-zinc-600 hover:text-zinc-900 transition-all rounded-full active:scale-95"
-              >
-                使用须知
-              </button>
-            </div>
-          </div>
           <div class="flex items-center gap-2 ml-2">
             <a
               href="https://github.com/yanyaoli/byerun-web"
@@ -47,24 +35,13 @@
             </a>
           </div>
         </div>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1.5">
           <button
-            @click="refreshMessages"
-            :disabled="loadingMessages"
-            title="刷新"
-            class="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-all active:rotate-180 duration-500"
+            @click="showPrivacyInfo = true"
+            title="Usage Notes"
+            class="h-8 px-3 flex items-center justify-center text-sm text-zinc-600 hover:text-zinc-900 transition-all rounded-full active:scale-95"
           >
-            <i
-              class="fa-solid fa-arrows-rotate text-xs"
-              :class="{ 'animate-spin': loadingMessages }"
-            ></i>
-          </button>
-          <button
-            @click="openSettings"
-            title="个人设置"
-            class="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-all"
-          >
-            <i class="ri-user-settings-fill"></i>
+            使用须知
           </button>
         </div>
       </div>
@@ -299,21 +276,32 @@
 
       <div class="p-3 bg-white border-t border-zinc-100 relative">
         <!-- 表情按钮 -->
-        <div class="mb-3 flex items-center gap-3">
-          <button
-            @click="showEmojiPicker = !showEmojiPicker"
-            title="表情符号"
-            class="w-8 h-8 flex-shrink-0 grid place-items-center text-zinc-400 hover:text-zinc-600 transition-colors"
-          >
-            <i class="fa-regular fa-face-smile text-lg"></i>
-          </button>
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <button
+              @click="showEmojiPicker = !showEmojiPicker"
+              title="Emoji"
+              class="w-8 h-8 flex-shrink-0 grid place-items-center text-zinc-400 hover:text-zinc-600 transition-colors"
+            >
+              <i class="fa-regular fa-face-smile text-lg"></i>
+            </button>
 
-          <label
-            class="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-700 cursor-pointer"
+            <label
+              class="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-700 cursor-pointer"
+            >
+              <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
+              <i class="fa-solid fa-image"></i>
+            </label>
+          </div>
+
+          <button
+            @click="openSettings"
+            title="Profile Settings"
+            class="h-8 px-3 flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-all"
           >
-            <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
-            <i class="fa-solid fa-image"></i>
-          </label>
+            <i class="ri-user-settings-fill"></i>
+            <span>个人资料</span>
+          </button>
         </div>
         <!-- 回复预览 -->
         <div
@@ -732,8 +720,6 @@ import {
   nextTick,
   onMounted,
   onUnmounted,
-  onActivated,
-  onDeactivated,
 } from 'vue';
 import { useRouter } from 'vue-router';
 import MessageClient from '@/composables/messageClient';
@@ -773,6 +759,7 @@ const showPrivacyInfo = ref(false);
 const showSettings = ref(false);
 const showEmojiPicker = ref(false);
 const showPreviewBubble = ref(false);
+const viewportHeight = ref('100dvh');
 
 // 输入相关
 const text = ref('');
@@ -810,7 +797,6 @@ const messagesContainer = ref(null);
 const loadMoreSentinel = ref(null);
 const messageRef = ref(null);
 const confirmRef = ref(null);
-const chatSectionRef = ref(null);
 const viewedImage = ref(null);
 const imageModalLoading = ref(false);
 
@@ -820,6 +806,8 @@ let touchStartX = 0;
 let touchStartY = 0;
 let isSwiping = ref(false);
 let scrollObserver = null;
+let viewportSyncFrame = 0;
+let viewportRecoveryTimer = 0;
 
 // ==================== 工具函数 ====================
 const getNativeData = () => {
@@ -833,6 +821,32 @@ const getToken = () => {
 };
 
 const hasToken = () => !!getToken();
+
+function readViewportHeight() {
+  const visualHeight = Math.round(window.visualViewport?.height || 0);
+  const layoutHeight = Math.round(window.innerHeight || 0);
+  return Math.max(1, visualHeight, layoutHeight);
+}
+
+function syncViewportHeight() {
+  viewportHeight.value = `${readViewportHeight()}px`;
+}
+
+function scheduleViewportHeightSync() {
+  if (viewportSyncFrame) cancelAnimationFrame(viewportSyncFrame);
+  viewportSyncFrame = requestAnimationFrame(() => {
+    syncViewportHeight();
+    viewportSyncFrame = 0;
+  });
+}
+
+function recoverViewportHeight() {
+  if (viewportRecoveryTimer) clearTimeout(viewportRecoveryTimer);
+  viewportRecoveryTimer = window.setTimeout(() => {
+    scheduleViewportHeightSync();
+    viewportRecoveryTimer = 0;
+  }, 220);
+}
 
 const isMe = (m) => {
   if (user.value?.user_id && m.user?.user_id) {
@@ -1134,11 +1148,6 @@ async function fetchMessages(isSilent = false) {
     handleApiError(e, '消息加载失败');
     loadingMessages.value = false;
   }
-}
-
-async function refreshMessages() {
-  if (loadingMessages.value) return;
-  await fetchMessages();
 }
 
 async function loadMore() {
@@ -1818,7 +1827,12 @@ const onAuthError = () => {
 };
 
 onMounted(async () => {
-  document.documentElement.style.height = '';
+  syncViewportHeight();
+  window.addEventListener('resize', scheduleViewportHeightSync);
+  window.addEventListener('orientationchange', scheduleViewportHeightSync);
+  window.visualViewport?.addEventListener('resize', scheduleViewportHeightSync);
+  window.addEventListener('focusout', recoverViewportHeight, true);
+
   const cachedUser = localStorage.getItem('unorun_chat_userData');
   if (cachedUser) {
     try {
@@ -1856,6 +1870,20 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  window.removeEventListener('resize', scheduleViewportHeightSync);
+  window.removeEventListener('orientationchange', scheduleViewportHeightSync);
+  window.visualViewport?.removeEventListener('resize', scheduleViewportHeightSync);
+  window.removeEventListener('focusout', recoverViewportHeight, true);
+
+  if (viewportSyncFrame) {
+    cancelAnimationFrame(viewportSyncFrame);
+    viewportSyncFrame = 0;
+  }
+  if (viewportRecoveryTimer) {
+    clearTimeout(viewportRecoveryTimer);
+    viewportRecoveryTimer = 0;
+  }
+
   if (scrollObserver) {
     scrollObserver.disconnect();
     scrollObserver = null;
@@ -1868,12 +1896,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-html,
-body,
-#app {
-  height: 100%;
-}
-
 .custom-scrollbar::-webkit-scrollbar {
   width: 3px;
 }

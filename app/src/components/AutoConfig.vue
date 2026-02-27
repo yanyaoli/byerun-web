@@ -211,31 +211,44 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, inject, onMounted } from "vue";
-import { scheduledTaskConfig } from "@/utils/config";
-import { useDataStore } from "@/composables/useDataStore";
+import { ref, reactive, computed, watch, inject, onMounted } from 'vue';
+import { scheduledTaskConfig } from '@/utils/config';
+import { useDataStore } from '@/composables/useDataStore';
 
-const props = defineProps({ visible: { type: Boolean, default: false }, inline: { type: Boolean, default: false } });
-const emit = defineEmits(["update:visible", "saved"]);
-const showMessage = inject("showMessage", (msg) => alert(msg));
+const props = defineProps({
+  visible: { type: Boolean, default: false },
+  inline: { type: Boolean, default: false },
+});
+const emit = defineEmits(['update:visible', 'saved']);
+const showMessage = inject('showMessage', (msg) => alert(msg));
 
 const { userId, token } = useDataStore();
+const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
 
-const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, "");
+const AUTO_CONFIG_CACHE_KEY = '__byerunAutoConfigCache__';
+const INIT_CACHE_TTL = 60 * 1000;
+const globalCache =
+  typeof window === 'undefined'
+    ? { initPromise: null, payload: null, updatedAt: 0 }
+    : (window[AUTO_CONFIG_CACHE_KEY] ||= {
+        initPromise: null,
+        payload: null,
+        updatedAt: 0,
+      });
 
 const pinging = ref(true);
-const initError = ref(null); // 错误状态
+const initError = ref(null);
 const submitting = ref(false);
 const showMapList = ref(false);
 
 const maps = ref([]);
 const status = ref(null);
-const form = ref({ map_id: "", enabled: false });
+const form = ref({ map_id: '', enabled: false });
 const timeObj = reactive({ h: 8, m: 0 });
 
 const currentMapName = computed(() => {
-  const map = maps.value.find(m => m.id === form.value.map_id);
-  return map ? map.name : '加载中...';
+  const map = maps.value.find((m) => m.id === form.value.map_id);
+  return map ? map.name : 'Loading...';
 });
 
 const selectMap = (map) => {
@@ -244,85 +257,153 @@ const selectMap = (map) => {
 };
 
 const request = async (path, options = {}) => {
-  const url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
+  if (!API_BASE) {
+    throw new Error('Scheduled task service URL is not configured');
+  }
+
+  const url = API_BASE + (path.startsWith('/') ? path : '/' + path);
   const res = await fetch(url, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
-      "Token": token.value || "",
-      ...options.headers
-    }
+      'Content-Type': 'application/json',
+      Token: token.value || '',
+      ...options.headers,
+    },
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  if (!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
+
   let json;
   try {
     json = JSON.parse(text.trim());
   } catch (e) {
-    console.error("JSON Parse Error:", e, "Text:", text);
-    throw new Error("服务器响应格式异常");
+    console.error('JSON Parse Error:', e, 'Text:', text);
+    throw new Error('Invalid server response format');
   }
-  if (!json.success) throw new Error(json.message || "请求失败");
+
+  if (!json.success) throw new Error(json.message || 'Request failed');
   return json.data;
 };
 
 const parseCronToTime = (cronExpr) => {
   if (!cronExpr) return { h: 8, m: 0 };
-  const [min, hour] = cronExpr.split(' ');
-  return { h: parseInt(hour), m: parseInt(min) };
+
+  const parts = String(cronExpr).trim().split(/\s+/);
+  if (parts.length < 2) return { h: 8, m: 0 };
+
+  const minute = Number(parts[0]);
+  const hour = Number(parts[1]);
+
+  return {
+    h: Number.isInteger(hour) ? Math.max(0, Math.min(23, hour)) : 8,
+    m: Number.isInteger(minute) ? Math.max(0, Math.min(59, minute)) : 0,
+  };
 };
 
-const init = async () => {
-  pinging.value = true;
-  initError.value = null; // 重置错误
-  try {
-    // 1. 基础服务检查 (必须成功)
-    await request("/ping");
+const applyInitPayload = ({ mapsData, configData, statusData }) => {
+  maps.value = Array.isArray(mapsData?.maps) ? mapsData.maps : [];
+  form.value.map_id = configData?.map_id || mapsData?.default || maps.value[0]?.id || '';
+  form.value.enabled = !!configData?.enabled;
 
-    // 2. 并发请求后续数据
-    const [mapsData, configData, statusData] = await Promise.all([
-      request("/api/autorun/maps"),
-      request(`/api/autorun/config?userid=${userId.value}`),
-      request(`/api/autorun/run/status?userid=${userId.value}`)
-    ]);
+  const { h, m } = parseCronToTime(configData?.cron_expr);
+  timeObj.h = h;
+  timeObj.m = m;
+  status.value = statusData || null;
+};
 
-    // 赋值
-    maps.value = mapsData.maps;
-    form.value.map_id = configData.map_id || mapsData.default;
-    form.value.enabled = !!configData.enabled;
-    const { h, m } = parseCronToTime(configData.cron_expr);
-    timeObj.h = h;
-    timeObj.m = m;
-    status.value = statusData;
+const updateCachePayload = (payload) => {
+  globalCache.payload = payload;
+  globalCache.updatedAt = Date.now();
+};
 
+const fetchInitPayload = async () => {
+  const currentUserId = userId.value || '';
+  await request('/ping');
+  const [mapsData, configData, statusData] = await Promise.all([
+    request('/api/autorun/maps'),
+    request('/api/autorun/config?userid=' + currentUserId),
+    request('/api/autorun/run/status?userid=' + currentUserId),
+  ]);
+  return { mapsData, configData, statusData };
+};
+
+const init = async ({ force = false } = {}) => {
+  const canUseCache =
+    !force &&
+    globalCache.payload &&
+    Date.now() - globalCache.updatedAt < INIT_CACHE_TTL;
+
+  if (canUseCache) {
+    applyInitPayload(globalCache.payload);
+    initError.value = null;
     pinging.value = false;
+    return;
+  }
+
+  pinging.value = true;
+  initError.value = null;
+
+  if (!globalCache.initPromise) {
+    globalCache.initPromise = fetchInitPayload()
+      .then((payload) => {
+        updateCachePayload(payload);
+        return payload;
+      })
+      .finally(() => {
+        globalCache.initPromise = null;
+      });
+  }
+
+  try {
+    const payload = await globalCache.initPromise;
+    applyInitPayload(payload);
   } catch (err) {
-    console.error("AutoRun Init Error:", err);
-    initError.value = err.message || "未知错误";
-    pinging.value = false; // 停止 pinging 状态以展示错误 UI
+    console.error('AutoRun init error:', err);
+    initError.value = err.message || 'Unknown error';
+  } finally {
+    pinging.value = false;
   }
 };
 
 const handleSave = async () => {
+  if (!form.value.map_id) {
+    showMessage('Please select a map', 'error');
+    return;
+  }
+
   submitting.value = true;
   try {
     const targetDate = new Date();
     targetDate.setHours(timeObj.h, timeObj.m, 0, 0);
 
-    await request("/api/autorun/register", {
-      method: "POST",
+    await request('/api/autorun/register', {
+      method: 'POST',
       body: JSON.stringify({
         map_id: form.value.map_id,
         enabled: form.value.enabled ? 1 : 0,
-        timestamp: targetDate.getTime()
-      })
+        timestamp: targetDate.getTime(),
+      }),
     });
 
-    await request(`/api/autorun/run/status?userid=${userId.value}`);
-    showMessage("设置已更新");
+    const currentUserId = userId.value || '';
+    const latestStatus = await request('/api/autorun/run/status?userid=' + currentUserId);
+    status.value = latestStatus;
+
+    updateCachePayload({
+      mapsData: { maps: maps.value, default: form.value.map_id },
+      configData: {
+        map_id: form.value.map_id,
+        enabled: form.value.enabled ? 1 : 0,
+        cron_expr: String(timeObj.m) + ' ' + String(timeObj.h) + ' * * *',
+      },
+      statusData: latestStatus,
+    });
+
+    showMessage('Settings updated', 'success');
     emit('saved');
   } catch (err) {
-    showMessage(err.message, "error");
+    showMessage(err.message || 'Save failed', 'error');
   } finally {
     submitting.value = false;
   }
@@ -330,12 +411,15 @@ const handleSave = async () => {
 
 const close = () => {
   showMapList.value = false;
-  emit("update:visible", false);
+  emit('update:visible', false);
 };
 
-watch(() => props.visible, (val) => val && init());
-// 当以 inline 模式使用时也需要初始化
-watch(() => props.inline, (val) => val && init());
+watch(
+  () => props.visible,
+  (val) => {
+    if (val) init();
+  },
+);
 
 onMounted(() => {
   if (props.inline) init();
