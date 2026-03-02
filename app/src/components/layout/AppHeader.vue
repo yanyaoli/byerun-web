@@ -84,7 +84,7 @@ const emit = defineEmits(['logout']);
 
 const headerRef = ref(null);
 const confirmDialogRef = ref(null);
-const { userInfo } = useDataStore();
+const { userInfo, clearAllData } = useDataStore();
 const welcomePhase = ref('logo');
 const hasPlayedWelcome = ref(false);
 const timers = [];
@@ -177,8 +177,7 @@ const handleLogout = async () => {
       emit('logout');
     } else {
       try {
-        localStorage.clear();
-        sessionStorage.clear();
+        clearAllData();
       } catch (e) {}
       window.location.reload();
     }

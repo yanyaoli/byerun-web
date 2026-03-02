@@ -117,30 +117,29 @@ import { api } from '@/composables/useApi';
 import { useDataStore } from '@/composables/useDataStore';
 
 const showMessage = inject('showMessage');
-const { userInfo, fetchUserData } = useDataStore();
+const { userInfo, fetchUserData, rememberLogin, savedPhone } = useDataStore();
 const router = useRouter();
 
 const mode = ref('login');
 const phone = ref('');
 const password = ref('');
 const code = ref('');
-const rememberMe = ref(localStorage.getItem('unirun_remember') === 'true');
+const rememberMe = ref(!!rememberLogin.value);
 const loading = ref(false);
 const sending = ref(false);
 
 onMounted(() => {
   if (rememberMe.value) {
-    phone.value = localStorage.getItem('unirun_saved_phone') || '';
+    phone.value = savedPhone.value || '';
   }
-  localStorage.removeItem('unirun_saved_pass');
 });
 
 watch(rememberMe, (val) => {
-  localStorage.setItem('unirun_remember', val ? 'true' : 'false');
+  rememberLogin.value = !!val;
+
   if (!val) {
-    localStorage.removeItem('unirun_saved_phone');
+    savedPhone.value = '';
   }
-  localStorage.removeItem('unirun_saved_pass');
 });
 
 const sendCode = async () => {
@@ -169,11 +168,10 @@ const handleLogin = async () => {
     const { data } = await api.login(phone.value, password.value);
     if (data.code === 10000) {
       if (rememberMe.value) {
-        localStorage.setItem('unirun_saved_phone', phone.value);
+        savedPhone.value = phone.value;
       } else {
-        localStorage.removeItem('unirun_saved_phone');
+        savedPhone.value = '';
       }
-      localStorage.removeItem('unirun_saved_pass');
       userInfo.value = data.response;
       try {
         await fetchUserData();

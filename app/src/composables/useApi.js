@@ -3,10 +3,7 @@ import CryptoJS from 'crypto-js';
 import getDeviceInfo from '@/utils/device';
 import { genSign } from '@/utils/sign.js';
 import { appConfig } from '@/utils/config.js';
-import {
-  getSessionToken,
-  clearAuthSessionStorage,
-} from '@/utils/authStorage';
+import { getSessionToken, clearAuthSessionStorage } from '@/utils/authStorage';
 
 const req = axios.create({
   baseURL: appConfig.api.baseUrl,
@@ -17,14 +14,25 @@ const req = axios.create({
   },
 });
 
-// 请求拦截器
+const clearClientSideState = () => {
+  clearAuthSessionStorage();
+};
+
+const handleAuthFailure = () => {
+  clearClientSideState();
+
+  if (typeof window === 'undefined') return;
+  if (window.location.pathname !== '/auth') {
+    window.location.replace('/auth');
+  }
+};
+
 req.interceptors.request.use((config) => {
   const token = getSessionToken();
-  if (token) config.headers['token'] = token;
+  if (token) config.headers.token = token;
 
-  // 生成 sign，query 为 config.params，body 为 config.data
   const sign = genSign(config.params ?? null, config.data ?? null);
-  config.headers['sign'] = sign;
+  config.headers.sign = sign;
 
   return config;
 });
@@ -40,11 +48,7 @@ req.interceptors.response.use(
     return response;
   },
   (error) => {
-    // 处理 HTTP 状态码错误
-    if (
-      error.response &&
-      (error.response.status === 401 || error.response.status === 403)
-    ) {
+    if (error.response && [401, 403].includes(error.response.status)) {
       handleAuthFailure();
     }
     console.error('API Error:', error.response || error.message);
@@ -52,33 +56,13 @@ req.interceptors.response.use(
   },
 );
 
-// 提取验证失败的处理逻辑，避免直接引用 store 导致的循环依赖
-function handleAuthFailure() {
-  clearAuthSessionStorage();
-
-  const keysToRemove = ['unirun_device_info', 'activeTab'];
-  keysToRemove.forEach((k) => localStorage.removeItem(k));
-
-  // 如果在浏览器环境，且距离上次刷新超过 2 秒（防止死循环）
-  if (typeof window !== 'undefined') {
-    const lastReload = sessionStorage.getItem('last_auth_reload') || 0;
-    const now = Date.now();
-    if (now - lastReload > 2000) {
-      sessionStorage.setItem('last_auth_reload', String(now));
-      window.location.reload();
-    }
-  }
-}
-
-// API 方法封装
 export const api = {
-  // 登录
   login: async (userPhone, password) => {
     const device = getDeviceInfo();
     return req.post(appConfig.api.endpoints.login, {
       appVersion: appConfig.appVersion,
       password: CryptoJS.MD5(password).toString(),
-      userPhone: userPhone,
+      userPhone,
       brand: device.brand,
       deviceToken: '',
       deviceType: device.deviceType,
@@ -146,19 +130,14 @@ export const api = {
   // 获取活动信息
   getJoinNum: async (schoolId, studentId) => {
     return req.get(appConfig.api.endpoints.joinNum, {
-      params: {
-        schoolId,
-        studentId,
-      },
+      params: { schoolId, studentId },
     });
   },
 
   // 获取跑步标准
   getRunStandard: async (schoolId) => {
     return req.get(appConfig.api.endpoints.runStandard, {
-      params: {
-        schoolId,
-      },
+      params: { schoolId },
     });
   },
 

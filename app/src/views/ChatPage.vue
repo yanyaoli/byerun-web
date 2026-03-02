@@ -727,19 +727,21 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import emojiGroups from '@/assets/data/emojis.json';
 import stickerConfig from '@/assets/data/stickers.json';
 import { normalizeAvatarUrl, renderContent, getEmojiUrl, formatTime } from '@/utils/chat';
-import {
-  getSessionToken,
-  readSessionAuthData,
-  getCachedChatUserId,
-  readCachedChatUser,
-  writeCachedChatUser,
-  clearAuthSessionStorage,
-} from '@/utils/authStorage';
+import { useDataStore } from '@/composables/useDataStore';
 
 // ==================== 依赖注入 ====================
 const showMessage = inject('showMessage');
 const setLayoutHidden = inject('setLayoutHidden', () => {});
 const goBack = inject('goBack', null);
+const {
+  token,
+  userInfo,
+  chatUser,
+  chatUserId,
+  setCachedChatUser,
+  getCachedChatUserId,
+  clearAllData,
+} = useDataStore();
 
 // ==================== 常量配置 ====================
 const API_BASE = (import.meta.env.VITE_CHAT_SERVER_BASE_URL || '').replace(/\/$/, '');
@@ -817,7 +819,7 @@ let viewportRecoveryTimer = 0;
 let authExpiredNotified = false;
 
 // ==================== 工具函数 ====================
-const getToken = () => getSessionToken();
+const getToken = () => token.value || '';
 
 const hasToken = () => !!getToken();
 
@@ -852,8 +854,7 @@ const isMe = (m) => {
     return String(user.value.user_id) === String(m.user.user_id);
   }
   
-  const data = readSessionAuthData();
-  const cachedId = data.userInfo?.userId || getCachedChatUserId();
+  const cachedId = userInfo.value?.userId || chatUserId.value || getCachedChatUserId();
 
   if (cachedId && m.user?.user_id) {
     return String(cachedId) === String(m.user.user_id);
@@ -1091,8 +1092,8 @@ function clearAuthState() {
   client.setToken(null, { reconnect: false });
   client.disconnectSocket();
   user.value = null;
-  writeCachedChatUser(null);
-  clearAuthSessionStorage();
+  setCachedChatUser(null);
+  clearAllData();
 }
 
 function handleApiError(e, defaultMsg) {
@@ -1115,7 +1116,7 @@ async function fetchUser() {
     user.value = data.user;
     if (data.user?.user_id) {
       // Cache current user for isMe checks before profile request finishes.
-      writeCachedChatUser(data.user);
+      setCachedChatUser(data.user);
     }
   } catch (e) {
     handleApiError(e, '获取用户信息失败');
@@ -1393,7 +1394,7 @@ async function applySettings() {
     // 更新当前用户状态
     user.value = data.user;
     // 同步更新缓存
-    writeCachedChatUser(data.user);
+    setCachedChatUser(data.user);
 
     showSettings.value = false;
     showToast('更新成功', 'success');
@@ -1413,7 +1414,7 @@ async function openSettings() {
     settingsNickname.value = user.value?.nickname || '';
     settingsQQ.value = user.value?.qq || '';
     // 同步更新缓存，保证下次进入页面时 isMe 判定准确
-    writeCachedChatUser(data.user);
+    setCachedChatUser(data.user);
   } catch (e) {
     handleApiError(e, '获取用户信息失败');
   } finally {
@@ -1828,7 +1829,7 @@ onMounted(async () => {
   window.visualViewport?.addEventListener('resize', scheduleViewportHeightSync);
   window.addEventListener('focusout', recoverViewportHeight, true);
 
-  const cachedUser = readCachedChatUser();
+  const cachedUser = chatUser.value;
   if (cachedUser) user.value = cachedUser;
 
   client.on('message', onMessage);

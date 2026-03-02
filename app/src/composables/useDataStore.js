@@ -1,160 +1,174 @@
-import { reactive, toRefs, watch, computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { defineStore, storeToRefs } from 'pinia';
 import { api } from '@/composables/useApi';
 import { getDeviceInfo } from '@/utils/device';
-import {
-  readSessionAuthData,
-  writeSessionAuthData,
-  clearAuthSessionStorage,
-} from '@/utils/authStorage';
+import { STORAGE_KEYS } from '@/utils/storageKeys';
+import { setRuntimeToken } from '@/utils/authStorage';
 
-const tryParse = (key) => {
-  try {
-    const val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : null;
-  } catch (e) {
-    return null;
-  }
-};
+const useAppStateStore = defineStore(
+  'appState',
+  () => {
+    const userInfo = ref(null);
+    const runInfo = ref(null);
+    const runStandard = ref(null);
+    const activityInfo = ref(null);
+    const loading = ref(false);
 
-const initialAuthData = readSessionAuthData();
+    const submitRunDistance = ref(null);
+    const submitRunRoute = ref(null);
+    const deviceInfo = ref(getDeviceInfo());
+    const activeTab = ref('submit');
 
-const state = reactive({
-  userInfo: initialAuthData.userInfo || null,
-  runInfo: initialAuthData.runInfo || null,
-  runStandard: initialAuthData.runStandard || null,
-  activityInfo: initialAuthData.activityInfo || null,
-  loading: false,
+    const rememberLogin = ref(false);
+    const savedPhone = ref('');
 
-  submitRunDistance: localStorage.getItem('unirun_submitRunDistance') || null,
-  submitRunRoute: localStorage.getItem('unirun_submitRunRoute') || null,
-  deviceInfo: tryParse('unirun_device_info') || getDeviceInfo(),
-  activeTab: localStorage.getItem('activeTab') || 'submit',
-});
+    const chatUser = ref(null);
+    const chatUserId = ref(null);
 
-const syncNativeToStorage = () => {
-  writeSessionAuthData({
-    userInfo: state.userInfo,
-    runInfo: state.runInfo,
-    runStandard: state.runStandard,
-    activityInfo: state.activityInfo,
-  });
-};
+    const token = computed(() => userInfo.value?.oauthToken?.token || null);
+    const userId = computed(() => userInfo.value?.userId || null);
+    const studentId = computed(() => userInfo.value?.studentId || null);
+    const schoolId = computed(() => userInfo.value?.schoolId || null);
 
-watch(
-  () => [state.userInfo, state.runInfo, state.runStandard, state.activityInfo],
-  syncNativeToStorage,
-  { deep: true },
-);
+    const setCachedChatUser = (user) => {
+      if (!user || typeof user !== 'object') {
+        chatUser.value = null;
+        chatUserId.value = null;
+        return;
+      }
+      chatUser.value = user;
+      chatUserId.value =
+        user.user_id !== undefined && user.user_id !== null
+          ? String(user.user_id)
+          : null;
+    };
 
-watch(
-  () => state.submitRunDistance,
-  (v) => {
-    if (v !== null && v !== undefined) {
-      localStorage.setItem('unirun_submitRunDistance', v);
-    }
+    const getCachedChatUserId = () => {
+      if (chatUserId.value) return chatUserId.value;
+      if (chatUser.value?.user_id !== undefined && chatUser.value?.user_id !== null) {
+        chatUserId.value = String(chatUser.value.user_id);
+        return chatUserId.value;
+      }
+      return null;
+    };
+
+    const fetchUserData = async () => {
+      loading.value = true;
+      try {
+        const userRes = await api.getToken();
+        if (userRes.data.code === 10000) {
+          userInfo.value = userRes.data.response;
+
+          const { schoolId: sId, userId: uId, studentId: stId } = userInfo.value;
+
+          const [standardRes, activityRes] = await Promise.all([
+            api.getRunStandard(sId).catch(() => null),
+            api.getJoinNum(sId, stId).catch(() => null),
+          ]);
+
+          if (standardRes?.data?.code === 10000) {
+            runStandard.value = standardRes.data.response;
+            const semesterFromStandard = runStandard.value?.semesterYear;
+            const now = new Date();
+            const finalSemester =
+              semesterFromStandard ||
+              `${now.getFullYear()}${now.getMonth() + 1 < 8 ? '1' : '2'}`;
+
+            api
+              .getRunInfo(Number(uId), finalSemester)
+              .then((runRes) => {
+                if (runRes.data.code === 10000) {
+                  runInfo.value = runRes.data.response;
+                }
+              })
+              .catch(() => {});
+          }
+
+          if (activityRes?.data?.code === 10000) {
+            activityInfo.value = activityRes.data.response;
+          }
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Fetch data failed:', error);
+        return false;
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    const clearAllData = () => {
+      userInfo.value = null;
+      runInfo.value = null;
+      runStandard.value = null;
+      activityInfo.value = null;
+      submitRunDistance.value = null;
+      submitRunRoute.value = null;
+      activeTab.value = 'submit';
+      setCachedChatUser(null);
+    };
+
+    watch(
+      token,
+      (nextToken) => {
+        setRuntimeToken(nextToken || '');
+      },
+      { immediate: true },
+    );
+
+    return {
+      userInfo,
+      runInfo,
+      runStandard,
+      activityInfo,
+      loading,
+      submitRunDistance,
+      submitRunRoute,
+      deviceInfo,
+      activeTab,
+      rememberLogin,
+      savedPhone,
+      chatUser,
+      chatUserId,
+      token,
+      userId,
+      studentId,
+      schoolId,
+      setCachedChatUser,
+      getCachedChatUserId,
+      fetchUserData,
+      clearAllData,
+    };
   },
-);
-
-watch(
-  () => state.submitRunRoute,
-  (v) => {
-    if (v) localStorage.setItem('unirun_submitRunRoute', v);
-  },
-);
-
-watch(
-  () => state.deviceInfo,
-  (v) => {
-    if (v) localStorage.setItem('unirun_device_info', JSON.stringify(v));
-  },
-  { deep: true },
-);
-
-watch(
-  () => state.activeTab,
-  (v) => {
-    if (v) localStorage.setItem('activeTab', v);
+  {
+    persist: {
+      key: STORAGE_KEYS.LOCAL.APP_STATE,
+      storage: localStorage,
+      pick: [
+        'userInfo',
+        'runInfo',
+        'runStandard',
+        'activityInfo',
+        'submitRunDistance',
+        'submitRunRoute',
+        'deviceInfo',
+        'rememberLogin',
+        'savedPhone',
+        'chatUser',
+        'chatUserId',
+      ],
+    },
   },
 );
 
 export const useDataStore = () => {
-  const token = computed(() => state.userInfo?.oauthToken?.token || null);
-  const userId = computed(() => state.userInfo?.userId || null);
-  const studentId = computed(() => state.userInfo?.studentId || null);
-  const schoolId = computed(() => state.userInfo?.schoolId || null);
-
-  const fetchUserData = async () => {
-    state.loading = true;
-    try {
-      const userRes = await api.getToken();
-      if (userRes.data.code === 10000) {
-        state.userInfo = userRes.data.response;
-
-        const { schoolId: sId, userId: uId, studentId: stId } = state.userInfo;
-
-        const [standardRes, activityRes] = await Promise.all([
-          api.getRunStandard(sId).catch(() => null),
-          api.getJoinNum(sId, stId).catch(() => null),
-        ]);
-
-        if (standardRes?.data?.code === 10000) {
-          state.runStandard = standardRes.data.response;
-          const semesterFromStandard = state.runStandard?.semesterYear;
-          const now = new Date();
-          const finalSemester =
-            semesterFromStandard ||
-            `${now.getFullYear()}${now.getMonth() + 1 < 8 ? '1' : '2'}`;
-
-          api
-            .getRunInfo(Number(uId), finalSemester)
-            .then((runRes) => {
-              if (runRes.data.code === 10000) {
-                state.runInfo = runRes.data.response;
-              }
-            })
-            .catch(() => {});
-        }
-
-        if (activityRes?.data?.code === 10000) {
-          state.activityInfo = activityRes.data.response;
-        }
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Fetch data failed:', error);
-      return false;
-    } finally {
-      state.loading = false;
-    }
-  };
-
-  const clearAllData = () => {
-    state.userInfo = null;
-    state.runInfo = null;
-    state.runStandard = null;
-    state.activityInfo = null;
-    state.submitRunDistance = null;
-    state.submitRunRoute = null;
-
-    clearAuthSessionStorage();
-
-    const keysToRemove = [
-      'unirun_submitRunDistance',
-      'unirun_submitRunRoute',
-      'unirun_device_info',
-      'activeTab',
-    ];
-    keysToRemove.forEach((k) => localStorage.removeItem(k));
-  };
-
+  const store = useAppStateStore();
   return {
-    ...toRefs(state),
-    token,
-    userId,
-    studentId,
-    schoolId,
-    fetchUserData,
-    clearAllData,
+    ...storeToRefs(store),
+    setCachedChatUser: store.setCachedChatUser,
+    getCachedChatUserId: store.getCachedChatUserId,
+    fetchUserData: store.fetchUserData,
+    clearAllData: store.clearAllData,
   };
 };

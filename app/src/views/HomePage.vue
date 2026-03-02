@@ -46,7 +46,14 @@ import AppHeader from '@/components/layout/AppHeader.vue';
 import BottomTabBar from '@/components/layout/BottomTabBar.vue';
 import { useDataStore } from '@/composables/useDataStore';
 
-const { fetchUserData, activeTab } = useDataStore();
+const {
+  fetchUserData,
+  activeTab,
+  userInfo,
+  runInfo,
+  runStandard,
+  activityInfo,
+} = useDataStore();
 const rootShowMessage = inject('showMessage', null);
 
 const appHeaderRef = ref(null);
@@ -58,8 +65,6 @@ const bottomBarHeight = ref(96);
 const headerCompact = ref(false);
 const activeKey = ref(activeTab.value || 'submit');
 const chatMounted = ref(activeKey.value === 'chat');
-
-const getScrollKey = (key = activeKey.value) => `scroll_${key}`;
 
 function updateHeaderCompact(top) {
   const next = Number(top) > 6;
@@ -73,21 +78,8 @@ function handleMainScroll(e) {
   updateHeaderCompact(top);
 }
 
-function saveScrollPosition(key = activeKey.value) {
-  if (!mainScrollRef.value || key === 'chat') return;
-  localStorage.setItem(getScrollKey(key), String(mainScrollRef.value.scrollTop || 0));
-}
-
-function restoreScrollPosition(key = activeKey.value) {
-  if (!mainScrollRef.value || key === 'chat') return;
-  const pos = Number(localStorage.getItem(getScrollKey(key)) || 0);
-  mainScrollRef.value.scrollTop = Number.isFinite(pos) ? pos : 0;
-  updateHeaderCompact(mainScrollRef.value.scrollTop || 0);
-}
-
 const setActiveKey = (key) => {
   if (!key || key === activeKey.value) return;
-  saveScrollPosition(activeKey.value);
   activeKey.value = key;
   activeTab.value = key;
 };
@@ -118,26 +110,25 @@ provide('showMessage', showMessage);
 watch(
   activeKey,
   async (newKey, oldKey) => {
-    if (oldKey && oldKey !== 'chat') {
-      saveScrollPosition(oldKey);
-    }
     if (newKey === 'chat') {
       chatMounted.value = true;
       return;
     }
     await nextTick();
-    restoreScrollPosition(newKey);
+    updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
     measureHeights();
   },
   { flush: 'post' },
 );
 
 onMounted(() => {
+  if (userInfo.value && (!runInfo.value || !runStandard.value || !activityInfo.value)) {
+    fetchUserData().catch(() => {});
+  }
   measureHeights();
   window.addEventListener('resize', measureHeights);
   nextTick(() => {
     try {
-      restoreScrollPosition(activeKey.value);
       updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
     } catch (e) {}
   });
@@ -145,9 +136,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', measureHeights);
-  try {
-    saveScrollPosition(activeKey.value);
-  } catch (e) {}
 });
 </script>
 

@@ -1,9 +1,6 @@
-const AUTH_SESSION_KEY = 'unirun_session_data';
-const CHAT_USER_DATA_KEY = 'unorun_chat_userData';
-const CHAT_USER_ID_KEY = 'unorun_chat_userId';
+import { STORAGE_KEYS, readStorageValue, writeStorageValue } from '@/utils/storageKeys';
 
-const getSessionStorage = () =>
-  typeof window !== 'undefined' ? window.sessionStorage : null;
+const RUNTIME_TOKEN_KEY = '__unirun_runtime_token__';
 
 const safeParseJson = (raw) => {
   if (!raw) return null;
@@ -14,73 +11,42 @@ const safeParseJson = (raw) => {
   }
 };
 
-export const readSessionAuthData = () => {
-  const session = getSessionStorage();
-  if (!session) return {};
-  const parsed = safeParseJson(session.getItem(AUTH_SESSION_KEY));
+const readAppState = () => {
+  const parsed = safeParseJson(readStorageValue('local', STORAGE_KEYS.LOCAL.APP_STATE));
   return parsed && typeof parsed === 'object' ? parsed : {};
 };
 
-export const writeSessionAuthData = (data) => {
-  const session = getSessionStorage();
-  if (!session) return;
+const writeAppState = (state) => {
+  writeStorageValue('local', STORAGE_KEYS.LOCAL.APP_STATE, JSON.stringify(state));
+};
 
-  const hasAuthData =
-    !!data &&
-    (data.userInfo || data.runInfo || data.runStandard || data.activityInfo);
+const patchAppState = (patcher) => {
+  const current = readAppState();
+  const next = patcher({ ...current }) || current;
+  writeAppState(next);
+};
 
-  if (hasAuthData) {
-    session.setItem(AUTH_SESSION_KEY, JSON.stringify(data));
-  } else {
-    session.removeItem(AUTH_SESSION_KEY);
-  }
+export const setRuntimeToken = (token) => {
+  if (typeof window === 'undefined') return;
+  window[RUNTIME_TOKEN_KEY] = token || '';
 };
 
 export const getSessionToken = () => {
-  return readSessionAuthData().userInfo?.oauthToken?.token || '';
-};
-
-export const readCachedChatUser = () => {
-  const session = getSessionStorage();
-  if (!session) return null;
-  return safeParseJson(session.getItem(CHAT_USER_DATA_KEY));
-};
-
-export const writeCachedChatUser = (user) => {
-  const session = getSessionStorage();
-  if (!session) return;
-
-  if (user && typeof user === 'object') {
-    session.setItem(CHAT_USER_DATA_KEY, JSON.stringify(user));
-    if (user.user_id !== undefined && user.user_id !== null) {
-      session.setItem(CHAT_USER_ID_KEY, String(user.user_id));
-    }
-    return;
+  if (typeof window !== 'undefined' && window[RUNTIME_TOKEN_KEY]) {
+    return window[RUNTIME_TOKEN_KEY];
   }
-
-  session.removeItem(CHAT_USER_DATA_KEY);
-  session.removeItem(CHAT_USER_ID_KEY);
-};
-
-export const getCachedChatUserId = () => {
-  const session = getSessionStorage();
-  if (!session) return null;
-
-  const cachedId = session.getItem(CHAT_USER_ID_KEY);
-  if (cachedId) return cachedId;
-  const cachedUser = readCachedChatUser();
-  if (cachedUser?.user_id !== undefined && cachedUser?.user_id !== null) {
-    const userId = String(cachedUser.user_id);
-    session.setItem(CHAT_USER_ID_KEY, userId);
-    return userId;
-  }
-  return null;
+  return readAppState().userInfo?.oauthToken?.token || '';
 };
 
 export const clearAuthSessionStorage = () => {
-  const session = getSessionStorage();
-  if (!session) return;
-  session.removeItem(AUTH_SESSION_KEY);
-  session.removeItem(CHAT_USER_DATA_KEY);
-  session.removeItem(CHAT_USER_ID_KEY);
+  setRuntimeToken('');
+  patchAppState((state) => ({
+    ...state,
+    userInfo: null,
+    runInfo: null,
+    runStandard: null,
+    activityInfo: null,
+    chatUser: null,
+    chatUserId: null,
+  }));
 };
