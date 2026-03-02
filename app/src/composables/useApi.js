@@ -1,11 +1,13 @@
 import axios from 'axios';
-import { genSign } from '@/utils/sign.js';
-import { appConfig } from '@/utils/config.js';
 import CryptoJS from 'crypto-js';
 import getDeviceInfo from '@/utils/device';
-import { decrypt } from '@/utils/crypto';
+import { genSign } from '@/utils/sign.js';
+import { appConfig } from '@/utils/config.js';
+import {
+  getSessionToken,
+  clearAuthSessionStorage,
+} from '@/utils/authStorage';
 
-// 创建 axios 实例
 const req = axios.create({
   baseURL: appConfig.api.baseUrl,
   timeout: 15000,
@@ -17,23 +19,7 @@ const req = axios.create({
 
 // 请求拦截器
 req.interceptors.request.use((config) => {
-  // 尝试从新的加密存储中获取 token
-  let token = null;
-  try {
-    const encryptedData = localStorage.getItem('unirun_data');
-    if (encryptedData) {
-      const decrypted = decrypt(encryptedData);
-      token = decrypted?.userInfo?.oauthToken?.token;
-    }
-  } catch (e) {
-    // 如果解密失败或数据结构不对，尝试读取遗留字段
-    token = localStorage.getItem('unirun_token');
-  }
-
-  if (!token) {
-    token = localStorage.getItem('unirun_token');
-  }
-
+  const token = getSessionToken();
   if (token) config.headers['token'] = token;
 
   // 生成 sign，query 为 config.params，body 为 config.data
@@ -63,28 +49,14 @@ req.interceptors.response.use(
     }
     console.error('API Error:', error.response || error.message);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 提取验证失败的处理逻辑，避免直接引用 store 导致的循环依赖
 function handleAuthFailure() {
-  localStorage.removeItem('unirun_data');
-  // 清理所有相关字段以防脏数据残留
-  const keysToRemove = [
-    'unirun_token',
-    'unirun_userId',
-    'unirun_studentId',
-    'unirun_schoolId',
-    'unirun_userInfo',
-    'unirun_runInfo',
-    'unirun_runStandard',
-    'unirun_activityInfo',
-    'unirun_device_info',
-    'activeTab',
-    'unorun_chat_userData',
-    'unorun_chat_userId',
-    'unorun_chat_token',
-  ];
+  clearAuthSessionStorage();
+
+  const keysToRemove = ['unirun_device_info', 'activeTab'];
   keysToRemove.forEach((k) => localStorage.removeItem(k));
 
   // 如果在浏览器环境，且距离上次刷新超过 2 秒（防止死循环）
@@ -149,7 +121,7 @@ export const api = {
     runTime,
     userId,
     recordDate,
-    yearSemester
+    yearSemester,
   ) => {
     const device = getDeviceInfo();
     return req.post(appConfig.api.endpoints.saveNewRecord, {

@@ -726,8 +726,15 @@ import Message from '@/components/Message.vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import emojiGroups from '@/assets/data/emojis.json';
 import stickerConfig from '@/assets/data/stickers.json';
-import { decrypt } from '@/utils/crypto';
 import { normalizeAvatarUrl, renderContent, getEmojiUrl, formatTime } from '@/utils/chat';
+import {
+  getSessionToken,
+  readSessionAuthData,
+  getCachedChatUserId,
+  readCachedChatUser,
+  writeCachedChatUser,
+  clearAuthSessionStorage,
+} from '@/utils/authStorage';
 
 // ==================== 依赖注入 ====================
 const showMessage = inject('showMessage');
@@ -810,15 +817,7 @@ let viewportRecoveryTimer = 0;
 let authExpiredNotified = false;
 
 // ==================== 工具函数 ====================
-const getNativeData = () => {
-  const encrypted = localStorage.getItem('unirun_data');
-  return decrypt(encrypted) || {};
-};
-
-const getToken = () => {
-  const data = getNativeData();
-  return data.userInfo?.oauthToken?.token || localStorage.getItem('unirun_token') || '';
-};
+const getToken = () => getSessionToken();
 
 const hasToken = () => !!getToken();
 
@@ -853,17 +852,8 @@ const isMe = (m) => {
     return String(user.value.user_id) === String(m.user.user_id);
   }
   
-  const data = getNativeData();
-  let cachedId = data.userInfo?.userId || localStorage.getItem('unorun_chat_userId');
-
-  if (!cachedId) {
-    try {
-      const userData = JSON.parse(localStorage.getItem('unorun_chat_userData') || '{}');
-      cachedId = userData.user_id;
-    } catch (e) {
-      cachedId = null;
-    }
-  }
+  const data = readSessionAuthData();
+  const cachedId = data.userInfo?.userId || getCachedChatUserId();
 
   if (cachedId && m.user?.user_id) {
     return String(cachedId) === String(m.user.user_id);
@@ -1101,7 +1091,8 @@ function clearAuthState() {
   client.setToken(null, { reconnect: false });
   client.disconnectSocket();
   user.value = null;
-  localStorage.removeItem('unirun_token');
+  writeCachedChatUser(null);
+  clearAuthSessionStorage();
 }
 
 function handleApiError(e, defaultMsg) {
@@ -1123,9 +1114,8 @@ async function fetchUser() {
     authExpiredNotified = false;
     user.value = data.user;
     if (data.user?.user_id) {
-      // 存储到 localStorage，确保下次进入或刷新时能立即通过 isMe 判断身份
-      localStorage.setItem('unorun_chat_userId', data.user.user_id);
-      localStorage.setItem('unorun_chat_userData', JSON.stringify(data.user));
+      // Cache current user for isMe checks before profile request finishes.
+      writeCachedChatUser(data.user);
     }
   } catch (e) {
     handleApiError(e, '获取用户信息失败');
@@ -1403,7 +1393,7 @@ async function applySettings() {
     // 更新当前用户状态
     user.value = data.user;
     // 同步更新缓存
-    localStorage.setItem('unorun_chat_userData', JSON.stringify(data.user));
+    writeCachedChatUser(data.user);
 
     showSettings.value = false;
     showToast('更新成功', 'success');
@@ -1423,8 +1413,7 @@ async function openSettings() {
     settingsNickname.value = user.value?.nickname || '';
     settingsQQ.value = user.value?.qq || '';
     // 同步更新缓存，保证下次进入页面时 isMe 判定准确
-    localStorage.setItem('unorun_chat_userData', JSON.stringify(data.user));
-    localStorage.setItem('unorun_chat_userId', data.user.user_id);
+    writeCachedChatUser(data.user);
   } catch (e) {
     handleApiError(e, '获取用户信息失败');
   } finally {
@@ -1839,15 +1828,8 @@ onMounted(async () => {
   window.visualViewport?.addEventListener('resize', scheduleViewportHeightSync);
   window.addEventListener('focusout', recoverViewportHeight, true);
 
-  const cachedUser = localStorage.getItem('unorun_chat_userData');
-  if (cachedUser) {
-    try {
-      const parsed = JSON.parse(cachedUser);
-      if (parsed) user.value = parsed;
-    } catch (e) {
-      console.error('Failed to parse cached userData', e);
-    }
-  }
+  const cachedUser = readCachedChatUser();
+  if (cachedUser) user.value = cachedUser;
 
   client.on('message', onMessage);
   client.on('delete', onDelete);

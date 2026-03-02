@@ -178,6 +178,7 @@ const handleLogout = async () => {
     } else {
       try {
         localStorage.clear();
+        sessionStorage.clear();
       } catch (e) {}
       window.location.reload();
     }

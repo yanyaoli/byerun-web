@@ -115,7 +115,6 @@ import { ref, inject, watch, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '@/composables/useApi';
 import { useDataStore } from '@/composables/useDataStore';
-import { encrypt, decrypt } from '@/utils/crypto';
 
 const showMessage = inject('showMessage');
 const { userInfo, fetchUserData } = useDataStore();
@@ -132,20 +131,16 @@ const sending = ref(false);
 onMounted(() => {
   if (rememberMe.value) {
     phone.value = localStorage.getItem('unirun_saved_phone') || '';
-    const savedPass = localStorage.getItem('unirun_saved_pass');
-    if (savedPass) {
-      const decryptedPass = decrypt(savedPass);
-      if (decryptedPass) password.value = decryptedPass;
-    }
   }
+  localStorage.removeItem('unirun_saved_pass');
 });
 
 watch(rememberMe, (val) => {
   localStorage.setItem('unirun_remember', val ? 'true' : 'false');
   if (!val) {
     localStorage.removeItem('unirun_saved_phone');
-    localStorage.removeItem('unirun_saved_pass');
   }
+  localStorage.removeItem('unirun_saved_pass');
 });
 
 const sendCode = async () => {
@@ -175,8 +170,10 @@ const handleLogin = async () => {
     if (data.code === 10000) {
       if (rememberMe.value) {
         localStorage.setItem('unirun_saved_phone', phone.value);
-        localStorage.setItem('unirun_saved_pass', encrypt(password.value));
+      } else {
+        localStorage.removeItem('unirun_saved_phone');
       }
+      localStorage.removeItem('unirun_saved_pass');
       userInfo.value = data.response;
       try {
         await fetchUserData();
