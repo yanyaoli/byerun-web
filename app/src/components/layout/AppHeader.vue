@@ -1,34 +1,69 @@
-﻿<template>
+<template>
   <div>
     <header
-      class="fixed left-0 right-0 top-2 h-11 z-[998] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+      ref="headerRef"
+      :class="[
+        'fixed left-0 right-0 z-[998]  pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
+        props.scrolled ? 'top-1 h-9' : 'top-2 h-9',
+      ]"
     >
       <div
-        class="flex items-center h-full bg-white/10 backdrop-blur-[16px] border border-white/50 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[480px] mx-auto w-[calc(100%_-_24px)]"
+        :class="[
+          'flex items-center h-full backdrop-blur-[16px] border rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
+          props.scrolled ? 'max-w-[380px] w-[calc(100%_-_52px)]' : 'max-w-[400px] w-[calc(100%_-_24px)]',
+          messageVisible ? messageStyles[messageType].shell : 'bg-white/10 border-white/50',
+        ]"
       >
-        <div
-          class="flex items-center flex-1 min-w-0 h-full pl-4 pr-2 overflow-hidden pointer-events-none"
+        <transition
+          mode="out-in"
+          enter-active-class="transition-all duration-220 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition-all duration-180 ease-in"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
         >
-          <div class="welcome-sequence">
-            <img
-              src="/logo.png"
-              alt="App Logo"
-              class="welcome-sequence-logo"
-              :class="{ 'is-visible': welcomePhase !== 'text' }"
-            />
-            <span class="welcome-sequence-text" :class="{ 'is-visible': welcomePhase === 'text' }">
-              {{ welcomeText }}
+          <div v-if="messageVisible" key="message" class="flex items-center w-full px-4 gap-2.5">
+            <i :class="['text-[14px] shrink-0', messageStyles[messageType].icon]"></i>
+            <span :class="['text-[13px] leading-5 truncate', messageStyles[messageType].text]">
+              {{ messageContent }}
             </span>
           </div>
-        </div>
 
-        <button
-          class="inline-flex items-center justify-center h-6 w-6 p-0.5 text-[rgba(60,60,67,0.8)] rounded-full font-semibold transition-all duration-150 border-none outline-none shadow-none hover:bg-red-100 hover:text-red-700 ml-auto mr-4 shrink-0"
-          @click="handleLogout"
-          title="退出登录"
-        >
-          <i class="ri-logout-circle-r-line text-[16px]"></i>
-        </button>
+          <div v-else key="default" class="flex items-center w-full h-full">
+            <div
+              class="flex items-center flex-1 min-w-0 h-full pl-4 pr-2 overflow-hidden pointer-events-none"
+            >
+              <div class="welcome-sequence">
+                <img
+                  src="/logo.png"
+                  alt="App Logo"
+                  class="welcome-sequence-logo"
+                  :class="{ 'is-visible': welcomePhase !== 'text' }"
+                />
+                <span
+                  class="welcome-sequence-text"
+                  :class="{ 'is-visible': welcomePhase === 'text' }"
+                >
+                  {{ welcomeText }}
+                </span>
+              </div>
+            </div>
+
+            <button
+              :class="[
+                'inline-flex items-center justify-center p-0.5 text-[rgba(60,60,67,0.8)] rounded-full font-semibold transition-all duration-150 border-none outline-none shadow-none hover:bg-red-100 hover:text-red-700 ml-auto mr-4 shrink-0',
+                props.scrolled ? 'h-5 w-5' : 'h-6 w-6',
+              ]"
+              @click="handleLogout"
+              title="退出登录"
+            >
+              <i
+                :class="['ri-logout-circle-r-line', props.scrolled ? 'text-[14px]' : 'text-[16px]']"
+              ></i>
+            </button>
+          </div>
+        </transition>
       </div>
     </header>
 
@@ -41,13 +76,46 @@ import { ref, computed, getCurrentInstance, watch, onUnmounted } from 'vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import { useDataStore } from '@/composables/useDataStore';
 
+const props = defineProps({
+  scrolled: { type: Boolean, default: false },
+});
+
 const emit = defineEmits(['logout']);
 
+const headerRef = ref(null);
 const confirmDialogRef = ref(null);
 const { userInfo } = useDataStore();
 const welcomePhase = ref('logo');
 const hasPlayedWelcome = ref(false);
 const timers = [];
+const messageVisible = ref(false);
+const messageContent = ref('');
+const messageType = ref('info');
+
+const messageStyles = {
+  success: {
+    shell: 'bg-emerald-50/92 border-emerald-200/70',
+    icon: 'ri-checkbox-circle-fill text-emerald-600',
+    text: 'text-emerald-900',
+  },
+  error: {
+    shell: 'bg-rose-50/92 border-rose-200/70',
+    icon: 'ri-error-warning-fill text-rose-600',
+    text: 'text-rose-900',
+  },
+  info: {
+    shell: 'bg-blue-50/92 border-blue-200/70',
+    icon: 'ri-information-fill text-blue-600',
+    text: 'text-blue-900',
+  },
+  warning: {
+    shell: 'bg-amber-50/92 border-amber-200/70',
+    icon: 'ri-alert-fill text-amber-600',
+    text: 'text-amber-900',
+  },
+};
+
+let messageTimer = null;
 
 const displayName = computed(() => {
   const name = userInfo.value?.studentName;
@@ -91,10 +159,6 @@ watch(
   { immediate: true },
 );
 
-onUnmounted(() => {
-  clearSequenceTimers();
-});
-
 const handleLogout = async () => {
   const confirmed = await confirmDialogRef.value?.show({
     title: '退出登录',
@@ -119,6 +183,33 @@ const handleLogout = async () => {
     }
   }
 };
+
+const show = (message, type = 'info') => {
+  const normalizedType = messageStyles[type] ? type : 'info';
+  const normalizedMessage = typeof message === 'string' ? message : String(message ?? '');
+  if (!normalizedMessage) return;
+
+  messageType.value = normalizedType;
+  messageContent.value = normalizedMessage;
+  messageVisible.value = true;
+
+  if (messageTimer) clearTimeout(messageTimer);
+  messageTimer = setTimeout(() => {
+    messageVisible.value = false;
+  }, 3000);
+};
+
+const getHeaderElement = () => headerRef.value;
+
+onUnmounted(() => {
+  clearSequenceTimers();
+  if (messageTimer) clearTimeout(messageTimer);
+});
+
+defineExpose({
+  show,
+  getHeaderElement,
+});
 </script>
 
 <style scoped>

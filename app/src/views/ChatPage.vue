@@ -807,6 +807,7 @@ let isSwiping = ref(false);
 let scrollObserver = null;
 let viewportSyncFrame = 0;
 let viewportRecoveryTimer = 0;
+let authExpiredNotified = false;
 
 // ==================== 工具函数 ====================
 const getNativeData = () => {
@@ -1096,11 +1097,17 @@ watch(
 );
 
 // ==================== 错误处理 ====================
+function clearAuthState() {
+  client.setToken(null, { reconnect: false });
+  client.disconnectSocket();
+  user.value = null;
+  localStorage.removeItem('unirun_token');
+}
+
 function handleApiError(e, defaultMsg) {
   console.error(defaultMsg || 'API Error', e);
   if (e && (e.code === 'unauthorized' || /unauthor/i.test(String(e.message || '')))) {
-    client.setToken(null);
-    user.value = null;
+    clearAuthState();
     loadingMessages.value = false;
     showToast('请先登录', 'warning');
     return;
@@ -1113,6 +1120,7 @@ function handleApiError(e, defaultMsg) {
 async function fetchUser() {
   try {
     const data = await client.getProfile();
+    authExpiredNotified = false;
     user.value = data.user;
     if (data.user?.user_id) {
       // 存储到 localStorage，确保下次进入或刷新时能立即通过 isMe 判断身份
@@ -1818,9 +1826,9 @@ const onDelete = ({ id }) => {
 };
 
 const onAuthError = () => {
-  client.setToken(null);
-  user.value = null;
-  localStorage.removeItem('unirun_token');
+  if (authExpiredNotified) return;
+  authExpiredNotified = true;
+  clearAuthState();
   showToast('登录已过期', 'warning');
 };
 

@@ -8,10 +8,12 @@ class MessageClient {
     this.events = {}; // 简单的事件订阅系统
   }
 
-  setToken(token) {
-    this.token = token;
+  setToken(token, { reconnect = true } = {}) {
+    const nextToken = token || null;
+    if (this.token === nextToken) return;
+    this.token = nextToken;
     // 如果 token 变更且 socket 已连接，建议断开重连以同步权限
-    if (this.socket) {
+    if (reconnect && this.socket) {
       this.disconnectSocket();
       this.connectSocket();
     }
