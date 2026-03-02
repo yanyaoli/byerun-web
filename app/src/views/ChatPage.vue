@@ -402,9 +402,9 @@
           </div>
         </div>
 
-        <div class="flex items-end gap-2 max-w-5xl mx-auto">
+        <div class="flex items-end gap-2 max-w-5xl mx-auto min-w-0">
           <div
-            class="flex-1 flex items-end gap-1 bg-zinc-100/70 rounded-[22px] px-2 py-1.5 focus-within:bg-white focus-within:ring-1 focus-within:ring-zinc-200 transition-all shadow-inner min-h-[44px]"
+            class="flex-1 min-w-0 flex items-end gap-1 bg-zinc-100/70 rounded-[22px] px-2 py-1.5 focus-within:bg-white focus-within:ring-1 focus-within:ring-zinc-200 transition-all shadow-inner min-h-[44px]"
           >
             <div
               ref="messageInput"
@@ -412,13 +412,12 @@
               :placeholder="hasToken() ? '说点什么吧' : '请先登录'"
               @input="handleInput"
               @keydown.enter.exact.prevent="send"
-              @keydown.delete="handleDeleteKey"
               @blur="saveRange"
               @keyup="saveRange"
               @mouseup="saveRange"
               @touchend="saveRange"
               :class="[
-                'flex-1 bg-transparent border-none outline-none text-sm py-2 px-1 overflow-y-auto max-h-32 min-h-[36px] leading-relaxed sticker-input',
+                'flex-1 min-w-0 w-full max-w-full h-[36px] bg-transparent border-none outline-none text-sm py-2 px-1 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-relaxed sticker-input',
                 !hasToken() ? 'pointer-events-none' : '',
               ]"
             ></div>
@@ -1187,10 +1186,9 @@ function handleInput(e) {
   }
   // 更新预览气泡显示状态
   showPreviewBubble.value = text.value.trim().length > 0;
-}
-
-function handleDeleteKey(e) {
-  // 标准删除行为
+  // 固定输入框高度时，始终滚动到末尾，只显示最新输入区域
+  e.target.scrollTop = e.target.scrollHeight;
+  e.target.scrollLeft = e.target.scrollWidth;
 }
 
 async function send() {
