@@ -39,7 +39,7 @@
     </div>
 
     <!-- 主卡片：Tab 与 表单共存 -->
-    <form @submit.prevent="handleSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
+    <form @submit.prevent="onFormSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
       <div class="bg-white rounded-xl border border-gray-200 w-full box-border mb-5 p-5">
         <!-- Tab 按钮行 -->
         <div class="flex items-center mb-4 border-b border-gray-200 pb-2">
@@ -340,6 +340,11 @@ const handleSubmit = async () => {
   } finally {
     submitting.value = false;
   }
+};
+
+const onFormSubmit = () => {
+  if (activeTab.value !== 'submit') return;
+  handleSubmit();
 };
 
 const onAutoConfigSaved = () => {

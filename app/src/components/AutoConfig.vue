@@ -15,7 +15,7 @@
           <p class="text-stone-200 text-xs font-bold">连接失败</p>
           <p class="text-stone-500 text-[10px] mt-1 line-clamp-2">{{ initError }}</p>
         </div>
-        <button @click="init"
+        <button type="button" @click="init"
           class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 text-[10px] font-bold rounded-xl transition-colors">
           重新尝试
         </button>
@@ -91,7 +91,7 @@
           </div>
         </div>
 
-        <button @click="handleSave" :disabled="submitting"
+        <button type="button" @click="handleSave" :disabled="submitting"
           class="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2">
           <i v-if="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
           <span>{{ submitting ? 'SYNCING' : '保存配置' }}</span>
@@ -119,7 +119,7 @@
           <p class="text-stone-200 text-xs font-bold">连接失败</p>
           <p class="text-stone-500 text-[10px] mt-1 line-clamp-2">{{ initError }}</p>
         </div>
-        <button @click="init"
+        <button type="button" @click="init"
           class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 text-[10px] font-bold rounded-xl transition-colors">
           重新尝试
         </button>
@@ -195,14 +195,14 @@
           </div>
         </div>
 
-        <button @click="handleSave" :disabled="submitting"
+        <button type="button" @click="handleSave" :disabled="submitting"
           class="w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2">
           <i v-if="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
           <span>{{ submitting ? 'SYNCING' : '保存配置' }}</span>
         </button>
       </div>
 
-      <button @click="close"
+      <button type="button" @click="close"
         class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5 text-stone-600 hover:text-white transition-all">
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
