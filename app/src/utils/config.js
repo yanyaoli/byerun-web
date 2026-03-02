@@ -36,17 +36,6 @@ export const scheduledTaskConfig = {
   isAutomationEnabled: import.meta.env.VITE_AUTORUN_ENABLED !== 'false',
 };
 
-// ArTalk评论系统配置
-export const artalkConfig = {
-  baseUrl: import.meta.env.VITE_ARTALK_SERVER || '',
-  siteName: import.meta.env.VITE_ARTALK_SITE || 'Byerun',
-};
-
-// 高德地图SDK配置
-export const amapConfig = {
-  jsApiKey: import.meta.env.VITE_AMAP_KEY || '',
-  securityJsCode: import.meta.env.VITE_AMAP_SECURITY || '',
-};
 
 // 外部链接
 export const urls = {
