@@ -128,17 +128,38 @@
               </div>
             </div>
 
-            <div class="flex gap-3">
+            <transition name="confirm-actions" mode="out-in">
               <button
+                v-if="!awaitingSubmitConfirm"
+                key="single-submit"
                 type="submit"
                 class="w-full p-2 text-gray-600 bg-gray-200 rounded-full hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
                 :disabled="submitting || !isDistanceValid"
               >
-                <i v-if="!submitting" class="fa-solid fa-check"></i>
-                <span class="loader" v-else></span>
-                {{ submitting ? '提交中...' : '提交记录' }}
+                <i class="fa-solid fa-check"></i>
+                提交记录
               </button>
-            </div>
+              <div v-else key="double-submit" class="flex w-full gap-3">
+                <button
+                  type="button"
+                  class="flex-1 p-2 text-slate-700 bg-slate-200 rounded-full hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-70"
+                  :disabled="submitting"
+                  @click="cancelSubmitConfirm"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 p-2 text-slate-50 bg-slate-500 rounded-full hover:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  :disabled="submitting || !isDistanceValid"
+                  @click="confirmSubmit"
+                >
+                  <i v-if="!submitting" class="fa-solid fa-check"></i>
+                  <span class="loader" v-else></span>
+                  {{ submitting ? '提交中...' : '确认' }}
+                </button>
+              </div>
+            </transition>
           </div>
 
           <!-- 定时任务 -->
@@ -210,6 +231,7 @@ const form = ref({
   route: submitRunRoute.value,
 });
 const submitting = ref(false);
+const awaitingSubmitConfirm = ref(false);
 const showRouteOptions = ref(false);
 
 const isDistanceValid = computed(() => {
@@ -227,6 +249,7 @@ watch(
   () => form.value.distance,
   (val) => {
     submitRunDistance.value = val;
+    awaitingSubmitConfirm.value = false;
   },
 );
 
@@ -318,11 +341,6 @@ function selectRoute(route) {
 }
 
 const handleSubmit = async () => {
-  if (!isDistanceValid.value) {
-    showMessage('跑步里程必须为不小于1000米的正整数', 'error');
-    return;
-  }
-
   submitting.value = true;
   try {
     const res = await submitRunApi({ distance: form.value.distance });
@@ -339,12 +357,30 @@ const handleSubmit = async () => {
     emit('submitted');
   } finally {
     submitting.value = false;
+    awaitingSubmitConfirm.value = false;
   }
 };
 
-const onFormSubmit = () => {
-  if (activeTab.value !== 'submit') return;
+const requestSubmitConfirm = () => {
+  if (!isDistanceValid.value) {
+    showMessage('跑步里程必须为不小于1000米的正整数', 'error');
+    return;
+  }
+  awaitingSubmitConfirm.value = true;
+};
+
+const cancelSubmitConfirm = () => {
+  awaitingSubmitConfirm.value = false;
+};
+
+const confirmSubmit = () => {
+  if (!awaitingSubmitConfirm.value || submitting.value) return;
   handleSubmit();
+};
+
+const onFormSubmit = () => {
+  if (activeTab.value !== 'submit' || submitting.value) return;
+  requestSubmitConfirm();
 };
 
 const onAutoConfigSaved = () => {
@@ -428,6 +464,17 @@ loadMaps().then(() => {
   animation: spin 1s linear infinite;
   vertical-align: middle;
   margin-right: 6px;
+}
+
+.confirm-actions-enter-active,
+.confirm-actions-leave-active {
+  transition: all 0.18s ease;
+}
+
+.confirm-actions-enter-from,
+.confirm-actions-leave-to {
+  opacity: 0;
+  transform: translateY(4px) scale(0.985);
 }
 
 @keyframes spin {
