@@ -38,8 +38,8 @@ export function useRunRecords({ pageSize = 15, onMessage } = {}) {
       records.value = recordsList.map((record) => ({
         ...record,
         key: record.recordId,
-        runDistance: Number(record.runValidDistance || record.runDistance),
-        runTime: Number(record.runValidTime || record.runTime),
+        runDistance: Number(record.runDistance),
+        runTime: Number(record.runTime),
         runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
       }));
 
@@ -70,8 +70,8 @@ export function useRunRecords({ pageSize = 15, onMessage } = {}) {
         const newRecords = recordsList.map((record) => ({
           ...record,
           key: record.recordId,
-          runDistance: Number(record.runValidDistance || record.runDistance),
-          runTime: Number(record.runValidTime || record.runTime),
+          runDistance: Number(record.runDistance),
+          runTime: Number(record.runTime),
           runSpeed: record.runStatus === "1" ? Number(record.runSpeed) : 0,
         }));
 
