@@ -30,9 +30,14 @@
             <h2 class="text-sm font-black text-stone-200 uppercase tracking-widest">定时任务</h2>
             <p class="text-[9px] text-stone-700 font-mono">{{ versionLabel }}</p>
           </div>
-          <span :class="['text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide', statusLabelClass]">
-            {{ statusLabelText }}
-          </span>
+          <div class="flex items-center gap-2">
+            <span :class="['text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide', enabledLabelClass]">
+              {{ enabledLabelText }}
+            </span>
+            <span :class="['text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide', statusLabelClass]">
+              {{ statusLabelText }}
+            </span>
+          </div>
         </div>
 
         <div :class="ui.fields">
@@ -226,6 +231,12 @@ const statusLabelClass = computed(() =>
   isCompletedToday.value
     ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
     : 'text-orange-300 border-orange-500/30 bg-orange-500/10',
+);
+const enabledLabelText = computed(() => (form.value.enabled ? '\u5df2\u542f\u7528' : '\u672a\u542f\u7528'));
+const enabledLabelClass = computed(() =>
+  form.value.enabled
+    ? 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10'
+    : 'text-stone-400 border-stone-600/40 bg-stone-700/20',
 );
 
 const currentMapName = computed(() => {

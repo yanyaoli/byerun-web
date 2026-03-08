@@ -17,6 +17,7 @@
             :key="'submit'"
             @submitted="fetchUserData"
           />
+          <MyPage v-else-if="activeKey === 'my'" :key="'my'" />
         </keep-alive>
       </main>
 
@@ -44,16 +45,10 @@ import SubmitRun from '../components/SubmitRun.vue';
 import ChatPage from '@/views/ChatPage.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import BottomTabBar from '@/components/layout/BottomTabBar.vue';
+import MyPage from '@/views/MyPage.vue';
 import { useDataStore } from '@/composables/useDataStore';
 
-const {
-  fetchUserData,
-  activeTab,
-  userInfo,
-  runInfo,
-  runStandard,
-  activityInfo,
-} = useDataStore();
+const { fetchUserData, activeTab, userInfo } = useDataStore();
 const rootShowMessage = inject('showMessage', null);
 
 const appHeaderRef = ref(null);
@@ -104,6 +99,20 @@ const showMessage = (message, type = 'info') => {
   }
 };
 
+const checkTokenAndRefreshUserData = async () => {
+  if (!userInfo.value) return;
+
+  const result = await fetchUserData({ background: true });
+  if (result?.ok) return;
+
+  if (result?.reason === 'network_error') {
+    showMessage('用户数据刷新失败', 'warning');
+    return;
+  }
+
+  showMessage(result?.message || '登录状态校验失败', 'error');
+};
+
 provide('goBack', () => setActiveKey('submit'));
 provide('showMessage', showMessage);
 
@@ -122,8 +131,10 @@ watch(
 );
 
 onMounted(() => {
-  if (userInfo.value && (!runInfo.value || !runStandard.value || !activityInfo.value)) {
-    fetchUserData().catch(() => {});
+  if (userInfo.value) {
+    checkTokenAndRefreshUserData().catch(() => {
+      showMessage('用户数据刷新失败', 'warning');
+    });
   }
   measureHeights();
   window.addEventListener('resize', measureHeights);

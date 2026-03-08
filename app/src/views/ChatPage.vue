@@ -1,61 +1,49 @@
 <template>
-  <div class="w-full" :style="{ height: viewportHeight, width: '100%' }">
+  <div class="w-full h-full">
     <div
-      class="chat-section h-full flex flex-col w-full relative overflow-hidden bg-white border border-black/8 shadow-sm transition-all duration-300 transform-gpu"
+      class="chat-section h-full flex flex-col w-full relative overflow-hidden bg-transparent transition-all duration-300"
     >
       <div
-        class="py-2.5 px-4 border-b border-zinc-100 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-20"
+        ref="headerShellRef"
+        class="fixed left-0 right-0 z-[998] top-2 h-9 flex items-center max-w-[400px] mx-auto w-[calc(100%_-_24px)] px-2 border border-white/50 bg-white/10 backdrop-blur-[16px] rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
       >
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
           <button
             @click="onBack"
             title="返回"
-            class="w-8 h-8 flex items-center justify-center text-zinc-600 hover:bg-zinc-100 rounded-full mr-2"
+            class="w-7 h-7 flex items-center justify-center text-[rgba(60,60,67,0.85)] hover:bg-black/5 rounded-full transition-all"
           >
-            <i class="fa-solid fa-arrow-left text-sm"></i>
+            <i class="fa-solid fa-arrow-left text-xs"></i>
           </button>
-          <div class="flex items-center gap-2 ml-2">
-            <a
-              href="https://github.com/yanyaoli/byerun-web"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="GitHub 仓库"
-              class="w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-all"
-            >
-              <i class="fa-brands fa-github text-xs"></i>
-            </a>
-            <a
-              href="https://redirect.where.nyc.mn/byerun-qqgroup"
-              target="_blank"
-              rel="noopener noreferrer"
-              title="加入QQ群"
-              class="w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-all"
-            >
-              <i class="fa-brands fa-qq text-xs"></i>
-            </a>
+          <div class="flex items-center min-w-0">
+            <div class="text-[12px] font-semibold text-[rgba(39,39,42,0.9)] truncate">消息</div>
           </div>
         </div>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 pointer-events-auto ml-auto">
           <button
             @click="showPrivacyInfo = true"
             title="Usage Notes"
-            class="h-8 px-3 flex items-center justify-center text-sm text-zinc-600 hover:text-zinc-900 transition-all rounded-full active:scale-95"
+            class="w-7 h-7 flex items-center justify-center text-[rgba(60,60,67,0.85)] hover:bg-black/5 rounded-full transition-all"
           >
-            使用须知
+            <i class="fa-solid fa-circle-info text-xs"></i>
           </button>
         </div>
       </div>
 
       <div
         v-if="!hasToken()"
-        class="p-2 text-center text-[10px] bg-amber-50 text-amber-600 border-b border-amber-100"
+        class="absolute top-[52px] left-1/2 -translate-x-1/2 z-[996] px-3 py-1 text-center text-[10px] bg-amber-50/95 text-amber-600 border border-amber-100 rounded-full backdrop-blur-sm"
       >
         <i class="fa-solid fa-circle-info mr-1"></i> 请先登录
       </div>
 
       <div
-        class="flex-1 overflow-y-auto p-4 space-y-4 relative bg-zinc-50/20"
         ref="messagesContainer"
+        class="flex-1 overflow-y-auto px-4 space-y-4 relative bg-zinc-50/20"
+        :style="{
+          paddingTop: `${messageListPaddingTop}px`,
+          paddingBottom: `${messageListPaddingBottom}px`,
+        }"
       >
         <!-- 消息列表 -->
         <template v-if="messages.length > 0 || !loadingMessages">
@@ -274,20 +262,23 @@
         </div>
       </div>
 
-      <div class="p-3 bg-white border-t border-zinc-100 relative">
+      <div
+        ref="composerShellRef"
+        class="fixed left-0 right-0 bottom-4 z-[998] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/10 border border-white/50 backdrop-blur-[16px] rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+      >
         <!-- 表情按钮 -->
         <div class="mb-3 flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
             <button
               @click="showEmojiPicker = !showEmojiPicker"
               title="Emoji"
-              class="w-8 h-8 flex-shrink-0 grid place-items-center text-zinc-400 hover:text-zinc-600 transition-colors"
+              class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full text-[rgba(60,60,67,0.75)] hover:text-black hover:bg-black/5 transition-colors"
             >
               <i class="fa-regular fa-face-smile text-lg"></i>
             </button>
 
             <label
-              class="inline-flex items-center gap-2 text-zinc-500 hover:text-zinc-700 cursor-pointer"
+              class="w-8 h-8 inline-flex items-center justify-center rounded-full text-[rgba(60,60,67,0.75)] hover:text-black hover:bg-black/5 cursor-pointer transition-colors"
             >
               <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
               <i class="fa-solid fa-image"></i>
@@ -297,10 +288,18 @@
           <button
             @click="openSettings"
             title="Profile Settings"
-            class="h-8 px-3 flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-full transition-all"
+            class="w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full text-[rgba(60,60,67,0.75)] hover:text-black hover:bg-black/5 transition-colors"
           >
-            <i class="ri-user-settings-fill"></i>
-            <span>个人资料</span>
+            <span
+              class="w-6 h-6 rounded-full bg-zinc-200/80 border border-white/80 overflow-hidden flex items-center justify-center"
+            >
+              <img
+                v-if="user?.avatar_url"
+                :src="normalizeAvatarUrl(user.avatar_url)"
+                class="w-full h-full object-cover"
+              />
+              <i v-else class="fa-solid fa-user text-[10px] text-zinc-500"></i>
+            </span>
           </button>
         </div>
         <!-- 回复预览 -->
@@ -329,7 +328,7 @@
 
         <div
           v-if="showEmojiPicker"
-          class="absolute bottom-full left-0 w-full p-4 bg-white/95 backdrop-blur-md border-t border-zinc-100 z-50 rounded-t-[2rem] shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
+          class="absolute bottom-full left-0 w-full mb-2 p-4 bg-white/95 backdrop-blur-md border border-zinc-100 z-50 rounded-3xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
         >
           <div class="flex items-center justify-between mb-4 px-1">
             <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
@@ -402,9 +401,9 @@
           </div>
         </div>
 
-        <div class="flex items-end gap-2 max-w-5xl mx-auto min-w-0">
+        <div ref="composerInputRowRef" class="flex items-end gap-2 max-w-5xl mx-auto min-w-0">
           <div
-            class="flex-1 min-w-0 flex items-end gap-1 bg-zinc-100/70 rounded-[22px] px-2 py-1.5 focus-within:bg-white focus-within:ring-1 focus-within:ring-zinc-200 transition-all shadow-inner min-h-[44px]"
+            class="flex-1 min-w-0 flex items-end gap-1 bg-white/75 rounded-[22px] px-2 py-1.5 focus-within:bg-white focus-within:ring-1 focus-within:ring-zinc-200 transition-all shadow-inner min-h-[44px]"
           >
             <div
               ref="messageInput"
@@ -711,15 +710,7 @@
 </template>
 
 <script setup>
-import {
-  ref,
-  reactive,
-  watch,
-  inject,
-  nextTick,
-  onMounted,
-  onUnmounted,
-} from 'vue';
+import { ref, reactive, watch, inject, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import MessageClient from '@/composables/messageClient';
 import Message from '@/components/Message.vue';
@@ -767,7 +758,9 @@ const showPrivacyInfo = ref(false);
 const showSettings = ref(false);
 const showEmojiPicker = ref(false);
 const showPreviewBubble = ref(false);
-const viewportHeight = ref('100dvh');
+const SINGLE_MESSAGE_GAP_PX = 16;
+const messageListPaddingTop = ref(68);
+const messageListPaddingBottom = ref(176);
 
 // 输入相关
 const text = ref('');
@@ -803,6 +796,9 @@ const contextMenu = reactive({
 // DOM 引用
 const messagesContainer = ref(null);
 const loadMoreSentinel = ref(null);
+const headerShellRef = ref(null);
+const composerShellRef = ref(null);
+const composerInputRowRef = ref(null);
 const messageRef = ref(null);
 const confirmRef = ref(null);
 const viewedImage = ref(null);
@@ -814,8 +810,8 @@ let touchStartX = 0;
 let touchStartY = 0;
 let isSwiping = ref(false);
 let scrollObserver = null;
-let viewportSyncFrame = 0;
-let viewportRecoveryTimer = 0;
+let layoutMeasureFrame = 0;
+let floatingLayoutObserver = null;
 let authExpiredNotified = false;
 
 // ==================== 工具函数 ====================
@@ -823,37 +819,53 @@ const getToken = () => token.value || '';
 
 const hasToken = () => !!getToken();
 
-function readViewportHeight() {
-  const visualHeight = Math.round(window.visualViewport?.height || 0);
-  const layoutHeight = Math.round(window.innerHeight || 0);
-  return Math.max(1, visualHeight, layoutHeight);
+function measureFloatingLayout() {
+  const headerRect = headerShellRef.value?.getBoundingClientRect?.();
+  const composerRect = composerShellRef.value?.getBoundingClientRect?.();
+  const inputRowRect = composerInputRowRef.value?.getBoundingClientRect?.();
+  const visibleHeight =
+    window.visualViewport?.height ||
+    window.innerHeight ||
+    document.documentElement?.clientHeight ||
+    0;
+
+  if (headerRect) {
+    let topPadding = Math.max(56, Math.ceil(headerRect.bottom + 10));
+    if (!hasToken()) topPadding += 28;
+    messageListPaddingTop.value = topPadding;
+  }
+
+  if (inputRowRect) {
+    // Keep only one-message spacing between the latest message and input row.
+    messageListPaddingBottom.value = Math.max(
+      0,
+      Math.ceil(visibleHeight - inputRowRect.top + SINGLE_MESSAGE_GAP_PX),
+    );
+    return;
+  }
+
+  if (composerRect) {
+    // Fallback when input row isn't available yet.
+    messageListPaddingBottom.value = Math.max(
+      0,
+      Math.ceil(visibleHeight - composerRect.top + SINGLE_MESSAGE_GAP_PX),
+    );
+  }
 }
 
-function syncViewportHeight() {
-  viewportHeight.value = `${readViewportHeight()}px`;
-}
-
-function scheduleViewportHeightSync() {
-  if (viewportSyncFrame) cancelAnimationFrame(viewportSyncFrame);
-  viewportSyncFrame = requestAnimationFrame(() => {
-    syncViewportHeight();
-    viewportSyncFrame = 0;
+function scheduleFloatingLayoutMeasure() {
+  if (layoutMeasureFrame) cancelAnimationFrame(layoutMeasureFrame);
+  layoutMeasureFrame = requestAnimationFrame(() => {
+    measureFloatingLayout();
+    layoutMeasureFrame = 0;
   });
-}
-
-function recoverViewportHeight() {
-  if (viewportRecoveryTimer) clearTimeout(viewportRecoveryTimer);
-  viewportRecoveryTimer = window.setTimeout(() => {
-    scheduleViewportHeightSync();
-    viewportRecoveryTimer = 0;
-  }, 220);
 }
 
 const isMe = (m) => {
   if (user.value?.user_id && m.user?.user_id) {
     return String(user.value.user_id) === String(m.user.user_id);
   }
-  
+
   const cachedId = userInfo.value?.userId || chatUserId.value || getCachedChatUserId();
 
   if (cachedId && m.user?.user_id) {
@@ -893,12 +905,10 @@ function onBack() {
 // ==================== 表情贴纸加载 ====================
 async function fetchStickers() {
   if (stickerLoaded.value || stickerLoading.value) return;
-  
+
   stickerLoading.value = true;
   try {
-    const results = await Promise.all(
-      stickerConfig.map((url) => fetch(url).then((r) => r.json()))
-    );
+    const results = await Promise.all(stickerConfig.map((url) => fetch(url).then((r) => r.json())));
     const groups = {};
     results.forEach((g, i) => {
       groups[`sticker-${i}`] = g;
@@ -1035,6 +1045,22 @@ function handleImageSelected(ev) {
 watch(showPreviewBubble, (val) => {
   if (val) nextTick(() => scrollToBottom(false));
 });
+
+watch([showEmojiPicker, replyingTo], () => {
+  nextTick(() => {
+    scheduleFloatingLayoutMeasure();
+    scrollToBottom(false);
+  });
+});
+
+watch(
+  () => token.value,
+  () => {
+    nextTick(() => {
+      scheduleFloatingLayoutMeasure();
+    });
+  },
+);
 
 // ==================== 滚动和观察器 ====================
 const setupIntersectionObserver = () => {
@@ -1823,11 +1849,13 @@ const onAuthError = () => {
 };
 
 onMounted(async () => {
-  syncViewportHeight();
-  window.addEventListener('resize', scheduleViewportHeightSync);
-  window.addEventListener('orientationchange', scheduleViewportHeightSync);
-  window.visualViewport?.addEventListener('resize', scheduleViewportHeightSync);
-  window.addEventListener('focusout', recoverViewportHeight, true);
+  nextTick(() => {
+    scheduleFloatingLayoutMeasure();
+  });
+  window.addEventListener('resize', scheduleFloatingLayoutMeasure);
+  window.addEventListener('orientationchange', scheduleFloatingLayoutMeasure);
+  window.visualViewport?.addEventListener('resize', scheduleFloatingLayoutMeasure);
+  window.visualViewport?.addEventListener('scroll', scheduleFloatingLayoutMeasure);
 
   const cachedUser = chatUser.value;
   if (cachedUser) user.value = cachedUser;
@@ -1856,21 +1884,30 @@ onMounted(async () => {
       loadingMessages.value = false;
     });
   }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    floatingLayoutObserver = new ResizeObserver(() => {
+      scheduleFloatingLayoutMeasure();
+    });
+    if (headerShellRef.value) floatingLayoutObserver.observe(headerShellRef.value);
+    if (composerShellRef.value) floatingLayoutObserver.observe(composerShellRef.value);
+    if (composerInputRowRef.value) floatingLayoutObserver.observe(composerInputRowRef.value);
+  }
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', scheduleViewportHeightSync);
-  window.removeEventListener('orientationchange', scheduleViewportHeightSync);
-  window.visualViewport?.removeEventListener('resize', scheduleViewportHeightSync);
-  window.removeEventListener('focusout', recoverViewportHeight, true);
+  window.removeEventListener('resize', scheduleFloatingLayoutMeasure);
+  window.removeEventListener('orientationchange', scheduleFloatingLayoutMeasure);
+  window.visualViewport?.removeEventListener('resize', scheduleFloatingLayoutMeasure);
+  window.visualViewport?.removeEventListener('scroll', scheduleFloatingLayoutMeasure);
 
-  if (viewportSyncFrame) {
-    cancelAnimationFrame(viewportSyncFrame);
-    viewportSyncFrame = 0;
+  if (layoutMeasureFrame) {
+    cancelAnimationFrame(layoutMeasureFrame);
+    layoutMeasureFrame = 0;
   }
-  if (viewportRecoveryTimer) {
-    clearTimeout(viewportRecoveryTimer);
-    viewportRecoveryTimer = 0;
+  if (floatingLayoutObserver) {
+    floatingLayoutObserver.disconnect();
+    floatingLayoutObserver = null;
   }
 
   if (scrollObserver) {

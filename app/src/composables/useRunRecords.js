@@ -7,6 +7,13 @@ export function useRunRecords({ pageSize = 15, onMessage } = {}) {
   const pagination = reactive({ current: 1, pageSize, total: 0 });
   const isLoading = ref(false);
 
+  const isSuccessResponse = (data) => Number(data?.code) === 10000;
+
+  const notifyRequestError = (data, fallbackText) => {
+    if (typeof onMessage !== "function") return;
+    onMessage(data?.msg || fallbackText, "error");
+  };
+
   function formatCreateTime(createTime) {
     if (!createTime) return "";
     return createTime.slice(0, 16);
@@ -30,6 +37,13 @@ export function useRunRecords({ pageSize = 15, onMessage } = {}) {
         pagination.current,
         pagination.pageSize
       );
+
+      if (!isSuccessResponse(data)) {
+        records.value = [];
+        pagination.total = 0;
+        notifyRequestError(data, "获取跑步记录失败");
+        return;
+      }
 
       const recordsList = Array.isArray(data.response)
         ? data.response
@@ -61,6 +75,11 @@ export function useRunRecords({ pageSize = 15, onMessage } = {}) {
     try {
       const nextPage = pagination.current + 1;
       const { data } = await api.getRunRecords(nextPage, pagination.pageSize);
+
+      if (!isSuccessResponse(data)) {
+        notifyRequestError(data, "加载更多记录失败");
+        return;
+      }
 
       const recordsList = Array.isArray(data.response)
         ? data.response

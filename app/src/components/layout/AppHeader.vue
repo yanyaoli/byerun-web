@@ -10,7 +10,9 @@
       <div
         :class="[
           'flex items-center h-full backdrop-blur-[16px] border rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
-          props.scrolled ? 'max-w-[380px] w-[calc(100%_-_52px)]' : 'max-w-[400px] w-[calc(100%_-_24px)]',
+          props.scrolled
+            ? 'max-w-[380px] w-[calc(100%_-_52px)]'
+            : 'max-w-[400px] w-[calc(100%_-_24px)]',
           messageVisible ? messageStyles[messageType].shell : 'bg-white/10 border-white/50',
         ]"
       >
@@ -144,7 +146,7 @@ const startWelcomeSequence = () => {
   timers.push(
     setTimeout(() => {
       welcomePhase.value = 'logo';
-    }, 2300),
+    }, 4000),
   );
 };
 

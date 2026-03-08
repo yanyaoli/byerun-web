@@ -52,8 +52,25 @@ const useAppStateStore = defineStore(
       return null;
     };
 
-    const fetchUserData = async () => {
-      loading.value = true;
+    const resolveFailureReason = (code, status) => {
+      if (code === 10001 || status === 401 || status === 403) return 'auth_invalid';
+      return 'request_failed';
+    };
+
+    const resolveErrorMessage = (error, fallback) => {
+      const responseData = error?.response?.data;
+      if (responseData?.msg) return String(responseData.msg);
+      if (responseData?.message) return String(responseData.message);
+      if (error?.message) return String(error.message);
+      return fallback;
+    };
+
+    const fetchUserData = async (options = {}) => {
+      const { background = false } = options;
+      const useLoadingState = !(background && !!userInfo.value);
+      if (useLoadingState) {
+        loading.value = true;
+      }
       try {
         const userRes = await api.getToken();
         if (userRes.data.code === 10000) {
@@ -87,14 +104,28 @@ const useAppStateStore = defineStore(
           if (activityRes?.data?.code === 10000) {
             activityInfo.value = activityRes.data.response;
           }
-          return true;
+          return { ok: true, reason: 'ok', message: '' };
         }
-        return false;
+        return {
+          ok: false,
+          reason: resolveFailureReason(userRes?.data?.code, null),
+          message: userRes?.data?.msg || '登录状态校验失败',
+        };
       } catch (error) {
         console.error('Fetch data failed:', error);
-        return false;
+        const status = Number(error?.response?.status || 0);
+        const reason = resolveFailureReason(null, status);
+        const fallbackMessage =
+          reason === 'auth_invalid' ? '登录状态已失效，请重新登录' : '用户数据加载失败';
+        return {
+          ok: false,
+          reason: reason === 'auth_invalid' ? 'auth_invalid' : 'network_error',
+          message: resolveErrorMessage(error, fallbackMessage),
+        };
       } finally {
-        loading.value = false;
+        if (useLoadingState) {
+          loading.value = false;
+        }
       }
     };
 
@@ -153,6 +184,7 @@ const useAppStateStore = defineStore(
         'submitRunDistance',
         'submitRunRoute',
         'deviceInfo',
+        'activeTab',
         'rememberLogin',
         'savedPhone',
         'chatUser',
