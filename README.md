@@ -1,10 +1,10 @@
 <p align="center">
-  <a href="https://unorun.pages.dev" target="_blank" rel="noopener noreferrer">
-    <img width="160" height="160" src="./app/public/favicon.ico" alt="Unorun">
+  <a href="https://byerun.pages.dev" target="_blank" rel="noopener noreferrer">
+    <img width="160" height="160" src="./app/public/favicon.ico" alt="Byerun">
   </a>
 </p>
 
-<h1 align="center"/>UNORUN</h1>
+<h1 align="center"/>Byerun <sup><em>web</em></sup></h1>
 
 <p align="center">
 Goodbye Unirun - 校园跑助手🏃‍♂️
@@ -27,9 +27,14 @@ Goodbye Unirun - 校园跑助手🏃‍♂️
 | [川北幼儿师范](https://cbyz.edu.cn/)             |
 | [...](...)                                       |
 
+<i>需要更多地图欢迎反馈添加<i>
+
 ## 使用
 
-[UNORUN](https://unorun.pages.dev)
+| 部署平台   |                                     |                                     |
+| ---------- | ----------------------------------- | ----------------------------------- |
+| Cloudflare | [Byerun](https://byerun.pages.dev)  | [Unirun](https://unirun.pages.dev)  |
+| Vercel     | [Byerun](https://byerun.vercel.app) | [Unirun](https://unirun.vercel.app) |
 
 ## 本地构建
 
@@ -88,7 +93,7 @@ graph TD;
 
 
 
-    A([UnorunWeb]):::process -->|Direct Request| U([UnirunAPI]):::process
+    A([ByerunWeb]):::process -->|Direct Request| U([UnirunAPI]):::process
 
     U --> |Cross - Origin Restriction| E([Request Failed]):::error
 
