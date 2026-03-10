@@ -38,9 +38,7 @@ const useAppStateStore = defineStore(
       }
       chatUser.value = user;
       chatUserId.value =
-        user.user_id !== undefined && user.user_id !== null
-          ? String(user.user_id)
-          : null;
+        user.user_id !== undefined && user.user_id !== null ? String(user.user_id) : null;
     };
 
     const getCachedChatUserId = () => {
@@ -88,8 +86,7 @@ const useAppStateStore = defineStore(
             const semesterFromStandard = runStandard.value?.semesterYear;
             const now = new Date();
             const finalSemester =
-              semesterFromStandard ||
-              `${now.getFullYear()}${now.getMonth() + 1 < 8 ? '1' : '2'}`;
+              semesterFromStandard || `${now.getFullYear()}${now.getMonth() + 1 < 8 ? '1' : '2'}`;
 
             api
               .getRunInfo(Number(uId), finalSemester)
@@ -134,9 +131,6 @@ const useAppStateStore = defineStore(
       runInfo.value = null;
       runStandard.value = null;
       activityInfo.value = null;
-      submitRunDistance.value = null;
-      submitRunRoute.value = null;
-      activeTab.value = 'submit';
       setCachedChatUser(null);
     };
 

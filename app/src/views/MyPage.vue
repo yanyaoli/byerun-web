@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="w-full max-w-3xl mx-auto py-2 px-1 space-y-3">
     <section class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
       <div class="flex items-center justify-between gap-3">
@@ -69,7 +69,7 @@
             <p class="mb-2 text-xs font-medium text-slate-600 text-center">{{ item.label }}</p>
             <img
               :src="item.url"
-              :alt="`${item.label}收款码`"
+              :alt="item.label"
               class="mx-auto h-32 w-32 rounded-xl bg-white object-contain"
             />
           </button>
@@ -92,7 +92,7 @@
           <div class="flex items-center gap-1.5">
             <i class="ri-medal-fill text-slate-500"></i>
 
-            <p class="text-xs uppercase tracking-[0.16em] text-slate-500">赞助小伙伴</p>
+            <p class="text-xs uppercase tracking-[0.16em] text-slate-500">赞助伙伴</p>
           </div>
           <a
             :href="qqGroupUrl"
@@ -117,7 +117,7 @@
       <div class="border-t border-gray-100 pt-4">
         <div class="flex items-center gap-1.5">
           <i class="ri-time-line text-slate-500"></i>
-          <p class="text-xs uppercase tracking-[0.16em] text-slate-500">网站有效期</p>
+          <p class="text-xs uppercase tracking-[0.16em] text-slate-500">网站状态</p>
         </div>
         <div class="mt-2 flex items-center justify-between gap-3">
           <a
@@ -130,7 +130,7 @@
             <i class="ri-external-link-line text-xs text-slate-500"></i>
           </a>
           <p class="shrink-0 text-sm font-medium text-slate-600 tabular-nums">
-            {{ remainingDaysText }}
+            剩余{{ remainingDaysText }}
           </p>
         </div>
       </div>
@@ -176,7 +176,6 @@ const autorunClient = API_BASE ? new AutorunClient({ baseURL: API_BASE }) : null
 const pingMeta = ref(null);
 const pingReady = ref(false);
 const previewQrUrl = ref('');
-const previewQrLabel = ref('');
 
 const displayName = computed(() => userInfo.value?.studentName ?? '');
 const registerCode = computed(() => userInfo.value?.registerCode ?? '');
@@ -189,7 +188,7 @@ const sponsorNames = computed(() => {
 });
 const qrItems = computed(() =>
   [
-    { key: 'alipay', label: '收款码', url: sponsor.value?.alipay_qrcode },
+    { key: 'alipay', label: '支付宝收款码', url: sponsor.value?.alipay_qrcode },
     { key: 'wechat', label: '微信赞赏码', url: sponsor.value?.wechat_qrcode },
   ].filter((item) => Boolean(item.url)),
 );
@@ -202,36 +201,43 @@ const remainingDaysText = computed(() => `${domain.value?.remaining_days}天`);
 
 const fetchPingMeta = async () => {
   if (!autorunClient) {
-    pingReady.value = false;
+    if (!pingReady.value) {
+      pingMeta.value = null;
+      pingReady.value = false;
+    }
     return;
   }
   try {
     const envelope = await autorunClient.ping();
     const payload = envelope?.data;
     if (!payload?.sponsor || !payload?.domain) {
-      pingReady.value = false;
-      pingMeta.value = null;
+      if (!pingReady.value) {
+        pingMeta.value = null;
+        pingReady.value = false;
+      }
       return;
     }
     pingMeta.value = payload;
     pingReady.value = true;
+    try {
+      window.localStorage.setItem('unirun.my_page.ping_meta', JSON.stringify(payload));
+    } catch (error) {}
   } catch (error) {
-    pingReady.value = false;
-    pingMeta.value = null;
+    if (!pingReady.value) {
+      pingMeta.value = null;
+      pingReady.value = false;
+    }
     previewQrUrl.value = '';
-    previewQrLabel.value = '';
   }
 };
 
 const openQrPreview = (item) => {
   if (!item?.url) return;
   previewQrUrl.value = item.url;
-  previewQrLabel.value = item.label || '';
 };
 
 const closeQrPreview = () => {
   previewQrUrl.value = '';
-  previewQrLabel.value = '';
 };
 
 const handleLogout = () => {
@@ -241,7 +247,21 @@ const handleLogout = () => {
   window.location.reload();
 };
 
-onMounted(fetchPingMeta);
+onMounted(() => {
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem('unirun.my_page.ping_meta');
+      if (raw) {
+        const payload = JSON.parse(raw);
+        if (payload?.sponsor && payload?.domain) {
+          pingMeta.value = payload;
+          pingReady.value = true;
+        }
+      }
+    } catch (error) {}
+  }
+  fetchPingMeta();
+});
 </script>
 
 <style scoped>
