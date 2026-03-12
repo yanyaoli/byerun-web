@@ -1,93 +1,117 @@
 /**
- * 设备信息模块
+ * 设备检测工具模块
  */
 
+const IOS_DEVICE_TYPE = '2'; // iOS 设备类型标识码
+const Android_DEVICE_TYPE = '1'; // Android 设备类型标识码
 
-// iPhone 设备列表
-const IPHONE_DEVICES = [
-  { brand: 'iPhone', model: 'iPhone17,3' }, // iPhone 15 Pro Max
-  { brand: 'iPhone', model: 'iPhone17,1' }, // iPhone 15 Pro
-  { brand: 'iPhone', model: 'iPhone16,5' }, // iPhone 15 Plus
-  { brand: 'iPhone', model: 'iPhone16,2' }, // iPhone 15
-  { brand: 'iPhone', model: 'iPhone15,5' }, // iPhone 14 Pro Max
-  { brand: 'iPhone', model: 'iPhone15,4' }, // iPhone 14 Pro
-  { brand: 'iPhone', model: 'iPhone15,3' }, // iPhone 14 Plus
-  { brand: 'iPhone', model: 'iPhone15,2' }, // iPhone 14
-  { brand: 'iPhone', model: 'iPhone14,3' }, // iPhone 13 Pro Max
-  { brand: 'iPhone', model: 'iPhone14,2' }, // iPhone 13 Pro
-];
+// 默认兜底配置
+const DEFAULT_DEVICE_INFO = {
+  brand: 'Apple',
+  mobileType: 'iPhone',
+  deviceType: IOS_DEVICE_TYPE,
+  sysVersion: '18.6',
+};
 
-// Android 设备列表
-const ANDROID_DEVICES = [
-  { brand: 'HUAWEI', model: 'HUAWEI Mate 60 Pro' },
-  { brand: 'HUAWEI', model: 'HUAWEI P60 Pro' },
-  { brand: 'Xiaomi', model: 'Xiaomi 14 Pro' },
-  { brand: 'Xiaomi', model: 'Xiaomi 13 Ultra' },
-  { brand: 'OPPO', model: 'OPPO Find X7 Pro' },
-  { brand: 'OPPO', model: 'OPPO Find X6 Pro' },
-  { brand: 'vivo', model: 'vivo X100 Pro' },
-  { brand: 'vivo', model: 'vivo X90 Pro+' },
-  { brand: 'HONOR', model: 'HONOR Magic6 Pro' },
-  { brand: 'samsung', model: 'SM-S9180' },
-];
-
-// 生成随机iOS版本 (15.6 - 18.7)
-function getRandomIOSVersion() {
-  const major = Math.floor(Math.random() * 4) + 15; // 15-18
-  const minor =
-    major === 15
-      ? 6 + Math.floor(Math.random() * 4) // 15.6-15.9
-      : major === 18
-      ? Math.floor(Math.random() * 8) // 18.0-18.7
-      : Math.floor(Math.random() * 10); // 16.0-16.9, 17.0-17.9
-
-  return `${major}.${minor}`;
-}
-
-// 生成随机Android版本 (12.0 - 14.0)
-function getRandomAndroidVersion() {
-  const major = Math.floor(Math.random() * 3) + 12; // 12-14
-  const minor = Math.floor(Math.random() * 10);
-
-  return `${major}.${minor}`;
-}
-
-// 选择随机设备
-function selectRandomDevice() {
-  const isIPhone = Math.random() > 0.5; // 50%概率iPhone
-
-  if (isIPhone) {
-    const device =
-      IPHONE_DEVICES[Math.floor(Math.random() * IPHONE_DEVICES.length)];
-    return {
-      brand: device.brand,
-      mobileType: device.model,
-      deviceType: '2',
-      sysVersion: getRandomIOSVersion(),
-    };
-  } else {
-    const device =
-      ANDROID_DEVICES[Math.floor(Math.random() * ANDROID_DEVICES.length)];
-    return {
-      brand: device.brand,
-      mobileType: device.model,
-      deviceType: '1',
-      sysVersion: getRandomAndroidVersion(),
-    };
-  }
-}
+// 检查是否存在 navigator 对象（判断是否在浏览器环境）
+const hasNavigator = () => typeof navigator !== 'undefined';
 
 /**
- * 获取设备信息
- * @param {Object} existingInfo 可选的现有设备信息，如果提供则直接返回
+ * 安全转换字符串
+ * @param {any} value - 待转换的值
+ * @param {string} fallback - 默认回退值
  */
-export function getDeviceInfo(existingInfo = null) {
-  if (existingInfo && existingInfo.brand) {
-    return existingInfo;
+const toSafeString = (value, fallback = '') => {
+  const text = String(value ?? '').trim();
+  return text || fallback;
+};
+
+/**
+ * 解析 iOS 版本号
+ */
+const parseIOSVersion = (ua) => {
+  const match = ua.match(/OS (\d+)[._](\d+)(?:[._](\d+))?/i);
+  if (!match) return '';
+  const [, major, minor, patch] = match;
+  return [major, minor, patch].filter(Boolean).join('.');
+};
+
+/**
+ * 解析 Android 版本号
+ */
+const parseAndroidVersion = (ua) => {
+  const match = ua.match(/Android\s+(\d+(?:\.\d+)?)/i);
+  return match?.[1] || '';
+};
+
+/**
+ * 解析 Android 设备型号
+ */
+const parseAndroidModel = (ua) => {
+  const buildMatch = ua.match(/Android[\s\d.;]*;\s*([^)]+?)\s+Build\//i);
+  if (buildMatch?.[1]) return buildMatch[1].trim();
+
+  const parenthesized = ua.match(/\(([^)]+)\)/);
+  if (!parenthesized?.[1]) return 'Android Device';
+  const parts = parenthesized[1]
+    .split(';')
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const candidate = parts[parts.length - 1];
+  return candidate || 'Android Device';
+};
+
+/**
+ * 核心识别逻辑
+ */
+const detectDeviceFromNavigator = () => {
+  if (!hasNavigator()) {
+    return DEFAULT_DEVICE_INFO;
   }
 
-  // 生成新设备信息
-  const device = selectRandomDevice();
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+
+  // 1. 识别 Android
+  if (/android/i.test(ua)) {
+    const model = parseAndroidModel(ua);
+    return {
+      brand: 'Android',
+      mobileType: toSafeString(model, 'Android Device'),
+      deviceType: Android_DEVICE_TYPE,
+      sysVersion: toSafeString(parseAndroidVersion(ua), 'Android'),
+    };
+  }
+
+  // 2. 识别 iOS (包含对 iPad OS 伪装的处理)
+  const isIOS =
+    /(iPhone|iPad|iPod)/i.test(ua) ||
+    (platform === 'MacIntel' && Number(navigator.maxTouchPoints || 0) > 1);
+
+  if (isIOS) {
+    const modelMatch = ua.match(/(iPhone|iPad|iPod)/i);
+    const model = modelMatch?.[1] || 'iPhone';
+    return {
+      brand: 'Apple',
+      mobileType: model,
+      deviceType: IOS_DEVICE_TYPE,
+      sysVersion: toSafeString(parseIOSVersion(ua), 'iOS'),
+    };
+  }
+
+  // 兜底默认
+  return DEFAULT_DEVICE_INFO;
+};
+
+/**
+ * 对外接口
+ * @param {Object} existingInfo - 已有设备信息
+ */
+export function getDeviceInfo(existingInfo = null) {
+  if (existingInfo && typeof existingInfo === 'object' && existingInfo.brand) {
+    return existingInfo;
+  }
+  const device = detectDeviceFromNavigator();
   return device;
 }
 
