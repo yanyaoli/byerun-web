@@ -136,6 +136,7 @@ import { ref, reactive, computed, watch, inject } from 'vue';
 import { scheduledTaskConfig } from '@/utils/config';
 import { useDataStore } from '@/composables/useDataStore';
 import { AutorunClient } from '@/composables/autorun-sdk';
+import { useAutorunPingMeta } from '@/composables/useAutorunPingMeta';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -145,6 +146,7 @@ const emit = defineEmits(['update:visible', 'saved']);
 const showMessage = inject('showMessage', (msg) => alert(msg));
 
 const { token } = useDataStore();
+const { pingMeta } = useAutorunPingMeta();
 const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
 const autorunClient = new AutorunClient({ baseURL: API_BASE });
 
@@ -300,17 +302,6 @@ const fetchInitPayload = async () => {
   if (!API_BASE) {
     throw new Error('Scheduled task service URL is not configured');
   }
-
-  let pingEnvelope;
-  try {
-    pingEnvelope = await autorunClient.ping();
-  } catch (error) {
-    const pingError = new Error('服务器暂时不可用');
-    pingError.cause = error;
-    pingError.isPingError = true;
-    throw pingError;
-  }
-
   const currentToken = getAuthToken();
   const [mapsEnvelope, configEnvelope, statusEnvelope] = await Promise.all([
     autorunClient.getMaps(),
@@ -319,7 +310,7 @@ const fetchInitPayload = async () => {
   ]);
 
   return {
-    version: pingEnvelope?.data?.version ? String(pingEnvelope.data.version) : '--',
+    version: pingMeta.value?.version ? String(pingMeta.value.version) : '--',
     mapsData: mapsEnvelope?.data,
     configData: configEnvelope?.data,
     statusData: statusEnvelope?.data,
@@ -335,7 +326,7 @@ const init = async () => {
     applyInitPayload(payload);
   } catch (err) {
     console.error('AutoRun init error:', err);
-    initError.value = err?.isPingError ? '服务器暂时不可用' : err.message || 'Unknown error';
+    initError.value = err.message || 'Unknown error';
   } finally {
     pinging.value = false;
   }
@@ -416,3 +407,4 @@ option {
   color: #e7e5e4;
 }
 </style>
+

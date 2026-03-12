@@ -1,49 +1,49 @@
 <template>
-  <div class="w-full h-full">
+  <div class="w-full h-full max-w-[480px] mx-auto overflow-x-hidden">
     <div
-      class="chat-section h-full flex flex-col w-full relative overflow-hidden bg-transparent transition-all duration-300"
+      class="chat-section h-full min-h-0 flex flex-col w-full max-w-full relative overflow-hidden bg-transparent transition-all duration-300"
     >
+      <!-- 导航栏 -->
       <div
         ref="headerShellRef"
-        class="fixed left-0 right-0 z-[998] top-2 h-9 flex items-center max-w-[400px] mx-auto w-[calc(100%_-_24px)] px-2 border border-white/50 bg-white/10 backdrop-blur-[16px] rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+        class="fixed left-0 right-0 z-[998] top-2 h-8 flex items-center max-w-[480px] mx-auto w-[calc(100%_-_24px)] px-2 border-none bg-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden"
       >
         <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
           <button
             @click="onBack"
             title="返回"
-            class="w-7 h-7 flex items-center justify-center text-[rgba(60,60,67,0.85)] hover:bg-black/5 rounded-full transition-all"
+            class="w-7 h-7 flex items-center justify-center text-gray-200 hover:bg-white/5 rounded-full transition-all"
           >
-            <i class="fa-solid fa-arrow-left text-xs"></i>
+            <i class="ri-arrow-left-line text-sm"></i>
           </button>
           <div class="flex items-center min-w-0">
-            <div class="text-[12px] font-semibold text-[rgba(39,39,42,0.9)] truncate">消息</div>
+            <div class="text-[14px] font-semibold text-gray-200 truncate">消息</div>
           </div>
         </div>
         <div class="flex items-center gap-1.5 pointer-events-auto ml-auto">
           <button
             @click="showPrivacyInfo = true"
             title="Usage Notes"
-            class="w-7 h-7 flex items-center justify-center text-[rgba(60,60,67,0.85)] hover:bg-black/5 rounded-full transition-all"
+            class="w-7 h-7 flex items-center justify-center text-gray-200 hover:bg-white/5 rounded-full transition-all"
           >
-            <i class="fa-solid fa-circle-info text-xs"></i>
+            <i class="ri-information-line text-sm"></i>
           </button>
         </div>
       </div>
 
+      <!-- 登录提示 -->
       <div
         v-if="!hasToken()"
-        class="absolute top-[52px] left-1/2 -translate-x-1/2 z-[996] px-3 py-1 text-center text-[10px] bg-amber-50/95 text-amber-600 border border-amber-100 rounded-full backdrop-blur-sm"
+        class="absolute top-[52px] left-1/2 -translate-x-1/2 z-[996] px-3 py-1 text-center text-[10px] bg-amber-50/95 text-amber-600 rounded-full backdrop-blur-sm"
       >
-        <i class="fa-solid fa-circle-info mr-1"></i> 请先登录
+        <i class="ri-information-line mr-1"></i> 请先登录
       </div>
 
+      <!-- 消息容器 -->
       <div
         ref="messagesContainer"
-        class="flex-1 overflow-y-auto px-4 space-y-4 relative bg-zinc-50/20"
-        :style="{
-          paddingTop: `${messageListPaddingTop}px`,
-          paddingBottom: `${messageListPaddingBottom}px`,
-        }"
+        class="bottom-overlay-aware flex-1 max-w-full bg-stone-950 overflow-y-auto overflow-x-hidden overscroll-y-none px-4 space-y-4 relative"
+        :style="{ paddingTop: `${messageListPaddingTop}px` }"
       >
         <!-- 消息列表 -->
         <template v-if="messages.length > 0 || !loadingMessages">
@@ -53,16 +53,14 @@
             ref="loadMoreSentinel"
             class="h-8 w-full flex justify-center items-center"
           >
-            <i
-              v-if="loadingMore"
-              class="fa-solid fa-circle-notch animate-spin text-zinc-300 text-xs"
-            ></i>
+            <i v-if="loadingMore" class="ri-loader-4-line animate-spin text-zinc-300 text-xs"></i>
           </div>
 
           <div v-for="(m, i) in messages" :key="m.id" :id="'msg-' + m.id">
+            <!-- 时间分割 -->
             <div v-if="shouldShowDate(i)" class="flex justify-center my-6">
               <span
-                class="px-3 py-1 text-[10px] font-medium text-zinc-400 bg-zinc-200/40 rounded-full backdrop-blur-sm"
+                class="px-3 py-1 text-[10px] font-medium text-gray-400 bg-stone-900/30 rounded-full backdrop-blur-sm"
               >
                 {{ formatDateSeparator(m.created_at) }}
               </span>
@@ -89,7 +87,7 @@
                     ')',
                 }"
               >
-                <i class="fa-solid fa-reply text-xs"></i>
+                <i class="ri-reply-fill text-xs"></i>
               </div>
 
               <div
@@ -110,9 +108,9 @@
                   @click="openUserProfile(m.user)"
                 >
                   <div
-                    class="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center overflow-hidden border border-zinc-100 shadow-sm cursor-pointer relative"
+                    class="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer relative"
                   >
-                    <div class="absolute inset-0 bg-zinc-100 animate-pulse"></div>
+                    <div class="absolute inset-0 bg-stone-900 animate-pulse"></div>
                     <img
                       v-if="m.user?.avatar_url"
                       :src="normalizeAvatarUrl(m.user.avatar_url)"
@@ -120,11 +118,11 @@
                       loading="lazy"
                       class="w-full h-full object-cover rounded-full z-10 avatar-fade-in"
                     />
-                    <i v-else class="fa-solid fa-user text-zinc-400 text-[10px] z-10"></i>
+                    <i v-else class="ri-user-3-fill text-zinc-400 text-[10px] z-10"></i>
                   </div>
                   <div
                     v-if="m.user?.is_alumni"
-                    class="absolute -bottom-0.5 right-0 translate-x-1/4 translate-y-1/4 w-3.5 h-3.5 bg-blue-600 border-2 border-white rounded-full flex items-center justify-center z-20 shadow-sm overflow-hidden"
+                    class="absolute -bottom-0.5 right-0 translate-x-1/4 translate-y-1/4 w-3.5 h-3.5 bg-blue-600 border-2 border-stone-800 rounded-full flex items-center justify-center z-20 shadow-sm overflow-hidden"
                     title="认证校友"
                   >
                     <i class="ri-graduation-cap-fill text-white text-[7px]"></i>
@@ -146,17 +144,13 @@
                       class="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-colors active:scale-90 mb-0.5"
                     >
                       <template v-if="isMe(m) && m.__status === 'sending'">
-                        <i
-                          class="fa-solid fa-circle-notch animate-spin text-[9px] text-zinc-400"
-                        ></i>
+                        <i class="ri-loader-4-line animate-spin text-[9px] text-zinc-400"></i>
                       </template>
                       <template v-else-if="isMe(m) && m.__status === 'failed'">
                         <i class="fa-solid fa-rotate-right text-[9px] text-rose-500"></i>
                       </template>
                       <template v-else>
-                        <i
-                          class="fa-solid fa-reply text-[9px] text-zinc-300 hover:text-zinc-600"
-                        ></i>
+                        <i class="ri-reply-fill text-[9px] text-zinc-300 hover:text-zinc-600"></i>
                       </template>
                     </button>
 
@@ -164,8 +158,8 @@
                       :class="[
                         'relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
                         isMe(m)
-                          ? 'bg-[#effdde] text-zinc-800 rounded-2xl rounded-br-[0.25rem]'
-                          : 'bg-white text-zinc-900 border border-zinc-200 rounded-2xl rounded-bl-[0.25rem]',
+                          ? 'bg-slate-600/20 text-gray-200 rounded-2xl rounded-br-[0.25rem]'
+                          : 'bg-stone-600/10 text-gray-300 rounded-2xl rounded-bl-[0.25rem]',
                       ]"
                     >
                       <div v-if="!isMe(m)" class="text-[11px] text-zinc-500 mb-0.5 font-bold">
@@ -174,7 +168,7 @@
 
                       <div
                         v-if="m.reply?.content"
-                        class="mb-1 p-2 bg-black/5 rounded-lg border-l-2 border-zinc-400/50 text-[11px] text-zinc-500 cursor-pointer overflow-hidden"
+                        class="mb-1 p-2 bg-black/5 border-l-2 border-gray-400/50 text-[11px] text-zinc-500 cursor-pointer overflow-hidden"
                         @click="scrollToOriginalMessage(m.reply)"
                       >
                         <div class="text-[10px] font-bold mb-0.5 opacity-60">
@@ -216,7 +210,7 @@
                 <button
                   class="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-colors active:scale-90 mb-0.5 text-zinc-400"
                 >
-                  <i class="fa-solid fa-circle-notch animate-spin text-[9px]"></i>
+                  <i class="ri-loader-4-line animate-spin text-[9px]"></i>
                 </button>
                 <div
                   class="relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words bg-[#effdde] text-zinc-800 rounded-2xl rounded-br-[0.25rem] opacity-75"
@@ -262,50 +256,16 @@
         </div>
       </div>
 
+      <!-- 输入区域 -->
       <div
         ref="composerShellRef"
-        class="fixed left-0 right-0 bottom-4 z-[998] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/10 border border-white/50 backdrop-blur-[16px] rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+        class="fixed left-0 right-0 z-[998] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/10 border-none backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+        :style="{ bottom: `${composerBottomOffset}px` }"
       >
-        <!-- 表情按钮 -->
-        <div class="mb-3 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3">
-            <button
-              @click="showEmojiPicker = !showEmojiPicker"
-              title="Emoji"
-              class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full text-[rgba(60,60,67,0.75)] hover:text-black hover:bg-black/5 transition-colors"
-            >
-              <i class="fa-regular fa-face-smile text-lg"></i>
-            </button>
-
-            <label
-              class="w-8 h-8 inline-flex items-center justify-center rounded-full text-[rgba(60,60,67,0.75)] hover:text-black hover:bg-black/5 cursor-pointer transition-colors"
-            >
-              <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
-              <i class="fa-solid fa-image"></i>
-            </label>
-          </div>
-
-          <button
-            @click="openSettings"
-            title="Profile Settings"
-            class="w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full text-[rgba(60,60,67,0.75)] hover:text-black hover:bg-black/5 transition-colors"
-          >
-            <span
-              class="w-6 h-6 rounded-full bg-zinc-200/80 border border-white/80 overflow-hidden flex items-center justify-center"
-            >
-              <img
-                v-if="user?.avatar_url"
-                :src="normalizeAvatarUrl(user.avatar_url)"
-                class="w-full h-full object-cover"
-              />
-              <i v-else class="fa-solid fa-user text-[10px] text-zinc-500"></i>
-            </span>
-          </button>
-        </div>
         <!-- 回复预览 -->
         <div
           v-if="replyingTo?.content"
-          class="mx-1 mb-3 px-3 py-2 bg-zinc-50 rounded-2xl flex items-center justify-between border border-zinc-100 animate-in fade-in slide-in-from-bottom-2 duration-300"
+          class="mx-1 mb-3 px-3 py-2 bg-stone-900/50 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300"
         >
           <div class="flex-1 min-w-0 pr-2">
             <div
@@ -314,148 +274,187 @@
               正在回复 {{ replyingTo.user?.nickname || replyingTo.nickname || '用户' }}
             </div>
             <div
-              class="text-xs text-zinc-500 truncate opacity-80"
+              class="text-xs text-gray-500 truncate opacity-80"
               v-html="renderContent(replyingTo.content, replyingTo.type || 'text', stickerGroups)"
             ></div>
           </div>
           <button
             @click="cancelReply"
-            class="w-7 h-7 flex items-center justify-center text-zinc-300 hover:text-zinc-500 active:scale-90 transition-all"
+            class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-zinc-500 active:scale-90 transition-all"
           >
-            <i class="fa-solid fa-xmark text-sm"></i>
+            <i class="ri-close-fill text-lg"></i>
           </button>
         </div>
-
-        <div
-          v-if="showEmojiPicker"
-          class="absolute bottom-full left-0 w-full mb-2 p-4 bg-white/95 backdrop-blur-md border border-zinc-100 z-50 rounded-3xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
-        >
-          <div class="flex items-center justify-between mb-4 px-1">
-            <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+        <div class="relative">
+          <!-- 表情按钮 -->
+          <div class="mb-3 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
               <button
-                v-for="(tab, id) in { emoji: { name: 'Twemoji' }, ...stickerGroups }"
-                :key="id"
-                @click="emojiActiveTab = id"
-                :class="[
-                  'text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap px-1 pb-1',
-                  emojiActiveTab === id
-                    ? 'text-zinc-900 border-b-2 border-zinc-900'
-                    : 'text-zinc-400',
-                ]"
+                @click="showEmojiPicker = !showEmojiPicker"
+                title="Emoji"
+                class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full text-gray-300 hover:text-gray-200 hover:bg-black/5 cursor-pointer transition-colors"
               >
-                {{ tab.name }}
+                <i class="ri-emotion-happy-fill text-lg"></i>
               </button>
+
+              <label
+                class="w-8 h-8 inline-flex items-center justify-center rounded-full text-gray-300 hover:text-gray-200 hover:bg-black/5 cursor-pointer transition-colors"
+              >
+                <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
+                <i class="ri-image-fill text-lg"></i>
+              </label>
             </div>
+
             <button
-              @click="showEmojiPicker = false"
-              class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-zinc-300 hover:text-zinc-500"
+              @click="openSettings"
+              title="Profile Settings"
+              class="w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer transition-colors"
             >
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-          <div class="max-h-60 overflow-y-auto pr-1 scrollbar-hide">
-            <div
-              v-if="stickerLoading"
-              class="flex flex-col items-center justify-center py-10 text-zinc-300"
-            >
-              <i class="fa-solid fa-circle-notch animate-spin text-2xl mb-2"></i>
-              <span class="text-[10px] font-bold uppercase tracking-widest">正在加载表情...</span>
-            </div>
-            <div v-else-if="emojiActiveTab === 'emoji'" class="space-y-6">
-              <div v-for="(group, name) in emojiGroups" :key="name">
-                <div class="text-[9px] font-bold uppercase tracking-widest text-zinc-300 mb-3 ml-1">
-                  {{ name }}
-                </div>
-                <div class="grid grid-cols-7 sm:grid-cols-8 gap-2">
-                  <button
-                    v-for="emoji in group"
-                    :key="emoji.code"
-                    @click="addEmoji(emoji.char)"
-                    class="aspect-square grid place-items-center hover:bg-zinc-100 rounded-xl transition-all active:scale-95 group"
-                  >
-                    <img
-                      :src="getEmojiUrl(emoji.code)"
-                      class="w-7 h-7 group-hover:scale-110 transition-transform"
-                    />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div
-              v-else-if="stickerGroups[emojiActiveTab]"
-              class="grid grid-cols-5 sm:grid-cols-6 gap-3 pb-2"
-            >
-              <button
-                v-for="item in stickerGroups[emojiActiveTab].items"
-                :key="item.key"
-                @click="addSticker(emojiActiveTab, item)"
-                class="aspect-square grid place-items-center hover:bg-zinc-100 rounded-xl transition-all active:scale-95 group p-1"
+              <span
+                class="w-6 h-6 rounded-full bg-stone-800 overflow-hidden flex items-center justify-center"
               >
                 <img
-                  :src="item.val"
-                  loading="lazy"
-                  class="w-full h-full object-contain group-hover:scale-110 transition-transform"
+                  v-if="user?.avatar_url"
+                  :src="normalizeAvatarUrl(user.avatar_url)"
+                  class="w-full h-full object-cover"
                 />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div ref="composerInputRowRef" class="flex items-end gap-2 max-w-5xl mx-auto min-w-0">
-          <div
-            class="flex-1 min-w-0 flex items-end gap-1 bg-white/75 rounded-[22px] px-2 py-1.5 focus-within:bg-white focus-within:ring-1 focus-within:ring-zinc-200 transition-all shadow-inner min-h-[44px]"
-          >
-            <div
-              ref="messageInput"
-              contenteditable="true"
-              :placeholder="hasToken() ? '说点什么吧' : '请先登录'"
-              @input="handleInput"
-              @keydown.enter.exact.prevent="send"
-              @blur="saveRange"
-              @keyup="saveRange"
-              @mouseup="saveRange"
-              @touchend="saveRange"
-              :class="[
-                'flex-1 min-w-0 w-full max-w-full h-[36px] bg-transparent border-none outline-none text-sm py-2 px-1 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-relaxed sticker-input',
-                !hasToken() ? 'pointer-events-none' : '',
-              ]"
-            ></div>
-
-            <button
-              v-if="text"
-              @click="clearText"
-              class="w-9 h-9 flex-shrink-0 grid place-items-center text-zinc-300 hover:text-rose-400 transition-colors"
-            >
-              <i class="fa-solid fa-circle-xmark text-lg"></i>
+                <i v-else class="ri-user-3-fill text-[10px]"></i>
+              </span>
             </button>
           </div>
 
-          <button
-            @click="send"
-            :disabled="!hasToken() || !text.trim() || isSending"
-            class="w-10 h-10 flex-shrink-0 grid place-items-center bg-zinc-900 text-white rounded-full active:scale-90 transition-all shadow-lg shadow-zinc-200 disabled:opacity-50 disabled:shadow-none mb-0.5"
+          <div
+            v-if="showEmojiPicker"
+            class="absolute bottom-full left-0 w-full mb-2 p-4 bg-stone-900 backdrop-blur-md z-50 rounded-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
           >
-            <i v-if="isSending" class="fa-solid fa-circle-notch animate-spin text-sm"></i>
-            <i v-else class="fa-solid fa-paper-plane text-sm"></i>
-          </button>
+            <div class="flex items-center justify-between mb-4 px-1">
+              <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+                <button
+                  v-for="(tab, id) in { emoji: { name: 'Twemoji' }, ...stickerGroups }"
+                  :key="id"
+                  @click="emojiActiveTab = id"
+                  :class="[
+                    'text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap px-1 pb-1',
+                    emojiActiveTab === id
+                      ? 'text-zinc-300 border-b-1 border-gray-600'
+                      : 'text-zinc-400',
+                  ]"
+                >
+                  {{ tab.name }}
+                </button>
+              </div>
+              <button
+                @click="showEmojiPicker = false"
+                class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300"
+              >
+                <i class="ri-close-fill"></i>
+              </button>
+            </div>
+            <div class="max-h-60 overflow-y-auto pr-1 scrollbar-hide">
+              <div
+                v-if="stickerLoading"
+                class="flex flex-col items-center justify-center py-10 text-zinc-300"
+              >
+                <i class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
+                <span class="text-[10px] font-bold uppercase tracking-widest">正在加载表情...</span>
+              </div>
+              <div v-else-if="emojiActiveTab === 'emoji'" class="space-y-6">
+                <div v-for="(group, name) in emojiGroups" :key="name">
+                  <div
+                    class="text-[9px] font-bold uppercase tracking-widest text-zinc-300 mb-3 ml-1"
+                  >
+                    {{ name }}
+                  </div>
+                  <div class="grid grid-cols-7 sm:grid-cols-8 gap-2">
+                    <button
+                      v-for="emoji in group"
+                      :key="emoji.code"
+                      @click="addEmoji(emoji.char)"
+                      class="aspect-square grid place-items-center hover:bg-stone-600 rounded-xl transition-all active:scale-95 group"
+                    >
+                      <img
+                        :src="getEmojiUrl(emoji.code)"
+                        class="w-7 h-7 group-hover:scale-110 transition-transform"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div
+                v-else-if="stickerGroups[emojiActiveTab]"
+                class="grid grid-cols-5 sm:grid-cols-6 gap-3 pb-2"
+              >
+                <button
+                  v-for="item in stickerGroups[emojiActiveTab].items"
+                  :key="item.key"
+                  @click="addSticker(emojiActiveTab, item)"
+                  class="aspect-square grid place-items-center hover:bg-zinc-300 rounded-xl transition-all active:scale-95 group p-1"
+                >
+                  <img
+                    :src="item.val"
+                    loading="lazy"
+                    class="w-full h-full object-contain group-hover:scale-110 transition-transform"
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div ref="composerInputRowRef" class="flex items-end gap-2 max-w-5xl mx-auto min-w-0">
+            <div
+              class="flex-1 min-w-0 flex items-end gap-1 bg-stone-800 text-gray-300 rounded-2xl px-2 py-1.5 focus-within:bg-stone-900 transition-all shadow-inner"
+            >
+              <div
+                ref="messageInput"
+                contenteditable="true"
+                :placeholder="hasToken() ? '说点什么吧' : '请先登录'"
+                @input="handleInput"
+                @keydown.enter.exact.prevent="send"
+                @blur="handleComposerBlur"
+                @keyup="saveRange"
+                @mouseup="saveRange"
+                @touchend="saveRange"
+                :class="[
+                  'flex-1 min-w-0 w-full max-w-full bg-transparent border-none outline-none text-sm px-1 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-relaxed sticker-input',
+                  !hasToken() ? 'pointer-events-none' : '',
+                ]"
+              ></div>
+
+              <button
+                v-if="text"
+                @click="clearText"
+                class="w-9 h-9 flex-shrink-0 grid place-items-center text-zinc-300 hover:text-rose-400 transition-colors"
+              >
+                <i class="ri-close-line text-lg"></i>
+              </button>
+            </div>
+
+            <button
+              @click="send"
+              :disabled="!hasToken() || !text.trim() || isSending"
+              class="w-10 h-10 flex-shrink-0 grid place-items-center bg-stone-800 text-gray-300 rounded-full active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none mb-0.5"
+            >
+              <i v-if="isSending" class="ri-loader-4-line animate-spin text-sm"></i>
+              <i v-else class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+          </div>
         </div>
       </div>
 
+      <!-- 资料设置 -->
       <div
         v-if="showSettings"
-        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-zinc-950/20 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
       >
-        <div
-          class="bg-white w-full max-w-[280px] rounded-[2rem] shadow-2xl border border-zinc-100 overflow-hidden"
-        >
+        <div class="bg-stone-900 w-full max-w-[280px] rounded-[2rem] shadow-2xl overflow-hidden">
           <div class="p-6">
             <div class="flex flex-col items-center mb-6">
               <div
-                class="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center overflow-hidden border-2 border-zinc-50 shadow-inner mb-2 relative"
+                class="w-16 h-16 rounded-full bg-stone-800 flex items-center justify-center overflow-hidden border-2 border-stone-800/50 shadow-inner mb-2 relative"
               >
                 <div
                   v-if="loadingUserSettings"
-                  class="absolute inset-0 bg-zinc-100 animate-pulse z-10"
+                  class="absolute inset-0 bg-stone-800 animate-pulse z-10"
                 ></div>
                 <template v-if="user?.avatar_url">
                   <img
@@ -463,75 +462,76 @@
                     class="w-full h-full object-cover"
                   />
                 </template>
-                <i v-else class="fa-solid fa-user text-zinc-300 text-2xl"></i>
+                <i v-else class="ri-user-3-fill text-zinc-300 text-2xl"></i>
               </div>
-              <h3 class="text-base font-bold text-zinc-900">个人设置</h3>
-              <p class="text-[10px] text-zinc-400">修改昵称和同步 QQ 头像</p>
+              <h3 class="text-base font-bold text-gray-300">个人设置</h3>
+              <p class="text-[10px] text-gray-400">修改昵称和同步 QQ 头像</p>
             </div>
             <div class="space-y-4">
               <div class="space-y-1">
-                <label class="text-[9px] font-bold uppercase text-zinc-400 ml-1">昵称</label>
+                <label class="text-[9px] font-bold uppercase text-gray-400 ml-1">昵称</label>
                 <div
                   v-if="loadingUserSettings"
-                  class="h-9 w-full bg-zinc-50 animate-pulse rounded-xl"
+                  class="h-9 w-full bg-stone-800 animate-pulse rounded-xl"
                 ></div>
                 <input
                   v-else
                   v-model="settingsNickname"
-                  class="w-full px-4 py-2 bg-zinc-50 border border-zinc-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-zinc-100 transition-all"
+                  class="w-full px-4 py-2 bg-stone-800 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
                 />
               </div>
               <div class="space-y-1">
-                <label class="text-[9px] font-bold uppercase text-zinc-400 ml-1"
+                <label class="text-[9px] font-bold uppercase text-gray-400 ml-1"
                   >QQ 号 (同步头像)</label
                 >
                 <div
                   v-if="loadingUserSettings"
-                  class="h-9 w-full bg-zinc-50 animate-pulse rounded-xl"
+                  class="h-9 w-full bg-stone-800 animate-pulse rounded-xl"
                 ></div>
                 <input
                   v-else
                   v-model="settingsQQ"
-                  class="w-full px-4 py-2 bg-zinc-50 border border-zinc-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-zinc-100 transition-all"
+                  class="w-full px-4 py-2 bg-stone-800 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
                 />
               </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 mt-8">
               <button
-                @click="applySettings"
-                :disabled="isSavingSettings"
-                class="py-2 bg-zinc-900 text-white rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <i v-if="isSavingSettings" class="fa-solid fa-circle-notch animate-spin"></i>
-                {{ isSavingSettings ? '正在保存' : '保存' }}
-              </button>
-              <button
                 @click="showSettings = false"
                 :disabled="isSavingSettings"
-                class="py-2 bg-zinc-100 text-zinc-500 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50"
+                class="py-2 text-gray-400 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50"
               >
                 取消
+              </button>
+              <button
+                @click="applySettings"
+                :disabled="isSavingSettings"
+                class="py-2 bg-stone-800 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <i v-if="isSavingSettings" class="ri-loader-4-line animate-spin"></i>
+                {{ isSavingSettings ? '正在保存' : '保存' }}
               </button>
             </div>
           </div>
         </div>
       </div>
 
+      <!-- 他人资料卡 -->
       <div
         v-if="showProfileViewer"
-        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-zinc-950/20 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
         @click.self="showProfileViewer = false"
       >
         <div
-          class="bg-white w-full max-w-[300px] rounded-[1.5rem] shadow-2xl border border-zinc-100 overflow-hidden animate-in zoom-in-95 duration-200 relative"
+          class="bg-stone-900 w-full max-w-[300px] rounded-[1.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
         >
           <!-- 关闭按钮 -->
           <button
             @click="showProfileViewer = false"
-            class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center text-zinc-400 hover:text-zinc-600 active:scale-90 transition-all z-10"
+            class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-300 active:scale-90 transition-all z-10"
           >
-            <i class="fa-solid fa-xmark text-lg"></i>
+            <i class="ri-close-fill text-lg"></i>
           </button>
 
           <div class="p-6">
@@ -539,7 +539,7 @@
               <!-- 头像区域 -->
               <div class="flex-shrink-0 relative">
                 <div
-                  class="w-16 h-16 rounded-full bg-zinc-100 flex items-center justify-center overflow-hidden border-2 border-white shadow"
+                  class="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden shadow"
                 >
                   <template v-if="viewedProfile?.avatar_url">
                     <img
@@ -548,7 +548,7 @@
                       class="w-full h-full object-cover"
                     />
                   </template>
-                  <i v-else class="fa-solid fa-user text-zinc-300 text-2xl"></i>
+                  <i v-else class="ri-user-3-fill text-gray-300 text-2xl"></i>
                 </div>
               </div>
 
@@ -556,11 +556,11 @@
               <div class="flex-1 min-w-0">
                 <h3
                   v-if="loadingProfile && !viewedProfile?.nickname"
-                  class="h-5 w-24 bg-zinc-100 animate-pulse rounded mb-1"
+                  class="h-5 w-24 bg-gray-300 animate-pulse rounded mb-1"
                 ></h3>
                 <h3
                   v-else
-                  class="text-base font-bold text-zinc-900 truncate mb-0.5 whitespace-nowrap"
+                  class="text-base font-bold text-gray-300 truncate mb-0.5 whitespace-nowrap"
                 >
                   {{ viewedProfile?.nickname || '用户' }}
                 </h3>
@@ -569,14 +569,14 @@
                   v-if="loadingProfile"
                   class="h-3 w-32 bg-zinc-50 animate-pulse rounded mb-1.5"
                 ></p>
-                <p v-else class="text-[10px] text-zinc-400 mb-1.5">
+                <p v-else class="text-[10px] text-zinc-400">
                   {{ formatLastSeen(viewedProfile?.last_seen_at) }}
                 </p>
 
                 <!-- 校友身份提示 -->
                 <div
                   v-if="viewedProfile?.is_alumni"
-                  class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] font-bold"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-stone-800 text-blue-600 rounded-full text-[9px] font-bold"
                 >
                   <i class="ri-graduation-cap-fill"></i>
                   TA是你的校友
@@ -594,19 +594,19 @@
         @click.self="showPrivacyInfo = false"
       >
         <div
-          class="bg-white w-full max-w-[300px] rounded-[1.5rem] shadow-2xl border border-zinc-100 overflow-hidden animate-in zoom-in-95 duration-200"
+          class="bg-stone-900 w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         >
           <div class="p-6">
-            <div class="flex items-center gap-2 mb-4 text-zinc-800">
+            <div class="flex items-center gap-2 mb-4 text-gray-300">
               <i class="fa-solid fa-shield-halved text-blue-500"></i>
               <h3 class="font-bold text-sm">隐私与校友功能说明</h3>
             </div>
             <div class="space-y-3">
-              <p class="text-[12px] text-zinc-600 leading-relaxed">
+              <p class="text-[12px] text-gray-400 leading-relaxed">
                 为了在留言板中实现在校校友身份识别，我们需要对您 UNIRUN
                 授权数据中的学校信息进行提取与比对。
               </p>
-              <p class="text-[12px] text-zinc-600 leading-relaxed">
+              <p class="text-[12px] text-gray-300/50 leading-relaxed">
                 <strong
                   >使用留言功能即视为您已知晓并同意我们基于学校标识字段进行校友匹配分析。</strong
                 >
@@ -614,7 +614,7 @@
             </div>
             <button
               @click="showPrivacyInfo = false"
-              class="mt-6 w-full py-2.5 bg-zinc-900 text-white rounded-xl text-xs font-bold active:scale-95 transition-all"
+              class="mt-6 w-full py-2.5 bg-stone-800 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all"
             >
               我知道了
             </button>
@@ -622,6 +622,7 @@
         </div>
       </div>
 
+      <!-- 消息操作弹窗 -->
       <Teleport to="body">
         <div
           v-if="contextMenu.show"
@@ -631,7 +632,7 @@
           @scroll.prevent
         >
           <div
-            class="absolute bg-white/90 backdrop-blur-xl border border-zinc-200 shadow-2xl rounded-2xl p-1.5 min-w-[140px] shadow-zinc-300/50"
+            class="absolute bg-stone-800 backdrop-blur-xl shadow-2xl rounded-2xl p-1.5 min-w-[140px] shadow-black/50"
             :class="[
               contextMenu.direction === 'down'
                 ? 'menu-pop-animation origin-top'
@@ -646,10 +647,10 @@
                 closeMenu();
               "
               :disabled="isDeleting"
-              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-rose-50 text-rose-500 rounded-xl transition-colors disabled:opacity-50"
+              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-stone-900/80 text-rose-500 rounded-xl transition-colors disabled:opacity-50"
             >
-              <i v-if="isDeleting" class="fa-solid fa-circle-notch animate-spin"></i>
-              <i v-else class="fa-solid fa-trash-can"></i>
+              <i v-if="isDeleting" class="ri-loader-4-line animate-spin"></i>
+              <i v-else class="ri-delete-bin-line"></i>
               {{ isDeleting ? '正在删除...' : '删除消息' }}
             </button>
             <button
@@ -657,9 +658,9 @@
                 startReply(contextMenu.message);
                 closeMenu();
               "
-              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-zinc-100 rounded-xl transition-colors"
+              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-stone-900/80 text-gray-300 rounded-xl transition-colors"
             >
-              <i class="fa-solid fa-reply text-zinc-400"></i>
+              <i class="ri-reply-fill text-gray-300"></i>
               回复
             </button>
           </div>
@@ -678,7 +679,7 @@
             @click="viewedImage = null"
             class="absolute top-4 right-4 z-30 bg-black/40 text-white rounded-full p-2 hover:bg-black/60"
           >
-            <i class="fa-solid fa-xmark"></i>
+            <i class="ri-close-fill"></i>
           </button>
           <div class="max-w-[95vw] max-h-[95vh] relative flex items-center justify-center">
             <!-- 加载占位: 保持固定的最大尺寸以减少布局跳动 -->
@@ -687,7 +688,7 @@
               class="w-[70vw] max-w-[900px] h-[60vh] bg-zinc-800/10 rounded-md flex items-center justify-center animate-pulse"
             >
               <div class="flex flex-col items-center gap-3">
-                <i class="fa-solid fa-circle-notch animate-spin text-2xl text-zinc-500"></i>
+                <i class="ri-loader-4-line animate-spin text-2xl text-zinc-500"></i>
                 <div class="text-sm text-zinc-400">图片加载中...</div>
               </div>
             </div>
@@ -724,6 +725,8 @@ import { useDataStore } from '@/composables/useDataStore';
 const showMessage = inject('showMessage');
 const setLayoutHidden = inject('setLayoutHidden', () => {});
 const goBack = inject('goBack', null);
+const setBottomOverlay = inject('setBottomOverlay', null);
+const setBottomOverlayHeight = inject('setBottomOverlayHeight', () => {});
 const {
   token,
   userInfo,
@@ -759,8 +762,10 @@ const showSettings = ref(false);
 const showEmojiPicker = ref(false);
 const showPreviewBubble = ref(false);
 const SINGLE_MESSAGE_GAP_PX = 16;
+const COMPOSER_BASE_BOTTOM_PX = 16;
 const messageListPaddingTop = ref(68);
-const messageListPaddingBottom = ref(176);
+const currentOverlayHeight = ref(0);
+const composerBottomOffset = ref(COMPOSER_BASE_BOTTOM_PX);
 
 // 输入相关
 const text = ref('');
@@ -772,6 +777,7 @@ const lastRange = ref(null);
 const stickerGroups = ref({});
 const stickerLoading = ref(false);
 const stickerLoaded = ref(false);
+const chatBootstrapFinished = ref(false);
 const emojiActiveTab = ref('emoji');
 
 // 设置相关
@@ -813,21 +819,48 @@ let scrollObserver = null;
 let layoutMeasureFrame = 0;
 let floatingLayoutObserver = null;
 let authExpiredNotified = false;
+let keyboardWasVisible = false;
+let messagesTouchStartY = 0;
 
 // ==================== 工具函数 ====================
 const getToken = () => token.value || '';
 
 const hasToken = () => !!getToken();
 
+function applyBottomOverlay(height = 0, gap = 0) {
+  if (typeof setBottomOverlay === 'function') {
+    setBottomOverlay({ height, gap });
+    return;
+  }
+  setBottomOverlayHeight(height);
+}
+
 function measureFloatingLayout() {
+  const viewport = window.visualViewport;
+  const layoutHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+  const visibleHeight = Math.max(0, viewport?.height || layoutHeight);
+  const offsetTop = Math.max(0, viewport?.offsetTop || 0);
+  const keyboardInset = Math.max(0, layoutHeight - (visibleHeight + offsetTop));
+  const keyboardVisible = keyboardInset > 0;
+
+  composerBottomOffset.value = COMPOSER_BASE_BOTTOM_PX + keyboardInset;
+  if (keyboardWasVisible && !keyboardVisible) {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+  keyboardWasVisible = keyboardVisible;
+
+  const messageRect = messagesContainer.value?.getBoundingClientRect?.();
   const headerRect = headerShellRef.value?.getBoundingClientRect?.();
   const composerRect = composerShellRef.value?.getBoundingClientRect?.();
   const inputRowRect = composerInputRowRef.value?.getBoundingClientRect?.();
-  const visibleHeight =
-    window.visualViewport?.height ||
-    window.innerHeight ||
-    document.documentElement?.clientHeight ||
-    0;
+  const messageContainerEl = messagesContainer.value;
+  const wasNearBottom = messageContainerEl
+    ? messageContainerEl.scrollHeight -
+        (messageContainerEl.scrollTop + messageContainerEl.clientHeight) <=
+      Math.max(24, SINGLE_MESSAGE_GAP_PX * 2)
+    : false;
 
   if (headerRect) {
     let topPadding = Math.max(56, Math.ceil(headerRect.bottom + 10));
@@ -835,22 +868,54 @@ function measureFloatingLayout() {
     messageListPaddingTop.value = topPadding;
   }
 
-  if (inputRowRect) {
-    // Keep only one-message spacing between the latest message and input row.
-    messageListPaddingBottom.value = Math.max(
-      0,
-      Math.ceil(visibleHeight - inputRowRect.top + SINGLE_MESSAGE_GAP_PX),
+  const anchorTop = Math.min(
+    inputRowRect?.top ?? Number.POSITIVE_INFINITY,
+    composerRect?.top ?? Number.POSITIVE_INFINITY,
+  );
+  if (Number.isFinite(anchorTop)) {
+    const viewportBottom = Math.min(
+      messageRect?.bottom ?? Number.POSITIVE_INFINITY,
+      offsetTop + visibleHeight,
+      layoutHeight,
     );
+    const overlayHeight = Math.max(0, Math.ceil(viewportBottom - anchorTop));
+    const overlayChanged = Math.abs(overlayHeight - currentOverlayHeight.value) > 0.5;
+    currentOverlayHeight.value = overlayHeight;
+    applyBottomOverlay(overlayHeight, SINGLE_MESSAGE_GAP_PX);
+
+    // Keep the latest message above the whole composer shell (not only the input line).
+    if (overlayChanged && wasNearBottom) {
+      requestAnimationFrame(() => {
+        scrollToBottom(false);
+      });
+    }
     return;
   }
 
-  if (composerRect) {
-    // Fallback when input row isn't available yet.
-    messageListPaddingBottom.value = Math.max(
-      0,
-      Math.ceil(visibleHeight - composerRect.top + SINGLE_MESSAGE_GAP_PX),
-    );
+  if (currentOverlayHeight.value !== 0) {
+    currentOverlayHeight.value = 0;
   }
+  applyBottomOverlay(0, 0);
+}
+
+function handleComposerBlur() {
+  saveRange();
+  setTimeout(() => {
+    const viewport = window.visualViewport;
+    const layoutHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+    const visibleHeight = Math.max(0, viewport?.height || layoutHeight);
+    const offsetTop = Math.max(0, viewport?.offsetTop || 0);
+    const keyboardInset = Math.max(0, layoutHeight - (visibleHeight + offsetTop));
+
+    if (keyboardInset <= 0) {
+      keyboardWasVisible = false;
+      composerBottomOffset.value = COMPOSER_BASE_BOTTOM_PX;
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+    scheduleFloatingLayoutMeasure();
+  }, 120);
 }
 
 function scheduleFloatingLayoutMeasure() {
@@ -859,6 +924,40 @@ function scheduleFloatingLayoutMeasure() {
     measureFloatingLayout();
     layoutMeasureFrame = 0;
   });
+}
+
+function handleMessagesTouchStart(e) {
+  if (!e?.touches?.length) return;
+  messagesTouchStartY = e.touches[0].clientY;
+}
+
+function handleMessagesTouchMove(e) {
+  const el = messagesContainer.value;
+  if (!el || !e?.touches?.length) return;
+
+  const currentY = e.touches[0].clientY;
+  const deltaY = currentY - messagesTouchStartY;
+  const atTop = el.scrollTop <= 0;
+  const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+
+  // Prevent iOS rubber-band overscroll from exposing page background.
+  if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+    e.preventDefault();
+  }
+}
+
+function bindMessageScrollLock() {
+  const el = messagesContainer.value;
+  if (!el) return;
+  el.addEventListener('touchstart', handleMessagesTouchStart, { passive: true });
+  el.addEventListener('touchmove', handleMessagesTouchMove, { passive: false });
+}
+
+function unbindMessageScrollLock() {
+  const el = messagesContainer.value;
+  if (!el) return;
+  el.removeEventListener('touchstart', handleMessagesTouchStart);
+  el.removeEventListener('touchmove', handleMessagesTouchMove);
 }
 
 const isMe = (m) => {
@@ -986,7 +1085,7 @@ function handleImageSelected(ev) {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result;
-      const imgHtml = `<img src="${base64}" data-pending-upload="true" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle border border-zinc-200 shadow-sm transition-transform hover:scale-105 cursor-pointer" />`;
+      const imgHtml = `<img src="${base64}" data-pending-upload="true" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle shadow-sm transition-transform hover:scale-105 cursor-pointer" />`;
 
       if (messageInput.value) {
         messageInput.value.focus();
@@ -1517,8 +1616,10 @@ function addSticker(groupId, sticker) {
   handleInput({ target: messageInput.value });
 }
 
-watch(showEmojiPicker, (val) => {
-  if (val) fetchStickers();
+watch([showEmojiPicker, chatBootstrapFinished], ([isOpen, isReady]) => {
+  if (isOpen && isReady) {
+    fetchStickers();
+  }
 });
 function formatLastSeen(s) {
   if (!s) return '离线';
@@ -1851,6 +1952,7 @@ const onAuthError = () => {
 onMounted(async () => {
   nextTick(() => {
     scheduleFloatingLayoutMeasure();
+    bindMessageScrollLock();
   });
   window.addEventListener('resize', scheduleFloatingLayoutMeasure);
   window.addEventListener('orientationchange', scheduleFloatingLayoutMeasure);
@@ -1864,15 +1966,13 @@ onMounted(async () => {
   client.on('delete', onDelete);
   client.on('auth_error', onAuthError);
 
-  fetchStickers();
-
   if (hasToken()) {
     client.setToken(getToken());
-    client.connectSocket();
     loadingMessages.value = true;
     try {
       await fetchUser();
       await fetchMessages(true);
+      client.connectSocket();
     } catch (e) {
       handleApiError(e);
     } finally {
@@ -1880,10 +1980,12 @@ onMounted(async () => {
     }
   } else {
     client.connectSocket();
-    fetchMessages().finally(() => {
+    await fetchMessages().finally(() => {
       loadingMessages.value = false;
     });
   }
+
+  chatBootstrapFinished.value = true;
 
   if (typeof ResizeObserver !== 'undefined') {
     floatingLayoutObserver = new ResizeObserver(() => {
@@ -1896,6 +1998,8 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  applyBottomOverlay(0, 0);
+  unbindMessageScrollLock();
   window.removeEventListener('resize', scheduleFloatingLayoutMeasure);
   window.removeEventListener('orientationchange', scheduleFloatingLayoutMeasure);
   window.visualViewport?.removeEventListener('resize', scheduleFloatingLayoutMeasure);

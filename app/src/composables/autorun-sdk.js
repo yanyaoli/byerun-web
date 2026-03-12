@@ -1,4 +1,4 @@
-﻿export class ApiBusinessError extends Error {
+export class ApiBusinessError extends Error {
   constructor(envelope) {
     super(envelope?.message || `API business error: ${envelope?.code}`);
     this.name = "ApiBusinessError";
@@ -59,6 +59,20 @@ export class AutorunClient {
       { method: "POST", headers: this.authHeaders(token), body: JSON.stringify({}) },
       requestId
     );
+  }
+
+  /** @param {string} token @param {{ map_id?: string, mapid?: string }} [query] */
+  getRandom(token, query = {}, requestId) {
+    const params = new URLSearchParams();
+    const mapId = String(query?.map_id ?? "").trim();
+    const mapIdCompat = String(query?.mapid ?? "").trim();
+    if (mapId) params.set("map_id", mapId);
+    if (!mapId && mapIdCompat) params.set("mapid", mapIdCompat);
+
+    const suffix = params.toString();
+    const path = suffix ? `/api/random?${suffix}` : "/api/random";
+
+    return this.request(path, { method: "GET", headers: this.authHeaders(token) }, requestId);
   }
 
   authHeaders(token) {

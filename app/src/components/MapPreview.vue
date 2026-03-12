@@ -19,11 +19,20 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  mapStyle: {
+    type: String,
+    default: 'dark',
+  },
 });
 
 const mapContainer = ref(null);
 
-const BASEMAP_STYLE = 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+const BASEMAP_STYLES = {
+  city: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
+  dark: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
+  darkMatter: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+};
 
 const TRACK_SOURCE_ID = 'byerun-track-source';
 const TRACK_SEGMENT_SOURCE_ID = 'byerun-track-segment-source';
@@ -38,6 +47,10 @@ let drawVersion = 0;
 let trackTimer = null;
 let startMarker = null;
 let endMarker = null;
+
+function resolveBasemapStyle(styleKey) {
+  return BASEMAP_STYLES[styleKey] || BASEMAP_STYLES.city;
+}
 
 function stopTrackAnimation() {
   if (trackTimer) {
@@ -126,16 +139,8 @@ function ensureTrackLayer() {
       },
       paint: {
         'line-width': 5,
-        'line-opacity': 0.78,
-        'line-gradient': [
-          'interpolate',
-          ['linear'],
-          ['line-progress'],
-          0,
-          '#90caf9',
-          1,
-          '#1565c0',
-        ],
+        'line-opacity': 0.9,
+        'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, '#5eead4', 1, '#2563eb'],
       },
     });
   }
@@ -151,7 +156,7 @@ function ensureTrackLayer() {
       },
       paint: {
         'line-width': 5,
-        'line-color': '#0f4ea3',
+        'line-color': '#f59e0b',
         'line-opacity': [
           'interpolate',
           ['linear'],
@@ -328,7 +333,7 @@ async function initMap() {
 
   map = new maplibregl.Map({
     container: mapContainer.value,
-    style: BASEMAP_STYLE,
+    style: resolveBasemapStyle(props.mapStyle),
     center: DEFAULT_CENTER,
     zoom: DEFAULT_ZOOM,
     attributionControl: false,
@@ -358,6 +363,18 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => props.mapStyle,
+  async (nextStyle, prevStyle) => {
+    if (!map || nextStyle === prevStyle) return;
+
+    stopTrackAnimation();
+    map.setStyle(resolveBasemapStyle(nextStyle));
+    await new Promise((resolve) => map.once('style.load', resolve));
+    await redrawTrack();
+  },
+);
+
 onMounted(async () => {
   await initMap();
   await redrawTrack();
@@ -384,7 +401,9 @@ onBeforeUnmount(() => {
   height: 400px;
   border-radius: 8px;
   overflow: hidden;
-  background: #f0f2f5;
+  background: #1a2230;
+  border: 1px solid #1a2235;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 :deep(.custom-map-marker) {
@@ -396,18 +415,41 @@ onBeforeUnmount(() => {
   color: #fff;
   font-size: 12px;
   font-weight: 700;
-  border-radius: 4px;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-radius: 50px;
+  border: 2px solid #0b1020;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
   line-height: 1;
   text-align: center;
 }
 
 :deep(.marker-start) {
-  background: #28c76f;
+  background: #10b981;
 }
 
 :deep(.marker-end) {
-  background: #ff6b6b;
+  background: #f97316;
+}
+
+:deep(.maplibregl-ctrl-group) {
+  background: #121826;
+  border: 1px solid #1f2937;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+:deep(.maplibregl-ctrl button) {
+  background-color: transparent;
+}
+
+:deep(.maplibregl-ctrl button .maplibregl-ctrl-icon) {
+  filter: invert(92%) sepia(9%) saturate(282%) hue-rotate(185deg) brightness(106%) contrast(96%);
+}
+
+:deep(.maplibregl-ctrl-attrib) {
+  background: rgba(10, 16, 30, 0.75);
+  color: #94a3b8;
+}
+
+:deep(.maplibregl-ctrl-attrib a) {
+  color: #cbd5e1;
 }
 </style>

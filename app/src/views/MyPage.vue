@@ -1,76 +1,63 @@
 ﻿<template>
   <div class="w-full max-w-3xl mx-auto py-2 px-1 space-y-3">
-    <section class="rounded-2xl border border-gray-200 bg-white px-5 py-4">
+    <section class="rounded-2xl bg-stone-900 px-5 py-4">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div
-            class="h-11 w-11 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"
+            class="h-11 w-11 rounded-full bg-stone-800 text-slate-500 flex items-center justify-center"
           >
             <i class="ri-user-3-line text-lg"></i>
           </div>
           <div class="min-w-0">
-            <p class="text-base font-bold text-slate-900 truncate">{{ displayName }}</p>
+            <p class="text-base font-bold text-slate-400/90 truncate">{{ displayName }}</p>
             <p class="text-xs text-slate-500 truncate">{{ registerCode }}</p>
           </div>
         </div>
         <button
           type="button"
           @click="handleLogout"
-          class="shrink-0 text-sm cursor-pointer inline-flex items-center gap-2 bg-red-50 text-red-600 px-5 py-2 rounded-full font-semibold border-none transition-colors duration-200 hover:bg-red-100 hover:text-red-700"
+          class="shrink-0 text-sm cursor-pointer inline-flex items-center gap-2 bg-stone-800 text-gray-200/50 px-5 py-2 rounded-full font-semibold border-none transition-colors duration-200 hover:bg-red-100 hover:text-red-700"
         >
           <span>登出</span>
         </button>
       </div>
     </section>
 
-    <section
-      v-if="sponsorCardVisible"
-      class="rounded-2xl border border-gray-200 bg-white p-5 space-y-5"
-    >
+    <section v-if="sponsorCardVisible" class="rounded-2xl bg-stone-900 p-5 space-y-2">
       <div class="flex items-center justify-between gap-3">
         <div class="flex min-w-0 items-center gap-2">
           <i class="ri-star-smile-line text-slate-500"></i>
-          <p class="truncate text-base font-semibold text-slate-900">{{ sponsor.title }}</p>
+          <p class="truncate text-sm font-bold text-slate-400">{{ sponsor.title }}</p>
         </div>
         <div class="flex items-center gap-2">
           <a
             :href="qqGroupUrl"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors"
+            class="inline-flex w-auto items-center justify-center rounded-full text-sm text-stone-700 hover:bg-stone-800 transition-colors"
             aria-label="QQ 群"
             title="QQ 群"
           >
-            <i class="fa-brands fa-qq"></i>
-          </a>
-          <a
-            :href="githubUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition-colors"
-            aria-label="GitHub"
-            title="GitHub"
-          >
-            <i class="fa-brands fa-github"></i>
+            <i class="ri-qq-line text-base"></i>
           </a>
         </div>
       </div>
 
       <div class="space-y-3">
-        <p class="text-sm text-slate-600">{{ sponsor.desc }}</p>
+        <p class="text-sm text-slate-500">{{ sponsor.desc }}</p>
         <div class="grid grid-cols-2 gap-3">
           <button
             v-for="item in qrItems"
             :key="item.key"
             type="button"
             @click="openQrPreview(item)"
-            class="rounded-xl border border-gray-200 bg-slate-50 p-3 hover:bg-slate-100 transition-colors"
+            class="rounded-md bg-stone-800 p-3 hover:bg-stone-950/60 transition-colors"
           >
             <p class="mb-2 text-xs font-medium text-slate-600 text-center">{{ item.label }}</p>
             <img
               :src="item.url"
               :alt="item.label"
-              class="mx-auto h-32 w-32 rounded-xl bg-white object-contain"
+              class="mx-auto h-32 w-32 bg-stone-800 object-contain"
             />
           </button>
         </div>
@@ -79,7 +66,7 @@
             :href="sponsor.alipay_url"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition-colors"
+            class="inline-flex items-center gap-1.5 rounded-full border bg-stone-900 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition-colors"
           >
             <i class="ri-alipay-fill"></i>
             <span>支付宝打赏</span>
@@ -87,7 +74,7 @@
         </div>
       </div>
 
-      <div class="border-t border-gray-100 pt-4">
+      <div class="pt-4">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-1.5">
             <i class="ri-medal-fill text-slate-500"></i>
@@ -114,7 +101,7 @@
         </div>
       </div>
 
-      <div class="border-t border-gray-100 pt-4">
+      <div class="pt-4">
         <div class="flex items-center gap-1.5">
           <i class="ri-time-line text-slate-500"></i>
           <p class="text-xs uppercase tracking-[0.16em] text-slate-500">网站状态</p>
@@ -124,12 +111,12 @@
             :href="domainHref"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-1 text-sm font-semibold text-slate-800 underline-offset-4 hover:underline"
+            class="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 underline-offset-4 hover:underline"
           >
             <span class="truncate">{{ domain.domain }}</span>
             <i class="ri-external-link-line text-xs text-slate-500"></i>
           </a>
-          <p class="shrink-0 text-sm font-medium text-slate-600 tabular-nums">
+          <p class="shrink-0 text-xs font-medium text-slate-600 tabular-nums">
             剩余{{ remainingDaysText }}
           </p>
         </div>
@@ -141,11 +128,11 @@
       class="fixed inset-0 z-[1001] flex items-center justify-center bg-black/60 px-4"
       @click.self="closeQrPreview"
     >
-      <div class="relative w-full max-w-sm rounded-2xl bg-white p-4 shadow-2xl">
+      <div class="relative w-full max-w-sm rounded-2xl bg-none p-4 shadow-2xl">
         <button
           type="button"
           @click="closeQrPreview"
-          class="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+          class="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-stone-900 text-gray-100"
           aria-label="关闭预览"
         >
           <i class="ri-close-line text-base"></i>
@@ -153,7 +140,7 @@
         <img
           :src="previewQrUrl"
           alt="收款码预览"
-          class="mx-auto mt-3 max-h-[70vh] w-full rounded-xl bg-white object-contain"
+          class="mx-auto mt-3 max-h-[70vh] w-full rounded-xl bg-none object-contain"
         />
       </div>
     </div>
@@ -161,27 +148,21 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useDataStore } from '@/composables/useDataStore';
-import { AutorunClient } from '@/composables/autorun-sdk';
-import { scheduledTaskConfig, urls } from '@/utils/config';
+import { useAutorunPingMeta } from '@/composables/useAutorunPingMeta';
 
 const { userInfo, clearAllData } = useDataStore();
+const { pingMeta } = useAutorunPingMeta();
 
 const qqGroupUrl = 'https://redirect.where.nyc.mn/byerun-qqgroup';
-const githubUrl = urls.github || 'https://github.com/yanyaoli/byerun-web';
-const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
-const autorunClient = API_BASE ? new AutorunClient({ baseURL: API_BASE }) : null;
-
-const pingMeta = ref(null);
-const pingReady = ref(false);
 const previewQrUrl = ref('');
 
 const displayName = computed(() => userInfo.value?.studentName ?? '');
 const registerCode = computed(() => userInfo.value?.registerCode ?? '');
 const sponsor = computed(() => pingMeta.value?.sponsor);
 const domain = computed(() => pingMeta.value?.domain);
-const sponsorCardVisible = computed(() => pingReady.value && sponsor.value && domain.value);
+const sponsorCardVisible = computed(() => Boolean(sponsor.value && domain.value));
 const sponsorNames = computed(() => {
   if (!Array.isArray(sponsor.value?.sponsors)) return [];
   return sponsor.value.sponsors.map((item) => item?.name).filter(Boolean);
@@ -199,38 +180,6 @@ const domainHref = computed(() => {
 });
 const remainingDaysText = computed(() => `${domain.value?.remaining_days}天`);
 
-const fetchPingMeta = async () => {
-  if (!autorunClient) {
-    if (!pingReady.value) {
-      pingMeta.value = null;
-      pingReady.value = false;
-    }
-    return;
-  }
-  try {
-    const envelope = await autorunClient.ping();
-    const payload = envelope?.data;
-    if (!payload?.sponsor || !payload?.domain) {
-      if (!pingReady.value) {
-        pingMeta.value = null;
-        pingReady.value = false;
-      }
-      return;
-    }
-    pingMeta.value = payload;
-    pingReady.value = true;
-    try {
-      window.localStorage.setItem('unirun.my_page.ping_meta', JSON.stringify(payload));
-    } catch (error) {}
-  } catch (error) {
-    if (!pingReady.value) {
-      pingMeta.value = null;
-      pingReady.value = false;
-    }
-    previewQrUrl.value = '';
-  }
-};
-
 const openQrPreview = (item) => {
   if (!item?.url) return;
   previewQrUrl.value = item.url;
@@ -246,22 +195,6 @@ const handleLogout = () => {
   } catch (e) {}
   window.location.reload();
 };
-
-onMounted(() => {
-  if (typeof window !== 'undefined') {
-    try {
-      const raw = window.localStorage.getItem('unirun.my_page.ping_meta');
-      if (raw) {
-        const payload = JSON.parse(raw);
-        if (payload?.sponsor && payload?.domain) {
-          pingMeta.value = payload;
-          pingReady.value = true;
-        }
-      }
-    } catch (error) {}
-  }
-  fetchPingMeta();
-});
 </script>
 
 <style scoped>
@@ -269,8 +202,7 @@ onMounted(() => {
   position: relative;
   overflow: hidden;
   color: #7c5b18;
-  border: 1px solid #e7d086;
-  background: linear-gradient(180deg, #f9edbe 0%, #f4e1a2 100%);
+  background: linear-gradient(180deg, #f1d49e 0%, #ebd48a 100%);
   box-shadow: 0 1px 2px rgba(124, 91, 24, 0.12);
 }
 

@@ -32,13 +32,10 @@ export const appConfig = {
 export const scheduledTaskConfig = {
   apiBaseUrl: import.meta.env.DEV
     ? '/autorunserver'
-    : (import.meta.env.VITE_AUTORUN_SERVER_BASE || ''),
-  isAutomationEnabled: import.meta.env.VITE_AUTORUN_ENABLED !== 'false',
+    : import.meta.env.VITE_AUTORUN_SERVER_BASE || '',
 };
-
 
 // 外部链接
 export const urls = {
-  notice: 'https://unirun-notice.where.nyc.mn/',
   github: 'https://github.com/yanyaoli/byerun-web',
 };

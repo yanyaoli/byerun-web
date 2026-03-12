@@ -4,6 +4,7 @@ import getDeviceInfo from '@/utils/device';
 import { genSign } from '@/utils/sign.js';
 import { appConfig } from '@/utils/config.js';
 import { getSessionToken, clearAuthSessionStorage } from '@/utils/authStorage';
+import { beginApiRequest, endApiRequest } from '@/composables/useApiRequestGate';
 
 const req = axios.create({
   baseURL: appConfig.api.baseUrl,
@@ -13,6 +14,19 @@ const req = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+const REQUEST_TRACK_KEY = '__isPrimaryApiRequest';
+
+const startTrackedRequest = (config) => {
+  config[REQUEST_TRACK_KEY] = true;
+  beginApiRequest();
+  return config;
+};
+
+const finishTrackedRequest = (config) => {
+  if (!config || config[REQUEST_TRACK_KEY] !== true) return;
+  endApiRequest();
+};
 
 const clearClientSideState = () => {
   clearAuthSessionStorage();
@@ -27,19 +41,24 @@ const handleAuthFailure = () => {
   }
 };
 
-req.interceptors.request.use((config) => {
-  const token = getSessionToken();
-  if (token) config.headers.token = token;
+req.interceptors.request.use(
+  (config) => {
+    const token = getSessionToken();
+    if (token) config.headers.token = token;
 
-  const sign = genSign(config.params ?? null, config.data ?? null);
-  config.headers.sign = sign;
+    const sign = genSign(config.params ?? null, config.data ?? null);
+    config.headers.sign = sign;
 
-  return config;
-});
+    return startTrackedRequest(config);
+  },
+  (error) => Promise.reject(error),
+);
 
 // 响应拦截器
 req.interceptors.response.use(
   (response) => {
+    finishTrackedRequest(response?.config);
+
     const data = response.data;
     // 处理业务逻辑错误，如验证过期
     if (data && (data.code === 10001 || data.msg === 'not_login')) {
@@ -48,6 +67,8 @@ req.interceptors.response.use(
     return response;
   },
   (error) => {
+    finishTrackedRequest(error?.config);
+
     if (error.response && [401, 403].includes(error.response.status)) {
       handleAuthFailure();
     }
@@ -99,14 +120,7 @@ export const api = {
   },
 
   // 提交跑步记录
-  saveNewRecord: async (
-    trackPoints,
-    runDistance,
-    runTime,
-    userId,
-    recordDate,
-    yearSemester,
-  ) => {
+  saveNewRecord: async (trackPoints, runDistance, runTime, userId, recordDate, yearSemester) => {
     const device = getDeviceInfo();
     return req.post(appConfig.api.endpoints.saveNewRecord, {
       againRunStatus: '0',

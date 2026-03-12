@@ -1,9 +1,19 @@
 @import 'tailwindcss';
 
+:root {
+  --bottom-overlay-height: 0px;
+  --bottom-overlay-gap: 0px;
+  --bottom-safe-area: env(safe-area-inset-bottom, 0px);
+  --bottom-content-clearance: calc(
+    var(--bottom-overlay-height) + var(--bottom-overlay-gap) + var(--bottom-safe-area)
+  );
+}
+
 @layer base {
   * {
     transform: none;
   }
+
   button,
   input,
   textarea,
@@ -15,12 +25,23 @@
   }
 }
 
-/* 隐藏所有滚动条 */
 html,
 body {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scrollbar-gutter: stable;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 html::-webkit-scrollbar,
@@ -30,9 +51,13 @@ body::-webkit-scrollbar {
   height: 0;
 }
 
-/* 为所有可滚动元素隐藏滚动条 */
 *::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
+}
+
+.bottom-overlay-aware {
+  --local-bottom-padding: 0px;
+  padding-bottom: max(var(--local-bottom-padding), var(--bottom-content-clearance)) !important;
 }

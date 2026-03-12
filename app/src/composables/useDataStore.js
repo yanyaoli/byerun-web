@@ -24,6 +24,7 @@ const useAppStateStore = defineStore(
 
     const chatUser = ref(null);
     const chatUserId = ref(null);
+    const chatUnread = ref(false);
 
     const token = computed(() => userInfo.value?.oauthToken?.token || null);
     const userId = computed(() => userInfo.value?.userId || null);
@@ -48,6 +49,19 @@ const useAppStateStore = defineStore(
         return chatUserId.value;
       }
       return null;
+    };
+
+    const setChatUnread = (value) => {
+      chatUnread.value = value === true;
+    };
+
+    const markChatSeen = (seenAt = new Date().toISOString()) => {
+      chatUnread.value = false;
+      if (!chatUser.value || typeof chatUser.value !== 'object') return;
+      chatUser.value = {
+        ...chatUser.value,
+        last_seen_at: seenAt,
+      };
     };
 
     const resolveFailureReason = (code, status) => {
@@ -81,21 +95,19 @@ const useAppStateStore = defineStore(
             api.getJoinNum(sId, stId).catch(() => null),
           ]);
 
+          let runInfoRes = null;
+
           if (standardRes?.data?.code === 10000) {
             runStandard.value = standardRes.data.response;
             const semesterFromStandard = runStandard.value?.semesterYear;
             const now = new Date();
             const finalSemester =
               semesterFromStandard || `${now.getFullYear()}${now.getMonth() + 1 < 8 ? '1' : '2'}`;
+            runInfoRes = await api.getRunInfo(Number(uId), finalSemester).catch(() => null);
+          }
 
-            api
-              .getRunInfo(Number(uId), finalSemester)
-              .then((runRes) => {
-                if (runRes.data.code === 10000) {
-                  runInfo.value = runRes.data.response;
-                }
-              })
-              .catch(() => {});
+          if (runInfoRes?.data?.code === 10000) {
+            runInfo.value = runInfoRes.data.response;
           }
 
           if (activityRes?.data?.code === 10000) {
@@ -132,6 +144,7 @@ const useAppStateStore = defineStore(
       runStandard.value = null;
       activityInfo.value = null;
       setCachedChatUser(null);
+      chatUnread.value = false;
     };
 
     watch(
@@ -156,12 +169,15 @@ const useAppStateStore = defineStore(
       savedPhone,
       chatUser,
       chatUserId,
+      chatUnread,
       token,
       userId,
       studentId,
       schoolId,
       setCachedChatUser,
       getCachedChatUserId,
+      setChatUnread,
+      markChatSeen,
       fetchUserData,
       clearAllData,
     };
@@ -194,6 +210,8 @@ export const useDataStore = () => {
     ...storeToRefs(store),
     setCachedChatUser: store.setCachedChatUser,
     getCachedChatUserId: store.getCachedChatUserId,
+    setChatUnread: store.setChatUnread,
+    markChatSeen: store.markChatSeen,
     fetchUserData: store.fetchUserData,
     clearAllData: store.clearAllData,
   };

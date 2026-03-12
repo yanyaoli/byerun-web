@@ -1,9 +1,9 @@
 // 动态导入所有地图文件
-const mapModules = import.meta.glob("../assets/maps/*.json", { eager: true });
+const mapModules = import.meta.glob('../assets/maps/*.json', { eager: true });
 
-// 地图数据集合：键为地图名称，值为该地图的坐标数组（格式：["经度,纬度", ...]）
+// 地图数据集合：键为地图ID，值为该地图的坐标数组（格式：["经度,纬度", ...]）
 let mapDataCollection = {
-  default: null, // 默认地图将在初始化时设置
+  default: [], // 默认地图在初始化时设置
 };
 
 // 存储所有可用地图ID的数组
@@ -13,6 +13,21 @@ let availableMapIds = [];
 let mapNameCollection = {};
 let hasLoadedMapFiles = false;
 let mapFilesLoadingPromise = null;
+
+function parseMapModule(moduleData) {
+  const mapFileData = moduleData?.default ?? moduleData;
+  if (!mapFileData || typeof mapFileData !== 'object') return null;
+
+  const mapId = String(mapFileData.mapId || '').trim();
+  const mapData = mapFileData.mapData;
+  if (!mapId || !Array.isArray(mapData)) return null;
+
+  return {
+    mapId,
+    mapName: String(mapFileData.mapName || mapId).trim() || mapId,
+    mapData,
+  };
+}
 
 /**
  * 动态加载地图文件
@@ -35,12 +50,12 @@ export async function loadMapFiles(forceReload = false) {
 
       // 从动态导入的地图模块加载数据
       Object.keys(mapModules).forEach((modulePath) => {
-        const mapFileData = mapModules[modulePath].default;
-        if (!mapFileData?.mapId || !Array.isArray(mapFileData?.mapData)) return;
+        const parsed = parseMapModule(mapModules[modulePath]);
+        if (!parsed) return;
 
-        mapDataCollection[mapFileData.mapId] = mapFileData.mapData;
-        availableMapIds.push(mapFileData.mapId);
-        mapNameCollection[mapFileData.mapId] = mapFileData.mapName || mapFileData.mapId;
+        mapDataCollection[parsed.mapId] = parsed.mapData;
+        availableMapIds.push(parsed.mapId);
+        mapNameCollection[parsed.mapId] = parsed.mapName;
       });
 
       // 设置默认地图
@@ -48,15 +63,18 @@ export async function loadMapFiles(forceReload = false) {
         const firstMapId = availableMapIds[0];
         mapDataCollection.default = mapDataCollection[firstMapId];
       } else {
-        console.warn("未找到任何地图文件！");
+        console.warn('未找到任何地图文件！');
         mapDataCollection.default = [];
       }
 
       hasLoadedMapFiles = true;
       return [...availableMapIds];
     } catch (error) {
-      console.error("加载地图文件时发生错误:", error);
-      mapDataCollection.default = [];
+      console.error('加载地图文件时发生错误:', error);
+      mapDataCollection = { default: [] };
+      availableMapIds = [];
+      mapNameCollection = {};
+      hasLoadedMapFiles = false;
       return [];
     } finally {
       mapFilesLoadingPromise = null;
@@ -76,11 +94,12 @@ export function getAvailableMapIds() {
 
 /**
  * 获取指定地图的坐标数据
- * @param mapChoice 地图名称（可选，默认值为"default"）
+ * @param mapChoice 地图ID（可选，默认值为"default"）
  * @returns 对应地图的坐标数组（格式：["经度,纬度", ...]），若指定地图不存在则返回默认地图数据
  */
-export function getMapData(mapChoice = "default") {
-  return mapDataCollection[mapChoice] || mapDataCollection["default"];
+export function getMapData(mapChoice = 'default') {
+  const mapId = String(mapChoice || 'default').trim() || 'default';
+  return mapDataCollection[mapId] || mapDataCollection.default || [];
 }
 
 /**
@@ -103,32 +122,10 @@ export function getDistance(start, end) {
   // 哈弗辛公式（Haversine formula）计算两点间距离
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c; // 返回最终距离（米）
-}
-
-
-/**
- * 轨迹生成算法
- * @param distance 目标跑步距离（单位：米）
- * @param mapChoice 地图名称（可选，默认值为"default"）
- * @param durationMinutes 跑步总时长（分钟，可选，缺省时按 7-9 分钟/公里估算）
- * @returns 轨迹点JSON字符串（格式：["经度-纬度-时间戳-定位精度", ...]）
- */
-/**
- * 获取30分钟前的格式化时间
- * @returns 格式化时间字符串（格式：YYYY-MM-DD HH:mm:ss）
- */
-export function getDate() {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() - 30); // 将当前时间减去30分钟
-  // 转换为ISO格式（如"2024-05-20T14:30:00.000Z"），替换"T"为空格，截取前19位（去掉毫秒和时区）
-  return now.toISOString().replace("T", " ").substring(0, 19);
 }
 
 /**

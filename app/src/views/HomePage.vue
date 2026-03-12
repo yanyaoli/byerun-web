@@ -5,9 +5,9 @@
     <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative bg-transparent">
       <main
         v-show="activeKey !== 'chat'"
-        class="main-scroll-area relative overflow-y-auto w-full box-border px-4"
-        :style="{ paddingTop: headerHeight + 'px', paddingBottom: bottomBarHeight + 'px' }"
         ref="mainScrollRef"
+        class="main-scroll-area bottom-overlay-aware relative overflow-y-auto w-full box-border px-4"
+        :style="{ paddingTop: `${headerHeight}px` }"
         @scroll.passive="handleMainScroll"
       >
         <keep-alive>
@@ -15,7 +15,7 @@
           <SubmitRun
             v-else-if="activeKey === 'submit'"
             :key="'submit'"
-            @submitted="fetchUserData"
+            @submitted="handleRunSubmitted"
           />
           <MyPage v-else-if="activeKey === 'my'" :key="'my'" />
         </keep-alive>
@@ -30,10 +30,10 @@
 
     <BottomTabBar
       v-show="activeKey !== 'chat'"
-      :active="activeKey"
-      @update:active="setActiveKey"
-      class="fixed inset-x-4 bottom-4 z-50 max-w-3xl mx-auto"
       ref="bottomBarRef"
+      :active="activeKey"
+      :chat-unread="chatUnread"
+      @update:active="setActiveKey"
     />
   </div>
 </template>
@@ -47,19 +47,36 @@ import AppHeader from '@/components/layout/AppHeader.vue';
 import BottomTabBar from '@/components/layout/BottomTabBar.vue';
 import MyPage from '@/views/MyPage.vue';
 import { useDataStore } from '@/composables/useDataStore';
+import { useApiRequestGate } from '@/composables/useApiRequestGate';
+import { preloadAutorunPingMeta } from '@/composables/useAutorunPingMeta';
+import { checkHasUnreadMessages } from '@/composables/useMessageReminder';
 
-const { fetchUserData, activeTab, userInfo } = useDataStore();
+const { fetchUserData, activeTab, userInfo, token, chatUnread, setChatUnread, markChatSeen } =
+  useDataStore();
+const { waitForIdle } = useApiRequestGate();
 const rootShowMessage = inject('showMessage', null);
+const setBottomOverlay = inject('setBottomOverlay', null);
+const setBottomOverlayHeight = inject('setBottomOverlayHeight', () => {});
 
 const appHeaderRef = ref(null);
 const bottomBarRef = ref(null);
 const mainScrollRef = ref(null);
 const HEADER_RESERVED_SPACE = 56;
+const DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT = 96;
+const BOTTOM_BAR_CLEARANCE_GAP = 12;
 const headerHeight = ref(HEADER_RESERVED_SPACE);
-const bottomBarHeight = ref(96);
+const bottomBarOverlayHeight = ref(DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT);
 const headerCompact = ref(false);
 const activeKey = ref(activeTab.value || 'submit');
 const chatMounted = ref(activeKey.value === 'chat');
+
+function applyBottomOverlay(height = 0, gap = 0) {
+  if (typeof setBottomOverlay === 'function') {
+    setBottomOverlay({ height, gap });
+    return;
+  }
+  setBottomOverlayHeight(height);
+}
 
 function updateHeaderCompact(top) {
   const next = Number(top) > 6;
@@ -82,10 +99,15 @@ const setActiveKey = (key) => {
 function measureHeights() {
   const bottomEl = bottomBarRef.value && (bottomBarRef.value.$el || bottomBarRef.value);
   headerHeight.value = HEADER_RESERVED_SPACE;
-  if (bottomEl && bottomEl.getBoundingClientRect) {
-    const r = bottomEl.getBoundingClientRect();
-    const bottomGap = Math.max(0, window.innerHeight - (r.bottom || window.innerHeight));
-    bottomBarHeight.value = (r.height || 96) + bottomGap;
+
+  if (bottomEl?.getBoundingClientRect) {
+    const rect = bottomEl.getBoundingClientRect();
+    const bottomGap = Math.max(0, window.innerHeight - (rect.bottom || window.innerHeight));
+    bottomBarOverlayHeight.value = (rect.height || DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT) + bottomGap;
+  }
+
+  if (activeKey.value !== 'chat') {
+    applyBottomOverlay(bottomBarOverlayHeight.value, BOTTOM_BAR_CLEARANCE_GAP);
   }
 }
 
@@ -99,18 +121,36 @@ const showMessage = (message, type = 'info') => {
   }
 };
 
-const checkTokenAndRefreshUserData = async () => {
-  if (!userInfo.value) return;
+const refreshUserData = async (options = { background: true }) => {
+  if (!userInfo.value) return true;
 
-  const result = await fetchUserData({ background: true });
-  if (result?.ok) return;
+  const result = await fetchUserData(options);
+  if (result?.ok) return true;
 
   if (result?.reason === 'network_error') {
     showMessage('用户数据刷新失败', 'warning');
-    return;
+    return false;
   }
 
   showMessage(result?.message || '登录状态校验失败', 'error');
+  return false;
+};
+
+const syncUnreadReminder = async () => {
+  if (activeKey.value === 'chat') return;
+  const unread = await checkHasUnreadMessages(token.value || '');
+  setChatUnread(unread);
+};
+
+const initializePage = async () => {
+  await refreshUserData({ background: false });
+  await waitForIdle();
+  await preloadAutorunPingMeta();
+  await syncUnreadReminder();
+};
+
+const handleRunSubmitted = async () => {
+  await refreshUserData({ background: true });
 };
 
 provide('goBack', () => setActiveKey('submit'));
@@ -118,11 +158,14 @@ provide('showMessage', showMessage);
 
 watch(
   activeKey,
-  async (newKey, oldKey) => {
+  async (newKey) => {
     if (newKey === 'chat') {
       chatMounted.value = true;
+      markChatSeen();
+      applyBottomOverlay(0, 0);
       return;
     }
+
     await nextTick();
     updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
     measureHeights();
@@ -131,21 +174,24 @@ watch(
 );
 
 onMounted(() => {
-  if (userInfo.value) {
-    checkTokenAndRefreshUserData().catch(() => {
-      showMessage('用户数据刷新失败', 'warning');
-    });
+  if (activeKey.value === 'chat') {
+    markChatSeen();
+    applyBottomOverlay(0, 0);
   }
+
+  initializePage().catch(() => {
+    showMessage('用户数据刷新失败', 'warning');
+  });
+
   measureHeights();
   window.addEventListener('resize', measureHeights);
   nextTick(() => {
-    try {
-      updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
-    } catch (e) {}
+    updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
   });
 });
 
 onUnmounted(() => {
+  applyBottomOverlay(0, 0);
   window.removeEventListener('resize', measureHeights);
 });
 </script>

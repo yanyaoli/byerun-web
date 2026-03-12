@@ -1,24 +1,27 @@
 <template>
-  <div class="min-h-screen flex flex-col justify-center items-center relative">
-    <div class="min-w-[340px] p-6 border border-dashed border-gray-600 rounded-lg">
+  <div
+    class="auth-page h-full min-h-0 w-full flex flex-col justify-center items-center relative px-4"
+  >
+    <div class="w-full max-w-[360px] p-6 border border-dashed border-gray-600 rounded-lg">
       <div class="flex justify-between items-center mb-4">
         <div class="h-[24px] w-[24px]">
           <img
             src="../assets/logo.png"
             alt="App Logo"
-            class="w-full h-full object-contain brightness-10 opacity-80 hover:brightness-10 hover:opacity-90"
+            class="w-full h-full object-contain invert brightness-0 opacity-80 hover:brightness-0 hover:opacity-90"
           />
         </div>
         <span class="text-sm text-gray-600 font-medium font-mono">UNORUN</span>
       </div>
       <div class="border border-dashed border-gray-600 mb-4"></div>
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" @focusout="handleInputBlur">
         <div class="mb-4">
           <label class="block text-sm text-gray-600 mb-2">手机号</label>
           <input
             v-model="phone"
             placeholder="请输入手机号"
             required
+            @blur="handleInputBlur"
             class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
           />
         </div>
@@ -29,6 +32,7 @@
             type="password"
             placeholder="请设置新密码"
             required
+            @blur="handleInputBlur"
             class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
           />
         </div>
@@ -39,13 +43,14 @@
               v-model="code"
               placeholder="请输入短信验证码"
               required
+              @blur="handleInputBlur"
               class="flex-1 p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
             />
             <button
               type="button"
               @click="sendCode"
               :disabled="sending"
-              class="px-3 py-2 hover:text-black/90 text-sm text-black/80 font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              class="px-3 py-2 bg-stone-900 text-gray-300 rounded-md hover:text-black/90 text-sm text-black/80 font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               <span v-if="!sending">发送验证码</span>
               <div
@@ -62,6 +67,7 @@
             type="password"
             placeholder="请输入密码"
             required
+            @blur="handleInputBlur"
             class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
           />
         </div>
@@ -69,10 +75,10 @@
           <label v-if="mode === 'login'" class="flex items-center space-x-2 cursor-pointer group">
             <input type="checkbox" v-model="rememberMe" class="hidden" />
             <div
-              class="w-4 h-4 border border-gray-600 rounded flex items-center justify-center transition"
-              :class="{ 'bg-black border-black': rememberMe }"
+              class="w-4 h-4 border border-slate-300 rounded flex items-center justify-center transition-colors"
+              :class="{ 'bg-slate-900 border-slate-900': rememberMe }"
             >
-              <i v-if="rememberMe" class="fa-solid fa-check text-[10px] text-white"></i>
+              <i v-if="rememberMe" class="ri-check-line text-[10px] text-white"></i>
             </div>
             <span class="text-xs text-gray-600 group-hover:text-gray-800 transition">记住我</span>
           </label>
@@ -88,7 +94,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-black/80 hover:bg-black/90 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full bg-stone-900 hover:bg-black/90 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="!loading">{{ mode === 'login' ? '登 录' : '重置密码' }}</span>
             <div
@@ -111,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, inject, watch, onMounted } from 'vue';
+import { ref, inject, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '@/composables/useApi';
 import { useDataStore } from '@/composables/useDataStore';
@@ -127,11 +133,83 @@ const code = ref('');
 const rememberMe = ref(!!rememberLogin.value);
 const loading = ref(false);
 const sending = ref(false);
+const keyboardInset = ref(0);
+const viewportBaseHeight = ref(0);
+let keyboardWasVisible = false;
+let keyboardMeasureTimer = 0;
+
+function restoreViewportPosition() {
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
+function getViewportBaseHeight() {
+  const cssHeight = Number.parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--app-vh'),
+  );
+  if (Number.isFinite(cssHeight) && cssHeight > 0) return cssHeight;
+  return window.innerHeight || document.documentElement?.clientHeight || 0;
+}
+
+function syncViewportBaseHeight() {
+  viewportBaseHeight.value = getViewportBaseHeight();
+}
+
+function measureKeyboardInset() {
+  const viewport = window.visualViewport;
+  const layoutHeight = viewportBaseHeight.value || getViewportBaseHeight();
+  const visibleHeight = Math.max(0, viewport?.height || layoutHeight);
+  const offsetTop = Math.max(0, viewport?.offsetTop || 0);
+  const inset = Math.max(0, layoutHeight - (visibleHeight + offsetTop));
+  keyboardInset.value = inset;
+
+  if (keyboardWasVisible && inset <= 0) {
+    restoreViewportPosition();
+  }
+  keyboardWasVisible = inset > 0;
+}
+
+function scheduleKeyboardMeasure() {
+  if (keyboardMeasureTimer) clearTimeout(keyboardMeasureTimer);
+  keyboardMeasureTimer = window.setTimeout(() => {
+    syncViewportBaseHeight();
+    measureKeyboardInset();
+    keyboardMeasureTimer = 0;
+  }, 60);
+}
+
+function handleInputBlur() {
+  window.setTimeout(() => {
+    syncViewportBaseHeight();
+    measureKeyboardInset();
+    if (keyboardInset.value <= 0) {
+      restoreViewportPosition();
+    }
+  }, 120);
+}
 
 onMounted(() => {
   if (rememberMe.value) {
     phone.value = savedPhone.value || '';
   }
+  syncViewportBaseHeight();
+  measureKeyboardInset();
+  window.addEventListener('resize', scheduleKeyboardMeasure);
+  window.addEventListener('orientationchange', scheduleKeyboardMeasure);
+  window.visualViewport?.addEventListener('resize', scheduleKeyboardMeasure);
+  window.visualViewport?.addEventListener('scroll', scheduleKeyboardMeasure);
+});
+
+onUnmounted(() => {
+  if (keyboardMeasureTimer) {
+    clearTimeout(keyboardMeasureTimer);
+    keyboardMeasureTimer = 0;
+  }
+  window.removeEventListener('resize', scheduleKeyboardMeasure);
+  window.removeEventListener('orientationchange', scheduleKeyboardMeasure);
+  window.visualViewport?.removeEventListener('resize', scheduleKeyboardMeasure);
+  window.visualViewport?.removeEventListener('scroll', scheduleKeyboardMeasure);
 });
 
 watch(rememberMe, (val) => {
