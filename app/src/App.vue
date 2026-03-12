@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { ref, provide } from 'vue';
+import { ref, provide, onMounted, onUnmounted } from 'vue';
 import Message from './components/Message.vue';
 
 const messageRef = ref(null);
