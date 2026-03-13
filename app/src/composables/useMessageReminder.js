@@ -19,7 +19,8 @@ const getCachedLastSeenAt = () => {
   const raw = readStorageValue('local', STORAGE_KEYS.LOCAL.APP_STATE);
   if (!raw) return '';
   try {
-    return JSON.parse(raw)?.chatUser?.last_seen_at || '';
+    const state = JSON.parse(raw) || {};
+    return state?.chatLastSeenAt || state?.chatUser?.last_seen_at || '';
   } catch (error) {
     return '';
   }

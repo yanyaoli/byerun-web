@@ -1,14 +1,5 @@
 @import 'tailwindcss';
 
-:root {
-  --bottom-overlay-height: 0px;
-  --bottom-overlay-gap: 0px;
-  --bottom-safe-area: env(safe-area-inset-bottom, 0px);
-  --bottom-content-clearance: calc(
-    var(--bottom-overlay-height) + var(--bottom-overlay-gap) + var(--bottom-safe-area)
-  );
-}
-
 @layer base {
   * {
     transform: none;
@@ -55,9 +46,4 @@ body::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
-}
-
-.bottom-overlay-aware {
-  --local-bottom-padding: 0px;
-  padding-bottom: max(var(--local-bottom-padding), var(--bottom-content-clearance)) !important;
 }

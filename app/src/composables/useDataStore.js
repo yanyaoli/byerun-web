@@ -25,21 +25,32 @@ const useAppStateStore = defineStore(
     const chatUser = ref(null);
     const chatUserId = ref(null);
     const chatUnread = ref(false);
+    const chatLastSeenAt = ref('');
 
     const token = computed(() => userInfo.value?.oauthToken?.token || null);
     const userId = computed(() => userInfo.value?.userId || null);
     const studentId = computed(() => userInfo.value?.studentId || null);
     const schoolId = computed(() => userInfo.value?.schoolId || null);
+    const parseTimestamp = (value) => {
+      const timestamp = Date.parse(value || '');
+      return Number.isFinite(timestamp) ? timestamp : 0;
+    };
 
     const setCachedChatUser = (user) => {
       if (!user || typeof user !== 'object') {
         chatUser.value = null;
         chatUserId.value = null;
+        chatLastSeenAt.value = '';
         return;
       }
       chatUser.value = user;
       chatUserId.value =
         user.user_id !== undefined && user.user_id !== null ? String(user.user_id) : null;
+      const userSeenAt = String(user.last_seen_at || '').trim();
+      if (!userSeenAt) return;
+      if (parseTimestamp(userSeenAt) > parseTimestamp(chatLastSeenAt.value)) {
+        chatLastSeenAt.value = userSeenAt;
+      }
     };
 
     const getCachedChatUserId = () => {
@@ -56,11 +67,13 @@ const useAppStateStore = defineStore(
     };
 
     const markChatSeen = (seenAt = new Date().toISOString()) => {
+      const normalizedSeenAt = String(seenAt || '').trim() || new Date().toISOString();
       chatUnread.value = false;
+      chatLastSeenAt.value = normalizedSeenAt;
       if (!chatUser.value || typeof chatUser.value !== 'object') return;
       chatUser.value = {
         ...chatUser.value,
-        last_seen_at: seenAt,
+        last_seen_at: normalizedSeenAt,
       };
     };
 
@@ -145,6 +158,7 @@ const useAppStateStore = defineStore(
       activityInfo.value = null;
       setCachedChatUser(null);
       chatUnread.value = false;
+      chatLastSeenAt.value = '';
     };
 
     watch(
@@ -170,6 +184,7 @@ const useAppStateStore = defineStore(
       chatUser,
       chatUserId,
       chatUnread,
+      chatLastSeenAt,
       token,
       userId,
       studentId,
@@ -199,6 +214,7 @@ const useAppStateStore = defineStore(
         'savedPhone',
         'chatUser',
         'chatUserId',
+        'chatLastSeenAt',
       ],
     },
   },

@@ -1,13 +1,16 @@
 <template>
-  <div class="h-screen flex flex-col bg-transparent overflow-hidden">
+  <div class="h-full min-h-0 flex flex-col bg-transparent overflow-hidden">
     <AppHeader v-show="activeKey !== 'chat'" ref="appHeaderRef" :scrolled="headerCompact" />
 
     <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative bg-transparent">
       <main
         v-show="activeKey !== 'chat'"
         ref="mainScrollRef"
-        class="main-scroll-area bottom-overlay-aware relative overflow-y-auto w-full box-border px-4"
-        :style="{ paddingTop: `${headerHeight}px` }"
+        class="main-scroll-area relative overflow-y-auto w-full box-border px-4"
+        :style="{
+          paddingTop: `${headerHeight}px`,
+          paddingBottom: `${bottomBarOverlayHeight + BOTTOM_BAR_CLEARANCE_GAP}px`,
+        }"
         @scroll.passive="handleMainScroll"
       >
         <keep-alive>
@@ -50,13 +53,12 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useApiRequestGate } from '@/composables/useApiRequestGate';
 import { preloadAutorunPingMeta } from '@/composables/useAutorunPingMeta';
 import { checkHasUnreadMessages } from '@/composables/useMessageReminder';
+import { getViewportMetrics } from '@/utils/viewport';
 
 const { fetchUserData, activeTab, userInfo, token, chatUnread, setChatUnread, markChatSeen } =
   useDataStore();
 const { waitForIdle } = useApiRequestGate();
 const rootShowMessage = inject('showMessage', null);
-const setBottomOverlay = inject('setBottomOverlay', null);
-const setBottomOverlayHeight = inject('setBottomOverlayHeight', () => {});
 
 const appHeaderRef = ref(null);
 const bottomBarRef = ref(null);
@@ -69,14 +71,7 @@ const bottomBarOverlayHeight = ref(DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT);
 const headerCompact = ref(false);
 const activeKey = ref(activeTab.value || 'submit');
 const chatMounted = ref(activeKey.value === 'chat');
-
-function applyBottomOverlay(height = 0, gap = 0) {
-  if (typeof setBottomOverlay === 'function') {
-    setBottomOverlay({ height, gap });
-    return;
-  }
-  setBottomOverlayHeight(height);
-}
+let homeMeasureFrame = 0;
 
 function updateHeaderCompact(top) {
   const next = Number(top) > 6;
@@ -102,13 +97,18 @@ function measureHeights() {
 
   if (bottomEl?.getBoundingClientRect) {
     const rect = bottomEl.getBoundingClientRect();
-    const bottomGap = Math.max(0, window.innerHeight - (rect.bottom || window.innerHeight));
-    bottomBarOverlayHeight.value = (rect.height || DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT) + bottomGap;
+    const { visibleBottom } = getViewportMetrics();
+    const overlayHeight = Math.max(0, Math.ceil(visibleBottom - rect.top));
+    bottomBarOverlayHeight.value = overlayHeight || DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT;
   }
+}
 
-  if (activeKey.value !== 'chat') {
-    applyBottomOverlay(bottomBarOverlayHeight.value, BOTTOM_BAR_CLEARANCE_GAP);
-  }
+function scheduleMeasureHeights() {
+  if (homeMeasureFrame) cancelAnimationFrame(homeMeasureFrame);
+  homeMeasureFrame = requestAnimationFrame(() => {
+    measureHeights();
+    homeMeasureFrame = 0;
+  });
 }
 
 const showMessage = (message, type = 'info') => {
@@ -162,13 +162,12 @@ watch(
     if (newKey === 'chat') {
       chatMounted.value = true;
       markChatSeen();
-      applyBottomOverlay(0, 0);
       return;
     }
 
     await nextTick();
     updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
-    measureHeights();
+    scheduleMeasureHeights();
   },
   { flush: 'post' },
 );
@@ -176,23 +175,31 @@ watch(
 onMounted(() => {
   if (activeKey.value === 'chat') {
     markChatSeen();
-    applyBottomOverlay(0, 0);
   }
 
   initializePage().catch(() => {
     showMessage('用户数据刷新失败', 'warning');
   });
 
-  measureHeights();
-  window.addEventListener('resize', measureHeights);
+  scheduleMeasureHeights();
+  window.addEventListener('resize', scheduleMeasureHeights);
+  window.addEventListener('orientationchange', scheduleMeasureHeights);
+  window.visualViewport?.addEventListener('resize', scheduleMeasureHeights);
+  window.visualViewport?.addEventListener('scroll', scheduleMeasureHeights);
   nextTick(() => {
     updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
   });
 });
 
 onUnmounted(() => {
-  applyBottomOverlay(0, 0);
-  window.removeEventListener('resize', measureHeights);
+  window.removeEventListener('resize', scheduleMeasureHeights);
+  window.removeEventListener('orientationchange', scheduleMeasureHeights);
+  window.visualViewport?.removeEventListener('resize', scheduleMeasureHeights);
+  window.visualViewport?.removeEventListener('scroll', scheduleMeasureHeights);
+  if (homeMeasureFrame) {
+    cancelAnimationFrame(homeMeasureFrame);
+    homeMeasureFrame = 0;
+  }
 });
 </script>
 

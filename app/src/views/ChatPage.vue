@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-full max-w-[480px] mx-auto overflow-x-hidden">
+  <div class="w-full h-full min-h-0 max-w-[480px] mx-auto overflow-x-hidden">
     <div
       class="chat-section h-full min-h-0 flex flex-col w-full max-w-full relative overflow-hidden bg-transparent transition-all duration-300"
     >
@@ -42,8 +42,11 @@
       <!-- 消息容器 -->
       <div
         ref="messagesContainer"
-        class="bottom-overlay-aware flex-1 max-w-full bg-stone-950 overflow-y-auto overflow-x-hidden overscroll-y-none px-4 space-y-4 relative"
-        :style="{ paddingTop: `${messageListPaddingTop}px` }"
+        class="flex-1 max-w-full bg-stone-950 overflow-y-auto overflow-x-hidden overscroll-y-none px-4 space-y-4 relative"
+        :style="{
+          paddingTop: `${messageListPaddingTop}px`,
+          paddingBottom: `${messageBottomInset}px`,
+        }"
       >
         <!-- 消息列表 -->
         <template v-if="messages.length > 0 || !loadingMessages">
@@ -719,14 +722,13 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import emojiGroups from '@/assets/data/emojis.json';
 import stickerConfig from '@/assets/data/stickers.json';
 import { normalizeAvatarUrl, renderContent, getEmojiUrl, formatTime } from '@/utils/chat';
+import { getViewportMetrics, restoreViewportPosition } from '@/utils/viewport';
 import { useDataStore } from '@/composables/useDataStore';
 
 // ==================== 依赖注入 ====================
 const showMessage = inject('showMessage');
 const setLayoutHidden = inject('setLayoutHidden', () => {});
 const goBack = inject('goBack', null);
-const setBottomOverlay = inject('setBottomOverlay', null);
-const setBottomOverlayHeight = inject('setBottomOverlayHeight', () => {});
 const {
   token,
   userInfo,
@@ -734,6 +736,7 @@ const {
   chatUserId,
   setCachedChatUser,
   getCachedChatUserId,
+  markChatSeen,
   clearAllData,
 } = useDataStore();
 
@@ -763,8 +766,9 @@ const showEmojiPicker = ref(false);
 const showPreviewBubble = ref(false);
 const SINGLE_MESSAGE_GAP_PX = 16;
 const COMPOSER_BASE_BOTTOM_PX = 16;
+const DEFAULT_MESSAGE_BOTTOM_INSET = 120;
 const messageListPaddingTop = ref(68);
-const currentOverlayHeight = ref(0);
+const messageBottomInset = ref(DEFAULT_MESSAGE_BOTTOM_INSET);
 const composerBottomOffset = ref(COMPOSER_BASE_BOTTOM_PX);
 
 // 输入相关
@@ -827,27 +831,13 @@ const getToken = () => token.value || '';
 
 const hasToken = () => !!getToken();
 
-function applyBottomOverlay(height = 0, gap = 0) {
-  if (typeof setBottomOverlay === 'function') {
-    setBottomOverlay({ height, gap });
-    return;
-  }
-  setBottomOverlayHeight(height);
-}
-
 function measureFloatingLayout() {
-  const viewport = window.visualViewport;
-  const layoutHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
-  const visibleHeight = Math.max(0, viewport?.height || layoutHeight);
-  const offsetTop = Math.max(0, viewport?.offsetTop || 0);
-  const keyboardInset = Math.max(0, layoutHeight - (visibleHeight + offsetTop));
+  const { visibleBottom, keyboardInset } = getViewportMetrics();
   const keyboardVisible = keyboardInset > 0;
 
   composerBottomOffset.value = COMPOSER_BASE_BOTTOM_PX + keyboardInset;
   if (keyboardWasVisible && !keyboardVisible) {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    restoreViewportPosition();
   }
   keyboardWasVisible = keyboardVisible;
 
@@ -873,15 +863,14 @@ function measureFloatingLayout() {
     composerRect?.top ?? Number.POSITIVE_INFINITY,
   );
   if (Number.isFinite(anchorTop)) {
-    const viewportBottom = Math.min(
-      messageRect?.bottom ?? Number.POSITIVE_INFINITY,
-      offsetTop + visibleHeight,
-      layoutHeight,
-    );
+    const viewportBottom = Math.min(messageRect?.bottom ?? Number.POSITIVE_INFINITY, visibleBottom);
     const overlayHeight = Math.max(0, Math.ceil(viewportBottom - anchorTop));
-    const overlayChanged = Math.abs(overlayHeight - currentOverlayHeight.value) > 0.5;
-    currentOverlayHeight.value = overlayHeight;
-    applyBottomOverlay(overlayHeight, SINGLE_MESSAGE_GAP_PX);
+    const nextBottomInset = Math.max(
+      SINGLE_MESSAGE_GAP_PX,
+      Math.ceil(overlayHeight + SINGLE_MESSAGE_GAP_PX),
+    );
+    const overlayChanged = Math.abs(nextBottomInset - messageBottomInset.value) > 0.5;
+    messageBottomInset.value = nextBottomInset;
 
     // Keep the latest message above the whole composer shell (not only the input line).
     if (overlayChanged && wasNearBottom) {
@@ -892,27 +881,18 @@ function measureFloatingLayout() {
     return;
   }
 
-  if (currentOverlayHeight.value !== 0) {
-    currentOverlayHeight.value = 0;
-  }
-  applyBottomOverlay(0, 0);
+  messageBottomInset.value = DEFAULT_MESSAGE_BOTTOM_INSET;
 }
 
 function handleComposerBlur() {
   saveRange();
   setTimeout(() => {
-    const viewport = window.visualViewport;
-    const layoutHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
-    const visibleHeight = Math.max(0, viewport?.height || layoutHeight);
-    const offsetTop = Math.max(0, viewport?.offsetTop || 0);
-    const keyboardInset = Math.max(0, layoutHeight - (visibleHeight + offsetTop));
+    const { keyboardInset } = getViewportMetrics();
 
     if (keyboardInset <= 0) {
       keyboardWasVisible = false;
       composerBottomOffset.value = COMPOSER_BASE_BOTTOM_PX;
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
+      restoreViewportPosition();
     }
     scheduleFloatingLayoutMeasure();
   }, 120);
@@ -1234,6 +1214,12 @@ function handleApiError(e, defaultMsg) {
 
 // ==================== API 调用 ====================
 
+function getLatestMessageSeenAt(messageList = []) {
+  const latest = messageList[messageList.length - 1];
+  const createdAt = String(latest?.created_at || '').trim();
+  return createdAt || new Date().toISOString();
+}
+
 async function fetchUser() {
   try {
     const data = await client.getProfile();
@@ -1263,6 +1249,7 @@ async function fetchMessages(isSilent = false) {
     messages.value = [...msgs];
     hasNext.value = data.hasNext ?? msgs.length === size;
     currentPage.value = 1;
+    markChatSeen(getLatestMessageSeenAt(msgs));
 
     loadingMessages.value = false;
     await nextTick();
@@ -1930,11 +1917,13 @@ const onMessage = (msg) => {
   const tempIdx = findMatchingTempIndex(msg);
   if (tempIdx !== -1) {
     messages.value.splice(tempIdx, 1, { ...msg, user: msg.user || user.value });
+    markChatSeen(String(msg.created_at || '').trim() || new Date().toISOString());
     nextTick(() => scrollToBottom());
     return;
   }
 
   messages.value.push(msg);
+  markChatSeen(String(msg.created_at || '').trim() || new Date().toISOString());
   nextTick(() => scrollToBottom());
 };
 
@@ -1998,7 +1987,6 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  applyBottomOverlay(0, 0);
   unbindMessageScrollLock();
   window.removeEventListener('resize', scheduleFloatingLayoutMeasure);
   window.removeEventListener('orientationchange', scheduleFloatingLayoutMeasure);
