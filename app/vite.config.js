@@ -4,7 +4,6 @@ import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
-  // 根据当前工作目录中的 mode（development/production）加载 .env 文件
   const env = loadEnv(mode, process.cwd());
 
   return {
@@ -14,6 +13,9 @@ export default defineConfig(({ mode }) => {
         '@': resolve(__dirname, 'src'),
       },
     },
+    optimizeDeps: {
+      include: ['leaflet'],
+    },
     server: {
       hot: true,
       host: '0.0.0.0',
@@ -21,7 +23,6 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       allowedHosts: 'all',
       cors: true,
-
       proxy: {
         '/devproxy': {
           target: 'https://run-lb.tanmasports.com/v1',
@@ -29,9 +30,7 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/devproxy/, ''),
         },
-        // --- 动态代理配置 ---
         '/autorunserver': {
-          // 动态引用环境变量中的后端地址
           target: env.VITE_AUTORUN_SERVER_BASE,
           changeOrigin: true,
           secure: false,

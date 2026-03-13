@@ -12,7 +12,7 @@
           props.scrolled
             ? 'max-w-[380px] w-[calc(100%_-_52px)]'
             : 'max-w-[400px] w-[calc(100%_-_24px)]',
-          messageVisible ? messageStyles[messageType].shell : 'bg-white/10',
+          messageVisible ? messageStyles[messageType].shell : 'bg-stone-900/20',
         ]"
       >
         <transition
@@ -270,7 +270,7 @@ defineExpose({
   text-overflow: ellipsis;
   font-size: 13px;
   font-weight: 500;
-  color: rgba(60, 60, 67, 0.85);
+  color: #979797;
 }
 
 .welcome-sequence-logo.is-visible {

@@ -3,7 +3,7 @@
     class="fixed left-0 right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] h-16 z-[998] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
   >
     <div
-      class="flex items-center h-full bg-white/10 backdrop-blur-[16px] rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[480px] mx-auto w-[calc(100%_-_24px)]"
+      class="flex items-center h-full bg-stone-900/80 backdrop-blur-[16px] rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[480px] mx-auto w-[calc(100%_-_24px)]"
     >
       <button
         v-for="item in tabs"
