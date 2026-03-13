@@ -1,29 +1,13 @@
 import MessageClient from '@/composables/messageClient';
-import { STORAGE_KEYS, readStorageValue } from '@/utils/storageKeys';
 
 const CHAT_API_BASE = (import.meta.env.VITE_CHAT_SERVER_BASE_URL || '').replace(/\/$/, '');
 const messageClient = new MessageClient({ baseUrl: CHAT_API_BASE });
 
-const parseTimestamp = (value) => {
-  const timestamp = Date.parse(value || '');
-  return Number.isFinite(timestamp) ? timestamp : 0;
-};
-
-const getLatestMessageTimestamp = (messages = []) =>
-  messages.reduce((maxTimestamp, message) => {
-    const timestamp = parseTimestamp(message?.created_at);
-    return Math.max(maxTimestamp, timestamp);
-  }, 0);
-
-const getCachedLastSeenAt = () => {
-  const raw = readStorageValue('local', STORAGE_KEYS.LOCAL.APP_STATE);
-  if (!raw) return '';
-  try {
-    const state = JSON.parse(raw) || {};
-    return state?.chatLastSeenAt || state?.chatUser?.last_seen_at || '';
-  } catch (error) {
-    return '';
-  }
+const resolveUnreadState = (payload) => {
+  if (!payload || typeof payload !== 'object') return false;
+  if (payload.has_unread === true) return true;
+  if (payload.has_unread === false) return false;
+  return payload.hasUnread === true;
 };
 
 export const checkHasUnreadMessages = async (token) => {
@@ -31,12 +15,10 @@ export const checkHasUnreadMessages = async (token) => {
 
   try {
     messageClient.setToken(token, { reconnect: false });
-    const data = await messageClient.listMessages(1, 20);
-    const latestMessageAt = getLatestMessageTimestamp(data?.messages || []);
-    const lastSeenAt = parseTimestamp(getCachedLastSeenAt());
-    return latestMessageAt > lastSeenAt;
+    const data = await messageClient.getUnreadState();
+    return resolveUnreadState(data);
   } catch (error) {
-    console.error('Failed to check unread messages:', error);
+    console.error('获取未读消息失败:', error);
     return false;
   }
 };

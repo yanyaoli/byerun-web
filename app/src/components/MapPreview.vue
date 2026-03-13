@@ -5,10 +5,8 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import { gcj02ToWgs84 } from '@/utils/coordinate';
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import L from 'leaflet';
 
 const props = defineProps({
   track: {
@@ -27,48 +25,33 @@ const props = defineProps({
 
 const mapContainer = ref(null);
 
-const BASEMAP_STYLES = {
-  city: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json',
-  dark: 'https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json',
-  darkMatter: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
-  light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+const DEFAULT_CENTER = [30.572269, 104.066541];
+const DEFAULT_ZOOM = 12;
+const TRACK_COLOR = '#38bdf8';
+const REPEAT_SEGMENT_COLOR = '#f59e0b';
+
+const STYLE_CODE_MAP = {
+  city: 7,
+  light: 7,
+  dark: 8,
+  darkMatter: 8,
 };
 
-const TRACK_SOURCE_ID = 'byerun-track-source';
-const TRACK_SEGMENT_SOURCE_ID = 'byerun-track-segment-source';
-const TRACK_LAYER_ID = 'byerun-track-layer';
-const TRACK_SEGMENT_LAYER_ID = 'byerun-track-segment-layer';
-const DEFAULT_CENTER = [104.066541, 30.572269];
-const DEFAULT_ZOOM = 12;
+const GAODE_TILE_URL =
+  'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style={style}&x={x}&y={y}&z={z}';
 
 let map = null;
-let trackPoints = [];
-let drawVersion = 0;
-let trackTimer = null;
+let baseLayer = null;
+let resizeObserver = null;
+
+let trackPolyline = null;
+let repeatedSegmentLayer = null;
 let startMarker = null;
 let endMarker = null;
 
-function resolveBasemapStyle(styleKey) {
-  return BASEMAP_STYLES[styleKey] || BASEMAP_STYLES.city;
-}
-
-function stopTrackAnimation() {
-  if (trackTimer) {
-    clearInterval(trackTimer);
-    trackTimer = null;
-  }
-}
-
-function clearMarkers() {
-  if (startMarker) {
-    startMarker.remove();
-    startMarker = null;
-  }
-  if (endMarker) {
-    endMarker.remove();
-    endMarker = null;
-  }
-}
+let drawVersion = 0;
+let animationTimer = null;
+let rawTrackPoints = [];
 
 function parseTrack(rawTrack) {
   if (!rawTrack) return [];
@@ -84,96 +67,104 @@ function parseTrack(rawTrack) {
 
   if (!Array.isArray(parsed)) return [];
 
-  const result = [];
+  const points = [];
   for (const item of parsed) {
     const [lngRaw, latRaw] = String(item || '').split('-');
     const lng = Number(lngRaw);
     const lat = Number(latRaw);
     if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
-    const [wgsLng, wgsLat] = gcj02ToWgs84(lng, lat);
 
-    const prev = result[result.length - 1];
-    if (!prev || prev[0] !== wgsLng || prev[1] !== wgsLat) {
-      result.push([wgsLng, wgsLat]);
+    const prev = points[points.length - 1];
+    if (!prev || prev[0] !== lng || prev[1] !== lat) {
+      points.push([lng, lat]);
     }
   }
-  return result;
+
+  return points;
 }
 
-function ensureTrackLayer() {
+function toLatLng(point) {
+  return [point[1], point[0]];
+}
+
+function getDisplayTrackPoints(points) {
+  if (!Array.isArray(points) || points.length === 0) return [];
+  return points.map(toLatLng);
+}
+
+function stopTrackAnimation() {
+  if (!animationTimer) return;
+  clearInterval(animationTimer);
+  animationTimer = null;
+}
+
+function clearMarkers() {
+  if (startMarker) {
+    startMarker.remove();
+    startMarker = null;
+  }
+  if (endMarker) {
+    endMarker.remove();
+    endMarker = null;
+  }
+}
+
+function invalidateMapSize() {
+  if (!map || !mapContainer.value) return;
+  const width = mapContainer.value.clientWidth || 0;
+  const height = mapContainer.value.clientHeight || 0;
+  if (width < 20 || height < 20) return;
+  map.invalidateSize({ animate: false, pan: false });
+}
+
+function scheduleInitialInvalidate() {
+  invalidateMapSize();
+  setTimeout(invalidateMapSize, 100);
+  setTimeout(invalidateMapSize, 320);
+}
+
+function resolveStyleCode(styleKey) {
+  return STYLE_CODE_MAP[styleKey] ?? STYLE_CODE_MAP.city;
+}
+
+function applyGaodeBasemap(styleKey) {
   if (!map) return;
 
-  if (!map.getSource(TRACK_SOURCE_ID)) {
-    map.addSource(TRACK_SOURCE_ID, {
-      type: 'geojson',
-      lineMetrics: true,
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'LineString',
-          coordinates: [],
-        },
-      },
-    });
+  if (baseLayer) {
+    baseLayer.remove();
+    baseLayer = null;
   }
 
-  if (!map.getSource(TRACK_SEGMENT_SOURCE_ID)) {
-    map.addSource(TRACK_SEGMENT_SOURCE_ID, {
-      type: 'geojson',
-      data: {
-        type: 'FeatureCollection',
-        features: [],
-      },
-    });
+  const styleCode = resolveStyleCode(styleKey);
+  baseLayer = L.tileLayer(GAODE_TILE_URL, {
+    subdomains: '1234',
+    style: styleCode,
+    minZoom: 3,
+    maxZoom: 19,
+    keepBuffer: 2,
+    updateWhenIdle: true,
+    updateWhenZooming: false,
+    // attribution: '&copy; AutoNavi',
+  });
+
+  baseLayer.addTo(map);
+}
+
+function ensureTrackLayers() {
+  if (!map) return;
+
+  if (!trackPolyline) {
+    trackPolyline = L.polyline([], {
+      color: TRACK_COLOR,
+      weight: 5,
+      opacity: 0.9,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(map);
   }
 
-  if (!map.getLayer(TRACK_LAYER_ID)) {
-    map.addLayer({
-      id: TRACK_LAYER_ID,
-      type: 'line',
-      source: TRACK_SOURCE_ID,
-      layout: {
-        'line-cap': 'round',
-        'line-join': 'round',
-      },
-      paint: {
-        'line-width': 5,
-        'line-opacity': 0.9,
-        'line-gradient': ['interpolate', ['linear'], ['line-progress'], 0, '#5eead4', 1, '#2563eb'],
-      },
-    });
-  }
-
-  if (!map.getLayer(TRACK_SEGMENT_LAYER_ID)) {
-    map.addLayer({
-      id: TRACK_SEGMENT_LAYER_ID,
-      type: 'line',
-      source: TRACK_SEGMENT_SOURCE_ID,
-      layout: {
-        'line-cap': 'round',
-        'line-join': 'round',
-      },
-      paint: {
-        'line-width': 5,
-        'line-color': '#f59e0b',
-        'line-opacity': [
-          'interpolate',
-          ['linear'],
-          ['coalesce', ['get', 'repeat'], 1],
-          1,
-          0,
-          2,
-          0.22,
-          3,
-          0.34,
-          4,
-          0.46,
-          6,
-          0.58,
-        ],
-      },
-    });
+  if (!repeatedSegmentLayer) {
+    repeatedSegmentLayer = L.layerGroup().addTo(map);
   }
 }
 
@@ -187,119 +178,112 @@ function normalizeSegmentKey(a, b) {
   return aKey < bKey ? `${aKey}|${bKey}` : `${bKey}|${aKey}`;
 }
 
-function buildSegmentFeatures(coordinates) {
-  if (!Array.isArray(coordinates) || coordinates.length < 2) return [];
+function buildRepeatedSegments(points) {
+  if (!Array.isArray(points) || points.length < 2) return [];
 
   const countMap = new Map();
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const from = coordinates[i];
-    const to = coordinates[i + 1];
-    const key = normalizeSegmentKey(from, to);
+  for (let i = 0; i < points.length - 1; i++) {
+    const key = normalizeSegmentKey(points[i], points[i + 1]);
     countMap.set(key, (countMap.get(key) || 0) + 1);
   }
 
-  const features = [];
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const from = coordinates[i];
-    const to = coordinates[i + 1];
+  const result = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const from = points[i];
+    const to = points[i + 1];
     const key = normalizeSegmentKey(from, to);
-    const repeat = countMap.get(key) || 1;
-    if (repeat <= 1) continue;
-
-    features.push({
-      type: 'Feature',
-      properties: { repeat },
-      geometry: {
-        type: 'LineString',
-        coordinates: [from, to],
-      },
-    });
+    if ((countMap.get(key) || 1) <= 1) continue;
+    result.push([from, to]);
   }
 
-  return features;
+  return result;
 }
 
-function updateTrackSource(coordinates) {
-  const trackSource = map?.getSource(TRACK_SOURCE_ID);
-  const segmentSource = map?.getSource(TRACK_SEGMENT_SOURCE_ID);
-  if (!trackSource || !segmentSource) return;
+function updateTrackPolyline(points) {
+  if (!trackPolyline) return;
+  trackPolyline.setLatLngs(points);
+}
 
-  trackSource.setData({
-    type: 'Feature',
-    properties: {},
-    geometry: {
-      type: 'LineString',
-      coordinates,
-    },
+function updateRepeatedSegments(points) {
+  if (!repeatedSegmentLayer) return;
+  repeatedSegmentLayer.clearLayers();
+
+  const segments = buildRepeatedSegments(points);
+  for (const segment of segments) {
+    L.polyline(segment, {
+      color: REPEAT_SEGMENT_COLOR,
+      weight: 5,
+      opacity: 0.5,
+      lineCap: 'round',
+      lineJoin: 'round',
+    }).addTo(repeatedSegmentLayer);
+  }
+}
+
+function createMarkerIcon(label, className) {
+  return L.divIcon({
+    className: `custom-map-marker ${className}`,
+    html: `<span>${label}</span>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
   });
-
-  segmentSource.setData({
-    type: 'FeatureCollection',
-    features: buildSegmentFeatures(coordinates),
-  });
 }
 
-function createMarkerElement(label, className) {
-  const el = document.createElement('div');
-  el.className = `custom-map-marker ${className}`;
-  el.textContent = label;
-  return el;
-}
-
-function renderMarkers(coords) {
+function renderMarkers(points) {
   clearMarkers();
-  if (!map || coords.length < 2) return;
+  if (!map || points.length < 2) return;
 
-  startMarker = new maplibregl.Marker({
-    element: createMarkerElement('起', 'marker-start'),
-    offset: [0, -13],
-  })
-    .setLngLat(coords[0])
-    .addTo(map);
+  startMarker = L.marker(points[0], {
+    icon: createMarkerIcon('起', 'marker-start'),
+    interactive: false,
+    keyboard: false,
+  }).addTo(map);
 
-  endMarker = new maplibregl.Marker({
-    element: createMarkerElement('终', 'marker-end'),
-    offset: [0, -13],
-  })
-    .setLngLat(coords[coords.length - 1])
-    .addTo(map);
+  endMarker = L.marker(points[points.length - 1], {
+    icon: createMarkerIcon('终', 'marker-end'),
+    interactive: false,
+    keyboard: false,
+  }).addTo(map);
 }
 
-function fitToTrack(coords) {
-  if (!map || coords.length < 2) return;
+function fitToTrack(points) {
+  if (!map || points.length < 2) return;
 
-  const bounds = coords.reduce(
-    (acc, point) => acc.extend(point),
-    new maplibregl.LngLatBounds(coords[0], coords[0]),
-  );
+  const bounds = L.latLngBounds(points);
+  if (!bounds.isValid()) return;
 
   map.fitBounds(bounds, {
-    padding: 60,
-    duration: 600,
+    padding: [48, 48],
+    animate: true,
+    duration: 0.55,
     maxZoom: 18,
   });
 }
 
-function animateTrack(coords) {
+function animateTrack(points) {
   stopTrackAnimation();
 
-  if (!map || coords.length < 2) {
-    updateTrackSource([]);
+  if (points.length < 2) {
+    updateTrackPolyline([]);
+    updateRepeatedSegments([]);
     return Promise.resolve();
   }
 
-  const total = coords.length;
+  const total = points.length;
   const step = Math.max(1, Math.ceil((total - 1) / 60));
   let visible = 2;
-  updateTrackSource(coords.slice(0, visible));
+
+  updateTrackPolyline(points.slice(0, visible));
+  updateRepeatedSegments([]);
 
   return new Promise((resolve) => {
-    trackTimer = setInterval(() => {
+    animationTimer = setInterval(() => {
       visible = Math.min(total, visible + step);
-      updateTrackSource(coords.slice(0, visible));
+      updateTrackPolyline(points.slice(0, visible));
 
       if (visible >= total) {
         stopTrackAnimation();
+        updateRepeatedSegments(points);
         resolve();
       }
     }, 30);
@@ -307,21 +291,23 @@ function animateTrack(coords) {
 }
 
 async function redrawTrack() {
-  if (!map || !map.isStyleLoaded()) return;
+  if (!map) return;
 
   const currentVersion = ++drawVersion;
-  ensureTrackLayer();
+  ensureTrackLayers();
+  const displayPoints = getDisplayTrackPoints(rawTrackPoints);
 
-  if (!props.ready || trackPoints.length < 2) {
+  if (!props.ready || displayPoints.length < 2) {
     stopTrackAnimation();
-    updateTrackSource([]);
+    updateTrackPolyline([]);
+    updateRepeatedSegments([]);
     clearMarkers();
     return;
   }
 
-  renderMarkers(trackPoints);
-  fitToTrack(trackPoints);
-  await animateTrack(trackPoints);
+  renderMarkers(displayPoints);
+  fitToTrack(displayPoints);
+  await animateTrack(displayPoints);
 
   if (currentVersion !== drawVersion) {
     stopTrackAnimation();
@@ -331,32 +317,41 @@ async function redrawTrack() {
 async function initMap() {
   if (map || !mapContainer.value) return;
 
-  map = new maplibregl.Map({
-    container: mapContainer.value,
-    style: resolveBasemapStyle(props.mapStyle),
-    center: DEFAULT_CENTER,
-    zoom: DEFAULT_ZOOM,
+  map = L.map(mapContainer.value, {
+    zoomControl: false,
     attributionControl: false,
-    renderWorldCopies: false,
+    preferCanvas: true,
+    zoomSnap: 0.5,
+    zoomDelta: 0.5,
   });
 
-  map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+  map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
-  map.addControl(
-    new maplibregl.NavigationControl({
-      showCompass: true,
-      visualizePitch: true,
-    }),
-    'bottom-right',
-  );
+  L.control
+    .attribution({
+      position: 'bottomleft',
+      prefix: false,
+    })
+    .addTo(map);
 
-  await new Promise((resolve) => map.once('load', resolve));
+  applyGaodeBasemap(props.mapStyle);
+
+  await new Promise((resolve) => map.whenReady(resolve));
+  await nextTick();
+  scheduleInitialInvalidate();
+
+  if (typeof ResizeObserver !== 'undefined' && mapContainer.value) {
+    resizeObserver = new ResizeObserver(() => {
+      invalidateMapSize();
+    });
+    resizeObserver.observe(mapContainer.value);
+  }
 }
 
 watch(
   () => [props.track, props.ready],
   async ([track]) => {
-    trackPoints = parseTrack(track);
+    rawTrackPoints = parseTrack(track);
     if (!map) return;
     await redrawTrack();
   },
@@ -367,43 +362,75 @@ watch(
   () => props.mapStyle,
   async (nextStyle, prevStyle) => {
     if (!map || nextStyle === prevStyle) return;
-
-    stopTrackAnimation();
-    map.setStyle(resolveBasemapStyle(nextStyle));
-    await new Promise((resolve) => map.once('style.load', resolve));
+    applyGaodeBasemap(nextStyle);
     await redrawTrack();
   },
 );
 
 onMounted(async () => {
   await initMap();
+  invalidateMapSize();
   await redrawTrack();
+
+  window.addEventListener('resize', invalidateMapSize);
+  window.addEventListener('orientationchange', invalidateMapSize);
 });
 
 onBeforeUnmount(() => {
   stopTrackAnimation();
   clearMarkers();
 
+  window.removeEventListener('resize', invalidateMapSize);
+  window.removeEventListener('orientationchange', invalidateMapSize);
+
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
+
+  if (baseLayer) {
+    baseLayer.remove();
+    baseLayer = null;
+  }
+
   if (map) {
     map.remove();
     map = null;
   }
+
+  trackPolyline = null;
+  repeatedSegmentLayer = null;
 });
 </script>
 
 <style scoped>
 .map-preview-root {
   width: 100%;
+  min-height: 320px;
 }
 
 .map-container {
+  display: block;
   width: 100%;
-  height: 400px;
+  height: clamp(320px, 42vh, 420px);
+  min-height: 320px;
   border-radius: 8px;
   overflow: hidden;
   background: #1a2230;
   border: 1px solid #1a2235;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+
+:deep(.leaflet-container) {
+  width: 100%;
+  height: 100%;
+  background: #1a2230;
+  filter: brightness(0.5) contrast(1.15) saturate(0.75);
+}
+
+:deep(.leaflet-div-icon) {
+  background: transparent;
+  border: none;
 }
 
 :deep(.custom-map-marker) {
@@ -416,7 +443,6 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 700;
   border-radius: 50px;
-  border: 2px solid #0b1020;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
   line-height: 1;
   text-align: center;
@@ -430,26 +456,12 @@ onBeforeUnmount(() => {
   background: #f97316;
 }
 
-:deep(.maplibregl-ctrl-group) {
-  background: #121826;
-  border: 1px solid #1f2937;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-}
-
-:deep(.maplibregl-ctrl button) {
-  background-color: transparent;
-}
-
-:deep(.maplibregl-ctrl button .maplibregl-ctrl-icon) {
-  filter: invert(92%) sepia(9%) saturate(282%) hue-rotate(185deg) brightness(106%) contrast(96%);
-}
-
-:deep(.maplibregl-ctrl-attrib) {
+:deep(.leaflet-control-attribution) {
   background: rgba(10, 16, 30, 0.75);
   color: #94a3b8;
 }
 
-:deep(.maplibregl-ctrl-attrib a) {
+:deep(.leaflet-control-attribution a) {
   color: #cbd5e1;
 }
 </style>

@@ -15,7 +15,7 @@
                 <span v-if="!loading">{{ formatCreateTime(record.createTime) }}</span>
                 <div
                   v-else
-                  class="inline-block bg-stone-900 rounded animate-pulse"
+                  class="inline-block bg-gray-300/30 rounded animate-pulse"
                   style="width: 140px; height: 20px"
                 ></div>
               </div>
@@ -67,7 +67,7 @@
                 }}</span>
                 <div
                   v-else
-                  class="inline-block rounded animate-pulse"
+                  class="inline-block bg-gray-200 rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>

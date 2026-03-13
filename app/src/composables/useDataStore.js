@@ -68,12 +68,17 @@ const useAppStateStore = defineStore(
 
     const markChatSeen = (seenAt = new Date().toISOString()) => {
       const normalizedSeenAt = String(seenAt || '').trim() || new Date().toISOString();
+      const finalSeenAt =
+        parseTimestamp(normalizedSeenAt) >= parseTimestamp(chatLastSeenAt.value)
+          ? normalizedSeenAt
+          : chatLastSeenAt.value;
+
       chatUnread.value = false;
-      chatLastSeenAt.value = normalizedSeenAt;
+      chatLastSeenAt.value = finalSeenAt;
       if (!chatUser.value || typeof chatUser.value !== 'object') return;
       chatUser.value = {
         ...chatUser.value,
-        last_seen_at: normalizedSeenAt,
+        last_seen_at: finalSeenAt,
       };
     };
 

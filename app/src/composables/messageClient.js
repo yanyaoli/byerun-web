@@ -2,10 +2,10 @@ import { io } from 'socket.io-client';
 
 class MessageClient {
   constructor({ baseUrl = 'http://localhost:3000', token = null } = {}) {
-    this.baseUrl = baseUrl.replace(/\/$/, '');
+    this.baseUrl = String(baseUrl).replace(/\/$/, '');
     this.token = token;
     this.socket = null; // 初始化 socket 实例
-    this.events = {}; // 简单的事件订阅系统
+    this.events = Object.create(null); // 简单的事件订阅系统
   }
 
   setToken(token, { reconnect = true } = {}) {
@@ -39,6 +39,7 @@ class MessageClient {
 
     this.socket.on('connect_error', (err) => {
       console.error('WebSocket connection error:', err.message);
+      this._emit('error', err);
       // 如果是鉴权失败，可以在这里触发一个全局事件提醒用户重新登录
       if (err.message === 'Authentication error: Token missing') {
         this._emit('auth_error', err);
@@ -59,23 +60,25 @@ class MessageClient {
    * @param {Function} callback
    */
   on(event, callback) {
-    if (!this.events[event]) this.events[event] = [];
-    this.events[event].push(callback);
+    if (!this.events[event]) this.events[event] = new Set();
+    this.events[event].add(callback);
+    return () => this.off(event, callback);
   }
 
   off(event, callback) {
     if (!this.events[event]) return;
     if (callback) {
-      this.events[event] = this.events[event].filter((cb) => cb !== callback);
+      this.events[event].delete(callback);
     } else {
-      this.events[event] = [];
+      this.events[event].clear();
     }
+    if (this.events[event].size === 0) delete this.events[event];
   }
 
   _emit(event, data) {
-    if (this.events[event]) {
-      this.events[event].forEach((cb) => cb(data));
-    }
+    const listeners = this.events[event];
+    if (!listeners) return;
+    listeners.forEach((cb) => cb(data));
   }
 
   /**
@@ -99,14 +102,13 @@ class MessageClient {
     try {
       json = await res.json();
     } catch (e) {
-      const err = new Error('invalid_response');
-      err.code = 'invalid_response';
-      err.payload = { status: res.status, ok: res.ok };
+      const err = new Error(`invalid_json_response (${res.status})`);
+      err.status = res.status;
       throw err;
     }
 
     if (!json.success) {
-      const err = new Error(json.message || 'upload_error');
+      const err = new Error(json.message || 'api_error');
       err.code = json.code;
       err.payload = json;
       throw err;
@@ -177,16 +179,18 @@ class MessageClient {
    * @description 前端需要先使用 canvas/sharp 等工具将其他图片格式转换为 WebP，然后上传
    */
   async uploadImage(file) {
+    if (!file) {
+      throw new Error('file is required');
+    }
     if (file.type !== 'image/webp') {
-      throw new Error('仅支持 WebP 格式的图片文件');
+      throw new Error('Only WebP images are allowed');
     }
 
     const formData = new FormData();
     formData.append('file', file);
 
-    const headers = {
-      Authorization: this.token ? `Bearer ${this.token}` : undefined,
-    };
+    const headers = {};
+    if (this.token) headers.Authorization = `Bearer ${this.token}`;
 
     const res = await fetch(this.baseUrl + '/api/message/upload', {
       method: 'POST',
@@ -211,6 +215,28 @@ class MessageClient {
   async listMessages(page = 1, size = 20) {
     const q = `?page=${encodeURIComponent(page)}&size=${encodeURIComponent(size)}`;
     return this._fetch(`/api/message/list${q}`, { method: 'GET' });
+  }
+  async getUnreadState() {
+    return this._fetch('/api/message/unread', { method: 'GET' });
+  }
+
+  _validateContent(content) {
+    if (!Array.isArray(content)) {
+      throw new Error('content must be an array, e.g. [{ type: "text", value: "Hello" }]');
+    }
+
+    const allowedTypes = new Set(['text', 'image', 'sticker']);
+    content.forEach((seg, i) => {
+      if (!seg || typeof seg !== 'object') {
+        throw new Error(`content[${i}] must be an object`);
+      }
+      if (!allowedTypes.has(seg.type)) {
+        throw new Error(`content[${i}].type must be one of: text, image, sticker`);
+      }
+      if (typeof seg.value !== 'string') {
+        throw new Error(`content[${i}].value must be a string`);
+      }
+    });
   }
 
   /**
@@ -241,9 +267,7 @@ class MessageClient {
    *   );
    */
   async sendMessage(content, parentId = null) {
-    if (!Array.isArray(content)) {
-      throw new Error('content 必须是数组格式，例如：[{type:"text",value:"Hello"}]');
-    }
+    this._validateContent(content);
     const body = {
       content,
       parentId: parentId ? String(parentId) : null,
