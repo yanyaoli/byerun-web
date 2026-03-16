@@ -1,7 +1,7 @@
 {
   "name": "byerun",
   "private": true,
-  "version": "0.0.0",
+  "version": "26.3.14",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,6 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@tailwindcss/vite": "^4.1.17",
-    "artalk": "^2.9.1",
     "axios": "^1.10.0",
     "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",

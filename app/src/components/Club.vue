@@ -1,270 +1,1246 @@
 <template>
-  <div class="app container mx-auto p-4">
-    <span>
-      <p>来早了，这里正在施工中</p>
-      <i class="fa-solid fa-person-digging"></i>
-    </span>
+  <div class="club-page min-h-full pb-4">
+    <section class="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+      <div class="grid grid-cols-2 gap-2">
+        <button
+          v-for="tab in MAIN_TABS"
+          :key="tab.key"
+          type="button"
+          :class="[
+            'h-9 rounded-xl border text-xs font-medium transition-colors',
+            activeMainTab === tab.key
+              ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
+              : 'border-white/10 bg-white/5 text-gray-300',
+          ]"
+          @click="activeMainTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
 
-    <!-- <div class="flex items-center justify-between mb-4">
-            <nav class="flex gap-2">
-                <button v-for="item in menuItems" :key="item.index" @click="handleSelect(item.index)"
-                    :class="['px-3 py-1 rounded font-medium', activeName === item.index ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700']">
-                    {{ item.label }}
-                </button>
-            </nav>
+      <div v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
+        <button
+          v-for="tab in HISTORY_SUB_TABS"
+          :key="tab.key"
+          type="button"
+          :class="[
+            'h-8 rounded-xl border text-xs font-medium transition-colors',
+            activeHistoryTab === tab.key
+              ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
+              : 'border-white/10 bg-white/5 text-gray-300',
+          ]"
+          @click="activeHistoryTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <div class="mt-3 flex items-start gap-2">
+        <div v-if="activeMainTab === 'activities'" ref="datePickerRef" class="relative flex-1">
+          <button
+            type="button"
+            class="w-full h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-xs text-gray-100 inline-flex items-center justify-between"
+            @click="showDateDropdown = !showDateDropdown"
+          >
+            <span class="truncate">{{ selectedDateLabel }}</span>
+            <i :class="showDateDropdown ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'" class="text-sm"></i>
+          </button>
+
+          <transition name="fade-slide">
+            <div
+              v-if="showDateDropdown"
+              class="absolute left-0 right-0 top-11 z-30 rounded-xl border border-white/10 bg-stone-900/95 backdrop-blur max-h-44 overflow-y-auto"
+            >
+              <button
+                v-for="day in dateOptions"
+                :key="day.value"
+                type="button"
+                :class="[
+                  'w-full h-9 px-3 text-left text-xs border-b border-white/5 last:border-b-0 transition-colors',
+                  selectedQueryDate === day.value
+                    ? 'text-cyan-200 bg-cyan-400/10'
+                    : 'text-gray-200 hover:bg-white/5',
+                ]"
+                @click="selectQueryDate(day.value)"
+              >
+                {{ day.label }} {{ day.shortDate }}
+              </button>
+            </div>
+          </transition>
         </div>
 
-        <div class="overflow-auto" :style="{ maxHeight: 'calc(100vh - 300px)' }">
-            <div v-if="clubs.length === 0" class="text-center text-gray-500 py-12">{{ emptyMessage }}</div>
-            <div v-for="(club, idx) in clubs" :key="club.configurationId || club.id || club.taskId || idx"
-                class="border rounded-lg p-4 mb-4 bg-white shadow-sm">
-                <div class="flex items-start justify-between mb-3">
-                    <h3 class="text-lg font-semibold">{{ club.activityName }}</h3>
-                    <div>
-                        <button @click="handleJoin(club)" :disabled="isDisabled(club)" :class="actionClass(club)">
-                            {{ actionLabel(club) }}
-                        </button>
-                    </div>
-                </div>
+        <button
+          type="button"
+          class="h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-gray-200 text-xs font-medium flex items-center gap-1.5"
+          @click="showFilters = !showFilters"
+        >
+          <i class="ri-equalizer-line text-sm"></i>
+          <span>筛选</span>
+        </button>
+      </div>
 
-                <div class="grid grid-cols-1 gap-2 text-sm text-gray-700">
-                    <div class="flex items-center gap-2"><span class="text-gray-400">👩‍🏫</span> <span
-                            class="font-medium mr-2">教师：</span>{{ club.teacherName }}</div>
-                    <div class="flex items-center gap-2"><span class="text-gray-400">👥</span> <span
-                            class="font-medium mr-2">人数：</span>{{ club.joinStudentNum }} / {{ club.studentNum }}人</div>
-                    <div class="flex items-center gap-2"><span class="text-gray-400">⏰</span> <span
-                            class="font-medium mr-2">时间：</span>周{{ weekDayMap[club.weekDay] }} {{ club.startTime }} - {{
-                        club.endTime }}</div>
-                    <div class="flex items-center gap-2"><span class="text-gray-400">📍</span> <span
-                            class="font-medium mr-2">地点：</span>{{ club.addressDetail }}</div>
-                    <div class="flex items-center gap-2"><span class="text-gray-400">ℹ️</span> <span
-                            class="font-medium mr-2">介绍：</span>{{ club.clubIntroduction }}</div>
-                </div>
-            </div>
-        </div> -->
+      <transition name="fade-slide">
+        <div v-show="showFilters" class="mt-3 space-y-2">
+          <div class="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              v-for="option in statusOptions"
+              :key="option.value"
+              type="button"
+              :class="[
+                'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors',
+                selectedStatus === option.value
+                  ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
+                  : 'border-white/10 bg-white/5 text-gray-300',
+              ]"
+              @click="selectedStatus = option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+
+          <div v-if="activeMainTab === 'activities'" class="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              v-for="item in itemFilterOptions"
+              :key="item.value"
+              type="button"
+              :class="[
+                'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors',
+                selectedItemId === item.value
+                  ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
+                  : 'border-white/10 bg-white/5 text-gray-300',
+              ]"
+              @click="selectedItemId = item.value"
+            >
+              {{ item.label }}
+            </button>
+          </div>
+        </div>
+      </transition>
+    </section>
+
+    <section v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
+      <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+        <div class="text-[11px] text-gray-400">累计报名</div>
+        <div class="mt-1 text-xl font-semibold text-white">{{ summary.joinNum }}</div>
+      </div>
+      <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+        <div class="text-[11px] text-gray-400">有效签到</div>
+        <div class="mt-1 text-xl font-semibold text-emerald-300">{{ summary.validNum }}</div>
+      </div>
+    </section>
+
+    <section v-if="activeMainTab === 'activities'" class="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-sm font-semibold text-cyan-100">俱乐部签到签退</p>
+        </div>
+        <button
+          type="button"
+          class="h-8 w-8 rounded-lg border border-cyan-300/30 bg-cyan-300/10 text-cyan-100"
+          @click="refreshSignTask(true)"
+        >
+          <i :class="refreshingSign ? 'ri-loader-4-line animate-spin' : 'ri-refresh-line'"></i>
+        </button>
+      </div>
+
+      <div v-if="refreshingSign && !signTask" class="mt-3 text-xs text-cyan-100/80">正在刷新签到状态...</div>
+
+      <div v-else-if="signTask" class="mt-3 space-y-2 text-sm text-cyan-50">
+        <p class="font-medium leading-5">{{ signTask.activityName || '未命名活动' }}</p>
+        <p class="text-xs text-cyan-100/80 leading-5">
+          {{ signTask.startTime || '--:--' }} - {{ signTask.endTime || '--:--' }}
+          <span class="mx-1">|</span>
+          {{ signTask.address || '地点待定' }}
+        </p>
+        <div class="pt-1 flex items-center justify-between gap-2">
+          <span class="text-xs text-cyan-100/80">状态：{{ signTaskStatusText }}</span>
+          <button
+            type="button"
+            :disabled="!signTaskAction || signTaskAction.disabled || signPendingType !== ''"
+            :class="[
+              'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+              signTaskAction?.buttonClass || 'bg-white/10 text-gray-300',
+              (!signTaskAction || signTaskAction.disabled || signPendingType !== '') && 'opacity-70 cursor-not-allowed',
+            ]"
+            @click="handleSignTask(signTaskAction?.type || '')"
+          >
+            <i v-if="signPendingType" class="ri-loader-4-line animate-spin"></i>
+            <span>{{ signPendingType ? signTaskAction?.pendingLabel || '提交中' : signTaskAction?.label || '无可执行操作' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div v-else class="mt-3 text-xs text-cyan-100/80">当前没有可执行签到/签退任务</div>
+    </section>
+
+    <section class="mt-3 flex items-center justify-between text-xs text-gray-400">
+      <span>{{ currentListTitle }}</span>
+      <span>共 {{ filteredList.length }} 条</span>
+    </section>
+
+    <section class="mt-2 space-y-3">
+      <template v-if="loading">
+        <div
+          v-for="idx in 4"
+          :key="`skeleton-${idx}`"
+          class="rounded-2xl border border-white/10 bg-white/5 p-3 animate-pulse"
+        >
+          <div class="h-4 w-2/3 bg-white/10 rounded"></div>
+          <div class="mt-3 h-3 w-full bg-white/10 rounded"></div>
+          <div class="mt-2 h-3 w-4/5 bg-white/10 rounded"></div>
+        </div>
+      </template>
+
+      <div
+        v-else-if="cards.length === 0"
+        class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-gray-400"
+      >
+        {{ emptyMessage }}
+      </div>
+
+      <article
+        v-for="card in cards"
+        :key="card.key"
+        class="rounded-2xl border border-white/10 bg-white/5 p-3"
+      >
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 flex-1">
+            <h3 class="text-sm font-semibold text-white truncate">{{ card.title }}</h3>
+            <p class="mt-1 text-xs text-gray-400 truncate">{{ card.subTitle }}</p>
+          </div>
+          <span :class="card.badgeClass">{{ card.badgeText }}</span>
+        </div>
+
+        <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-300">
+          <div class="meta-pill">
+            <i class="ri-time-line"></i>
+            <span class="truncate">{{ card.timeText }}</span>
+          </div>
+          <div class="meta-pill">
+            <i :class="card.metaSecondaryIcon"></i>
+            <span class="truncate">{{ card.metaSecondaryText }}</span>
+          </div>
+          <div class="meta-pill col-span-2">
+            <i :class="card.metaTertiaryIcon"></i>
+            <span class="truncate">{{ card.metaTertiaryText }}</span>
+          </div>
+        </div>
+
+        <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">{{ card.introText }}</p>
+
+        <div v-if="card.action" class="mt-3 flex items-center justify-end">
+          <button
+            type="button"
+            :disabled="card.action.disabled || isCardActionPending(card)"
+            :class="[
+              'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
+              card.action.buttonClass,
+              (card.action.disabled || isCardActionPending(card)) && 'opacity-70 cursor-not-allowed',
+            ]"
+            @click="handleCardAction(card)"
+          >
+            <i v-if="isCardActionPending(card)" class="ri-loader-4-line animate-spin"></i>
+            <span>{{ isCardActionPending(card) ? card.action.pendingLabel : card.action.label }}</span>
+          </button>
+        </div>
+      </article>
+
+      <div
+        v-if="activeMainTab === 'history' && activeHistoryTab === 'record' && cards.length > 0 && historyHasMore"
+        class="pt-1"
+      >
+        <button
+          type="button"
+          class="w-full h-9 rounded-xl border border-white/10 bg-white/5 text-xs text-gray-200 inline-flex items-center justify-center gap-1.5"
+          :disabled="historyLoadingMore"
+          @click="loadMoreHistoryRecords"
+        >
+          <i v-if="historyLoadingMore" class="ri-loader-4-line animate-spin"></i>
+          <span>{{ historyLoadingMore ? '加载中...' : '加载更多' }}</span>
+        </button>
+      </div>
+    </section>
   </div>
 </template>
 
-
 <script setup>
-import { ref, reactive, onMounted, inject, computed } from 'vue';
-import { api } from "@/composables/useApi";
-import { useDataStore } from "@/composables/useDataStore";
+import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
+import { api } from '@/composables/useApi';
+import { useDataStore } from '@/composables/useDataStore';
 
-const showMessage = inject('showMessage');
-
-const { userInfo } = useDataStore();
-
-const user = computed(() => userInfo.value);
-const clubs = ref([]);
-const loading = ref(true);
-const activeName = ref('1');
-const menuItems = [
-  { index: '1', label: '周一' },
-  { index: '2', label: '周二' },
-  { index: '3', label: '周三' },
-  { index: '4', label: '周四' },
-  { index: '5', label: '周五' },
-  { index: '6', label: '我的记录' },
-  { index: '7', label: '我的任务' },
+const MAIN_TABS = [
+  { key: 'activities', label: '活动列表' },
+  { key: 'history', label: '历史记录' },
 ];
-const weekDayMap = reactive({
+
+const HISTORY_SUB_TABS = [
+  { key: 'record', label: '签到记录' },
+  { key: 'semester', label: '学期记录' },
+];
+
+const STATUS_OPTIONS_MAP = {
+  pending: [
+    { value: 'all', label: '全部' },
+    { value: 'joined', label: '已报名' },
+    { value: 'joinable', label: '可报名' },
+    { value: 'full', label: '报名已满' },
+    { value: 'blocked', label: '无法报名' },
+  ],
+  semester: [
+    { value: 'all', label: '全部' },
+    { value: 'completed', label: '已完成' },
+    { value: 'pending', label: '未完成' },
+  ],
+  history: [
+    { value: 'all', label: '全部' },
+    { value: 'completed', label: '已完成' },
+    { value: 'unsigned', label: '未签到' },
+    { value: 'notSignOut', label: '未签退' },
+  ],
+};
+
+const WEEKDAY_TEXT = {
   1: '一',
   2: '二',
   3: '三',
   4: '四',
   5: '五',
   6: '六',
-  7: '日'
+  7: '日',
+};
+
+const showMessage = inject('showMessage', () => {});
+const { userInfo, token, loading: userLoading, fetchUserData } = useDataStore();
+
+const activeMainTab = ref('activities');
+const activeHistoryTab = ref('record');
+const selectedQueryDate = ref(formatDate(new Date()));
+const selectedStatus = ref('all');
+const selectedItemId = ref('all');
+const showFilters = ref(false);
+const showDateDropdown = ref(false);
+
+const pendingActivities = ref([]);
+const semesterActivities = ref([]);
+const historyRecords = ref([]);
+const itemOptions = ref([]);
+const summary = ref({ joinNum: 0, validNum: 0 });
+
+const HISTORY_PAGE_SIZE = 15;
+const historyPageNo = ref(1);
+const historyHasMore = ref(false);
+const historyLoadingMore = ref(false);
+
+const signTask = ref(null);
+const refreshingSign = ref(false);
+const signPendingType = ref('');
+
+const loading = ref(false);
+const clubActionPendingMap = ref({});
+const datePickerRef = ref(null);
+
+let ensureAuthPromise = null;
+
+const studentId = computed(() => {
+  const value = Number(userInfo.value?.studentId || 0);
+  return Number.isFinite(value) && value > 0 ? value : null;
+});
+
+const schoolId = computed(() => {
+  const value = Number(userInfo.value?.schoolId || 0);
+  return Number.isFinite(value) && value > 0 ? value : null;
+});
+
+const dateOptions = computed(() => buildDateOptions());
+const currentQueryDate = computed(() => selectedQueryDate.value || formatDate(new Date()));
+const selectedDateLabel = computed(() => {
+  const selected = dateOptions.value.find((item) => item.value === currentQueryDate.value);
+  if (selected) return `${selected.label} ${selected.shortDate}`;
+  const now = new Date();
+  return `周${WEEKDAY_TEXT[resolveWeekDayNumber(now)]} ${formatMonthDay(now)}`;
+});
+const statusOptions = computed(() => {
+  if (activeMainTab.value === 'activities') return STATUS_OPTIONS_MAP.pending;
+  return activeHistoryTab.value === 'semester' ? STATUS_OPTIONS_MAP.semester : STATUS_OPTIONS_MAP.history;
+});
+
+const itemFilterOptions = computed(() => {
+  const options = [{ value: 'all', label: '全部项目' }];
+  itemOptions.value.forEach((item) => {
+    options.push({ value: String(item.itemId), label: item.itemName || `项目${item.itemId}` });
+  });
+  return options;
+});
+
+
+const sourceList = computed(() => {
+  if (activeMainTab.value === 'history') {
+    return activeHistoryTab.value === 'semester' ? semesterActivities.value : historyRecords.value;
+  }
+  return pendingActivities.value;
+});
+
+const filteredList = computed(() => {
+  let list = sourceList.value;
+  if (activeMainTab.value === 'activities' && selectedItemId.value !== 'all') {
+    list = list.filter((item) => String(item.activityItemId || '') === selectedItemId.value);
+  }
+
+  if (selectedStatus.value !== 'all') {
+    list = list.filter((item) => resolveStatusBucket(item) === selectedStatus.value);
+  }
+
+  return list;
+});
+
+const cards = computed(() =>
+  filteredList.value.map((item, index) => {
+    const activityId = resolveActivityId(item);
+    const key = String(activityId || item.configurationId || item.yymmdd || 'club') + '-' + index;
+    const badge = resolveBadge(item);
+    const isHistoryRecord = activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
+
+    return {
+      key,
+      item,
+      activityId,
+      action:
+        activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
+          ? resolveClubAction(item)
+          : null,
+      title: item.activityName || ('活动 #' + (activityId || index + 1)),
+      subTitle: item.teacherName ? (item.teacherName) : '',
+      badgeText: badge.text,
+      badgeClass: badge.className,
+      timeText: formatTimeRange(item),
+      metaSecondaryIcon: isHistoryRecord ? 'ri-calendar-line' : 'ri-team-line',
+      metaSecondaryText: isHistoryRecord ? formatHistoryWeekDate(item) : formatCapacity(item),
+      metaTertiaryIcon: isHistoryRecord ? 'ri-checkbox-circle-line' : 'ri-map-pin-line',
+      metaTertiaryText: isHistoryRecord
+        ? formatHistoryRecordStatus(item)
+        : item.addressDetail || item.address || '地点待定',
+      showIntro: !isHistoryRecord,
+      introText: item.clubIntroduction || formatHistoryHint(item),
+    };
+  }),
+);
+
+const currentListTitle = computed(() => {
+  if (activeMainTab.value === 'activities') return `活动列表（${currentQueryDate.value}）`;
+  if (activeHistoryTab.value === 'semester') return '学期记录（queryMySemesterClubActivity）';
+  return '历史记录';
 });
 
 const emptyMessage = computed(() => {
-  if (activeName.value === '6') return '暂无我的俱乐部记录';
-  if (activeName.value === '7') return '暂无俱乐部任务';
-  return '暂无俱乐部活动或俱乐部活动已达标';
+  if (activeMainTab.value === 'activities') return '暂无活动列表数据';
+  if (activeHistoryTab.value === 'semester') return '暂无学期记录';
+  return '暂无历史记录';
 });
 
+const signTaskStatusText = computed(() => {
+  const task = signTask.value;
+  if (!task) return '无任务';
 
-
-const handleSelect = async (index) => {
-  activeName.value = index;
-  if (index === '6') {
-    await loadMyClubRecords();
-  } else if (index === '7') {
-    await loadMyTasks();
-  } else {
-    await fetchClubInfo(index);
+  if (task.signInStatus === '1' && task.signBackStatus === '1') {
+    return '签到签退均完成';
   }
-};
 
-const fetchClubInfo = async (weekDay) => {
-  loading.value = true;
-  try {
-    const response = await api.queryClubInfo(weekDay);
-    const data = response.data;
-    if (data && data.code === 10000) {
-      if (!data.response || data.response.length === 0) {
-        clubs.value = [];
-      } else {
-        clubs.value = data.response.map(club => ({
-          ...club,
-          weekDay: Number(club.weekDay),
-          joinStatus: Number(club.joinStatus)
-        }));
-      }
-    } else {
-      clubs.value = [];
-      showMessage(data?.msg || '获取俱乐部信息失败', 'error');
-    }
-  } catch (e) {
-    console.error('fetchClubInfo error:', e);
-    clubs.value = [];
-    showMessage('获取俱乐部信息异常', 'error');
-  } finally {
-    loading.value = false;
+  if (task.signInStatus === '1' && task.signBackStatus !== '1') {
+    return '可签退';
   }
-};
 
-const fetchMyTask = async () => {
-  try {
-    const response = await api.queryMyClubTask();
-    const data = response.data;
-    if (data && data.code === 10000) {
-      return data.response || [];
-    } else {
-      showMessage(data?.msg || '获取任务信息失败', 'error');
-      return [];
-    }
-  } catch (e) {
-    console.error('fetchMyTask error:', e);
-    showMessage('获取任务信息异常', 'error');
-    return [];
+  return '可签到';
+});
+
+const signTaskAction = computed(() => {
+  const task = signTask.value;
+  if (!task) return null;
+
+  if (task.signInStatus === '1' && task.signBackStatus === '1') {
+    return {
+      type: '',
+      label: '已完成',
+      pendingLabel: '已完成',
+      disabled: true,
+      buttonClass: 'bg-white/10 text-gray-300',
+    };
   }
-};
 
-const fetchMyClub = async () => {
-  try {
-    const studentId = user.value?.studentId;
-    if (!studentId) return [];
-    const response = await api.queryMyClubRecord(studentId);
-    const data = response.data;
-    if (data && data.code === 10000) {
-      return data.response || [];
-    } else {
-      showMessage(data?.msg || '获取我的俱乐部失败', 'error');
-      return [];
-    }
-  } catch (e) {
-    console.error('fetchMyClub error:', e);
-    showMessage('获取我的俱乐部异常', 'error');
-    return [];
+  if (task.signInStatus === '1' && task.signBackStatus !== '1') {
+    return {
+      type: '2',
+      label: '签退',
+      pendingLabel: '签退中',
+      disabled: false,
+      buttonClass: 'bg-amber-500/85 text-white',
+    };
   }
-};
 
-const loadMyClubRecords = async () => {
-  loading.value = true;
-  try {
-    const data = await fetchMyClub();
-    const normalize = (item) => ({
-      ...item,
-      weekDay: item.weekDay ? Number(item.weekDay) : item.weekDay,
-      joinStatus: item.joinStatus !== undefined ? Number(item.joinStatus) : item.joinStatus
-    });
-    clubs.value = (data || []).map(normalize);
-  } catch (e) {
-    console.error('loadMyClubRecords error:', e);
-    showMessage('加载俱乐部记录失败', 'error');
-    clubs.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
+  return {
+    type: '1',
+    label: '签到',
+    pendingLabel: '签到中',
+    disabled: false,
+    buttonClass: 'bg-emerald-500/85 text-white',
+  };
+});
 
-const loadMyTasks = async () => {
-  loading.value = true;
-  try {
-    const data = await fetchMyTask();
-    const normalize = (item) => ({
-      ...item,
-      weekDay: item.weekDay ? Number(item.weekDay) : item.weekDay,
-      joinStatus: item.joinStatus !== undefined ? Number(item.joinStatus) : item.joinStatus
-    });
-    clubs.value = (data || []).map(normalize);
-  } catch (e) {
-    console.error('loadMyTasks error:', e);
-    showMessage('加载俱乐部任务失败', 'error');
-    clubs.value = [];
-  } finally {
-    loading.value = false;
-  }
-};
+watch(activeMainTab, async () => {
+  selectedStatus.value = 'all';
+  showFilters.value = false;
+  showDateDropdown.value = false;
 
-const handleJoin = async (club) => {
-  let type;
-  if (club.joinStatus === 0 || club.joinStatus === 2) {
-    type = 1;
-  } else if (club.joinStatus === 1 || club.joinStatus === 3) {
-    type = 2;
-  } else {
+  if (activeMainTab.value === 'activities') {
+    await Promise.all([loadCurrentList(), loadItemOptions(), refreshSignTask(false)]);
     return;
   }
 
-  try {
-    const response = await api.joinClub(club.configurationId, type);
-    const data = response.data;
-    if (data && data.code === 10000) {
-      showMessage(data.response?.message || '操作成功', 'success');
-      if (activeName.value === '6') {
-        await loadMyClubRecords();
-      } else if (activeName.value === '7') {
-        await loadMyTasks();
-      } else {
-        await fetchClubInfo(activeName.value);
-      }
-    } else {
-      showMessage(data?.msg || '操作失败', 'error');
-    }
-  } catch (e) {
-    console.error('handleJoin error:', e);
-    showMessage('报名/取消报名操作异常', 'error');
-  }
-};
+  selectedItemId.value = 'all';
+  await Promise.all([loadCurrentList(), loadSummary()]);
+});
 
-const actionLabel = (club) => {
-  if (club.joinStatus === 0) return '报名';
-  if (club.joinStatus === 1) return '取消报名';
-  if (club.joinStatus === 2) return '报名';
-  if (club.joinStatus === 3) return '活动进行中';
-  return '活动已失效';
-};
+watch(activeHistoryTab, async () => {
+  if (activeMainTab.value !== 'history') return;
+  selectedStatus.value = 'all';
+  await loadCurrentList();
+});
 
-const actionClass = (club) => {
-  const base = 'px-3 py-1 rounded font-medium text-sm';
-  if (club.joinStatus === 0 || club.joinStatus === 2) return base + ' bg-blue-600 text-white hover:bg-blue-700';
-  if (club.joinStatus === 1) return base + ' bg-red-600 text-white hover:bg-red-700';
-  if (club.joinStatus === 3) return base + ' bg-green-600 text-white';
-  return base + ' bg-gray-300 text-gray-600';
-};
+watch(
+  dateOptions,
+  (options) => {
+    if (!Array.isArray(options) || options.length === 0) return;
+    if (options.some((item) => item.value === selectedQueryDate.value)) return;
+    selectedQueryDate.value = options[0].value;
+  },
+  { immediate: true },
+);
 
-const isDisabled = (club) => {
-  // Treat expired (>3) as disabled
-  return !(club.joinStatus === 0 || club.joinStatus === 1 || club.joinStatus === 2 || club.joinStatus === 3);
-};
+watch(selectedQueryDate, async () => {
+  if (activeMainTab.value !== 'activities') return;
+  await loadCurrentList();
+});
 
 onMounted(async () => {
-  if (!user.value) {
-    // not logged in, redirect to login
-    window.location.href = '/login';
+  document.addEventListener('click', handleDocumentClick);
+  await Promise.all([loadCurrentList(), loadItemOptions(), refreshSignTask(false)]);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleDocumentClick);
+});
+
+function handleDocumentClick(event) {
+  if (!showDateDropdown.value) return;
+  const root = datePickerRef.value;
+  if (!root || root.contains(event.target)) return;
+  showDateDropdown.value = false;
+}
+
+function selectQueryDate(value) {
+  selectedQueryDate.value = value;
+  showDateDropdown.value = false;
+}
+
+function isApiSuccess(data) {
+  const code = Number(data?.code);
+  return code === 10000 || code === 1000;
+}
+
+function resolveResponseMessage(data, fallback) {
+  const candidates = [data?.response?.message, data?.response, data?.message, data?.msg];
+  for (const item of candidates) {
+    if (typeof item === 'string' && item.trim()) return item.trim();
+  }
+  return fallback;
+}
+
+function extractList(response) {
+  if (Array.isArray(response)) return response;
+  if (!response || typeof response !== 'object') return [];
+
+  const keys = ['records', 'list', 'rows', 'items', 'activityList'];
+  for (const key of keys) {
+    if (Array.isArray(response[key])) return response[key];
+  }
+  return [];
+}
+
+function extractPagedList(response) {
+  const list = extractList(response);
+  if (!response || Array.isArray(response) || typeof response !== 'object') {
+    return {
+      list,
+      total: list.length,
+      hasTotal: false,
+    };
+  }
+
+  const totalCandidate = Number(response.total ?? response.totalCount ?? response.count);
+  const hasTotal = Number.isFinite(totalCandidate) && totalCandidate >= 0;
+  return {
+    list,
+    total: hasTotal ? totalCandidate : list.length,
+    hasTotal,
+  };
+}
+
+function formatDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function formatMonthDay(date) {
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${m}-${d}`;
+}
+
+function resolveWeekDayNumber(date) {
+  const day = date.getDay();
+  return day === 0 ? 7 : day;
+}
+
+function buildDateOptions() {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: 7 }, (_, offset) => {
+    const current = new Date(start);
+    current.setDate(start.getDate() + offset);
+    const weekDay = resolveWeekDayNumber(current);
+    return {
+      value: formatDate(current),
+      label: `周${WEEKDAY_TEXT[weekDay]}`,
+      shortDate: formatMonthDay(current),
+    };
+  });
+}
+
+function resolveActivityId(item) {
+  const candidates = [item.clubActivityId, item.activityId, item.configurationId, item.id];
+  for (const raw of candidates) {
+    const value = Number(raw);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return null;
+}
+
+function resolveStatusBucket(item) {
+  if (activeMainTab.value === 'history') {
+    if (activeHistoryTab.value === 'semester') {
+      return String(item.signStatus) === '1' ? 'completed' : 'pending';
+    }
+
+    const signStatus = String(item.signStatus);
+    if (signStatus === '1') return 'completed';
+    if (signStatus === '3') return 'notSignOut';
+    return 'unsigned';
+  }
+
+  switch (String(item.optionStatus)) {
+    case '1':
+      return 'joined';
+    case '6':
+      return 'joinable';
+    case '7':
+      return 'full';
+    case '3':
+      return 'blocked';
+    default:
+      return 'all';
+  }
+}
+
+function createBadge(text, className) {
+  return {
+    text,
+    className: 'shrink-0 h-6 px-2 rounded-full text-[11px] inline-flex items-center ' + className,
+  };
+}
+
+function resolveBadge(item) {
+  if (activeMainTab.value === 'history' && activeHistoryTab.value === 'semester') {
+    return String(item.signStatus) === '1'
+      ? createBadge('已完成', 'bg-emerald-500/20 text-emerald-200')
+      : createBadge('未完成', 'bg-white/10 text-gray-300');
+  }
+
+  if (activeMainTab.value === 'history') {
+    const signStatus = String(item.signStatus);
+    if (signStatus === '1') return createBadge('已完成', 'bg-emerald-500/20 text-emerald-200');
+    if (signStatus === '3') return createBadge('未签退', 'bg-amber-500/20 text-amber-200');
+    return createBadge('未签到', 'bg-white/10 text-gray-300');
+  }
+
+  switch (String(item.optionStatus)) {
+    case '1':
+      return createBadge('已报名', 'bg-amber-500/20 text-amber-200');
+    case '6':
+      return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
+    case '7':
+      return createBadge('报名已满', 'bg-rose-500/20 text-rose-200');
+    case '3':
+      return createBadge('无法报名', 'bg-white/10 text-gray-300');
+    default:
+      return createBadge('待开放', 'bg-white/10 text-gray-300');
+  }
+}
+
+function resolveClubAction(item) {
+  const optionStatus = String(item.optionStatus);
+
+  if (optionStatus === '6') {
+    return {
+      type: 1,
+      label: '报名',
+      pendingLabel: '报名中',
+      disabled: false,
+      buttonClass: 'bg-cyan-500 hover:bg-cyan-400',
+    };
+  }
+
+  if (optionStatus === '1') {
+    return {
+      type: 2,
+      label: '取消报名',
+      pendingLabel: '取消中',
+      disabled: false,
+      buttonClass: 'bg-rose-500 hover:bg-rose-400',
+    };
+  }
+
+  if (optionStatus === '7') {
+    return {
+      type: 0,
+      label: '已满员',
+      pendingLabel: '已满员',
+      disabled: true,
+      buttonClass: 'bg-white/10 text-gray-300',
+    };
+  }
+
+  if (optionStatus === '3') {
+    return {
+      type: 0,
+      label: '无法报名',
+      pendingLabel: '无法报名',
+      disabled: true,
+      buttonClass: 'bg-white/10 text-gray-300',
+    };
+  }
+
+  return {
+    type: 0,
+    label: '暂不可操作',
+    pendingLabel: '暂不可操作',
+    disabled: true,
+    buttonClass: 'bg-white/10 text-gray-300',
+  };
+}
+
+function formatTimeRange(item) {
+  const start = item.startTime || '--:--';
+  const end = item.endTime || '--:--';
+  const hideDatePrefix = activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
+  const dateText = !hideDatePrefix && item.yymmdd ? item.yymmdd + ' ' : '';
+  return dateText + start + ' - ' + end;
+}
+
+function formatCapacity(item) {
+  const signed = Number(item.signInStudent ?? item.joinStudentNum);
+  const total = Number(item.maxStudent ?? item.studentNum);
+
+  const signedText = Number.isFinite(signed) && signed >= 0 ? signed : '-';
+  const totalText = Number.isFinite(total) && total >= 0 ? total : '-';
+
+  return `${signedText}/${totalText} 人`;
+}
+
+function formatHistoryWeekDate(item) {
+  const weekValue = Number(item.weekDay);
+  const weekLabel = Number.isFinite(weekValue) && WEEKDAY_TEXT[weekValue] ? ('周' + WEEKDAY_TEXT[weekValue]) : '周--';
+  const dateText = item.yymmdd || '--';
+  return weekLabel + ' ' + dateText;
+}
+
+function formatHistoryRecordStatus(item) {
+  const signStatus = String(item.signStatus);
+  if (signStatus === '1') return '已完成';
+  if (signStatus === '3') return '未签退';
+  return '未签到';
+}
+
+function formatHistoryHint(item) {
+  if (!item.yymmdd) return '暂无活动介绍';
+  return `活动日期：${item.yymmdd}`;
+}
+
+function getClubActionPendingKey(activityId, type) {
+  return `${activityId}-${type}`;
+}
+
+function isClubActionPending(key) {
+  return clubActionPendingMap.value[key] === true;
+}
+
+function isCardActionPending(card) {
+  if (!card || !card.action) return false;
+  const type = Number(card.action.type);
+  if (type !== 1 && type !== 2) return false;
+  return isClubActionPending(getClubActionPendingKey(card.activityId, type));
+}
+
+async function handleCardAction(card) {
+  if (!card || !card.action) return;
+
+  const type = Number(card.action.type);
+  if (type <= 0) return;
+
+  await handleClubAction(card.item, type);
+}
+
+
+function setClubActionPending(key, pending) {
+  const next = { ...clubActionPendingMap.value };
+  if (pending) {
+    next[key] = true;
+  } else {
+    delete next[key];
+  }
+  clubActionPendingMap.value = next;
+}
+
+function waitForUserLoadingIdle() {
+  return new Promise((resolve) => {
+    if (!userLoading.value) {
+      resolve();
+      return;
+    }
+
+    const stop = watch(
+      () => userLoading.value,
+      (next) => {
+        if (next) return;
+        stop();
+        resolve();
+      },
+      { immediate: true },
+    );
+  });
+}
+
+async function ensureAuthReady() {
+  if (userLoading.value) {
+    await waitForUserLoadingIdle();
+  }
+
+  if (token.value && studentId.value) return true;
+
+  if (!ensureAuthPromise) {
+    ensureAuthPromise = fetchUserData({ background: false })
+      .then((result) => !!result?.ok)
+      .catch(() => false)
+      .finally(() => {
+        ensureAuthPromise = null;
+      });
+  }
+
+  const ok = await ensureAuthPromise;
+  return ok && !!token.value && !!studentId.value;
+}
+
+async function loadHistoryRecords({ append = false } = {}) {
+  const targetPage = append ? historyPageNo.value + 1 : 1;
+  const response = await api.queryMyClubRecord(studentId.value, targetPage, HISTORY_PAGE_SIZE);
+  const data = response?.data;
+
+  if (!isApiSuccess(data)) {
+    if (!append) {
+      historyRecords.value = [];
+      historyPageNo.value = 1;
+      historyHasMore.value = false;
+    }
+    showMessage(data?.msg || data?.message || '加载历史记录失败', 'error');
+    return false;
+  }
+
+  const paged = extractPagedList(data.response);
+  const nextList = append ? [...historyRecords.value, ...paged.list] : paged.list;
+  historyRecords.value = nextList;
+  historyPageNo.value = targetPage;
+  historyHasMore.value = paged.hasTotal
+    ? nextList.length < paged.total && paged.list.length > 0
+    : paged.list.length >= HISTORY_PAGE_SIZE;
+  return true;
+}
+
+async function loadMoreHistoryRecords() {
+  if (historyLoadingMore.value || !historyHasMore.value || activeMainTab.value !== 'history') return;
+
+  historyLoadingMore.value = true;
+  try {
+    await loadHistoryRecords({ append: true });
+  } catch (error) {
+    console.error('loadMoreHistoryRecords failed:', error);
+    showMessage('加载更多历史记录异常', 'error');
+  } finally {
+    historyLoadingMore.value = false;
+  }
+}
+
+async function loadCurrentList() {
+  loading.value = true;
+  try {
+    const authReady = await ensureAuthReady();
+    if (!authReady) {
+      pendingActivities.value = [];
+      semesterActivities.value = [];
+      historyRecords.value = [];
+      historyPageNo.value = 1;
+      historyHasMore.value = false;
+      return;
+    }
+
+    if (activeMainTab.value === 'history') {
+      if (activeHistoryTab.value === 'semester') {
+        historyPageNo.value = 1;
+        historyHasMore.value = false;
+
+        const semesterResponse = await api.queryMyClubTask();
+        const semesterData = semesterResponse?.data;
+        if (!isApiSuccess(semesterData)) {
+          semesterActivities.value = [];
+          showMessage(semesterData?.msg || semesterData?.message || '加载学期记录失败', 'error');
+          return;
+        }
+        semesterActivities.value = extractList(semesterData.response);
+        return;
+      }
+
+      await loadHistoryRecords({ append: false });
+      return;
+    }
+
+    if (!schoolId.value) {
+      pendingActivities.value = [];
+      return;
+    }
+
+    const response = await api.queryClubInfo({
+      pageNo: 1,
+      pageSize: 15,
+      queryTime: currentQueryDate.value,
+      schoolId: schoolId.value,
+      studentId: studentId.value,
+    });
+
+    const data = response?.data;
+    if (!isApiSuccess(data)) {
+      pendingActivities.value = [];
+      showMessage(data?.msg || data?.message || '加载活动列表失败', 'error');
+      return;
+    }
+
+    pendingActivities.value = extractList(data.response);
+  } catch (error) {
+    console.error('loadCurrentList failed:', error);
+    if (activeMainTab.value === 'history') {
+      if (activeHistoryTab.value === 'semester') {
+        semesterActivities.value = [];
+        historyPageNo.value = 1;
+        historyHasMore.value = false;
+        showMessage('加载学期记录异常', 'error');
+      } else {
+        historyRecords.value = [];
+        historyPageNo.value = 1;
+        historyHasMore.value = false;
+        showMessage('加载历史记录异常', 'error');
+      }
+      return;
+    }
+
+    pendingActivities.value = [];
+    showMessage('加载活动列表异常', 'error');
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function loadSummary() {
+  try {
+    const authReady = await ensureAuthReady();
+    if (!authReady) {
+      summary.value = { joinNum: 0, validNum: 0 };
+      return;
+    }
+
+
+    const response = await api.countValidSignUp(studentId.value);
+    const data = response?.data;
+    if (!isApiSuccess(data)) {
+      summary.value = { joinNum: 0, validNum: 0 };
+      return;
+    }
+
+    const list = extractList(data.response);
+    const first = list[0] || (typeof data.response === 'object' ? data.response : {}) || {};
+    summary.value = {
+      joinNum: Number(first.joinNum || 0),
+      validNum: Number(first.validNum || 0),
+    };
+  } catch (error) {
+    console.error('loadSummary failed:', error);
+    summary.value = { joinNum: 0, validNum: 0 };
+  }
+}
+
+async function loadItemOptions() {
+  try {
+    const authReady = await ensureAuthReady();
+    if (!authReady || !schoolId.value) {
+      itemOptions.value = [];
+      selectedItemId.value = 'all';
+      return;
+    }
+
+
+    const normalResponse = await api.queryMyClubItemList({
+      schoolId: schoolId.value,
+      studentId: studentId.value,
+    });
+
+    let data = normalResponse?.data;
+    let list = isApiSuccess(data) ? extractList(data.response) : [];
+
+    if (list.length === 0) {
+      const fallbackResponse = await api.queryMyClubItemList({
+        schoolId: schoolId.value,
+        studentId: studentId.value,
+        type: 2,
+      });
+      data = fallbackResponse?.data;
+      list = isApiSuccess(data) ? extractList(data.response) : [];
+    }
+
+    itemOptions.value = list
+      .map((item) => ({
+        itemId: Number(item.itemId),
+        itemName: item.itemName || '',
+      }))
+      .filter((item) => Number.isFinite(item.itemId) && item.itemId > 0);
+
+    if (!itemOptions.value.some((item) => String(item.itemId) === selectedItemId.value)) {
+      selectedItemId.value = 'all';
+    }
+  } catch (error) {
+    console.error('loadItemOptions failed:', error);
+    itemOptions.value = [];
+    selectedItemId.value = 'all';
+  }
+}
+
+function normalizeSignTask(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+
+  const activityId = Number(payload.activityId);
+  if (!Number.isFinite(activityId) || activityId <= 0) return null;
+
+  return {
+    ...payload,
+    activityId,
+    latitude: String(payload.latitude || ''),
+    longitude: String(payload.longitude || ''),
+    signStatus: String(payload.signStatus ?? ''),
+    signInStatus: String(payload.signInStatus ?? ''),
+    signBackStatus: String(payload.signBackStatus ?? ''),
+  };
+}
+
+async function refreshSignTask(manual = false) {
+  if (refreshingSign.value) return;
+
+  refreshingSign.value = true;
+  try {
+    const authReady = await ensureAuthReady();
+    if (!authReady) {
+      signTask.value = null;
+      return;
+    }
+
+    const response = await api.queryClubSignStatus(studentId.value);
+    const data = response?.data;
+
+    if (!isApiSuccess(data)) {
+      signTask.value = null;
+      if (manual) showMessage(data?.msg || data?.message || '刷新签到状态失败', 'error');
+      return;
+    }
+
+    signTask.value = normalizeSignTask(data.response);
+
+    if (manual && !signTask.value) {
+      showMessage('当前没有可签到/签退任务', 'info');
+    }
+  } catch (error) {
+    signTask.value = null;
+    console.error('refreshSignTask failed:', error);
+    if (manual) showMessage('刷新签到状态异常', 'error');
+  } finally {
+    refreshingSign.value = false;
+  }
+}
+
+async function handleSignTask(signType) {
+  const task = signTask.value;
+  const normalizedSignType = String(signType) === '2' ? '2' : String(signType) === '1' ? '1' : '';
+
+  if (!task || !normalizedSignType) {
+    showMessage('当前没有可操作的签到/签退任务', 'warning');
     return;
   }
 
-  if (activeName.value === '6') {
-    await loadMyClubRecords();
-  } else if (activeName.value === '7') {
-    await loadMyTasks();
-  } else {
-    await fetchClubInfo(activeName.value);
+  const authReady = await ensureAuthReady();
+  if (!authReady) {
+    showMessage('登录状态失效，请重新登录', 'error');
+    return;
   }
-});
 
+  if (!task.latitude || !task.longitude) {
+    showMessage('签到坐标缺失，暂无法执行操作', 'error');
+    return;
+  }
+
+  signPendingType.value = normalizedSignType;
+
+  try {
+    const response = await api.signInOrSignBack({
+      activityId: task.activityId,
+      latitude: task.latitude,
+      longitude: task.longitude,
+      signType: normalizedSignType,
+      studentId: studentId.value,
+    });
+
+    const data = response?.data;
+    const actionText = normalizedSignType === '1' ? '签到' : '签退';
+    if (!isApiSuccess(data)) {
+      showMessage(data?.msg || data?.message || `${actionText}失败`, 'error');
+      return;
+    }
+
+    showMessage(resolveResponseMessage(data, `${actionText}成功`), 'success');
+    await Promise.all([refreshSignTask(false), loadCurrentList()]);
+  } catch (error) {
+    console.error('handleSignTask failed:', error);
+    showMessage('签到/签退操作异常', 'error');
+  } finally {
+    signPendingType.value = '';
+  }
+}
+
+async function handleClubAction(item, type) {
+  const activityId = resolveActivityId(item);
+  if (!Number.isFinite(activityId) || activityId <= 0) {
+    showMessage('活动标识缺失，无法执行操作', 'error');
+    return;
+  }
+
+  const authReady = await ensureAuthReady();
+  if (!authReady) {
+    showMessage('登录状态失效，请重新登录', 'error');
+    return;
+  }
+
+  const actionType = Number(type) === 2 ? 2 : 1;
+  const actionKey = getClubActionPendingKey(activityId, actionType);
+  setClubActionPending(actionKey, true);
+
+  try {
+    const response =
+      actionType === 1
+        ? await api.joinClub(activityId, studentId.value)
+        : await api.cancelClub(activityId, studentId.value);
+
+    const data = response?.data;
+    if (!isApiSuccess(data)) {
+      showMessage(data?.msg || data?.message || '娱乐部操作失败', 'error');
+      return;
+    }
+
+    const fallback = actionType === 1 ? '报名成功' : '取消报名成功';
+    showMessage(resolveResponseMessage(data, fallback), 'success');
+
+    const refreshTasks = [loadCurrentList(), refreshSignTask(false)];
+    if (activeMainTab.value === 'history') refreshTasks.push(loadSummary());
+
+    await Promise.all(refreshTasks);
+  } catch (error) {
+    console.error('handleClubAction failed:', error);
+    showMessage('娱乐部操作异常', 'error');
+  } finally {
+    setClubActionPending(actionKey, false);
+  }
+}
 </script>
+
+<style scoped>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 180ms ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.meta-pill {
+  height: 28px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.intro-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

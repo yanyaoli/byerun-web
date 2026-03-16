@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <nav
     class="fixed left-0 right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] h-16 z-[998] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
   >
@@ -8,18 +8,20 @@
       <button
         v-for="item in tabs"
         :key="item.key"
+        type="button"
         :class="[
           'relative flex flex-col items-center justify-center bg-none border-0 cursor-pointer rounded-full transition-all duration-[300ms] outline-none flex-1 h-full',
-          active === item.key ? 'text-gray-200' : 'text-gray-300/80',
+          active === item.key ? 'text-gray-100' : 'text-gray-300/80',
         ]"
         @click="handleClick(item)"
       >
         <div
           v-if="active === item.key"
-          class="absolute w-12 h-12 rounded-xl bg-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none"
+          class="absolute w-11 h-11 rounded-xl bg-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none"
         ></div>
+
         <div class="relative flex items-center justify-center w-6 h-6 z-10">
-          <i :class="item.icon" class="text-[20px]"></i>
+          <i :class="item.icon" class="text-[19px]"></i>
           <span
             v-if="item.key === 'chat' && chatUnread && active !== 'chat'"
             class="absolute -top-0.5 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 border border-white"
@@ -33,12 +35,14 @@
 
 <script setup>
 const emit = defineEmits(['update:active', 'switch']);
-const props = defineProps({
+
+defineProps({
   active: { type: String, default: 'submit' },
   chatUnread: { type: Boolean, default: false },
   tabs: {
     type: Array,
     default: () => [
+      { key: 'club', label: '俱乐部', icon: 'ri-basketball-line' },
       { key: 'records', label: '记录', icon: 'ri-task-line' },
       { key: 'submit', label: '管理', icon: 'ri-command-line' },
       { key: 'chat', label: '消息', icon: 'ri-message-3-line' },

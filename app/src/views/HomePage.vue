@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="h-full min-h-0 flex flex-col bg-transparent overflow-hidden">
     <AppHeader v-show="activeKey !== 'chat'" ref="appHeaderRef" :scrolled="headerCompact" />
 
@@ -15,6 +15,7 @@
       >
         <keep-alive>
           <RunRecords v-if="activeKey === 'records'" :key="'records'" />
+          <Club v-else-if="activeKey === 'club'" :key="'club'" />
           <SubmitRun
             v-else-if="activeKey === 'submit'"
             :key="'submit'"
@@ -44,7 +45,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, nextTick, watch, provide, inject } from 'vue';
 import RunRecords from '@/components/RunRecords.vue';
-import SubmitRun from '../components/SubmitRun.vue';
+import Club from '@/components/Club.vue';
+import SubmitRun from '@/components/SubmitRun.vue';
 import ChatPage from '@/views/ChatPage.vue';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import BottomTabBar from '@/components/layout/BottomTabBar.vue';
@@ -80,16 +82,16 @@ function updateHeaderCompact(top) {
   return true;
 }
 
-function handleMainScroll(e) {
-  const top = e?.target?.scrollTop || 0;
+function handleMainScroll(event) {
+  const top = event?.target?.scrollTop || 0;
   updateHeaderCompact(top);
 }
 
-const setActiveKey = (key) => {
+function setActiveKey(key) {
   if (!key || key === activeKey.value) return;
   activeKey.value = key;
   activeTab.value = key;
-};
+}
 
 function measureHeights() {
   const bottomEl = bottomBarRef.value && (bottomBarRef.value.$el || bottomBarRef.value);
@@ -111,17 +113,18 @@ function scheduleMeasureHeights() {
   });
 }
 
-const showMessage = (message, type = 'info') => {
+function showMessage(message, type = 'info') {
   if (activeKey.value !== 'chat' && appHeaderRef.value?.show) {
     appHeaderRef.value.show(message, type);
     return;
   }
+
   if (typeof rootShowMessage === 'function') {
     rootShowMessage(message, type);
   }
-};
+}
 
-const refreshUserData = async (options = { background: true }) => {
+async function refreshUserData(options = { background: true }) {
   if (!userInfo.value) return true;
 
   const result = await fetchUserData(options);
@@ -134,24 +137,24 @@ const refreshUserData = async (options = { background: true }) => {
 
   showMessage(result?.message || '登录状态校验失败', 'error');
   return false;
-};
+}
 
-const syncUnreadReminder = async () => {
+async function syncUnreadReminder() {
   if (activeKey.value === 'chat') return;
   const unread = await checkHasUnreadMessages(token.value || '');
   setChatUnread(unread);
-};
+}
 
-const initializePage = async () => {
+async function initializePage() {
   await refreshUserData({ background: false });
   await waitForIdle();
   await preloadAutorunPingMeta();
   await syncUnreadReminder();
-};
+}
 
-const handleRunSubmitted = async () => {
+async function handleRunSubmitted() {
   await refreshUserData({ background: true });
-};
+}
 
 provide('goBack', () => setActiveKey('submit'));
 provide('showMessage', showMessage);
@@ -186,6 +189,7 @@ onMounted(() => {
   window.addEventListener('orientationchange', scheduleMeasureHeights);
   window.visualViewport?.addEventListener('resize', scheduleMeasureHeights);
   window.visualViewport?.addEventListener('scroll', scheduleMeasureHeights);
+
   nextTick(() => {
     updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
   });
@@ -196,6 +200,7 @@ onUnmounted(() => {
   window.removeEventListener('orientationchange', scheduleMeasureHeights);
   window.visualViewport?.removeEventListener('resize', scheduleMeasureHeights);
   window.visualViewport?.removeEventListener('scroll', scheduleMeasureHeights);
+
   if (homeMeasureFrame) {
     cancelAnimationFrame(homeMeasureFrame);
     homeMeasureFrame = 0;
