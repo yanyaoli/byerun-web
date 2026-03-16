@@ -55,10 +55,20 @@ const minPositive = (a, b) => {
   return 0;
 };
 
-const selectAllRunDistance = (gender, runStandard = {}) => {
+const selectOnceRunDistanceMin = (gender, runStandard = {}) => {
   const normalized = normalizeGender(gender);
-  const boy = toPositiveNumber(runStandard?.boyAllRunDistance);
-  const girl = toPositiveNumber(runStandard?.girlAllRunDistance);
+  const boy = toPositiveNumber(runStandard?.boyOnceDistanceMin);
+  const girl = toPositiveNumber(runStandard?.girlOnceDistanceMin);
+
+  if (normalized === 'male') return boy;
+  if (normalized === 'female') return girl;
+  return maxFloat(boy, girl);
+};
+
+const selectOnceRunDistanceMax = (gender, runStandard = {}) => {
+  const normalized = normalizeGender(gender);
+  const boy = toPositiveNumber(runStandard?.boyOnceDistanceMax);
+  const girl = toPositiveNumber(runStandard?.girlOnceDistanceMax);
 
   if (normalized === 'male') return boy;
   if (normalized === 'female') return girl;
@@ -69,18 +79,25 @@ export function calculateDistanceBounds(gender, runStandard = {}, defaults = {})
   const defaultMin = Math.max(1, Math.trunc(toFiniteNumber(defaults?.min, DEFAULT_DISTANCE_MIN)));
   const defaultMax = Math.max(defaultMin, Math.trunc(toFiniteNumber(defaults?.max, DEFAULT_DISTANCE_MAX)));
 
-  const allDistance = selectAllRunDistance(gender, runStandard);
+  const onceDistanceMin = selectOnceRunDistanceMin(gender, runStandard);
+  const onceDistanceMax = selectOnceRunDistanceMax(gender, runStandard);
+  let minDistance = defaultMin;
   let maxDistance = defaultMax;
 
-  if (allDistance > 0) {
-    maxDistance = Math.trunc(allDistance / 10) + 1000;
+  if (onceDistanceMin > 0 || onceDistanceMax > 0) {
+    if (onceDistanceMin > 0) {
+      minDistance = Math.max(1, Math.trunc(onceDistanceMin) + 1);
+    }
+    if (onceDistanceMax > 0) {
+      maxDistance = Math.max(minDistance, Math.trunc(onceDistanceMax) + 1001);
+    }
   }
 
-  if (maxDistance < defaultMin) {
-    maxDistance = defaultMin;
+  if (maxDistance < minDistance) {
+    maxDistance = minDistance;
   }
 
-  return { min: defaultMin, max: maxDistance };
+  return { min: minDistance, max: maxDistance };
 }
 
 // Time bounds come from runStandard once-time constraints and gender.
@@ -324,6 +341,28 @@ export function normalizeRoundedRunTime(runTimeMinutes, distanceMeters, opts = {
   if (rounded < 1) rounded = 1;
 
   return rounded;
+}
+
+export function calculatePaceMinutesPerKm(distanceMeters, durationMinutes) {
+  const distance = toFiniteNumber(distanceMeters, 0);
+  const duration = toFiniteNumber(durationMinutes, 0);
+
+  if (distance <= 0 || duration <= 0) return 0;
+
+  const pace = duration / (distance / 1000);
+  return Number.isFinite(pace) ? Number(pace.toFixed(2)) : 0;
+}
+
+export function formatPaceMinutesPerKm(distanceMeters, durationMinutes) {
+  const pace = calculatePaceMinutesPerKm(distanceMeters, durationMinutes);
+  if (pace <= 0) return "0'00''/km";
+
+  const minutes = Math.floor(pace);
+  const seconds = Math.round((pace - minutes) * 60);
+  const normalizedMinutes = minutes + Math.floor(seconds / 60);
+  const normalizedSeconds = seconds % 60;
+
+  return `${normalizedMinutes}'${String(normalizedSeconds).padStart(2, '0')}''/km`;
 }
 
 export function isPaceWithinLimits(

@@ -48,11 +48,11 @@ export async function submitRun(payload = {}) {
   const { userId, studentId, schoolId, submitRunRoute, runStandard, userInfo } = useDataStore();
   const bounds = resolveRunBoundsFromStandard(userInfo.value || {}, runStandard.value || {});
 
-  if (!Number.isInteger(dist) || dist < bounds.distanceMin || dist > bounds.distanceMax) {
+  if (!Number.isInteger(dist) || dist <= 0) {
     return {
       ok: false,
       msg: 'distance_invalid',
-      bounds: { min: bounds.distanceMin, max: bounds.distanceMax },
+      bounds: { min: 1, max: 0 },
     };
   }
 

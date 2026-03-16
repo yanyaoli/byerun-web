@@ -228,13 +228,13 @@ const isCompletedToday = computed(() => {
   return lastRunAtToday;
 });
 
-const statusLabelText = computed(() => (isCompletedToday.value ? '\u5df2\u5b8c\u6210' : '\u5f85\u6267\u884c'));
+const statusLabelText = computed(() => (isCompletedToday.value ? '已完成' : '待执行'));
 const statusLabelClass = computed(() =>
   isCompletedToday.value
     ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
     : 'text-orange-300 border-orange-500/30 bg-orange-500/10',
 );
-const enabledLabelText = computed(() => (form.value.enabled ? '\u5df2\u542f\u7528' : '\u672a\u542f\u7528'));
+const enabledLabelText = computed(() => (form.value.enabled ? '已启用' : '未启用'));
 const enabledLabelClass = computed(() =>
   form.value.enabled
     ? 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10'

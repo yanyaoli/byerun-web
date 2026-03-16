@@ -1,4 +1,4 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import CryptoJS from 'crypto-js';
 import getDeviceInfo from '@/utils/device';
 import { genSign } from '@/utils/sign.js';
@@ -17,29 +17,29 @@ const req = axios.create({
 
 const REQUEST_TRACK_KEY = '__isPrimaryApiRequest';
 
-const startTrackedRequest = (config) => {
+function startTrackedRequest(config) {
   config[REQUEST_TRACK_KEY] = true;
   beginApiRequest();
   return config;
-};
+}
 
-const finishTrackedRequest = (config) => {
+function finishTrackedRequest(config) {
   if (!config || config[REQUEST_TRACK_KEY] !== true) return;
   endApiRequest();
-};
+}
 
-const clearClientSideState = () => {
+function clearClientSideState() {
   clearAuthSessionStorage();
-};
+}
 
-const handleAuthFailure = () => {
+function handleAuthFailure() {
   clearClientSideState();
 
   if (typeof window === 'undefined') return;
   if (window.location.pathname !== '/auth') {
     window.location.replace('/auth');
   }
-};
+}
 
 req.interceptors.request.use(
   (config) => {
@@ -54,13 +54,11 @@ req.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// 响应拦截器
 req.interceptors.response.use(
   (response) => {
     finishTrackedRequest(response?.config);
 
     const data = response.data;
-    // 处理业务逻辑错误，如验证过期
     if (data && (data.code === 10001 || data.msg === 'not_login')) {
       handleAuthFailure();
     }
@@ -91,13 +89,13 @@ export const api = {
       sysVersion: device.sysVersion,
     });
   },
-  // 发送验证码
+
   sendVerifyCode: async (phoneNum) => {
     return req.get(appConfig.api.endpoints.sendVerifyCode, {
       params: { phoneNum },
     });
   },
-  // 重置密码
+
   updatePassword: async (phone, password, code) => {
     return req.post(appConfig.api.endpoints.updatePassword, {
       password: CryptoJS.MD5(password).toString(),
@@ -107,19 +105,16 @@ export const api = {
     });
   },
 
-  // 获取令牌信息
   getToken: async () => {
     return req.get(appConfig.api.endpoints.token);
   },
 
-  // 获取跑步记录
   getRunRecords: async (pageNum = 1, pageSize = 15) => {
     return req.get(appConfig.api.endpoints.runRecord, {
       params: { pageNum, pageSize },
     });
   },
 
-  // 提交跑步记录
   saveNewRecord: async (trackPoints, runDistance, runTime, userId, recordDate, yearSemester) => {
     const device = getDeviceInfo();
     return req.post(appConfig.api.endpoints.saveNewRecord, {
@@ -141,61 +136,119 @@ export const api = {
     });
   },
 
-  // 获取活动信息
   getJoinNum: async (schoolId, studentId) => {
     return req.get(appConfig.api.endpoints.joinNum, {
       params: { schoolId, studentId },
     });
   },
 
-  // 获取跑步标准
   getRunStandard: async (schoolId) => {
     return req.get(appConfig.api.endpoints.runStandard, {
       params: { schoolId },
     });
   },
 
-  // 获取跑步信息
   getRunInfo: async (userId, yearSemester) => {
     return req.get(appConfig.api.endpoints.runInfo, {
       params: { userId, yearSemester },
     });
   },
 
-  // 查询指定星期的俱乐部信息
-  queryClubInfo: async (weekDay = 1) => {
+  // queryActivityList: pageNo/pageSize/queryTime/schoolId/studentId
+  queryClubInfo: async ({ queryTime, schoolId, studentId, pageNo = 1, pageSize = 15 } = {}) => {
     return req.get(appConfig.api.endpoints.clubInfo, {
       params: {
-        pageNo: 1,
-        pageSize: 15,
-        weekDay,
-      },
-    });
-  },
-
-  // 查询我的俱乐部活动记录
-  queryMyClubRecord: async (studentId) => {
-    return req.get(appConfig.api.endpoints.myClubRecord, {
-      params: {
-        pageNo: 1,
-        pageSize: 15,
+        pageNo,
+        pageSize,
+        queryTime,
+        schoolId,
         studentId,
       },
     });
   },
 
-  // 查询我的俱乐部任务
+  
+  // queryMyActivityList（活动列表置顶待完成）
+  queryMyPendingClub: async (studentId, pageNo = 1, pageSize = 15) => {
+    return req.get(appConfig.api.endpoints.myPendingClub, {
+      params: {
+        pageNo,
+        pageSize,
+        studentId,
+      },
+    });
+  },
+  // queryMySemesterClubActivity
   queryMyClubTask: async () => {
     return req.get(appConfig.api.endpoints.myClubTask);
   },
 
-  // 加入俱乐部/退出俱乐部
-  joinClub: async (configurationId, type) => {
-    return req.get(appConfig.api.endpoints.joinClub, {
+  // getStudentClubRecord
+  queryMyClubRecord: async (studentId, pageNo = 1, pageSize = 15) => {
+    return req.get(appConfig.api.endpoints.myClubRecord, {
       params: {
-        configurationId,
-        type,
+        pageNo,
+        pageSize,
+        studentId,
       },
     });
   },
+
+  // joinClubActivity
+  joinClub: async (activityId, studentId) => {
+    return req.get(appConfig.api.endpoints.joinClub, {
+      params: {
+        activityId,
+        studentId,
+      },
+    });
+  },
+
+  // cancelActivity
+  cancelClub: async (activityId, studentId) => {
+    return req.get(appConfig.api.endpoints.cancelClub, {
+      params: {
+        activityId,
+        studentId,
+      },
+    });
+  },
+
+  // countValidSignUp
+  countValidSignUp: async (studentId) => {
+    return req.get(appConfig.api.endpoints.clubSummary, {
+      params: { studentId },
+    });
+  },
+
+  // getMyClubItemList
+  queryMyClubItemList: async ({ schoolId, studentId, type } = {}) => {
+    const params = { schoolId, studentId };
+    if (type !== undefined && type !== null && `${type}`.trim() !== '') {
+      params.type = type;
+    }
+
+    return req.get(appConfig.api.endpoints.clubItems, {
+      params,
+    });
+  },
+
+  // getSignInTf
+  queryClubSignStatus: async (studentId) => {
+    return req.get(appConfig.api.endpoints.clubSignStatus, {
+      params: { studentId },
+    });
+  },
+
+  // signInOrSignBack signType: 1-签到 2-签退
+  signInOrSignBack: async ({ activityId, latitude, longitude, signType, studentId }) => {
+    return req.post(appConfig.api.endpoints.clubSignAction, {
+      activityId: Number(activityId),
+      latitude: String(latitude),
+      longitude: String(longitude),
+      signType: String(signType),
+      studentId: Number(studentId),
+    });
+  },
 };
+
