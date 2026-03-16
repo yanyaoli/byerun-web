@@ -185,7 +185,9 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useApiRequestGate } from '@/composables/useApiRequestGate';
 import { waitForAutorunPingReady } from '@/composables/useAutorunPingMeta';
 import {
+  calculatePaceMinutesPerKm,
   computeDurationFromDistance,
+  formatPaceMinutesPerKm,
   normalizeRoundedRunTime,
   randomIntNonThousand,
   resolveRunBoundsFromStandard,
@@ -237,13 +239,11 @@ const distanceBounds = computed(() =>
 
 const isDistanceValid = computed(() => {
   const distance = Number(form.value.distance);
-  const { distanceMin, distanceMax } = distanceBounds.value;
-  return Number.isInteger(distance) && distance >= distanceMin && distance <= distanceMax;
+  return Number.isInteger(distance) && distance > 0;
 });
 
 const distanceErrorText = computed(() => {
-  const { distanceMin, distanceMax } = distanceBounds.value;
-  return `跑步里程需为 ${distanceMin}-${distanceMax} 米之间的整数`;
+  return '跑步里程需为大于 0 的整数';
 });
 
 const buildLocalRandomRun = () => {
@@ -259,6 +259,24 @@ const buildLocalRandomRun = () => {
   });
 
   const route = String(form.value.route || selectedRoute.value || 'default').trim() || 'default';
+  const paceMinutesPerKm = calculatePaceMinutesPerKm(runDistance, runTime);
+
+  console.info('[SubmitRun] Random run generated', {
+    route,
+    distanceBounds: {
+      min: bounds.distanceMin,
+      max: bounds.distanceMax,
+    },
+    timeBounds: {
+      min: bounds.timeMin,
+      max: bounds.timeMax,
+    },
+    runDistance,
+    rawDurationMinutes: duration,
+    roundedRunTimeMinutes: runTime,
+    paceMinutesPerKm,
+    paceDisplay: formatPaceMinutesPerKm(runDistance, runTime),
+  });
 
   return {
     map_id: route,
@@ -414,9 +432,7 @@ const handleSubmit = async () => {
       if (res.msg === 'not_login') {
         msg = '请先登录';
       } else if (res.msg === 'distance_invalid') {
-        const min = Number(res.bounds?.min || distanceBounds.value.distanceMin);
-        const max = Number(res.bounds?.max || distanceBounds.value.distanceMax);
-        msg = `跑步里程需为 ${min}-${max} 米之间的整数`;
+        msg = '跑步里程需为大于 0 的整数';
       } else if (res.msg === 'track_invalid') {
         msg = '轨迹生成失败，请重新随机里程';
       }
@@ -477,13 +493,8 @@ loadMaps().then(async () => {
   }
 
   const cachedDistance = Number(submitRunDistance.value);
-  const { distanceMin, distanceMax } = distanceBounds.value;
 
-  if (
-    Number.isInteger(cachedDistance) &&
-    cachedDistance >= distanceMin &&
-    cachedDistance <= distanceMax
-  ) {
+  if (Number.isInteger(cachedDistance) && cachedDistance > 0) {
     form.value.distance = cachedDistance;
   } else {
     await onRandomFill();
