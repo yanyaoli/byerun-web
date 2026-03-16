@@ -167,8 +167,7 @@ export const api = {
     });
   },
 
-  
-  // queryMyActivityList（活动列表置顶待完成）
+  // queryMyActivityList
   queryMyPendingClub: async (studentId, pageNo = 1, pageSize = 15) => {
     return req.get(appConfig.api.endpoints.myPendingClub, {
       params: {
@@ -251,4 +250,3 @@ export const api = {
     });
   },
 };
-
