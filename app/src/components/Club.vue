@@ -156,52 +156,73 @@
       </div>
     </section>
 
-    <section
-      v-if="activeMainTab === 'activities'"
-      class="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3"
-    >
-      <div v-if="signTask" class="space-y-2 text-sm text-cyan-50">
-        <div class="flex items-start justify-between gap-3">
-          <p class="text-sm font-semibold leading-5 text-cyan-100">
-            {{ signTask.activityName || '未命名活动' }}
-          </p>
-          <div class="shrink-0 flex flex-col items-end gap-2">
-            <span :class="signTaskPanelStatus.badgeClass">{{ signTaskPanelStatus.label }}</span>
-            <button
-              type="button"
-              :disabled="!signTaskAction || signTaskAction.disabled || signPendingType !== ''"
-              :class="[
-                'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
-                signTaskAction?.buttonClass || 'bg-white/10 text-gray-300',
-                (!signTaskAction || signTaskAction.disabled || signPendingType !== '') &&
-                  'opacity-70 cursor-not-allowed',
-              ]"
-              @click="handleSignTaskAction(signTaskAction?.type || '')"
-            >
-              <i v-if="signPendingType" class="ri-loader-4-line animate-spin"></i>
-              <span>{{
-                signPendingType
-                  ? signTaskAction?.pendingLabel || '提交中'
-                  : signTaskAction?.label || '无可执行操作'
-              }}</span>
-            </button>
+    <section v-if="activeMainTab === 'activities'" class="mt-3">
+      <article
+        v-if="signTaskCard"
+        class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3"
+      >
+        <div class="flex items-start gap-3">
+          <div class="club-logo shrink-0 border-cyan-300/15 bg-cyan-400/15 text-cyan-100">
+            <img
+              v-if="signTaskCard.logoUrl"
+              :src="signTaskCard.logoUrl"
+              :alt="`${signTaskCard.title} 徽标`"
+              class="h-full w-full object-cover"
+            />
+            <i v-else class="ri-shield-star-line text-lg"></i>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-cyan-50 truncate">
+                  {{ signTaskCard.title }}
+                </h3>
+                <p class="mt-1 text-xs text-cyan-100/80 truncate">{{ signTaskCard.subTitle }}</p>
+              </div>
+              <span :class="signTaskCard.badgeClass">{{ signTaskCard.badgeText }}</span>
+            </div>
+
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-cyan-50/90">
+              <div
+                v-for="meta in signTaskCard.metaList"
+                :key="meta.key"
+                :class="['meta-pill meta-pill-cyan', meta.spanClass]"
+              >
+                <i :class="meta.icon"></i>
+                <span class="truncate">{{ meta.label }}</span>
+              </div>
+            </div>
+
+            <div v-if="signTaskButtons.length > 0" class="mt-3 flex flex-wrap justify-end gap-2">
+              <button
+                v-for="action in signTaskButtons"
+                :key="action.key"
+                type="button"
+                :disabled="isSignTaskActionDisabled(action)"
+                :class="[
+                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+                  action.buttonClass,
+                  isSignTaskActionDisabled(action) && 'opacity-70 cursor-not-allowed',
+                ]"
+                @click="handleSignTaskAction(action.type)"
+              >
+                <i v-if="isSignTaskActionPending(action)" class="ri-loader-4-line animate-spin"></i>
+                <span>{{
+                  isSignTaskActionPending(action) ? action.pendingLabel : action.label
+                }}</span>
+              </button>
+            </div>
           </div>
         </div>
-        <p class="text-xs text-cyan-100/80 leading-5">
-          活动时间：{{ signTask.startTime || '--:--' }} - {{ signTask.endTime || '--:--' }}
-        </p>
-        <p class="text-xs text-cyan-100/80 leading-5">
-          活动地点：{{ signTask.addressDetail || signTask.address || '地点待定' }}
-        </p>
-        <p class="text-xs text-cyan-100/80 leading-5">
-          签到时间：{{ signTask.signInTime || '--' }}
-        </p>
-        <p class="text-xs text-cyan-100/80 leading-5">
-          签退时间：{{ signTask.signBackTime || signTask.signBackLimitTime || '--' }}
-        </p>
-      </div>
+      </article>
 
-      <div v-else class="mt-3 text-xs text-cyan-100/80">当前没有可执行签到/签退任务</div>
+      <div
+        v-else
+        class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4 text-xs text-cyan-100/80"
+      >
+        当前没有可执行签到/签退任务
+      </div>
     </section>
 
     <section class="mt-3 flex items-center justify-between text-xs text-gray-400">
@@ -308,6 +329,7 @@
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api } from '@/composables/useApi';
 import { useDataStore } from '@/composables/useDataStore';
+import { appConfig } from '@/utils/config.js';
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表' },
@@ -507,48 +529,95 @@ const signTaskPanelStatus = computed(() => {
   }
 });
 
-const signTaskAction = computed(() => {
+const signTaskCard = computed(() => {
+  const task = signTask.value;
+  if (!task) return null;
+
+  const source = mergeActivityData(task, findLinkedActivityById(task.activityId));
+  return {
+    title: source.activityName || '未命名活动',
+    subTitle: resolveSignTaskSubTitle(source),
+    badgeText: signTaskPanelStatus.value.text,
+    badgeClass: signTaskPanelStatus.value.className,
+    logoUrl: resolveActivityLogo(source),
+    metaList: [
+      {
+        key: 'time',
+        icon: 'ri-time-line',
+        label: formatTimeRange(source),
+      },
+      {
+        key: 'capacity',
+        icon: 'ri-team-line',
+        label: formatCapacity(source),
+      },
+      {
+        key: 'sign-in',
+        icon: 'ri-login-circle-line',
+        label: `签到时间：${source.signInTime || '--'}`,
+      },
+      {
+        key: 'sign-out',
+        icon: 'ri-logout-circle-r-line',
+        label: `签退时间：${source.signBackTime || source.signBackLimitTime || '--'}`,
+      },
+    ],
+  };
+});
+
+const signTaskPrimaryAction = computed(() => {
   const task = signTask.value;
   if (!task) return null;
 
   if (signTaskPhase.value === 'completed') {
     return {
+      key: 'completed',
       type: '',
       label: '已完成',
       pendingLabel: '已完成',
       disabled: true,
-      buttonClass: 'bg-emerald-500/20 text-emerald-200',
+      buttonClass: 'bg-white/10 text-gray-300',
     };
   }
 
   if (signTaskPhase.value === 'signedIn') {
     return {
+      key: 'sign-out',
       type: '2',
       label: '签退',
       pendingLabel: '签退中',
       disabled: false,
-      buttonClass: 'bg-amber-500/85 text-white',
-    };
-  }
-
-  if (signTaskPhase.value === 'joined') {
-    return {
-      type: 'cancel',
-      label: '取消报名',
-      pendingLabel: '取消中',
-      disabled: false,
-      buttonClass: 'bg-rose-500/85 text-white',
+      buttonClass: 'bg-amber-500 text-white hover:bg-amber-400',
     };
   }
 
   return {
+    key: 'sign-in',
     type: '1',
     label: '签到',
     pendingLabel: '签到中',
     disabled: false,
-    buttonClass: 'bg-emerald-500/85 text-white',
+    buttonClass: 'bg-emerald-500 text-white hover:bg-emerald-400',
   };
 });
+
+const signTaskCancelAction = computed(() => {
+  const task = signTask.value;
+  if (!task || signTaskPhase.value !== 'joined') return null;
+
+  return {
+    key: 'cancel',
+    type: 'cancel',
+    label: '取消报名',
+    pendingLabel: '取消中',
+    disabled: false,
+    buttonClass: 'bg-rose-500 text-white hover:bg-rose-400',
+  };
+});
+
+const signTaskButtons = computed(() =>
+  [signTaskCancelAction.value, signTaskPrimaryAction.value].filter(Boolean),
+);
 
 watch(activeMainTab, async () => {
   selectedStatus.value = 'all';
@@ -717,7 +786,7 @@ function resolveStatusBucket(item) {
     return 'unsigned';
   }
 
-  switch (String(item.optionStatus)) {
+  switch (resolveEffectiveOptionStatus(item)) {
     case '1':
       return 'joined';
     case '6':
@@ -752,7 +821,20 @@ function resolveBadge(item) {
     return createBadge('未签到', 'bg-white/10 text-gray-300');
   }
 
-  switch (String(item.optionStatus)) {
+  if (activeMainTab.value === 'activities' && activeActivityTab.value === 'myTask') {
+    switch (String(item.activityStatus)) {
+      case '1':
+        return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
+      case '2':
+        return createBadge('进行中', 'bg-blue-500/20 text-blue-200');
+      case '3':
+        return createBadge('已结束', 'bg-white/10 text-gray-300');
+      default:
+        return createBadge('待开放', 'bg-white/10 text-gray-300');
+    }
+  }
+
+  switch (resolveEffectiveOptionStatus(item)) {
     case '1':
       return createBadge('已报名', 'bg-amber-500/20 text-amber-200');
     case '2':
@@ -762,7 +844,7 @@ function resolveBadge(item) {
     case '7':
       return createBadge('报名已满', 'bg-rose-500/20 text-rose-200');
     case '3':
-      return createBadge('无法报名', 'bg-white/10 text-gray-300');
+      return createBadge('已有待参加', 'bg-white/10 text-gray-300');
     case '4':
       return createBadge('已完成', 'bg-emerald-500/20 text-emerald-200');
     default:
@@ -771,7 +853,7 @@ function resolveBadge(item) {
 }
 
 function resolveClubAction(item) {
-  const optionStatus = String(item.optionStatus);
+  const optionStatus = resolveEffectiveOptionStatus(item);
 
   if (optionStatus === '6') {
     return {
@@ -861,10 +943,13 @@ function formatTimeRange(item) {
 
 function formatCapacity(item) {
   const signed = Number(item.signInStudent ?? item.joinStudentNum);
-  const total = Number(item.maxStudent ?? item.studentNum);
+  const totalRaw = pickDisplayValue(item.maxStudent, item.studentNum);
+  const total = Number(totalRaw);
 
   const signedText = Number.isFinite(signed) && signed >= 0 ? signed : '-';
-  const totalText = Number.isFinite(total) && total >= 0 ? total : '-';
+  if (isUnlimitedSignup(item)) return `${signedText}/不限`;
+
+  const totalText = totalRaw !== '' && Number.isFinite(total) && total >= 0 ? total : '-';
 
   return `${signedText}/${totalText} 人`;
 }
@@ -890,6 +975,17 @@ function isCardActionPending(card) {
   const type = Number(card.action.type);
   if (type !== 1 && type !== 2) return false;
   return isClubActionPending(getClubActionPendingKey(card.activityId, type));
+}
+
+function isSignTaskActionPending(action) {
+  if (!action) return false;
+  return signPendingType.value !== '' && signPendingType.value === String(action.type || '');
+}
+
+function isSignTaskActionDisabled(action) {
+  if (!action) return true;
+  if (action.disabled) return true;
+  return signPendingType.value !== '';
 }
 
 async function handleCardAction(card) {
@@ -1186,15 +1282,147 @@ function isSignedStatus(status) {
   return Number(status) === 1;
 }
 
+function pickDisplayValue(...values) {
+  for (const value of values) {
+    if (value === 0 || value === '0' || value === false) return value;
+    if (value === null || value === undefined) continue;
+    if (typeof value === 'string' && value.trim() === '') continue;
+    return value;
+  }
+  return '';
+}
+
+function mergeActivityData(primary, secondary) {
+  if (!primary && !secondary) return null;
+
+  const merged = { ...(secondary || {}), ...(primary || {}) };
+  const preferredKeys = [
+    'activityId',
+    'clubActivityId',
+    'configurationId',
+    'activityName',
+    'activityItemId',
+    'itemName',
+    'teacherName',
+    'clubIntroduction',
+    'address',
+    'addressDetail',
+    'yymmdd',
+    'startTime',
+    'endTime',
+    'signInTime',
+    'signBackTime',
+    'signBackLimitTime',
+    'joinStudentNum',
+    'signInStudent',
+    'maxStudent',
+    'studentNum',
+    'optionStatus',
+    'signStatus',
+    'signInStatus',
+    'signBackStatus',
+    'latitude',
+    'longitude',
+    'logoUrl',
+    'logo',
+    'itemLogo',
+    'itemImg',
+    'itemImage',
+    'itemPic',
+    'activityLogo',
+    'activityImg',
+    'activityImage',
+    'activityPic',
+    'cover',
+    'coverUrl',
+    'image',
+    'imageUrl',
+    'photo',
+    'photoUrl',
+  ];
+
+  preferredKeys.forEach((key) => {
+    merged[key] = pickDisplayValue(primary?.[key], secondary?.[key]);
+  });
+
+  return merged;
+}
+
+function findLinkedActivityById(activityId) {
+  const normalizedId = Number(activityId);
+  if (!Number.isFinite(normalizedId) || normalizedId <= 0) return null;
+
+  return [...pendingActivities.value, ...myPendingActivities.value].find(
+    (item) => resolveActivityId(item) === normalizedId,
+  );
+}
+
+function isUnlimitedSignup(item) {
+  const totalRaw = pickDisplayValue(item?.maxStudent, item?.studentNum);
+  if (totalRaw === '') return false;
+  const total = Number(totalRaw);
+  return Number.isFinite(total) && total <= 0;
+}
+
+function resolveEffectiveOptionStatus(item) {
+  const optionStatus = String(item?.optionStatus ?? '').trim();
+  if (optionStatus === '7' && isUnlimitedSignup(item)) return '6';
+  return optionStatus;
+}
+
+function resolveSignTaskSubTitle(item) {
+  return item?.addressDetail || item?.address || item?.teacherName || '地点待定';
+}
+
+function normalizeMediaUrl(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  if (/^(data:|blob:)/i.test(raw)) return raw;
+  if (/^(https?:)?\/\//i.test(raw)) return raw;
+  if (!raw.startsWith('/') && !raw.includes('/') && !raw.includes('.')) return '';
+
+  const base = String(appConfig.api.baseUrl || '').replace(/\/$/, '');
+  if (!base) return raw;
+  if (raw.startsWith('/')) return `${base}${raw}`;
+  return `${base}/${raw.replace(/^\/+/, '')}`;
+}
+
+function resolveActivityLogo(item) {
+  const candidates = [
+    item?.logoUrl,
+    item?.logo,
+    item?.itemLogo,
+    item?.itemImg,
+    item?.itemImage,
+    item?.itemPic,
+    item?.activityLogo,
+    item?.activityImg,
+    item?.activityImage,
+    item?.activityPic,
+    item?.coverUrl,
+    item?.cover,
+    item?.imageUrl,
+    item?.image,
+    item?.photoUrl,
+    item?.photo,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeMediaUrl(candidate);
+    if (normalized) return normalized;
+  }
+
+  return '';
+}
+
 function resolveSignTaskOptionStatus(task) {
   const directOptionStatus = String(task?.optionStatus ?? '').trim();
   if (directOptionStatus) return directOptionStatus;
 
   const activityId = Number(task?.activityId);
   if (Number.isFinite(activityId) && activityId > 0) {
-    const linked = [...pendingActivities.value, ...myPendingActivities.value].find(
-      (item) => resolveActivityId(item) === activityId,
-    );
+    const linked = findLinkedActivityById(activityId);
     const linkedOptionStatus = String(linked?.optionStatus ?? '').trim();
     if (linkedOptionStatus) return linkedOptionStatus;
   }
@@ -1373,6 +1601,22 @@ async function handleClubAction(item, type) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.meta-pill-cyan {
+  background: rgba(34, 211, 238, 0.1);
+  border-color: rgba(125, 211, 252, 0.18);
+}
+
+.club-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .intro-text {
