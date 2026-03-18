@@ -11,7 +11,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@tailwindcss/vite": "^4.1.17",
-    "axios": "^1.10.0",
+    "axios": "^1.13.5",
     "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
