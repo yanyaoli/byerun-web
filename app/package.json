@@ -11,6 +11,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@tailwindcss/vite": "^4.1.17",
+    "@vercel/analytics": "^2.0.1",
     "axios": "^1.10.0",
     "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",
