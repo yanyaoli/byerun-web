@@ -43,7 +43,10 @@
             @click="showDateDropdown = !showDateDropdown"
           >
             <span class="truncate">{{ selectedDateLabel }}</span>
-            <i :class="showDateDropdown ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'" class="text-sm"></i>
+            <i
+              :class="showDateDropdown ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
+              class="text-sm"
+            ></i>
           </button>
 
           <transition name="fade-slide">
@@ -98,7 +101,10 @@
             </button>
           </div>
 
-          <div v-if="activeMainTab === 'activities'" class="flex items-center gap-2 overflow-x-auto pb-1">
+          <div
+            v-if="activeMainTab === 'activities'"
+            class="flex items-center gap-2 overflow-x-auto pb-1"
+          >
             <button
               v-for="item in itemFilterOptions"
               :key="item.value"
@@ -129,48 +135,70 @@
       </div>
     </section>
 
-    <section v-if="activeMainTab === 'activities'" class="mt-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <p class="text-sm font-semibold text-cyan-100">俱乐部签到签退</p>
+    <section v-if="activeMainTab === 'activities'" class="mt-3">
+      <article v-if="signTaskCard" class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
+        <div class="flex items-start gap-3">
+          <div class="club-logo shrink-0 border-cyan-300/15 bg-cyan-400/15 text-cyan-100">
+            <img
+              v-if="signTaskCard.logoUrl"
+              :src="signTaskCard.logoUrl"
+              :alt="`${signTaskCard.title} 徽标`"
+              class="h-full w-full object-cover"
+            />
+            <i v-else class="ri-shield-star-line text-lg"></i>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <h3 class="text-sm font-semibold text-cyan-50 truncate">
+                  {{ signTaskCard.title }}
+                </h3>
+                <p class="mt-1 text-xs text-cyan-100/80 truncate">{{ signTaskCard.subTitle }}</p>
+              </div>
+              <span :class="signTaskCard.badgeClass">{{ signTaskCard.badgeText }}</span>
+            </div>
+
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-cyan-50/90">
+              <div
+                v-for="meta in signTaskCard.metaList"
+                :key="meta.key"
+                :class="['meta-pill meta-pill-cyan', meta.spanClass]"
+              >
+                <i :class="meta.icon"></i>
+                <span class="truncate">{{ meta.label }}</span>
+              </div>
+            </div>
+
+            <div v-if="signTaskButtons.length > 0" class="mt-3 flex flex-wrap justify-end gap-2">
+              <button
+                v-for="action in signTaskButtons"
+                :key="action.key"
+                type="button"
+                :disabled="isSignTaskActionDisabled(action)"
+                :class="[
+                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+                  action.buttonClass,
+                  isSignTaskActionDisabled(action) && 'opacity-70 cursor-not-allowed',
+                ]"
+                @click="handleSignTaskAction(action.type)"
+              >
+                <i v-if="isSignTaskActionPending(action)" class="ri-loader-4-line animate-spin"></i>
+                <span>{{
+                  isSignTaskActionPending(action) ? action.pendingLabel : action.label
+                }}</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <button
-          type="button"
-          class="h-8 w-8 rounded-lg border border-cyan-300/30 bg-cyan-300/10 text-cyan-100"
-          @click="refreshSignTask(true)"
-        >
-          <i :class="refreshingSign ? 'ri-loader-4-line animate-spin' : 'ri-refresh-line'"></i>
-        </button>
+      </article>
+
+      <div
+        v-else
+        class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4 text-xs text-cyan-100/80"
+      >
+        当前没有可执行签到/签退任务
       </div>
-
-      <div v-if="refreshingSign && !signTask" class="mt-3 text-xs text-cyan-100/80">正在刷新签到状态...</div>
-
-      <div v-else-if="signTask" class="mt-3 space-y-2 text-sm text-cyan-50">
-        <p class="font-medium leading-5">{{ signTask.activityName || '未命名活动' }}</p>
-        <p class="text-xs text-cyan-100/80 leading-5">
-          {{ signTask.startTime || '--:--' }} - {{ signTask.endTime || '--:--' }}
-          <span class="mx-1">|</span>
-          {{ signTask.address || '地点待定' }}
-        </p>
-        <div class="pt-1 flex items-center justify-between gap-2">
-          <span class="text-xs text-cyan-100/80">状态：{{ signTaskStatusText }}</span>
-          <button
-            type="button"
-            :disabled="!signTaskAction || signTaskAction.disabled || signPendingType !== ''"
-            :class="[
-              'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
-              signTaskAction?.buttonClass || 'bg-white/10 text-gray-300',
-              (!signTaskAction || signTaskAction.disabled || signPendingType !== '') && 'opacity-70 cursor-not-allowed',
-            ]"
-            @click="handleSignTask(signTaskAction?.type || '')"
-          >
-            <i v-if="signPendingType" class="ri-loader-4-line animate-spin"></i>
-            <span>{{ signPendingType ? signTaskAction?.pendingLabel || '提交中' : signTaskAction?.label || '无可执行操作' }}</span>
-          </button>
-        </div>
-      </div>
-
-      <div v-else class="mt-3 text-xs text-cyan-100/80">当前没有可执行签到/签退任务</div>
     </section>
 
     <section class="mt-3 flex items-center justify-between text-xs text-gray-400">
@@ -226,7 +254,9 @@
           </div>
         </div>
 
-        <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">{{ card.introText }}</p>
+        <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">
+          {{ card.introText }}
+        </p>
 
         <div v-if="card.action" class="mt-3 flex items-center justify-end">
           <button
@@ -235,18 +265,26 @@
             :class="[
               'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
               card.action.buttonClass,
-              (card.action.disabled || isCardActionPending(card)) && 'opacity-70 cursor-not-allowed',
+              (card.action.disabled || isCardActionPending(card)) &&
+                'opacity-70 cursor-not-allowed',
             ]"
             @click="handleCardAction(card)"
           >
             <i v-if="isCardActionPending(card)" class="ri-loader-4-line animate-spin"></i>
-            <span>{{ isCardActionPending(card) ? card.action.pendingLabel : card.action.label }}</span>
+            <span>{{
+              isCardActionPending(card) ? card.action.pendingLabel : card.action.label
+            }}</span>
           </button>
         </div>
       </article>
 
       <div
-        v-if="activeMainTab === 'history' && activeHistoryTab === 'record' && cards.length > 0 && historyHasMore"
+        v-if="
+          activeMainTab === 'history' &&
+          activeHistoryTab === 'record' &&
+          cards.length > 0 &&
+          historyHasMore
+        "
         class="pt-1"
       >
         <button
@@ -265,7 +303,7 @@
 
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
-import { api } from '@/composables/useApi';
+import { api, appConfig } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 
 const MAIN_TABS = [
@@ -361,7 +399,9 @@ const selectedDateLabel = computed(() => {
 });
 const statusOptions = computed(() => {
   if (activeMainTab.value === 'activities') return STATUS_OPTIONS_MAP.pending;
-  return activeHistoryTab.value === 'semester' ? STATUS_OPTIONS_MAP.semester : STATUS_OPTIONS_MAP.history;
+  return activeHistoryTab.value === 'semester'
+    ? STATUS_OPTIONS_MAP.semester
+    : STATUS_OPTIONS_MAP.history;
 });
 
 const itemFilterOptions = computed(() => {
@@ -371,7 +411,6 @@ const itemFilterOptions = computed(() => {
   });
   return options;
 });
-
 
 const sourceList = computed(() => {
   if (activeMainTab.value === 'history') {
@@ -398,7 +437,8 @@ const cards = computed(() =>
     const activityId = resolveActivityId(item);
     const key = String(activityId || item.configurationId || item.yymmdd || 'club') + '-' + index;
     const badge = resolveBadge(item);
-    const isHistoryRecord = activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
+    const isHistoryRecord =
+      activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
 
     return {
       key,
@@ -408,8 +448,8 @@ const cards = computed(() =>
         activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
           ? resolveClubAction(item)
           : null,
-      title: item.activityName || ('活动 #' + (activityId || index + 1)),
-      subTitle: item.teacherName ? (item.teacherName) : '',
+      title: item.activityName || '活动 #' + (activityId || index + 1),
+      subTitle: item.teacherName ? item.teacherName : '',
       badgeText: badge.text,
       badgeClass: badge.className,
       timeText: formatTimeRange(item),
@@ -760,7 +800,8 @@ function formatCapacity(item) {
 
 function formatHistoryWeekDate(item) {
   const weekValue = Number(item.weekDay);
-  const weekLabel = Number.isFinite(weekValue) && WEEKDAY_TEXT[weekValue] ? ('周' + WEEKDAY_TEXT[weekValue]) : '周--';
+  const weekLabel =
+    Number.isFinite(weekValue) && WEEKDAY_TEXT[weekValue] ? '周' + WEEKDAY_TEXT[weekValue] : '周--';
   const dateText = item.yymmdd || '--';
   return weekLabel + ' ' + dateText;
 }
@@ -800,7 +841,6 @@ async function handleCardAction(card) {
 
   await handleClubAction(card.item, type);
 }
-
 
 function setClubActionPending(key, pending) {
   const next = { ...clubActionPendingMap.value };
@@ -877,7 +917,8 @@ async function loadHistoryRecords({ append = false } = {}) {
 }
 
 async function loadMoreHistoryRecords() {
-  if (historyLoadingMore.value || !historyHasMore.value || activeMainTab.value !== 'history') return;
+  if (historyLoadingMore.value || !historyHasMore.value || activeMainTab.value !== 'history')
+    return;
 
   historyLoadingMore.value = true;
   try {
@@ -976,7 +1017,6 @@ async function loadSummary() {
       return;
     }
 
-
     const response = await api.countValidSignUp(studentId.value);
     const data = response?.data;
     if (!isApiSuccess(data)) {
@@ -1004,7 +1044,6 @@ async function loadItemOptions() {
       selectedItemId.value = 'all';
       return;
     }
-
 
     const normalResponse = await api.queryMyClubItemList({
       schoolId: schoolId.value,
@@ -1215,32 +1254,3 @@ async function handleClubAction(item, type) {
   overflow: hidden;
 }
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

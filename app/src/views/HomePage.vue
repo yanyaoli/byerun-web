@@ -52,14 +52,13 @@ import AppHeader from '@/components/layout/AppHeader.vue';
 import BottomTabBar from '@/components/layout/BottomTabBar.vue';
 import MyPage from '@/views/MyPage.vue';
 import { useDataStore } from '@/composables/useDataStore';
-import { useApiRequestGate } from '@/composables/useApiRequestGate';
-import { preloadAutorunPingMeta } from '@/composables/useAutorunPingMeta';
-import { checkHasUnreadMessages } from '@/composables/useMessageReminder';
+import { useChatStore } from '@/composables/useChatStore';
+import { preloadAutorunPingMeta } from '@/sdk/autorun';
+import { checkHasUnreadMessages } from '@/sdk/message';
 import { getViewportMetrics } from '@/utils/viewport';
 
-const { fetchUserData, activeTab, userInfo, token, chatUnread, setChatUnread, markChatSeen } =
-  useDataStore();
-const { waitForIdle } = useApiRequestGate();
+const { fetchUserData, activeTab, userInfo, token } = useDataStore();
+const { chatUnread, setChatUnread, markChatSeen } = useChatStore();
 const rootShowMessage = inject('showMessage', null);
 
 const appHeaderRef = ref(null);
@@ -147,7 +146,6 @@ async function syncUnreadReminder() {
 
 async function initializePage() {
   await refreshUserData({ background: false });
-  await waitForIdle();
   await preloadAutorunPingMeta();
   await syncUnreadReminder();
 }

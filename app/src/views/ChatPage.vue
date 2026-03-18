@@ -716,14 +716,21 @@
 <script setup>
 import { ref, reactive, watch, inject, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import MessageClient from '@/composables/messageClient';
+import {
+  MessageClient,
+  formatTime,
+  getEmojiUrl,
+  messageSdkConfig,
+  normalizeAvatarUrl,
+  renderContent,
+} from '@/sdk/message';
 import Message from '@/components/Message.vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import emojiGroups from '@/assets/data/emojis.json';
 import stickerConfig from '@/assets/data/stickers.json';
-import { normalizeAvatarUrl, renderContent, getEmojiUrl, formatTime } from '@/utils/chat';
 import { getViewportMetrics, restoreViewportPosition } from '@/utils/viewport';
 import { useDataStore } from '@/composables/useDataStore';
+import { useChatStore } from '@/composables/useChatStore';
 
 // ==================== 依赖注入 ====================
 const showMessage = inject('showMessage');
@@ -732,16 +739,19 @@ const goBack = inject('goBack', null);
 const {
   token,
   userInfo,
+  clearAllData,
+} = useDataStore();
+const {
   chatUser,
   chatUserId,
   setCachedChatUser,
   getCachedChatUserId,
   markChatSeen,
-  clearAllData,
-} = useDataStore();
+  clearChatData,
+} = useChatStore();
 
 // ==================== 常量配置 ====================
-const API_BASE = (import.meta.env.VITE_CHAT_SERVER_BASE_URL || '').replace(/\/$/, '');
+const API_BASE = messageSdkConfig.apiBaseUrl;
 const client = new MessageClient({ baseUrl: API_BASE });
 
 // ==================== 响应式状态 ====================
@@ -1197,8 +1207,8 @@ function clearAuthState() {
   client.setToken(null, { reconnect: false });
   client.disconnectSocket();
   user.value = null;
-  setCachedChatUser(null);
   clearAllData();
+  clearChatData();
 }
 
 function handleApiError(e, defaultMsg) {

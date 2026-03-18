@@ -119,7 +119,7 @@
 <script setup>
 import { ref, inject, watch, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { api } from '@/composables/useApi';
+import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 
 const showMessage = inject('showMessage');

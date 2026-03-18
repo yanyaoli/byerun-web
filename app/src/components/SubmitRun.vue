@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
     <!-- 完成情况卡片 -->
     <div class="bg-stone-900 rounded-xl p-5 mb-5 w-full box-border">
@@ -179,11 +179,9 @@
 
 <script setup>
 import { ref, computed, watch, inject, defineAsyncComponent, onMounted } from 'vue';
-import { submitRun as submitRunApi } from '@/composables/useRunSubmission';
-import { useRouteGenerator } from '@/composables/useRouteGenerator';
+import { submitRun as submitRunApi, useRouteGenerator } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
-import { useApiRequestGate } from '@/composables/useApiRequestGate';
-import { waitForAutorunPingReady } from '@/composables/useAutorunPingMeta';
+import { waitForAutorunPingReady } from '@/sdk/autorun';
 import {
   calculatePaceMinutesPerKm,
   computeDurationFromDistance,
@@ -195,7 +193,6 @@ import {
 
 const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
 const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
-const { waitForIdle } = useApiRequestGate();
 
 const showMessage = inject('showMessage');
 
@@ -476,7 +473,6 @@ const onAutoConfigSaved = () => {
 };
 
 const unlockMapRender = async () => {
-  await waitForIdle();
   await waitForAutorunPingReady();
   mapRenderUnlocked.value = true;
 };

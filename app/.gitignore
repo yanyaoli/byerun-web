@@ -32,3 +32,5 @@ debug/
 .history/
 .cache/
 coverage/
+
+standalone-map-draw/
