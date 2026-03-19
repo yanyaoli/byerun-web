@@ -133,10 +133,8 @@
 
 <script setup>
 import { ref, reactive, computed, watch, inject } from 'vue';
-import { scheduledTaskConfig } from '@/utils/config';
+import { AutorunClient, pingMeta, scheduledTaskConfig } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
-import { AutorunClient } from '@/composables/autorun-sdk';
-import { useAutorunPingMeta } from '@/composables/useAutorunPingMeta';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -146,7 +144,6 @@ const emit = defineEmits(['update:visible', 'saved']);
 const showMessage = inject('showMessage', (msg) => alert(msg));
 
 const { token } = useDataStore();
-const { pingMeta } = useAutorunPingMeta();
 const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
 const autorunClient = new AutorunClient({ baseURL: API_BASE });
 

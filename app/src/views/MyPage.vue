@@ -150,11 +150,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useDataStore } from '@/composables/useDataStore';
-import { useAutorunPingMeta } from '@/composables/useAutorunPingMeta';
+import { useChatStore } from '@/composables/useChatStore';
+import { pingMeta } from '@/sdk/autorun';
 
 const { userInfo, clearAllData } = useDataStore();
-const { pingMeta } = useAutorunPingMeta();
-
+const { clearChatData } = useChatStore();
 const qqGroupUrl = 'https://redirect.where.nyc.mn/byerun-qqgroup';
 const previewQrUrl = ref('');
 
@@ -192,6 +192,7 @@ const closeQrPreview = () => {
 const handleLogout = () => {
   try {
     clearAllData();
+    clearChatData();
   } catch (e) {}
   window.location.reload();
 };

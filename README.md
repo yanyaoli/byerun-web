@@ -9,23 +9,27 @@
 <p align="center">
 Goodbye Unirun - 校园跑助手🏃‍♂️
 </p>
+<p align="center">
+<i>身体是革命的本钱 别让打卡磨灭了你对运动的热情</i>
+</p>
 
 <p align="center">
-一键完成记录 / 云端定时任务 / 在线反馈社区 / 校友圈
+<i>一键完成记录 / 云端定时任务 / 在线反馈社区 / 校友圈 </i>
 </p>
 
 ## 支持的地图
 
-| 学校名称                                         |
-| ------------------------------------------------ |
-| [成都信息工程大学](https://cuit.edu.cn/)         |
-| [成都中医药大学](https://cdutcm.edu.cn/)         |
-| [四川邮电职业技术学院](https://www.sptc.edu.cn/) |
-| [四川工商职业技术学院](https://www.sctbc.net/)   |
-| [四川南充卫生学校](http://www.ncwsxx.com/)       |
-| [广安职业技术学院](https://www.gavtc.edu.cn/)    |
-| [川北幼儿师范](https://cbyz.edu.cn/)             |
-| [...](...)                                       |
+| 学校名称                                          |
+| ------------------------------------------------- |
+| [成都信息工程大学](https://cuit.edu.cn/)          |
+| [成都中医药大学](https://cdutcm.edu.cn/)          |
+| [四川邮电职业技术学院](https://www.sptc.edu.cn/)  |
+| [四川工商职业技术学院](https://www.sctbc.net/)    |
+| [四川南充卫生学校](http://www.ncwsxx.com/)        |
+| [广安职业技术学院](https://www.gavtc.edu.cn/)     |
+| [川北幼儿师范](https://cbyz.edu.cn/)              |
+| [唐山工业职业技术大学](https://www.tsgzy.edu.cn/) |
+| [...](...)                                        |
 
 <i>需要更多地图欢迎反馈添加<i>
 

@@ -157,10 +157,7 @@
     </section>
 
     <section v-if="activeMainTab === 'activities'" class="mt-3">
-      <article
-        v-if="signTaskCard"
-        class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3"
-      >
+      <article v-if="signTaskCard" class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
         <div class="flex items-start gap-3">
           <div class="club-logo shrink-0 border-cyan-300/15 bg-cyan-400/15 text-cyan-100">
             <img
@@ -327,7 +324,7 @@
 
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
-import { api } from '@/composables/useApi';
+import { api, appConfig } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { appConfig } from '@/utils/config.js';
 
@@ -484,7 +481,7 @@ const cards = computed(() =>
           ? resolveClubAction(item)
           : null,
       title: item.activityName || '活动 #' + (activityId || index + 1),
-      subTitle: resolveCardSubTitle(item, isHistoryRecord),
+      subTitle: item.teacherName ? item.teacherName : '',
       badgeText: badge.text,
       badgeClass: badge.className,
       timeText: formatTimeRange(item),

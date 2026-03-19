@@ -20,8 +20,6 @@ const toInteger = (value, fallback = 0) => {
   return Number.isFinite(num) ? Math.trunc(num) : fallback;
 };
 
-const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
-
 const getRandom = (rng) => {
   if (typeof rng === 'function') {
     const v = Number(rng());
@@ -43,44 +41,29 @@ export function normalizeGender(raw) {
   return '';
 }
 
-const maxFloat = (a, b) => (a > b ? a : b);
-
-const minPositive = (a, b) => {
-  const aPos = toPositiveNumber(a);
-  const bPos = toPositiveNumber(b);
-
-  if (aPos > 0 && bPos > 0) return Math.min(aPos, bPos);
-  if (aPos > 0) return aPos;
-  if (bPos > 0) return bPos;
-  return 0;
-};
-
-const selectOnceRunDistanceMin = (gender, runStandard = {}) => {
-  const normalized = normalizeGender(gender);
-  const boy = toPositiveNumber(runStandard?.boyOnceDistanceMin);
-  const girl = toPositiveNumber(runStandard?.girlOnceDistanceMin);
-
-  if (normalized === 'male') return boy;
-  if (normalized === 'female') return girl;
-  return maxFloat(boy, girl);
-};
-
-const selectOnceRunDistanceMax = (gender, runStandard = {}) => {
-  const normalized = normalizeGender(gender);
-  const boy = toPositiveNumber(runStandard?.boyOnceDistanceMax);
-  const girl = toPositiveNumber(runStandard?.girlOnceDistanceMax);
-
-  if (normalized === 'male') return boy;
-  if (normalized === 'female') return girl;
-  return maxFloat(boy, girl);
-};
-
 export function calculateDistanceBounds(gender, runStandard = {}, defaults = {}) {
   const defaultMin = Math.max(1, Math.trunc(toFiniteNumber(defaults?.min, DEFAULT_DISTANCE_MIN)));
   const defaultMax = Math.max(defaultMin, Math.trunc(toFiniteNumber(defaults?.max, DEFAULT_DISTANCE_MAX)));
+  const normalized = normalizeGender(gender);
+  const boyMin = toPositiveNumber(runStandard?.boyOnceDistanceMin);
+  const girlMin = toPositiveNumber(runStandard?.girlOnceDistanceMin);
+  const boyMax = toPositiveNumber(runStandard?.boyOnceDistanceMax);
+  const girlMax = toPositiveNumber(runStandard?.girlOnceDistanceMax);
 
-  const onceDistanceMin = selectOnceRunDistanceMin(gender, runStandard);
-  const onceDistanceMax = selectOnceRunDistanceMax(gender, runStandard);
+  let onceDistanceMin = 0;
+  let onceDistanceMax = 0;
+
+  if (normalized === 'male') {
+    onceDistanceMin = boyMin;
+    onceDistanceMax = boyMax;
+  } else if (normalized === 'female') {
+    onceDistanceMin = girlMin;
+    onceDistanceMax = girlMax;
+  } else {
+    onceDistanceMin = Math.max(boyMin, girlMin);
+    onceDistanceMax = Math.max(boyMax, girlMax);
+  }
+
   let minDistance = defaultMin;
   let maxDistance = defaultMax;
 
@@ -119,8 +102,10 @@ export function calculateTimeBounds(gender, runStandard = {}) {
     minTime = girlMin;
     maxTime = girlMax;
   } else {
-    minTime = minPositive(boyMin, girlMin);
-    maxTime = maxFloat(boyMax, girlMax);
+    if (boyMin > 0 && girlMin > 0) minTime = Math.min(boyMin, girlMin);
+    else minTime = boyMin > 0 ? boyMin : girlMin;
+
+    maxTime = Math.max(boyMax, girlMax);
   }
 
   if (minTime > 0 && maxTime > 0 && minTime > maxTime) {
@@ -149,7 +134,7 @@ export function resolveRunBoundsFromStandard(userInfo = {}, runStandard = {}, de
 export function avoidRoundedTenValue(value, min, max, rng) {
   const lo = Math.min(min, max);
   const hi = Math.max(min, max);
-  const current = clamp(Math.trunc(value), lo, hi);
+  const current = Math.max(lo, Math.min(Math.trunc(value), hi));
 
   if (current % 10 !== 0) return current;
 
@@ -177,11 +162,6 @@ export function avoidRoundedTenValue(value, min, max, rng) {
 export function randomIntNonThousand(min = DEFAULT_DISTANCE_MIN, max = DEFAULT_DISTANCE_MAX, rng) {
   let lo = toInteger(min, DEFAULT_DISTANCE_MIN);
   let hi = toInteger(max, DEFAULT_DISTANCE_MAX);
-
-  if (!Number.isFinite(lo) || !Number.isFinite(hi)) {
-    lo = DEFAULT_DISTANCE_MIN;
-    hi = DEFAULT_DISTANCE_MAX;
-  }
 
   if (lo > hi) {
     const tmp = lo;
@@ -215,21 +195,6 @@ export function avoidMultipleOf(value, modulus = 1000, opts = {}) {
   return current + offset;
 }
 
-const resolvePaceBounds = (distanceMeters, minMinutes, maxMinutes) => {
-  const km = distanceMeters / 1000;
-  let minPace = MIN_PACE_MINUTES_PER_KM;
-  let maxPace = MAX_PACE_MINUTES_PER_KM;
-
-  if (km > 0 && minMinutes > 0) {
-    minPace = Math.max(minPace, minMinutes / km);
-  }
-  if (km > 0 && maxMinutes > 0) {
-    maxPace = Math.min(maxPace, maxMinutes / km);
-  }
-
-  return { minPace, maxPace };
-};
-
 // Computes duration (minutes) from distance with pace and time-bound constraints.
 export function computeDurationFromDistance(distanceMeters, opts = {}) {
   const dist = toFiniteNumber(distanceMeters, 0);
@@ -246,7 +211,15 @@ export function computeDurationFromDistance(distanceMeters, opts = {}) {
 
   const randomFn = opts?.rng;
   const km = dist / 1000;
-  const { minPace, maxPace } = resolvePaceBounds(dist, minMinutes, maxMinutes);
+  let minPace = MIN_PACE_MINUTES_PER_KM;
+  let maxPace = MAX_PACE_MINUTES_PER_KM;
+
+  if (minMinutes > 0) {
+    minPace = Math.max(minPace, minMinutes / km);
+  }
+  if (maxMinutes > 0) {
+    maxPace = Math.min(maxPace, maxMinutes / km);
+  }
 
   let seconds;
   if (minPace <= maxPace) {

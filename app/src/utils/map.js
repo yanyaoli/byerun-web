@@ -1,37 +1,11 @@
-// 动态导入所有地图文件
 const mapModules = import.meta.glob('../assets/maps/*.json', { eager: true });
 
-// 地图数据集合：键为地图ID，值为该地图的坐标数组（格式：["经度,纬度", ...]）
-let mapDataCollection = {
-  default: [], // 默认地图在初始化时设置
-};
-
-// 存储所有可用地图ID的数组
+let mapDataCollection = { default: [] };
 let availableMapIds = [];
-
-// 存储地图ID到名称的映射
 let mapNameCollection = {};
 let hasLoadedMapFiles = false;
 let mapFilesLoadingPromise = null;
 
-function parseMapModule(moduleData) {
-  const mapFileData = moduleData?.default ?? moduleData;
-  if (!mapFileData || typeof mapFileData !== 'object') return null;
-
-  const mapId = String(mapFileData.mapId || '').trim();
-  const mapData = mapFileData.mapData;
-  if (!mapId || !Array.isArray(mapData)) return null;
-
-  return {
-    mapId,
-    mapName: String(mapFileData.mapName || mapId).trim() || mapId,
-    mapData,
-  };
-}
-
-/**
- * 动态加载地图文件
- */
 export async function loadMapFiles(forceReload = false) {
   if (hasLoadedMapFiles && !forceReload) {
     return [...availableMapIds];
@@ -43,34 +17,32 @@ export async function loadMapFiles(forceReload = false) {
 
   mapFilesLoadingPromise = (async () => {
     try {
-      // 清空现有数据
       mapDataCollection = {};
       availableMapIds = [];
       mapNameCollection = {};
 
-      // 从动态导入的地图模块加载数据
-      Object.keys(mapModules).forEach((modulePath) => {
-        const parsed = parseMapModule(mapModules[modulePath]);
-        if (!parsed) return;
+      Object.values(mapModules).forEach((moduleData) => {
+        const mapFileData = moduleData?.default ?? moduleData;
+        const mapId = String(mapFileData?.mapId || '').trim();
+        const mapData = mapFileData?.mapData;
+        if (!mapId || !Array.isArray(mapData)) return;
 
-        mapDataCollection[parsed.mapId] = parsed.mapData;
-        availableMapIds.push(parsed.mapId);
-        mapNameCollection[parsed.mapId] = parsed.mapName;
+        mapDataCollection[mapId] = mapData;
+        availableMapIds.push(mapId);
+        mapNameCollection[mapId] = String(mapFileData?.mapName || mapId).trim() || mapId;
       });
 
-      // 设置默认地图
       if (availableMapIds.length > 0) {
-        const firstMapId = availableMapIds[0];
-        mapDataCollection.default = mapDataCollection[firstMapId];
+        mapDataCollection.default = mapDataCollection[availableMapIds[0]];
       } else {
-        console.warn('未找到任何地图文件！');
+        console.warn('No map files found.');
         mapDataCollection.default = [];
       }
 
       hasLoadedMapFiles = true;
       return [...availableMapIds];
     } catch (error) {
-      console.error('加载地图文件时发生错误:', error);
+      console.error('Failed to load map files:', error);
       mapDataCollection = { default: [] };
       availableMapIds = [];
       mapNameCollection = {};
@@ -84,54 +56,173 @@ export async function loadMapFiles(forceReload = false) {
   return mapFilesLoadingPromise;
 }
 
-/**
- * 获取所有可用的地图ID列表
- * @returns 地图ID数组
- */
-export function getAvailableMapIds() {
-  return [...availableMapIds];
-}
-
-/**
- * 获取指定地图的坐标数据
- * @param mapChoice 地图ID（可选，默认值为"default"）
- * @returns 对应地图的坐标数组（格式：["经度,纬度", ...]），若指定地图不存在则返回默认地图数据
- */
 export function getMapData(mapChoice = 'default') {
   const mapId = String(mapChoice || 'default').trim() || 'default';
   return mapDataCollection[mapId] || mapDataCollection.default || [];
 }
 
-/**
- * 计算地球表面两点间的直线距离（单位：米）
- * @param start 起点坐标（格式：[经度, 纬度]）
- * @param end 终点坐标（格式：[经度, 纬度]）
- * @returns 两点间距离（米）
- */
-export function getDistance(start, end) {
-  // 角度转弧度的工具函数
-  const toRad = (d) => (d * Math.PI) / 180;
-  const [lng1, lat1] = start; // 起点经纬度
-  const [lng2, lat2] = end; // 终点经纬度
-  const R = 6378137; // 地球半径（单位：米，WGS84椭球半径）
+export function genTrackPoints(distance, mapChoice = 'default', durationMinutes) {
+  const targetDistance = Number(distance);
+  if (!Number.isFinite(targetDistance) || targetDistance <= 0) return '[]';
 
-  // 计算纬度差、经度差（弧度）
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
+  const coords = getMapData(mapChoice)
+    .map((point) => point.split(',').map(Number))
+    .filter((pair) => pair.length === 2 && pair.every((num) => !Number.isNaN(num)));
+  if (coords.length < 2) return '[]';
 
-  // 哈弗辛公式（Haversine formula）计算两点间距离
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const sanitized = [];
+  coords.forEach((point, index) => {
+    const prev = coords[index - 1];
+    if (
+      index === 0 ||
+      Math.abs(point[0] - prev[0]) > 1e-9 ||
+      Math.abs(point[1] - prev[1]) > 1e-9
+    ) {
+      sanitized.push(point);
+    }
+  });
 
-  return R * c; // 返回最终距离（米）
+  if (
+    sanitized.length > 1 &&
+    Math.abs(sanitized[0][0] - sanitized[sanitized.length - 1][0]) <= 1e-9 &&
+    Math.abs(sanitized[0][1] - sanitized[sanitized.length - 1][1]) <= 1e-9
+  ) {
+    sanitized.pop();
+  }
+  if (sanitized.length < 2) return '[]';
+
+  const bounds = sanitized.reduce(
+    (acc, [lng, lat]) => {
+      acc.minLng = Math.min(acc.minLng, lng);
+      acc.maxLng = Math.max(acc.maxLng, lng);
+      acc.minLat = Math.min(acc.minLat, lat);
+      acc.maxLat = Math.max(acc.maxLat, lat);
+      return acc;
+    },
+    { minLng: Infinity, maxLng: -Infinity, minLat: Infinity, maxLat: -Infinity },
+  );
+
+  const getDistance = (start, end) => {
+    const [lng1, lat1] = start;
+    const [lng2, lat2] = end;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const lat1Rad = (lat1 * Math.PI) / 180;
+    const lat2Rad = (lat2 * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+
+    return 6378137 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  const segments = [];
+  for (let i = 0; i < sanitized.length; i++) {
+    const from = sanitized[i];
+    const to = sanitized[(i + 1) % sanitized.length];
+    const length = getDistance(from, to);
+    if (length >= 0.5) {
+      segments.push({ from, to, length });
+    }
+  }
+  if (segments.length === 0) return '[]';
+
+  const clampValue = (value, a, b) => {
+    const lo = Math.min(a, b);
+    const hi = Math.max(a, b);
+    return Math.max(lo, Math.min(value, hi));
+  };
+
+  const pace = clampValue(
+    Number(durationMinutes) > 0
+      ? durationMinutes / (targetDistance / 1000)
+      : 7.6 + Math.random() * 1.2,
+    6,
+    10,
+  );
+  const durationMs = Math.round((targetDistance / 1000) * pace * 60 * 1000);
+  const baseSpeed = 1000 / (pace * 60);
+  const baseSpacing = clampValue(targetDistance / 1200, 4, 8);
+  const maxTotalPoints = 4000;
+  const jitter = 0.000003;
+  const bboxPad = 0.00005;
+
+  const addJitter = ([lng, lat]) => [
+    clampValue(
+      lng + (Math.random() - 0.5) * 2 * jitter,
+      bounds.minLng - bboxPad,
+      bounds.maxLng + bboxPad,
+    ),
+    clampValue(
+      lat + (Math.random() - 0.5) * 2 * jitter,
+      bounds.minLat - bboxPad,
+      bounds.maxLat + bboxPad,
+    ),
+  ];
+
+  let segIndex = Math.floor(Math.random() * segments.length);
+  let segOffset = Math.random() * Math.max(1, segments[segIndex].length * 0.6);
+  let lastPoint = addJitter([
+    segments[segIndex].from[0] +
+      (segments[segIndex].to[0] - segments[segIndex].from[0]) *
+        clampValue(segOffset / segments[segIndex].length, 0, 1),
+    segments[segIndex].from[1] +
+      (segments[segIndex].to[1] - segments[segIndex].from[1]) *
+        clampValue(segOffset / segments[segIndex].length, 0, 1),
+  ]);
+
+  let elapsedMs = 0;
+  let generatedDistance = 0;
+  let currentSpeed = baseSpeed;
+  const result = [`${lastPoint[0]}-${lastPoint[1]}`];
+
+  while (generatedDistance < targetDistance && result.length < maxTotalPoints) {
+    const remainingDistance = targetDistance - generatedDistance;
+    let advance = Math.min(remainingDistance, baseSpacing * (0.9 + Math.random() * 0.35));
+
+    while (advance > 0) {
+      const segment = segments[segIndex];
+      const remainingOnSeg = segment.length - segOffset;
+      const stepOnSegment = Math.min(advance, remainingOnSeg);
+      segOffset += stepOnSegment;
+      advance -= stepOnSegment;
+
+      if (segOffset >= segment.length - 1e-6) {
+        segIndex = (segIndex + 1) % segments.length;
+        segOffset = 0;
+      }
+    }
+
+    const segment = segments[segIndex];
+    const point = addJitter([
+      segment.from[0] + (segment.to[0] - segment.from[0]) * clampValue(segOffset / segment.length, 0, 1),
+      segment.from[1] + (segment.to[1] - segment.from[1]) * clampValue(segOffset / segment.length, 0, 1),
+    ]);
+    const traveled = getDistance(lastPoint, point);
+    generatedDistance += traveled;
+
+    const remainingTime = Math.max(2000, durationMs - elapsedMs);
+    const neededSpeed =
+      remainingDistance > 0 ? remainingDistance / (remainingTime / 1000) : baseSpeed;
+    const targetSpeed = clampValue(
+      (baseSpeed * 0.6 + neededSpeed * 0.4) * (0.95 + Math.random() * 0.1),
+      baseSpeed * 0.8,
+      baseSpeed * 1.2,
+    );
+    currentSpeed = clampValue(
+      currentSpeed * 0.65 + targetSpeed * 0.35,
+      baseSpeed * 0.75,
+      baseSpeed * 1.25,
+    );
+    elapsedMs += (traveled / Math.max(0.5, currentSpeed)) * 1000;
+
+    result.push(`${point[0]}-${point[1]}`);
+    lastPoint = point;
+  }
+
+  return JSON.stringify(result);
 }
 
-/**
- * 获取地图ID到名称的映射
- * @returns 地图ID到名称的对象
- */
 export function getMapNames() {
   return { ...mapNameCollection };
 }
