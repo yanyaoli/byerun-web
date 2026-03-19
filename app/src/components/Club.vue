@@ -18,6 +18,23 @@
         </button>
       </div>
 
+      <div v-if="activeMainTab === 'activities'" class="mt-3 grid grid-cols-2 gap-2">
+        <button
+          v-for="tab in ACTIVITY_SUB_TABS"
+          :key="tab.key"
+          type="button"
+          :class="[
+            'h-8 rounded-xl border text-xs font-medium transition-colors',
+            activeActivityTab === tab.key
+              ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
+              : 'border-white/10 bg-white/5 text-gray-300',
+          ]"
+          @click="activeActivityTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
       <div v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
         <button
           v-for="tab in HISTORY_SUB_TABS"
@@ -36,7 +53,11 @@
       </div>
 
       <div class="mt-3 flex items-start gap-2">
-        <div v-if="activeMainTab === 'activities'" ref="datePickerRef" class="relative flex-1">
+        <div
+          v-if="activeMainTab === 'activities' && activeActivityTab === 'list'"
+          ref="datePickerRef"
+          class="relative flex-1"
+        >
           <button
             type="button"
             class="w-full h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-xs text-gray-100 inline-flex items-center justify-between"
@@ -248,7 +269,7 @@
             <i :class="card.metaSecondaryIcon"></i>
             <span class="truncate">{{ card.metaSecondaryText }}</span>
           </div>
-          <div class="meta-pill col-span-2">
+          <div v-if="card.metaTertiaryText" class="meta-pill col-span-2">
             <i :class="card.metaTertiaryIcon"></i>
             <span class="truncate">{{ card.metaTertiaryText }}</span>
           </div>
@@ -305,10 +326,16 @@
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
+import { appConfig } from '@/utils/config.js';
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表' },
   { key: 'history', label: '历史记录' },
+];
+
+const ACTIVITY_SUB_TABS = [
+  { key: 'list', label: '活动列表' },
+  { key: 'myTask', label: '我的任务' },
 ];
 
 const HISTORY_SUB_TABS = [
@@ -351,6 +378,7 @@ const showMessage = inject('showMessage', () => {});
 const { userInfo, token, loading: userLoading, fetchUserData } = useDataStore();
 
 const activeMainTab = ref('activities');
+const activeActivityTab = ref('list');
 const activeHistoryTab = ref('record');
 const selectedQueryDate = ref(formatDate(new Date()));
 const selectedStatus = ref('all');
@@ -359,9 +387,12 @@ const showFilters = ref(false);
 const showDateDropdown = ref(false);
 
 const pendingActivities = ref([]);
+const myPendingActivities = ref([]);
 const semesterActivities = ref([]);
 const historyRecords = ref([]);
 const itemOptions = ref([]);
+const itemOptionsLoaded = ref(false);
+const itemOptionsLoading = ref(false);
 const summary = ref({ joinNum: 0, validNum: 0 });
 
 const HISTORY_PAGE_SIZE = 15;
@@ -370,7 +401,6 @@ const historyHasMore = ref(false);
 const historyLoadingMore = ref(false);
 
 const signTask = ref(null);
-const refreshingSign = ref(false);
 const signPendingType = ref('');
 
 const loading = ref(false);
@@ -413,10 +443,12 @@ const itemFilterOptions = computed(() => {
 });
 
 const sourceList = computed(() => {
-  if (activeMainTab.value === 'history') {
-    return activeHistoryTab.value === 'semester' ? semesterActivities.value : historyRecords.value;
+  if (activeMainTab.value === 'activities') {
+    return activeActivityTab.value === 'myTask'
+      ? myPendingActivities.value
+      : pendingActivities.value;
   }
-  return pendingActivities.value;
+  return activeHistoryTab.value === 'semester' ? semesterActivities.value : historyRecords.value;
 });
 
 const filteredList = computed(() => {
@@ -455,49 +487,88 @@ const cards = computed(() =>
       timeText: formatTimeRange(item),
       metaSecondaryIcon: isHistoryRecord ? 'ri-calendar-line' : 'ri-team-line',
       metaSecondaryText: isHistoryRecord ? formatHistoryWeekDate(item) : formatCapacity(item),
-      metaTertiaryIcon: isHistoryRecord ? 'ri-checkbox-circle-line' : 'ri-map-pin-line',
-      metaTertiaryText: isHistoryRecord
-        ? formatHistoryRecordStatus(item)
-        : item.addressDetail || item.address || '地点待定',
-      showIntro: !isHistoryRecord,
-      introText: item.clubIntroduction || formatHistoryHint(item),
+      metaTertiaryIcon: isHistoryRecord ? '' : 'ri-map-pin-line',
+      metaTertiaryText: isHistoryRecord ? '' : item.addressDetail || item.address || '地点待定',
+      showIntro: false,
+      introText: '',
     };
   }),
 );
 
 const currentListTitle = computed(() => {
-  if (activeMainTab.value === 'activities') return `活动列表（${currentQueryDate.value}）`;
+  if (activeMainTab.value === 'activities') {
+    if (activeActivityTab.value === 'myTask') return '我的任务';
+    return `活动列表（${currentQueryDate.value}）`;
+  }
   if (activeHistoryTab.value === 'semester') return '学期记录（queryMySemesterClubActivity）';
   return '历史记录';
 });
 
 const emptyMessage = computed(() => {
-  if (activeMainTab.value === 'activities') return '暂无活动列表数据';
+  if (activeMainTab.value === 'activities') {
+    return activeActivityTab.value === 'myTask' ? '暂无我的任务数据' : '暂无活动列表数据';
+  }
   if (activeHistoryTab.value === 'semester') return '暂无学期记录';
   return '暂无历史记录';
 });
 
-const signTaskStatusText = computed(() => {
-  const task = signTask.value;
-  if (!task) return '无任务';
-
-  if (task.signInStatus === '1' && task.signBackStatus === '1') {
-    return '签到签退均完成';
+const signTaskPhase = computed(() => resolveSignTaskPhase(signTask.value));
+const signTaskPanelStatus = computed(() => {
+  switch (signTaskPhase.value) {
+    case 'joined':
+      return createBadge('已报名', 'bg-amber-500/20 text-amber-200');
+    case 'signedIn':
+      return createBadge('已签到', 'bg-emerald-500/20 text-emerald-200');
+    case 'completed':
+      return createBadge('已完成', 'bg-sky-500/20 text-sky-200');
+    default:
+      return createBadge('未签到', 'bg-white/10 text-gray-300');
   }
-
-  if (task.signInStatus === '1' && task.signBackStatus !== '1') {
-    return '可签退';
-  }
-
-  return '可签到';
 });
 
-const signTaskAction = computed(() => {
+const signTaskCard = computed(() => {
   const task = signTask.value;
   if (!task) return null;
 
-  if (task.signInStatus === '1' && task.signBackStatus === '1') {
+  const source = mergeActivityData(task, findLinkedActivityById(task.activityId));
+  return {
+    title: source.activityName || '未命名活动',
+    subTitle: resolveSignTaskSubTitle(source),
+    badgeText: signTaskPanelStatus.value.text,
+    badgeClass: signTaskPanelStatus.value.className,
+    logoUrl: resolveActivityLogo(source),
+    metaList: [
+      {
+        key: 'time',
+        icon: 'ri-time-line',
+        label: formatTimeRange(source),
+      },
+      {
+        key: 'capacity',
+        icon: 'ri-team-line',
+        label: formatCapacity(source),
+      },
+      {
+        key: 'sign-in',
+        icon: 'ri-login-circle-line',
+        label: `签到时间：${source.signInTime || '--'}`,
+      },
+      {
+        key: 'sign-out',
+        icon: 'ri-logout-circle-r-line',
+        label: `签退时间：${source.signBackTime || source.signBackLimitTime || '--'}`,
+      },
+    ],
+  };
+});
+
+const signTaskPrimaryAction = computed(() => {
+  const task = signTask.value;
+  if (!task) return null;
+
+  if (signTaskPhase.value === 'completed') {
     return {
+      key: 'completed',
       type: '',
       label: '已完成',
       pendingLabel: '已完成',
@@ -506,24 +577,44 @@ const signTaskAction = computed(() => {
     };
   }
 
-  if (task.signInStatus === '1' && task.signBackStatus !== '1') {
+  if (signTaskPhase.value === 'signedIn') {
     return {
+      key: 'sign-out',
       type: '2',
       label: '签退',
       pendingLabel: '签退中',
       disabled: false,
-      buttonClass: 'bg-amber-500/85 text-white',
+      buttonClass: 'bg-amber-500 text-white hover:bg-amber-400',
     };
   }
 
   return {
+    key: 'sign-in',
     type: '1',
     label: '签到',
     pendingLabel: '签到中',
     disabled: false,
-    buttonClass: 'bg-emerald-500/85 text-white',
+    buttonClass: 'bg-emerald-500 text-white hover:bg-emerald-400',
   };
 });
+
+const signTaskCancelAction = computed(() => {
+  const task = signTask.value;
+  if (!task || signTaskPhase.value !== 'joined') return null;
+
+  return {
+    key: 'cancel',
+    type: 'cancel',
+    label: '取消报名',
+    pendingLabel: '取消中',
+    disabled: false,
+    buttonClass: 'bg-rose-500 text-white hover:bg-rose-400',
+  };
+});
+
+const signTaskButtons = computed(() =>
+  [signTaskCancelAction.value, signTaskPrimaryAction.value].filter(Boolean),
+);
 
 watch(activeMainTab, async () => {
   selectedStatus.value = 'all';
@@ -531,12 +622,19 @@ watch(activeMainTab, async () => {
   showDateDropdown.value = false;
 
   if (activeMainTab.value === 'activities') {
-    await Promise.all([loadCurrentList(), loadItemOptions(), refreshSignTask(false)]);
+    await Promise.all([loadCurrentList(), loadSignTask()]);
     return;
   }
 
   selectedItemId.value = 'all';
   await Promise.all([loadCurrentList(), loadSummary()]);
+});
+
+watch(activeActivityTab, async () => {
+  if (activeMainTab.value !== 'activities') return;
+  selectedStatus.value = 'all';
+  selectedItemId.value = 'all';
+  await loadCurrentList();
 });
 
 watch(activeHistoryTab, async () => {
@@ -556,13 +654,19 @@ watch(
 );
 
 watch(selectedQueryDate, async () => {
-  if (activeMainTab.value !== 'activities') return;
+  if (activeMainTab.value !== 'activities' || activeActivityTab.value !== 'list') return;
   await loadCurrentList();
+});
+
+watch(showFilters, async (next) => {
+  if (!next || activeMainTab.value !== 'activities') return;
+  if (itemOptionsLoaded.value || itemOptionsLoading.value) return;
+  await loadItemOptions();
 });
 
 onMounted(async () => {
   document.addEventListener('click', handleDocumentClick);
-  await Promise.all([loadCurrentList(), loadItemOptions(), refreshSignTask(false)]);
+  await Promise.all([loadCurrentList(), loadSignTask()]);
 });
 
 onUnmounted(() => {
@@ -679,7 +783,7 @@ function resolveStatusBucket(item) {
     return 'unsigned';
   }
 
-  switch (String(item.optionStatus)) {
+  switch (resolveEffectiveOptionStatus(item)) {
     case '1':
       return 'joined';
     case '6':
@@ -714,22 +818,39 @@ function resolveBadge(item) {
     return createBadge('未签到', 'bg-white/10 text-gray-300');
   }
 
-  switch (String(item.optionStatus)) {
+  if (activeMainTab.value === 'activities' && activeActivityTab.value === 'myTask') {
+    switch (String(item.activityStatus)) {
+      case '1':
+        return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
+      case '2':
+        return createBadge('进行中', 'bg-blue-500/20 text-blue-200');
+      case '3':
+        return createBadge('已结束', 'bg-white/10 text-gray-300');
+      default:
+        return createBadge('待开放', 'bg-white/10 text-gray-300');
+    }
+  }
+
+  switch (resolveEffectiveOptionStatus(item)) {
     case '1':
       return createBadge('已报名', 'bg-amber-500/20 text-amber-200');
+    case '2':
+      return createBadge('进行中', 'bg-blue-500/20 text-blue-200');
     case '6':
       return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
     case '7':
       return createBadge('报名已满', 'bg-rose-500/20 text-rose-200');
     case '3':
-      return createBadge('无法报名', 'bg-white/10 text-gray-300');
+      return createBadge('已有待参加', 'bg-white/10 text-gray-300');
+    case '4':
+      return createBadge('已完成', 'bg-emerald-500/20 text-emerald-200');
     default:
       return createBadge('待开放', 'bg-white/10 text-gray-300');
   }
 }
 
 function resolveClubAction(item) {
-  const optionStatus = String(item.optionStatus);
+  const optionStatus = resolveEffectiveOptionStatus(item);
 
   if (optionStatus === '6') {
     return {
@@ -748,6 +869,16 @@ function resolveClubAction(item) {
       pendingLabel: '取消中',
       disabled: false,
       buttonClass: 'bg-rose-500 hover:bg-rose-400',
+    };
+  }
+
+  if (optionStatus === '2') {
+    return {
+      type: 2,
+      label: '活动进行中',
+      pendingLabel: '活动进行中',
+      disabled: false,
+      buttonClass: 'bg-blue-500 hover:bg-blue-400',
     };
   }
 
@@ -771,6 +902,16 @@ function resolveClubAction(item) {
     };
   }
 
+  if (optionStatus === '4') {
+    return {
+      type: 0,
+      label: '已完成',
+      pendingLabel: '已完成',
+      disabled: true,
+      buttonClass: 'bg-white/10 text-gray-300',
+    };
+  }
+
   return {
     type: 0,
     label: '暂不可操作',
@@ -778,6 +919,15 @@ function resolveClubAction(item) {
     disabled: true,
     buttonClass: 'bg-white/10 text-gray-300',
   };
+}
+
+function resolveCardSubTitle(item, isHistoryRecord) {
+  if (isHistoryRecord) return item.teacherName || '';
+
+  const parts = [];
+  if (item.teacherName) parts.push(item.teacherName);
+  if (item.clubIntroduction) parts.push(item.clubIntroduction);
+  return parts.join(' · ');
 }
 
 function formatTimeRange(item) {
@@ -790,10 +940,13 @@ function formatTimeRange(item) {
 
 function formatCapacity(item) {
   const signed = Number(item.signInStudent ?? item.joinStudentNum);
-  const total = Number(item.maxStudent ?? item.studentNum);
+  const totalRaw = pickDisplayValue(item.maxStudent, item.studentNum);
+  const total = Number(totalRaw);
 
   const signedText = Number.isFinite(signed) && signed >= 0 ? signed : '-';
-  const totalText = Number.isFinite(total) && total >= 0 ? total : '-';
+  if (isUnlimitedSignup(item)) return `${signedText}/不限`;
+
+  const totalText = totalRaw !== '' && Number.isFinite(total) && total >= 0 ? total : '-';
 
   return `${signedText}/${totalText} 人`;
 }
@@ -803,19 +956,7 @@ function formatHistoryWeekDate(item) {
   const weekLabel =
     Number.isFinite(weekValue) && WEEKDAY_TEXT[weekValue] ? '周' + WEEKDAY_TEXT[weekValue] : '周--';
   const dateText = item.yymmdd || '--';
-  return weekLabel + ' ' + dateText;
-}
-
-function formatHistoryRecordStatus(item) {
-  const signStatus = String(item.signStatus);
-  if (signStatus === '1') return '已完成';
-  if (signStatus === '3') return '未签退';
-  return '未签到';
-}
-
-function formatHistoryHint(item) {
-  if (!item.yymmdd) return '暂无活动介绍';
-  return `活动日期：${item.yymmdd}`;
+  return dateText + ' ' + weekLabel;
 }
 
 function getClubActionPendingKey(activityId, type) {
@@ -831,6 +972,17 @@ function isCardActionPending(card) {
   const type = Number(card.action.type);
   if (type !== 1 && type !== 2) return false;
   return isClubActionPending(getClubActionPendingKey(card.activityId, type));
+}
+
+function isSignTaskActionPending(action) {
+  if (!action) return false;
+  return signPendingType.value !== '' && signPendingType.value === String(action.type || '');
+}
+
+function isSignTaskActionDisabled(action) {
+  if (!action) return true;
+  if (action.disabled) return true;
+  return signPendingType.value !== '';
 }
 
 async function handleCardAction(card) {
@@ -937,6 +1089,7 @@ async function loadCurrentList() {
     const authReady = await ensureAuthReady();
     if (!authReady) {
       pendingActivities.value = [];
+      myPendingActivities.value = [];
       semesterActivities.value = [];
       historyRecords.value = [];
       historyPageNo.value = 1;
@@ -961,6 +1114,19 @@ async function loadCurrentList() {
       }
 
       await loadHistoryRecords({ append: false });
+      return;
+    }
+
+    if (activeActivityTab.value === 'myTask') {
+      const response = await api.queryMyPendingClub(studentId.value, 1, 15);
+      const data = response?.data;
+      if (!isApiSuccess(data)) {
+        myPendingActivities.value = [];
+        showMessage(data?.msg || data?.message || '加载我的任务失败', 'error');
+        return;
+      }
+
+      myPendingActivities.value = extractList(data.response);
       return;
     }
 
@@ -1002,8 +1168,13 @@ async function loadCurrentList() {
       return;
     }
 
-    pendingActivities.value = [];
-    showMessage('加载活动列表异常', 'error');
+    if (activeActivityTab.value === 'myTask') {
+      myPendingActivities.value = [];
+      showMessage('加载我的任务异常', 'error');
+    } else {
+      pendingActivities.value = [];
+      showMessage('加载活动列表异常', 'error');
+    }
   } finally {
     loading.value = false;
   }
@@ -1037,6 +1208,9 @@ async function loadSummary() {
 }
 
 async function loadItemOptions() {
+  if (itemOptionsLoading.value || itemOptionsLoaded.value) return;
+
+  itemOptionsLoading.value = true;
   try {
     const authReady = await ensureAuthReady();
     if (!authReady || !schoolId.value) {
@@ -1073,10 +1247,14 @@ async function loadItemOptions() {
     if (!itemOptions.value.some((item) => String(item.itemId) === selectedItemId.value)) {
       selectedItemId.value = 'all';
     }
+
+    itemOptionsLoaded.value = true;
   } catch (error) {
     console.error('loadItemOptions failed:', error);
     itemOptions.value = [];
     selectedItemId.value = 'all';
+  } finally {
+    itemOptionsLoading.value = false;
   }
 }
 
@@ -1091,16 +1269,179 @@ function normalizeSignTask(payload) {
     activityId,
     latitude: String(payload.latitude || ''),
     longitude: String(payload.longitude || ''),
-    signStatus: String(payload.signStatus ?? ''),
-    signInStatus: String(payload.signInStatus ?? ''),
-    signBackStatus: String(payload.signBackStatus ?? ''),
+    signStatus: payload.signStatus ?? null,
+    signInStatus: payload.signInStatus ?? null,
+    signBackStatus: payload.signBackStatus ?? null,
   };
 }
 
-async function refreshSignTask(manual = false) {
-  if (refreshingSign.value) return;
+function isSignedStatus(status) {
+  return Number(status) === 1;
+}
 
-  refreshingSign.value = true;
+function pickDisplayValue(...values) {
+  for (const value of values) {
+    if (value === 0 || value === '0' || value === false) return value;
+    if (value === null || value === undefined) continue;
+    if (typeof value === 'string' && value.trim() === '') continue;
+    return value;
+  }
+  return '';
+}
+
+function mergeActivityData(primary, secondary) {
+  if (!primary && !secondary) return null;
+
+  const merged = { ...(secondary || {}), ...(primary || {}) };
+  const preferredKeys = [
+    'activityId',
+    'clubActivityId',
+    'configurationId',
+    'activityName',
+    'activityItemId',
+    'itemName',
+    'teacherName',
+    'clubIntroduction',
+    'address',
+    'addressDetail',
+    'yymmdd',
+    'startTime',
+    'endTime',
+    'signInTime',
+    'signBackTime',
+    'signBackLimitTime',
+    'joinStudentNum',
+    'signInStudent',
+    'maxStudent',
+    'studentNum',
+    'optionStatus',
+    'signStatus',
+    'signInStatus',
+    'signBackStatus',
+    'latitude',
+    'longitude',
+    'logoUrl',
+    'logo',
+    'itemLogo',
+    'itemImg',
+    'itemImage',
+    'itemPic',
+    'activityLogo',
+    'activityImg',
+    'activityImage',
+    'activityPic',
+    'cover',
+    'coverUrl',
+    'image',
+    'imageUrl',
+    'photo',
+    'photoUrl',
+  ];
+
+  preferredKeys.forEach((key) => {
+    merged[key] = pickDisplayValue(primary?.[key], secondary?.[key]);
+  });
+
+  return merged;
+}
+
+function findLinkedActivityById(activityId) {
+  const normalizedId = Number(activityId);
+  if (!Number.isFinite(normalizedId) || normalizedId <= 0) return null;
+
+  return [...pendingActivities.value, ...myPendingActivities.value].find(
+    (item) => resolveActivityId(item) === normalizedId,
+  );
+}
+
+function isUnlimitedSignup(item) {
+  const totalRaw = pickDisplayValue(item?.maxStudent, item?.studentNum);
+  if (totalRaw === '') return false;
+  const total = Number(totalRaw);
+  return Number.isFinite(total) && total <= 0;
+}
+
+function resolveEffectiveOptionStatus(item) {
+  const optionStatus = String(item?.optionStatus ?? '').trim();
+  if (optionStatus === '7' && isUnlimitedSignup(item)) return '6';
+  return optionStatus;
+}
+
+function resolveSignTaskSubTitle(item) {
+  return item?.addressDetail || item?.address || item?.teacherName || '地点待定';
+}
+
+function normalizeMediaUrl(value) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+
+  if (/^(data:|blob:)/i.test(raw)) return raw;
+  if (/^(https?:)?\/\//i.test(raw)) return raw;
+  if (!raw.startsWith('/') && !raw.includes('/') && !raw.includes('.')) return '';
+
+  const base = String(appConfig.api.baseUrl || '').replace(/\/$/, '');
+  if (!base) return raw;
+  if (raw.startsWith('/')) return `${base}${raw}`;
+  return `${base}/${raw.replace(/^\/+/, '')}`;
+}
+
+function resolveActivityLogo(item) {
+  const candidates = [
+    item?.logoUrl,
+    item?.logo,
+    item?.itemLogo,
+    item?.itemImg,
+    item?.itemImage,
+    item?.itemPic,
+    item?.activityLogo,
+    item?.activityImg,
+    item?.activityImage,
+    item?.activityPic,
+    item?.coverUrl,
+    item?.cover,
+    item?.imageUrl,
+    item?.image,
+    item?.photoUrl,
+    item?.photo,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeMediaUrl(candidate);
+    if (normalized) return normalized;
+  }
+
+  return '';
+}
+
+function resolveSignTaskOptionStatus(task) {
+  const directOptionStatus = String(task?.optionStatus ?? '').trim();
+  if (directOptionStatus) return directOptionStatus;
+
+  const activityId = Number(task?.activityId);
+  if (Number.isFinite(activityId) && activityId > 0) {
+    const linked = findLinkedActivityById(activityId);
+    const linkedOptionStatus = String(linked?.optionStatus ?? '').trim();
+    if (linkedOptionStatus) return linkedOptionStatus;
+  }
+
+  return String(task?.signStatus ?? '').trim();
+}
+
+function resolveSignTaskPhase(task) {
+  if (!task) return 'unsigned';
+
+  if (isSignedStatus(task.signInStatus) && isSignedStatus(task.signBackStatus)) {
+    return 'completed';
+  }
+
+  if (isSignedStatus(task.signInStatus)) {
+    return 'signedIn';
+  }
+
+  return resolveSignTaskOptionStatus(task) === '1' ? 'joined' : 'unsigned';
+}
+
+async function loadSignTask() {
   try {
     const authReady = await ensureAuthReady();
     if (!authReady) {
@@ -1113,22 +1454,34 @@ async function refreshSignTask(manual = false) {
 
     if (!isApiSuccess(data)) {
       signTask.value = null;
-      if (manual) showMessage(data?.msg || data?.message || '刷新签到状态失败', 'error');
       return;
     }
 
     signTask.value = normalizeSignTask(data.response);
-
-    if (manual && !signTask.value) {
-      showMessage('当前没有可签到/签退任务', 'info');
-    }
   } catch (error) {
     signTask.value = null;
-    console.error('refreshSignTask failed:', error);
-    if (manual) showMessage('刷新签到状态异常', 'error');
-  } finally {
-    refreshingSign.value = false;
+    console.error('loadSignTask failed:', error);
   }
+}
+
+async function handleSignTaskAction(actionType) {
+  const normalizedActionType = String(actionType || '').trim();
+  if (!normalizedActionType) return;
+
+  if (normalizedActionType === 'cancel') {
+    const task = signTask.value;
+    if (!task) return;
+
+    signPendingType.value = normalizedActionType;
+    try {
+      await handleClubAction(task, 2);
+    } finally {
+      signPendingType.value = '';
+    }
+    return;
+  }
+
+  await handleSignTask(normalizedActionType);
 }
 
 async function handleSignTask(signType) {
@@ -1170,7 +1523,7 @@ async function handleSignTask(signType) {
     }
 
     showMessage(resolveResponseMessage(data, `${actionText}成功`), 'success');
-    await Promise.all([refreshSignTask(false), loadCurrentList()]);
+    await Promise.all([loadSignTask(), loadCurrentList()]);
   } catch (error) {
     console.error('handleSignTask failed:', error);
     showMessage('签到/签退操作异常', 'error');
@@ -1211,7 +1564,7 @@ async function handleClubAction(item, type) {
     const fallback = actionType === 1 ? '报名成功' : '取消报名成功';
     showMessage(resolveResponseMessage(data, fallback), 'success');
 
-    const refreshTasks = [loadCurrentList(), refreshSignTask(false)];
+    const refreshTasks = [loadCurrentList(), loadSignTask()];
     if (activeMainTab.value === 'history') refreshTasks.push(loadSummary());
 
     await Promise.all(refreshTasks);
@@ -1245,6 +1598,22 @@ async function handleClubAction(item, type) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.meta-pill-cyan {
+  background: rgba(34, 211, 238, 0.1);
+  border-color: rgba(125, 211, 252, 0.18);
+}
+
+.club-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .intro-text {
