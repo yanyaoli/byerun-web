@@ -326,7 +326,6 @@
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
-import { appConfig } from '@/utils/config.js';
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表' },
