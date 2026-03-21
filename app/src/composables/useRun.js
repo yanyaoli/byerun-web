@@ -157,7 +157,7 @@ export async function submitRun(payload = {}) {
         }
       : null;
 
-  let runTime = presetRun?.runTime || 0;
+  let runTime = Number(payload?.runTime) > 0 ? Number(payload.runTime) : (presetRun?.runTime || 0);
   let trackPoints = presetRun?.trackPoints || '';
 
   if (!runTime || !trackPoints) {

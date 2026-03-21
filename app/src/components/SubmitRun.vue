@@ -90,7 +90,12 @@
             </div>
 
             <div class="form-group mb-4">
-              <label class="block text-sm text-gray-500 mt-2 mb-2 font-medium">跑步里程</label>
+              <label class="block text-sm text-gray-500 mt-2 mb-2 font-medium">
+                <div class="flex justify-between items-center">
+                  <span>跑步里程</span>
+                  <span class="text-xs text-gray-400">配速 {{ paceDisplay }}</span>
+                </div>
+              </label>
               <div class="input-container flex items-center">
                 <div
                   class="input-wrapper flex-1 flex items-center bg-stone-950/50 border-none rounded-md px-3"
@@ -243,6 +248,37 @@ const distanceErrorText = computed(() => {
   return '跑步里程需为大于 0 的整数';
 });
 
+const predictedRunTime = ref(0);
+
+const calculatePredictedRunTime = (distance) => {
+  if (!Number.isInteger(distance) || distance <= 0) return 0;
+  const rawDuration = computeDurationFromDistance(distance, {
+    minMinutes: distanceBounds.value.timeMin,
+    maxMinutes: distanceBounds.value.timeMax,
+  });
+  return normalizeRoundedRunTime(rawDuration, distance, {
+    minMinutes: distanceBounds.value.timeMin,
+    maxMinutes: distanceBounds.value.timeMax,
+  });
+};
+
+watch(
+  () => Number(form.value.distance),
+  (distance) => {
+    predictedRunTime.value = calculatePredictedRunTime(distance);
+  },
+  { immediate: true },
+);
+
+const paceDisplay = computed(() => {
+  const distance = Number(form.value.distance);
+  if (!Number.isInteger(distance) || distance <= 0 || !Number.isFinite(predictedRunTime.value)) {
+    return "0'00''/km";
+  }
+
+  return formatPaceMinutesPerKm(distance, predictedRunTime.value);
+});
+
 const buildLocalRandomRun = () => {
   const bounds = distanceBounds.value;
   const runDistance = randomIntNonThousand(bounds.distanceMin, bounds.distanceMax);
@@ -300,7 +336,10 @@ async function onRandomFill() {
 
   randomizing.value = true;
   try {
-    applyRandomRun(buildLocalRandomRun());
+    const randomRun = buildLocalRandomRun();
+    applyRandomRun(randomRun);
+    predictedRunTime.value =
+      randomRun.run_time || calculatePredictedRunTime(Number(form.value.distance));
   } finally {
     randomizing.value = false;
     awaitingSubmitConfirm.value = false;
@@ -422,6 +461,7 @@ const handleSubmit = async () => {
     const res = await submitRunApi({
       distance: form.value.distance,
       route: form.value.route,
+      runTime: predictedRunTime.value,
     });
     if (!res.ok) {
       let msg = res.data?.msg || res.error?.message || '提交失败，请重试';
