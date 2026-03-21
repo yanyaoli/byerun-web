@@ -157,20 +157,25 @@ export async function submitRun(payload = {}) {
         }
       : null;
 
-  let runTime = Number(payload?.runTime) > 0 ? Number(payload.runTime) : (presetRun?.runTime || 0);
-  let trackPoints = presetRun?.trackPoints || '';
+  const resolveRunTime = () => {
+    const payloadRunTime = Number(payload?.runTime);
+    if (payloadRunTime > 0) return payloadRunTime;
+    if (Number(presetRun?.runTime) > 0) return Number(presetRun.runTime);
 
-  if (!runTime || !trackPoints) {
     const duration = computeDurationFromDistance(dist, {
       minMinutes: bounds.timeMin,
       maxMinutes: bounds.timeMax,
     });
 
-    runTime = normalizeRoundedRunTime(duration, dist, {
+    return normalizeRoundedRunTime(duration, dist, {
       minMinutes: bounds.timeMin,
       maxMinutes: bounds.timeMax,
     });
+  };
 
+  let runTime = resolveRunTime();
+  let trackPoints = presetRun?.trackPoints || '';
+  if (!trackPoints) {
     trackPoints = genTrackPoints(dist, route, runTime);
   }
 
