@@ -183,6 +183,7 @@ const macaronHues = [8, 22, 36, 50, 66, 88, 112, 136, 160, 182, 204, 226, 248, 2
 const qqGroupUrl = computed(() => props.community?.qq_group_url || '');
 const wechatGroupQrcode = computed(() => props.community?.wechat_group_qrcode || '');
 const preloadedQrSet = new Set();
+const loadedQrSet = new Set();
 
 const sponsorNames = computed(() => {
   if (!Array.isArray(props.sponsor?.sponsors)) return [];
@@ -284,16 +285,20 @@ const preloadQrImage = (url) => {
 
 const openQrPreview = (item) => {
   if (!item?.url) return;
-  previewLoading.value = true;
+  previewLoading.value = !loadedQrSet.has(item.url);
   previewQrUrl.value = item.url;
   previewVisible.value = true;
 };
 
 const closeQrPreview = () => {
   previewVisible.value = false;
+  previewLoading.value = false;
 };
 
 const handlePreviewLoaded = () => {
+  if (previewQrUrl.value) {
+    loadedQrSet.add(previewQrUrl.value);
+  }
   previewLoading.value = false;
 };
 
