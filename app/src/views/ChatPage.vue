@@ -736,11 +736,7 @@ import { useChatStore } from '@/composables/useChatStore';
 const showMessage = inject('showMessage');
 const setLayoutHidden = inject('setLayoutHidden', () => {});
 const goBack = inject('goBack', null);
-const {
-  token,
-  userInfo,
-  clearAllData,
-} = useDataStore();
+const { token, userInfo, clearAllData } = useDataStore();
 const {
   chatUser,
   chatUserId,
@@ -969,6 +965,7 @@ const showToast = (msg, type = 'info') => {
 };
 
 // ==================== 导航处理 ====================
+const router = useRouter();
 function onBack() {
   try {
     setLayoutHidden(false);
@@ -976,17 +973,17 @@ function onBack() {
     console.error('Failed to restore layout', e);
   }
 
-  if (goBack && typeof goBack === 'function') {
+  if (typeof goBack === 'function') {
     goBack();
     return;
   }
-
-  try {
-    const router = useRouter();
-    router.push({ name: 'home' }).catch(() => {
-      window.location.href = '/';
+  if (router) {
+    router.push({ name: 'home' }).catch((err) => {
+      if (err.name !== 'NavigationDuplicated') {
+        window.location.href = '/';
+      }
     });
-  } catch (e) {
+  } else {
     window.location.href = '/';
   }
 }
