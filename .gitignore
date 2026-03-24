@@ -29,3 +29,6 @@ dist-ssr
 .history/
 
 __pycache__/
+
+# Autorun persistent data
+tasks.json
