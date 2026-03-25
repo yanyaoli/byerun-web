@@ -87,7 +87,7 @@
                 ]"
                 @click="selectQueryDate(day.value)"
               >
-                {{ day.label }} {{ day.shortDate }}
+                {{ day.label }} {{ day.value }}
               </button>
             </div>
           </transition>
@@ -159,16 +159,6 @@
     <section v-if="activeMainTab === 'activities'" class="mt-3">
       <article v-if="signTaskCard" class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
         <div class="flex items-start gap-3">
-          <div class="club-logo shrink-0 border-cyan-300/15 bg-cyan-400/15 text-cyan-100">
-            <img
-              v-if="signTaskCard.logoUrl"
-              :src="signTaskCard.logoUrl"
-              :alt="`${signTaskCard.title} 徽标`"
-              class="h-full w-full object-cover"
-            />
-            <i v-else class="ri-shield-star-line text-lg"></i>
-          </div>
-
           <div class="min-w-0 flex-1">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
@@ -191,24 +181,49 @@
               </div>
             </div>
 
-            <div v-if="signTaskButtons.length > 0" class="mt-3 flex flex-wrap justify-end gap-2">
+            <div
+              v-if="signTaskButtons.length > 0"
+              class="mt-3 flex items-center justify-between gap-2"
+            >
               <button
-                v-for="action in signTaskButtons"
-                :key="action.key"
                 type="button"
-                :disabled="isSignTaskActionDisabled(action)"
+                :disabled="clubAutoConfigOpening"
                 :class="[
-                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
-                  action.buttonClass,
-                  isSignTaskActionDisabled(action) && 'opacity-70 cursor-not-allowed',
+                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 bg-white/10 text-gray-200 hover:bg-white/15 transition-colors',
+                  clubAutoConfigOpening && 'opacity-70 cursor-not-allowed',
                 ]"
-                @click="handleSignTaskAction(action.type)"
+                @click="openClubAutoConfigModal"
               >
-                <i v-if="isSignTaskActionPending(action)" class="ri-loader-4-line animate-spin"></i>
-                <span>{{
-                  isSignTaskActionPending(action) ? action.pendingLabel : action.label
-                }}</span>
+                <i
+                  :class="
+                    clubAutoConfigOpening ? 'ri-loader-4-line animate-spin' : 'ri-settings-4-line'
+                  "
+                ></i>
+                <span>{{ clubAutoConfigOpening ? '加载中...' : '定时任务' }}</span>
               </button>
+
+              <div class="flex flex-wrap justify-end gap-2">
+                <button
+                  v-for="action in signTaskButtons"
+                  :key="action.key"
+                  type="button"
+                  :disabled="isSignTaskActionDisabled(action)"
+                  :class="[
+                    'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+                    action.buttonClass,
+                    isSignTaskActionDisabled(action) && 'opacity-70 cursor-not-allowed',
+                  ]"
+                  @click="handleSignTaskAction(action.type)"
+                >
+                  <i
+                    v-if="isSignTaskActionPending(action)"
+                    class="ri-loader-4-line animate-spin"
+                  ></i>
+                  <span>{{
+                    isSignTaskActionPending(action) ? action.pendingLabel : action.label
+                  }}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -252,51 +267,66 @@
         :key="card.key"
         class="rounded-2xl border border-white/10 bg-white/5 p-3"
       >
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0 flex-1">
-            <h3 class="text-sm font-semibold text-white truncate">{{ card.title }}</h3>
-            <p class="mt-1 text-xs text-gray-400 truncate">{{ card.subTitle }}</p>
+        <template v-if="card.isHistoryRecord">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="min-w-0 flex-1 text-sm font-semibold text-white truncate">
+              {{ card.title }}
+            </h3>
+            <span :class="card.badgeClass">{{ card.badgeText }}</span>
           </div>
-          <span :class="card.badgeClass">{{ card.badgeText }}</span>
-        </div>
-
-        <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-300">
-          <div class="meta-pill">
-            <i class="ri-time-line"></i>
-            <span class="truncate">{{ card.timeText }}</span>
-          </div>
-          <div class="meta-pill">
-            <i :class="card.metaSecondaryIcon"></i>
-            <span class="truncate">{{ card.metaSecondaryText }}</span>
-          </div>
-          <div v-if="card.metaTertiaryText" class="meta-pill col-span-2">
-            <i :class="card.metaTertiaryIcon"></i>
-            <span class="truncate">{{ card.metaTertiaryText }}</span>
-          </div>
-        </div>
-
-        <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">
-          {{ card.introText }}
-        </p>
-
-        <div v-if="card.action" class="mt-3 flex items-center justify-end">
-          <button
-            type="button"
-            :disabled="card.action.disabled || isCardActionPending(card)"
-            :class="[
-              'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
-              card.action.buttonClass,
-              (card.action.disabled || isCardActionPending(card)) &&
-                'opacity-70 cursor-not-allowed',
-            ]"
-            @click="handleCardAction(card)"
-          >
-            <i v-if="isCardActionPending(card)" class="ri-loader-4-line animate-spin"></i>
-            <span>{{
-              isCardActionPending(card) ? card.action.pendingLabel : card.action.label
+          <div class="mt-1 flex items-center justify-between gap-2">
+            <span class="min-w-0 flex-1 text-xs text-gray-400 truncate">{{
+              card.subTitle || '--'
             }}</span>
-          </button>
-        </div>
+            <span class="shrink-0 text-xs text-gray-300">{{ card.historyDateTimeText }}</span>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="min-w-0 flex-1 text-sm font-semibold text-white truncate">
+              {{ card.title }}
+            </h3>
+            <span :class="card.badgeClass">{{ card.badgeText }}</span>
+          </div>
+
+          <div class="mt-1 flex items-center justify-between gap-2">
+            <span class="min-w-0 flex-1 text-xs text-gray-400 truncate">
+              {{ card.subTitle }}{{ card.metaTertiaryText ? ` · ${card.metaTertiaryText}` : '' }}
+            </span>
+            <span class="shrink-0 text-xs text-gray-300 text-right">{{
+              card.metaSecondaryText
+            }}</span>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between gap-2 text-xs text-gray-300">
+            <div class="meta-pill">
+              <i class="ri-time-line"></i>
+              <span class="truncate">{{ card.timeText }}</span>
+            </div>
+            <button
+              v-if="card.action"
+              type="button"
+              :disabled="card.action.disabled || isCardActionPending(card)"
+              :class="[
+                'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
+                card.action.buttonClass,
+                (card.action.disabled || isCardActionPending(card)) &&
+                  'opacity-70 cursor-not-allowed',
+              ]"
+              @click="handleCardAction(card)"
+            >
+              <i v-if="isCardActionPending(card)" class="ri-loader-4-line animate-spin"></i>
+              <span>{{
+                isCardActionPending(card) ? card.action.pendingLabel : card.action.label
+              }}</span>
+            </button>
+          </div>
+
+          <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">
+            {{ card.introText }}
+          </p>
+        </template>
       </article>
 
       <div
@@ -319,13 +349,17 @@
         </button>
       </div>
     </section>
+
+    <ClubAutoConfigModal v-model:visible="showClubAutoConfigModal" />
   </div>
 </template>
 
 <script setup>
-import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
+
+const ClubAutoConfigModal = defineAsyncComponent(() => import('./ClubAutoConfig.vue'));
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表' },
@@ -401,6 +435,8 @@ const historyLoadingMore = ref(false);
 
 const signTask = ref(null);
 const signPendingType = ref('');
+const showClubAutoConfigModal = ref(false);
+const clubAutoConfigOpening = ref(false);
 
 const loading = ref(false);
 const clubActionPendingMap = ref({});
@@ -422,9 +458,9 @@ const dateOptions = computed(() => buildDateOptions());
 const currentQueryDate = computed(() => selectedQueryDate.value || formatDate(new Date()));
 const selectedDateLabel = computed(() => {
   const selected = dateOptions.value.find((item) => item.value === currentQueryDate.value);
-  if (selected) return `${selected.label} ${selected.shortDate}`;
+  if (selected) return `${selected.label} ${selected.value}`;
   const now = new Date();
-  return `周${WEEKDAY_TEXT[resolveWeekDayNumber(now)]} ${formatMonthDay(now)}`;
+  return `周${WEEKDAY_TEXT[resolveWeekDayNumber(now)]} ${formatDate(now)}`;
 });
 const statusOptions = computed(() => {
   if (activeMainTab.value === 'activities') return STATUS_OPTIONS_MAP.pending;
@@ -474,6 +510,7 @@ const cards = computed(() =>
     return {
       key,
       item,
+      isHistoryRecord,
       activityId,
       action:
         activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
@@ -488,6 +525,9 @@ const cards = computed(() =>
       metaSecondaryText: isHistoryRecord ? formatHistoryWeekDate(item) : formatCapacity(item),
       metaTertiaryIcon: isHistoryRecord ? '' : 'ri-map-pin-line',
       metaTertiaryText: isHistoryRecord ? '' : item.addressDetail || item.address || '地点待定',
+      historyDateTimeText: isHistoryRecord
+        ? `${item.yymmdd || '--'} ${(item.startTime || '--:--') + ' - ' + (item.endTime || '--:--')}`
+        : '',
       showIntro: false,
       introText: '',
     };
@@ -535,7 +575,6 @@ const signTaskCard = computed(() => {
     subTitle: resolveSignTaskSubTitle(source),
     badgeText: signTaskPanelStatus.value.text,
     badgeClass: signTaskPanelStatus.value.className,
-    logoUrl: resolveActivityLogo(source),
     metaList: [
       {
         key: 'time',
@@ -749,16 +788,20 @@ function buildDateOptions() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
-  return Array.from({ length: 7 }, (_, offset) => {
-    const current = new Date(start);
-    current.setDate(start.getDate() + offset);
+  const end = new Date(start.getFullYear(), 11, 31);
+  const result = [];
+
+  const current = new Date(start);
+  while (current <= end) {
     const weekDay = resolveWeekDayNumber(current);
-    return {
+    result.push({
       value: formatDate(current),
       label: `周${WEEKDAY_TEXT[weekDay]}`,
-      shortDate: formatMonthDay(current),
-    };
-  });
+    });
+    current.setDate(current.getDate() + 1);
+  }
+
+  return result;
 }
 
 function resolveActivityId(item) {
@@ -982,6 +1025,23 @@ function isSignTaskActionDisabled(action) {
   if (!action) return true;
   if (action.disabled) return true;
   return signPendingType.value !== '';
+}
+
+async function openClubAutoConfigModal() {
+  if (clubAutoConfigOpening.value || showClubAutoConfigModal.value) return;
+
+  clubAutoConfigOpening.value = true;
+  try {
+    if (typeof ClubAutoConfigModal.__asyncLoader === 'function') {
+      await ClubAutoConfigModal.__asyncLoader();
+    }
+    showClubAutoConfigModal.value = true;
+  } catch (error) {
+    console.error('openClubAutoConfigModal failed:', error);
+    showMessage('加载定时任务面板失败', 'error');
+  } finally {
+    clubAutoConfigOpening.value = false;
+  }
 }
 
 async function handleCardAction(card) {
@@ -1384,34 +1444,6 @@ function normalizeMediaUrl(value) {
   return `${base}/${raw.replace(/^\/+/, '')}`;
 }
 
-function resolveActivityLogo(item) {
-  const candidates = [
-    item?.logoUrl,
-    item?.logo,
-    item?.itemLogo,
-    item?.itemImg,
-    item?.itemImage,
-    item?.itemPic,
-    item?.activityLogo,
-    item?.activityImg,
-    item?.activityImage,
-    item?.activityPic,
-    item?.coverUrl,
-    item?.cover,
-    item?.imageUrl,
-    item?.image,
-    item?.photoUrl,
-    item?.photo,
-  ];
-
-  for (const candidate of candidates) {
-    const normalized = normalizeMediaUrl(candidate);
-    if (normalized) return normalized;
-  }
-
-  return '';
-}
-
 function resolveSignTaskOptionStatus(task) {
   const directOptionStatus = String(task?.optionStatus ?? '').trim();
   if (directOptionStatus) return directOptionStatus;
@@ -1602,17 +1634,6 @@ async function handleClubAction(item, type) {
 .meta-pill-cyan {
   background: rgba(34, 211, 238, 0.1);
   border-color: rgba(125, 211, 252, 0.18);
-}
-
-.club-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
 }
 
 .intro-text {

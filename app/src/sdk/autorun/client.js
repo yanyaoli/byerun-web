@@ -53,6 +53,30 @@ export class AutorunClient {
     );
   }
 
+  setClubAutoConfig(token, body, requestId) {
+    return this.request(
+      '/api/club/config',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
+      requestId,
+    );
+  }
+
+  getClubAutoStatus(token, requestId) {
+    return this.request(
+      '/api/club/status',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
+  triggerClubAuto(token, requestId) {
+    return this.request(
+      '/api/club/trigger',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
   getRandom(token, query = {}, requestId) {
     const params = new URLSearchParams();
     const mapId = String(query?.map_id ?? '').trim();
@@ -95,4 +119,5 @@ export class AutorunClient {
     }
     return envelope;
   }
+
 }
