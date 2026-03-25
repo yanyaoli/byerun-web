@@ -27,14 +27,24 @@
       <div v-else :class="ui.content">
         <div :class="ui.header">
           <div class="space-y-0.5">
-            <h2 class="text-sm font-black text-stone-200 uppercase tracking-widest">定时任务</h2>
+            <h2 class="text-sm font-black text-stone-200 uppercase tracking-widest">自动任务</h2>
             <p class="text-[9px] text-stone-700 font-mono">{{ versionLabel }}</p>
           </div>
           <div class="flex items-center gap-2">
-            <span :class="['text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide', enabledLabelClass]">
+            <span
+              :class="[
+                'text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide',
+                enabledLabelClass,
+              ]"
+            >
               {{ enabledLabelText }}
             </span>
-            <span :class="['text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide', statusLabelClass]">
+            <span
+              :class="[
+                'text-[10px] font-black px-2 py-1 rounded-lg border tracking-wide',
+                statusLabelClass,
+              ]"
+            >
               {{ statusLabelText }}
             </span>
           </div>
@@ -42,7 +52,9 @@
 
         <div :class="ui.fields">
           <div :class="ui.fieldItem">
-            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">学校地图</label>
+            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
+              >学校地图</label
+            >
             <div class="relative">
               <div @click="showMapList = !showMapList" :class="ui.mapTrigger">
                 <span class="text-[12px] text-stone-200 font-medium">{{ currentMapName }}</span>
@@ -70,38 +82,63 @@
           </div>
 
           <div :class="ui.fieldItem">
-            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">运行时间</label>
+            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
+              >每日运行时间</label
+            >
             <div class="flex items-center gap-2">
-              <div class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1">
+              <div
+                class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1"
+              >
                 <select
                   v-model="timeObj.h"
                   class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1"
                 >
-                  <option v-for="h in 24" :key="h - 1" :value="h - 1" class="bg-stone-900 text-white">
+                  <option
+                    v-for="h in 24"
+                    :key="h - 1"
+                    :value="h - 1"
+                    class="bg-stone-900 text-white"
+                  >
                     {{ String(h - 1).padStart(2, '0') }}
                   </option>
                 </select>
-                <span class="text-[9px] text-stone-600 pr-2 italic">H</span>
+                <span class="text-[9px] text-stone-600 pr-2 italic">时</span>
               </div>
               <span class="text-stone-800 font-bold">:</span>
-              <div class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1">
+              <div
+                class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1"
+              >
                 <select
                   v-model="timeObj.m"
                   class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1"
                 >
-                  <option v-for="m in 60" :key="m - 1" :value="m - 1" class="bg-stone-900 text-white">
+                  <option
+                    v-for="m in 60"
+                    :key="m - 1"
+                    :value="m - 1"
+                    class="bg-stone-900 text-white"
+                  >
                     {{ String(m - 1).padStart(2, '0') }}
                   </option>
                 </select>
-                <span class="text-[9px] text-stone-600 pr-2 italic">M</span>
+                <span class="text-[9px] text-stone-600 pr-2 italic">分</span>
               </div>
             </div>
           </div>
 
-          <div @click="form.enabled = !form.enabled" class="flex items-center justify-between p-1 cursor-pointer group">
-            <span class="text-[11px] font-bold text-stone-500 group-hover:text-stone-300 transition-colors">开启定时</span>
+          <div
+            @click="form.enabled = !form.enabled"
+            class="flex items-center justify-between p-1 cursor-pointer group"
+          >
+            <span
+              class="text-[11px] font-bold text-stone-500 group-hover:text-stone-300 transition-colors"
+              >启用每日自动任务</span
+            >
             <div
-              :class="['w-9 h-5 rounded-full transition-all relative', form.enabled ? 'bg-stone-200' : 'bg-stone-800']"
+              :class="[
+                'w-9 h-5 rounded-full transition-all relative',
+                form.enabled ? 'bg-stone-200' : 'bg-stone-800',
+              ]"
             >
               <div
                 :class="[
@@ -174,7 +211,7 @@ const ui = computed(() =>
           'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
       }
     : {
-        wrapper: 'fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md',
+        wrapper: 'fixed inset-0 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md',
         panel:
           'relative w-full max-w-[300px] bg-stone-950 border border-white/10 rounded-[2rem] shadow-2xl transition-all overflow-hidden',
         feedback: 'py-16 flex flex-col items-center justify-center space-y-4',
@@ -195,7 +232,9 @@ const versionLabel = computed(() => {
 });
 
 const getDatePart = (value) => {
-  const match = String(value || '').trim().match(/^\d{4}-\d{2}-\d{2}/);
+  const match = String(value || '')
+    .trim()
+    .match(/^\d{4}-\d{2}-\d{2}/);
   return match ? match[0] : '';
 };
 
@@ -404,4 +443,3 @@ option {
   color: #e7e5e4;
 }
 </style>
-

@@ -10,7 +10,7 @@
     >
       <div
         v-if="visible"
-        class="fixed inset-0 z-[10000] grid place-items-center p-40 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] grid place-items-center p-40 backdrop-blur-sm"
       >
         <div
           class="bg-stone-900 w-full max-w-[300px] max-h-[90vh] overflow-auto rounded-[1.5rem] shadow-2xl overflow-hidden p-6"

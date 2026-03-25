@@ -3,7 +3,7 @@
     <header
       ref="headerRef"
       :class="[
-        'fixed left-0 right-0 top-2 h-8 px-2 z-[998] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
+        'fixed left-0 right-0 top-2 h-8 px-2 z-[999] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
       ]"
     >
       <div

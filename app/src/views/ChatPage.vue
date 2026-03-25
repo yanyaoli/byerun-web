@@ -6,7 +6,7 @@
       <!-- 导航栏 -->
       <div
         ref="headerShellRef"
-        class="fixed left-0 right-0 z-[998] top-2 h-8 flex items-center max-w-[480px] mx-auto w-[calc(100%_-_24px)] px-2 border-none bg-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden"
+        class="fixed left-0 right-0 z-[999] top-2 h-8 flex items-center max-w-[480px] mx-auto w-[calc(100%_-_24px)] px-2 border-none bg-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden"
       >
         <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
           <button
@@ -34,7 +34,7 @@
       <!-- 登录提示 -->
       <div
         v-if="!hasToken()"
-        class="absolute top-[52px] left-1/2 -translate-x-1/2 z-[996] px-3 py-1 text-center text-[10px] bg-amber-50/95 text-amber-600 rounded-full backdrop-blur-sm"
+        class="absolute top-[52px] left-1/2 -translate-x-1/2 z-[999] px-3 py-1 text-center text-[10px] bg-amber-50/95 text-amber-600 rounded-full backdrop-blur-sm"
       >
         <i class="ri-information-line mr-1"></i> 请先登录
       </div>
@@ -262,7 +262,7 @@
       <!-- 输入区域 -->
       <div
         ref="composerShellRef"
-        class="fixed left-0 right-0 z-[998] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/10 border-none backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+        class="fixed left-0 right-0 z-[999] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/10 border-none backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
         :style="{ bottom: `${composerBottomOffset}px` }"
       >
         <!-- 回复预览 -->
@@ -593,7 +593,7 @@
       <!-- 隐私说明弹窗 -->
       <div
         v-if="showPrivacyInfo"
-        class="fixed inset-0 z-[2000] flex items-center justify-center p-6 bg-zinc-950/20 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-zinc-950/20 backdrop-blur-sm"
         @click.self="showPrivacyInfo = false"
       >
         <div
@@ -629,7 +629,7 @@
       <Teleport to="body">
         <div
           v-if="contextMenu.show"
-          class="fixed inset-0 z-[1100]"
+          class="fixed inset-0 z-[1000]"
           @click="closeMenu"
           @contextmenu.prevent="closeMenu"
           @scroll.prevent
@@ -674,7 +674,7 @@
       <Teleport to="body">
         <div
           v-if="viewedImage"
-          class="fixed inset-0 z-[1200] flex items-center justify-center bg-black/75 p-4"
+          class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/75 p-4"
           @click.self="viewedImage = null"
         >
           <!-- 将关闭按钮置于遮罩右上角 -->

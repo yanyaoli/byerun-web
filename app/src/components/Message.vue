@@ -9,7 +9,7 @@
   >
     <div
       v-if="visible"
-      class="fixed top-6 left-1/2 -translate-x-1/2 z-[99999] pointer-events-none px-4"
+      class="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none px-4"
     >
       <div
         :class="[
@@ -24,19 +24,14 @@
         <div
           :class="[
             'flex items-center justify-center w-5 h-5 rounded-full shrink-0',
-            styles[messageType].iconBg
+            styles[messageType].iconBg,
           ]"
         >
           <i :class="['text-sm', styles[messageType].icon]"></i>
         </div>
 
         <!-- Content -->
-        <span
-          :class="[
-            'text-sm font-medium leading-relaxed flex-1',
-            styles[messageType].text
-          ]"
-        >
+        <span :class="['text-sm font-medium leading-relaxed flex-1', styles[messageType].text]">
           {{ content }}
         </span>
       </div>

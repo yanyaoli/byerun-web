@@ -131,7 +131,7 @@
 
   <div
     v-show="previewVisible && previewQrUrl"
-    class="fixed inset-0 z-[1001] flex items-center justify-center bg-black/60 px-4"
+    class="fixed inset-0 flex items-center justify-center bg-black/60 px-4"
   >
     <div class="relative w-full max-w-sm rounded-2xl bg-none p-4 shadow-2xl">
       <button

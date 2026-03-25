@@ -207,8 +207,8 @@ const { userInfo, runStandard, runInfo, activityInfo, submitRunDistance, submitR
 const emit = defineEmits(['submitted']);
 
 const tabs = [
-  { key: 'submit', label: '提交记录', icon: 'ri-add-line' },
-  { key: 'schedule', label: '定时任务', icon: 'ri-calendar-schedule-line' },
+  { key: 'submit', label: '手动提交', icon: 'ri-add-line' },
+  { key: 'schedule', label: '自动提交', icon: 'ri-calendar-schedule-line' },
 ];
 
 const activeTab = ref('submit');
