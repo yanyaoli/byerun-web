@@ -1,0 +1,16 @@
+{
+  "name": "byerun-autorun-server",
+  "version": "1.0.0",
+  "description": "Byerun 校园跑自动打卡定时任务服务",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "pm2": "pm2 start server.js --name byerun-autorun"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "node-cron": "^3.0.3",
+    "node-fetch": "^3.3.2"
+  }
+}
