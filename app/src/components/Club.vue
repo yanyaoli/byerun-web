@@ -237,6 +237,48 @@
       </div>
     </section>
 
+    <section
+      v-if="activeMainTab === 'activities' && clubRushTasks.length > 0"
+      class="mt-3 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3"
+    >
+      <div class="flex items-center justify-between gap-2">
+        <h3 class="text-xs font-semibold text-amber-100">已安排抢选任务</h3>
+        <span class="text-[11px] text-amber-100/70">{{ clubRushTasks.length }} 条</span>
+      </div>
+
+      <div class="mt-2 space-y-2">
+        <div
+          v-for="task in clubRushTasks"
+          :key="`rush-${task.id}`"
+          class="rounded-xl border border-amber-300/20 bg-black/10 px-3 py-2"
+        >
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs text-amber-50">活动ID {{ task.activityId }}</span>
+            <div class="flex items-center gap-2">
+              <button
+                v-if="task.canCancel"
+                type="button"
+                :disabled="isClubActionPending(task.cancelPendingKey)"
+                class="h-6 px-2 rounded-md text-[11px] inline-flex items-center gap-1 bg-rose-500/80 text-white hover:bg-rose-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                @click="cancelRushTask(task)"
+              >
+                <i
+                  v-if="isClubActionPending(task.cancelPendingKey)"
+                  class="ri-loader-4-line animate-spin"
+                ></i>
+                <span>{{ isClubActionPending(task.cancelPendingKey) ? '取消中' : '取消' }}</span>
+              </button>
+              <span :class="task.statusClass">{{ task.statusText }}</span>
+            </div>
+          </div>
+          <div class="mt-1 text-[11px] text-amber-100/80">执行时间：{{ task.executeAt }}</div>
+          <div v-if="task.lastResult" class="mt-1 text-[11px] text-amber-100/70">
+            结果：{{ task.lastResult }}
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="mt-3 flex items-center justify-between text-xs text-gray-400">
       <span>{{ currentListTitle }}</span>
       <span>共 {{ filteredList.length }} 条</span>
@@ -304,23 +346,43 @@
               <i class="ri-time-line"></i>
               <span class="truncate">{{ card.timeText }}</span>
             </div>
-            <button
-              v-if="card.action"
-              type="button"
-              :disabled="card.action.disabled || isCardActionPending(card)"
-              :class="[
-                'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
-                card.action.buttonClass,
-                (card.action.disabled || isCardActionPending(card)) &&
-                  'opacity-70 cursor-not-allowed',
-              ]"
-              @click="handleCardAction(card)"
-            >
-              <i v-if="isCardActionPending(card)" class="ri-loader-4-line animate-spin"></i>
-              <span>{{
-                isCardActionPending(card) ? card.action.pendingLabel : card.action.label
-              }}</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                v-if="card.rushAction"
+                type="button"
+                :disabled="card.rushAction.disabled || isRushActionPending(card)"
+                :class="[
+                  'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
+                  card.rushAction.buttonClass,
+                  (card.rushAction.disabled || isRushActionPending(card)) &&
+                    'opacity-70 cursor-not-allowed',
+                ]"
+                @click="handleRushCardAction(card)"
+              >
+                <i v-if="isRushActionPending(card)" class="ri-loader-4-line animate-spin"></i>
+                <span>{{
+                  isRushActionPending(card) ? card.rushAction.pendingLabel : card.rushAction.label
+                }}</span>
+              </button>
+
+              <button
+                v-if="card.action"
+                type="button"
+                :disabled="card.action.disabled || isCardActionPending(card)"
+                :class="[
+                  'h-8 px-3 rounded-lg text-xs font-medium text-white transition-colors inline-flex items-center gap-1.5',
+                  card.action.buttonClass,
+                  (card.action.disabled || isCardActionPending(card)) &&
+                    'opacity-70 cursor-not-allowed',
+                ]"
+                @click="handleCardAction(card)"
+              >
+                <i v-if="isCardActionPending(card)" class="ri-loader-4-line animate-spin"></i>
+                <span>{{
+                  isCardActionPending(card) ? card.action.pendingLabel : card.action.label
+                }}</span>
+              </button>
+            </div>
           </div>
 
           <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">
@@ -357,6 +419,7 @@
 <script setup>
 import { computed, defineAsyncComponent, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig } from '@/sdk/app';
+import { AutorunClient, scheduledTaskConfig } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
 
 const ClubAutoConfigModal = defineAsyncComponent(() => import('./ClubAutoConfig.vue'));
@@ -409,6 +472,8 @@ const WEEKDAY_TEXT = {
 
 const showMessage = inject('showMessage', () => {});
 const { userInfo, token, loading: userLoading, fetchUserData } = useDataStore();
+const autorunApiBase = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
+const autorunClient = autorunApiBase ? new AutorunClient({ baseURL: autorunApiBase }) : null;
 
 const activeMainTab = ref('activities');
 const activeActivityTab = ref('list');
@@ -437,6 +502,7 @@ const signTask = ref(null);
 const signPendingType = ref('');
 const showClubAutoConfigModal = ref(false);
 const clubAutoConfigOpening = ref(false);
+const clubRushTasks = ref([]);
 
 const loading = ref(false);
 const clubActionPendingMap = ref({});
@@ -515,6 +581,10 @@ const cards = computed(() =>
       action:
         activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
           ? resolveClubAction(item)
+          : null,
+      rushAction:
+        activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
+          ? resolveRushAction(item)
           : null,
       title: item.activityName || '活动 #' + (activityId || index + 1),
       subTitle: item.teacherName ? item.teacherName : '',
@@ -704,7 +774,7 @@ watch(showFilters, async (next) => {
 
 onMounted(async () => {
   document.addEventListener('click', handleDocumentClick);
-  await Promise.all([loadCurrentList(), loadSignTask()]);
+  await Promise.all([loadCurrentList(), loadSignTask(), loadClubRushStatus()]);
 });
 
 onUnmounted(() => {
@@ -1016,6 +1086,15 @@ function isCardActionPending(card) {
   return isClubActionPending(getClubActionPendingKey(card.activityId, type));
 }
 
+function getClubRushPendingKey(activityId) {
+  return getClubActionPendingKey(activityId, 'rush');
+}
+
+function isRushActionPending(card) {
+  if (!card || !card.rushAction) return false;
+  return isClubActionPending(getClubRushPendingKey(card.activityId));
+}
+
 function isSignTaskActionPending(action) {
   if (!action) return false;
   return signPendingType.value !== '' && signPendingType.value === String(action.type || '');
@@ -1051,6 +1130,44 @@ async function handleCardAction(card) {
   if (type <= 0) return;
 
   await handleClubAction(card.item, type);
+}
+
+async function handleRushCardAction(card) {
+  if (!card || !card.rushAction) return;
+
+  const activityId = Number(card.activityId);
+  if (!Number.isFinite(activityId) || activityId <= 0) return;
+
+  if (!autorunClient) {
+    showMessage('未配置抢报服务地址', 'error');
+    return;
+  }
+
+  const authReady = await ensureAuthReady();
+  if (!authReady || !token.value) {
+    showMessage('登录状态失效，请重新登录', 'error');
+    return;
+  }
+
+  const pendingKey = getClubRushPendingKey(activityId);
+  setClubActionPending(pendingKey, true);
+  try {
+    const activityDateText = normalizeDateOnlyText(card.item?.yymmdd || currentQueryDate.value);
+    const envelope = await autorunClient.rushClub(token.value, {
+      activity_id: activityId,
+      activity_date: activityDateText || undefined,
+      yymmdd: activityDateText || undefined,
+    });
+    const rushResult = envelope?.data?.result || {};
+    const message = String(rushResult.message || '').trim() || '抢报请求已提交';
+    showMessage(message, rushResult.performed || rushResult.scheduled ? 'success' : 'error');
+    await Promise.all([loadCurrentList(), loadSignTask(), loadClubRushStatus()]);
+  } catch (error) {
+    console.error('handleRushCardAction failed:', error);
+    showMessage(error?.message || '抢报操作异常', 'error');
+  } finally {
+    setClubActionPending(pendingKey, false);
+  }
 }
 
 function setClubActionPending(key, pending) {
@@ -1596,6 +1713,7 @@ async function handleClubAction(item, type) {
     showMessage(resolveResponseMessage(data, fallback), 'success');
 
     const refreshTasks = [loadCurrentList(), loadSignTask()];
+    refreshTasks.push(loadClubRushStatus());
     if (activeMainTab.value === 'history') refreshTasks.push(loadSummary());
 
     await Promise.all(refreshTasks);
@@ -1604,6 +1722,128 @@ async function handleClubAction(item, type) {
     showMessage('娱乐部操作异常', 'error');
   } finally {
     setClubActionPending(actionKey, false);
+  }
+}
+
+function resolveRushAction(item) {
+  if (resolveEffectiveOptionStatus(item) !== '6') return null;
+  if (!isFutureActivityItem(item)) return null;
+  return {
+    type: 'rush',
+    label: '抢报',
+    pendingLabel: '抢报中',
+    disabled: false,
+    buttonClass: 'bg-amber-500 hover:bg-amber-400',
+  };
+}
+
+function isFutureActivityItem(item) {
+  const fallbackDate =
+    activeMainTab.value === 'activities' && activeActivityTab.value === 'list'
+      ? currentQueryDate.value
+      : '';
+  const dateText = normalizeDateOnlyText(
+    item?.yymmdd || item?.activityDate || item?.dateText || fallbackDate,
+  );
+  if (!dateText) return false;
+
+  const todayText = formatDate(new Date());
+  return dateText > todayText;
+}
+
+function normalizeDateOnlyText(raw) {
+  const text = String(raw || '').trim().replace(/\//g, '-');
+  if (!text) return '';
+
+  const datePart = text.split(' ')[0].split('T')[0];
+  const match = datePart.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!match) return '';
+
+  const year = match[1];
+  const month = match[2].padStart(2, '0');
+  const day = match[3].padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+async function loadClubRushStatus() {
+  if (!autorunClient || !token.value || activeMainTab.value !== 'activities') {
+    clubRushTasks.value = [];
+    return;
+  }
+
+  try {
+    const envelope = await autorunClient.getClubRushStatus(token.value);
+    const tasks = Array.isArray(envelope?.data?.tasks) ? envelope.data.tasks : [];
+    clubRushTasks.value = tasks
+      .map((item) => {
+        const status = String(item?.status || '').trim();
+        return {
+          id: Number(item?.id || 0),
+          activityId: Number(item?.activity_id || 0),
+          executeAt: String(item?.execute_at || '--'),
+          statusText: resolveRushTaskStatusText(status),
+          statusClass: resolveRushTaskStatusClass(status),
+          lastResult: String(item?.last_result || '').trim(),
+          canCancel: status === 'pending',
+          cancelPendingKey: getClubActionPendingKey(`rush-cancel-${item?.id || 0}`, 'cancel'),
+        };
+      })
+      .filter((item) => item.id > 0 && item.activityId > 0);
+  } catch (error) {
+    console.error('loadClubRushStatus failed:', error);
+    clubRushTasks.value = [];
+  }
+}
+
+function resolveRushTaskStatusText(status) {
+  switch (status) {
+    case 'pending':
+      return '待执行';
+    case 'done':
+      return '已完成';
+    case 'failed':
+      return '已失败';
+    case 'cancelled':
+      return '已取消';
+    default:
+      return status || '未知';
+  }
+}
+
+function resolveRushTaskStatusClass(status) {
+  switch (status) {
+    case 'pending':
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-cyan-500/20 text-cyan-200';
+    case 'done':
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-200';
+    case 'failed':
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-rose-500/20 text-rose-200';
+    case 'cancelled':
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-white/10 text-gray-300';
+    default:
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-white/10 text-gray-300';
+  }
+}
+
+async function cancelRushTask(task) {
+  if (!task || !task.canCancel) return;
+  if (!autorunClient || !token.value) {
+    showMessage('未配置抢报服务地址', 'error');
+    return;
+  }
+
+  const pendingKey = task.cancelPendingKey;
+  setClubActionPending(pendingKey, true);
+  try {
+    const envelope = await autorunClient.cancelClubRush(token.value, { activity_id: task.activityId });
+    const message = String(envelope?.data?.result?.message || '已取消待执行抢报任务').trim();
+    showMessage(message, 'success');
+    await loadClubRushStatus();
+  } catch (error) {
+    console.error('cancelRushTask failed:', error);
+    showMessage(error?.message || '取消抢报失败', 'error');
+  } finally {
+    setClubActionPending(pendingKey, false);
   }
 }
 </script>
