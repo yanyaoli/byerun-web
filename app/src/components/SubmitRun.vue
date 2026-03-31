@@ -1,35 +1,35 @@
 ﻿<template>
   <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
     <!-- 完成情况卡片 -->
-    <div class="bg-stone-900 rounded-xl p-5 mb-5 w-full box-border">
-      <div class="flex justify-between items-center border-b border-dashed border-stone-700 pb-2">
-        <div class="text-sm font-semibold text-gray-400">完成情况</div>
-        <div class="text-sm text-gray-500">
-          <i class="fa-solid fa-hourglass-end"></i> {{ stats.semesterEndDateText }}
+    <div class="bg-white/5 border border-white/8 rounded-2xl p-5 mb-5 w-full box-border">
+      <div class="flex justify-between items-center border-b border-dashed border-white/20 pb-2">
+        <div class="text-sm font-semibold text-slate-300">完成情况</div>
+        <div class="text-sm text-slate-400">
+          <i class="ri-hourglass-fill"></i> {{ stats.semesterEndDateText }}
         </div>
       </div>
       <div class="flex gap-2 pt-2 w-full">
         <div
           v-for="card in summaryCards"
           :key="card.label"
-          class="flex-1 bg-stone-950/50 rounded-xl p-3 flex flex-col items-center"
+          class="flex-1 bg-white/5 border border-white/8 rounded-xl p-3 flex flex-col items-center"
         >
-          <div class="text-lg font-semibold text-gray-500 mb-1">
+          <div class="text-lg text-gray-400 mb-1">
             {{ card.value }}
           </div>
-          <div class="text-sm font-medium text-gray-500 mb-1 truncate">{{ card.label }}</div>
-          <div class="text-sm text-gray-500 mb-2">
+          <div class="text-sm font-semibold text-gray-300 mb-1 truncate">{{ card.label }}</div>
+          <div class="text-sm text-gray-400 mb-2">
             {{ card.detail }}
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 主卡片：Tab 与 表单共存 -->
+    <!-- 提交表单 -->
     <form @submit.prevent="onFormSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
-      <div class="bg-stone-900 rounded-xl border-none w-full box-border mb-5 p-5">
+      <div class="bg-white/5 border border-white/8 rounded-2xl w-full box-border mb-5 p-5">
         <!-- Tab 按钮行 -->
-        <div class="flex items-center mb-4 border-b border-dashed border-stone-700 pb-2">
+        <div class="flex items-center mb-4 border-b border-dashed border-white/20 pb-2">
           <button
             v-for="tab in tabs"
             :key="tab.key"
@@ -38,8 +38,8 @@
             :class="[
               'flex-1 text-base h-8 font-semibold transition-all text-center rounded-full',
               activeTab === tab.key
-                ? 'text-gray-400 bg-stone-950/50 '
-                : 'text-gray-500 hover:text-gray-400 hover:bg-stone-950/50',
+                ? 'text-slate-300 bg-white/5 border border-white/8'
+                : 'text-slate-400 border-none hover:text-gray-400 hover:bg-stone-950/50',
             ]"
           >
             <i :class="tab.icon" class="mr-2"></i>{{ tab.label }}
@@ -50,13 +50,13 @@
           <!-- 提交记录表单 -->
           <div v-show="activeTab === 'submit'">
             <div class="form-group mb-4">
-              <label class="block text-sm text-gray-500 mb-2 font-medium">选择地图</label>
+              <label class="block text-sm text-slate-300 mb-2 font-medium">选择地图</label>
               <div
-                class="route-dropdown bg-stone-950/50 border-none rounded-md p-2 cursor-pointer relative w-full box-border"
+                class="route-dropdown bg-white/5 border border-white/8 rounded-md p-2 cursor-pointer relative w-full box-border"
                 @click="mapsLoaded && !submitting ? (showRouteOptions = !showRouteOptions) : null"
               >
                 <div
-                  class="selected-route flex items-center justify-between text-sm text-gray-500"
+                  class="selected-route flex items-center justify-between text-sm text-slate-400"
                   :class="{ disabled: !mapsLoaded || submitting }"
                 >
                   <span v-if="!mapsLoaded">加载地图中...</span>
@@ -68,11 +68,14 @@
                   ></div>
                 </div>
                 <transition name="dropdown">
-                  <div v-show="showRouteOptions && mapsLoaded" class="route-options">
+                  <div
+                    v-show="showRouteOptions && mapsLoaded"
+                    class="route-options bg-white/5 backdrop-blur-[16px] border border-white/8"
+                  >
                     <div
                       v-for="(name, value) in routeOptions"
                       :key="value"
-                      class="route-option"
+                      class="route-option text-sm text-slate-400 cursor-pointer"
                       :class="{ selected: form.route === value }"
                       @click.stop="selectRoute(value)"
                     >
@@ -90,15 +93,15 @@
             </div>
 
             <div class="form-group mb-4">
-              <label class="block text-sm text-gray-500 mt-2 mb-2 font-medium">
+              <label class="block text-sm text-slate-300 mt-2 mb-2 font-medium">
                 <div class="flex justify-between items-center">
                   <span>跑步里程</span>
-                  <span class="text-xs text-gray-400">配速 {{ paceDisplay }}</span>
+                  <span class="text-xs text-slate-400">配速 {{ paceDisplay }}</span>
                 </div>
               </label>
               <div class="input-container flex items-center">
                 <div
-                  class="input-wrapper flex-1 flex items-center bg-stone-950/50 border-none rounded-md px-3"
+                  class="input-wrapper flex-1 flex items-center bg-white/5 border border-white/8 rounded-md px-3"
                 >
                   <input
                     v-model.number="form.distance"
@@ -106,13 +109,13 @@
                     step="1"
                     placeholder="输入里程"
                     required
-                    class="flex-1 py-2 text-sm text-gray-500 outline-none pr-2"
+                    class="flex-1 py-2 text-sm text-slate-400 outline-none pr-2"
                   />
-                  <span class="unit text-sm text-gray-500 pl-2">米</span>
+                  <span class="unit text-sm text-slate-500 pl-2">米</span>
                 </div>
                 <button
                   type="button"
-                  class="ml-3 px-3 py-2 bg-stone-950/50 text-sm text-gray-400 cursor-pointer hover:bg-stone-950/80 disabled:opacity-50 rounded-md"
+                  class="ml-3 px-3 py-2 bg-white/5 border border-white/8 text-sm text-gray-400 cursor-pointer hover:bg-stone-950/80 disabled:opacity-50 rounded-md"
                   @click="onRandomFill"
                   :disabled="submitting || randomizing"
                   aria-label="随机里程"
@@ -127,10 +130,9 @@
                 v-if="!awaitingSubmitConfirm"
                 key="single-submit"
                 type="submit"
-                class="w-full p-2 text-gray-300 bg-stone-950/80 rounded-full hover:bg-gray-400 hover:text-gray-700 disabled:cursor-not-allowed disabled:bg-gray-200"
+                class="w-full p-2 font-semibold text-gray-300 bg-white/5 backdrop-blur-[8px] border border-white/15 rounded-full hover:bg-stone-950/80 disabled:cursor-not-allowed disabled:bg-gray-200"
                 :disabled="submitting || !isDistanceValid"
               >
-                <i class="fa-solid fa-check"></i>
                 提交记录
               </button>
               <div v-else key="double-submit" class="flex w-full gap-3">
@@ -148,7 +150,7 @@
                   :disabled="submitting || !isDistanceValid"
                   @click="confirmSubmit"
                 >
-                  <i v-if="!submitting" class="fa-solid fa-check"></i>
+                  <i v-if="!submitting" class="ri-check-fill"></i>
                   <span class="loader" v-else></span>
                   {{ submitting ? '提交中...' : '确认' }}
                 </button>
@@ -167,8 +169,11 @@
     </form>
 
     <!-- 路线预览 -->
-    <div v-show="activeTab === 'submit'" class="bg-stone-900 rounded-xl p-5 mb-5 w-full box-border">
-      <div class="flex justify-between items-center border-b border-dashed border-stone-700 pb-2">
+    <div
+      v-show="activeTab === 'submit'"
+      class="bg-white/5 border border-white/8 rounded-2xl p-5 mb-5 w-full box-border"
+    >
+      <div class="flex justify-between items-center border-b border-dashed border-white/20 pb-2">
         <div class="text-sm font-semibold text-gray-400">路线预览</div>
       </div>
       <MapPreview
@@ -567,24 +572,20 @@ loadMaps().then(async () => {
   top: 110%;
   border-radius: 8px;
   z-index: 9999;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 4px 0;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
 .route-option {
   padding: 8px 16px;
-  font-size: 13px;
-  background: #161414;
-  color: #6a7282;
   cursor: pointer;
   transition: all 0.2s;
 }
-s .route-option.selected,
+.route-option.selected,
 .route-option:hover {
-  background: #0c0a0a;
-  color: #4f6d7a;
+  background: #313131;
+  color: #f3f3f3;
 }
 
 .loader {

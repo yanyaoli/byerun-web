@@ -67,7 +67,7 @@
               </div>
               <div
                 v-if="showMapList"
-                class="absolute z-50 w-full mt-1 bg-stone-900 border border-white/10 rounded-xl shadow-2xl py-1 max-h-[120px] overflow-y-auto"
+                class="absolute z-50 w-full mt-1 bg-stone-900 border border-white/8 rounded-xl shadow-2xl py-1 max-h-[120px] overflow-y-auto"
               >
                 <div
                   v-for="map in maps"
@@ -199,28 +199,28 @@ const ui = computed(() =>
   props.inline
     ? {
         wrapper: 'w-full',
-        panel: 'relative w-full bg-stone-950 border border-white/10 rounded-lg p-4',
+        panel: 'relative w-full bg-stone-950 border border-white/8 rounded-lg p-4',
         feedback: 'py-8 flex flex-col items-center justify-center space-y-4',
         content: 'p-4 space-y-4',
         header: 'flex justify-between items-center gap-3',
         fields: 'space-y-3',
         fieldItem: 'space-y-1',
         mapTrigger:
-          'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-3 py-2 cursor-pointer hover:border-white/10 transition-all',
+          'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-3 py-2 cursor-pointer hover:border-white/8 transition-all',
         saveButton:
           'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
       }
     : {
         wrapper: 'fixed inset-0 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md',
         panel:
-          'relative w-full max-w-[300px] bg-stone-950 border border-white/10 rounded-[2rem] shadow-2xl transition-all overflow-hidden',
+          'relative w-full max-w-[300px] bg-stone-950 border border-white/8 rounded-[2rem] shadow-2xl transition-all overflow-hidden',
         feedback: 'py-16 flex flex-col items-center justify-center space-y-4',
         content: 'p-6 space-y-5',
         header: 'flex justify-between items-center gap-3 pr-8',
         fields: 'space-y-4',
         fieldItem: 'space-y-1.5',
         mapTrigger:
-          'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:border-white/10 transition-all',
+          'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:border-white/8 transition-all',
         saveButton:
           'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
       },

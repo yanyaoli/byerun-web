@@ -3,16 +3,16 @@
     <header
       ref="headerRef"
       :class="[
-        'fixed left-0 right-0 top-2 h-8 px-2 z-[999] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
+        'fixed left-0 right-0 px-2 z-[999] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
       ]"
     >
       <div
         :class="[
-          'flex items-center h-full backdrop-blur-[16px] border-none rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
+          'flex items-center top-1 h-10 backdrop-blur-[8px] border bg-white/5 border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
           props.scrolled
-            ? 'max-w-[380px] w-[calc(100%_-_52px)]'
-            : 'max-w-[400px] w-[calc(100%_-_24px)]',
-          messageVisible ? messageStyles[messageType].shell : 'bg-stone-900/20',
+            ? '!h-8 max-w-[380px] w-[calc(100%_-_52px)]'
+            : 'max-w-[480px] w-[calc(100%_-_24px)]',
+          messageVisible ? messageStyles[messageType].shell : 'bg-white/5',
         ]"
       >
         <transition

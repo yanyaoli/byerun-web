@@ -6,20 +6,20 @@
           <div
             v-for="(record, index) in loading ? Array(5).fill(null) : records"
             :key="loading ? index : record.key"
-            class="bg-stone-900 rounded-lg overflow-hidden mb-4 transition-shadow p-0 flex flex-col"
+            class="bg-white/5 border border-white/8 rounded-2xl overflow-hidden mb-4 transition-shadow p-0 flex flex-col"
           >
             <div
-              class="flex justify-between items-center bg-stone-900 border-b border-gray-50/10 rounded-t-lg px-4 pt-4 pb-2"
+              class="flex justify-between items-center bg-white/5 border-b border-white/8 rounded-t-lg px-4 pt-4 pb-2"
             >
-              <div class="text-gray-300 font-semibold text-base">
+              <div class="text-slate-300 font-semibold text-base">
                 <span v-if="!loading">{{ formatCreateTime(record.createTime) }}</span>
                 <div
                   v-else
-                  class="inline-block bg-gray-300/30 rounded animate-pulse"
+                  class="inline-block bg-white/5 rounded animate-pulse"
                   style="width: 140px; height: 20px"
                 ></div>
               </div>
-              <div class="text-sm text-gray-700 flex items-center">
+              <div class="text-sm flex items-center text-slate-300">
                 <span
                   v-if="!loading"
                   class="defeated-info"
@@ -28,7 +28,7 @@
                 >
                 <div
                   v-else
-                  class="inline-block bg-gray-200 rounded-full animate-pulse"
+                  class="inline-block bg-white/5 rounded-full animate-pulse"
                   style="width: 60px; height: 20px"
                 ></div>
               </div>
@@ -36,12 +36,12 @@
             <div
               class="flex justify-between items-center px-4 py-1.5 border-b border-gray-50/10 text-sm"
             >
-              <div class="text-gray-500 text-sm">跑步里程</div>
-              <div class="text-gray-500 text-sm font-medium text-right min-w-[60px]">
+              <div class="text-gray-400 text-sm">跑步里程</div>
+              <div class="text-gray-400 text-sm font-medium text-right min-w-[60px]">
                 <span v-if="!loading">{{ (record.runDistance / 1000).toFixed(2) }}km</span>
                 <div
                   v-else
-                  class="inline-block bg-gray-200 rounded animate-pulse"
+                  class="inline-block bg-white/5 rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>
@@ -49,25 +49,25 @@
             <div
               class="flex justify-between items-center px-4 py-1.5 border-b border-gray-50/10 text-sm"
             >
-              <div class="text-gray-500 text-sm">跑步时长</div>
-              <div class="text-gray-500 text-sm font-medium text-right min-w-[60px]">
+              <div class="text-gray-400 text-sm">跑步时长</div>
+              <div class="text-gray-400 text-sm font-medium text-right min-w-[60px]">
                 <span v-if="!loading">{{ record.runTime }}分钟</span>
                 <div
                   v-else
-                  class="inline-block bg-gray-200 rounded animate-pulse"
+                  class="inline-block bg-white/5 rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>
             </div>
             <div class="flex justify-between items-center px-4 py-1.5 text-sm">
-              <div class="text-gray-500 text-sm">平均配速</div>
-              <div class="text-gray-500 text-sm font-medium text-right min-w-[60px]">
+              <div class="text-gray-400 text-sm">平均配速</div>
+              <div class="text-gray-400 text-sm font-medium text-right min-w-[60px]">
                 <span v-if="!loading">{{
                   formatPaceDetail(record.runTime, record.runDistance)
                 }}</span>
                 <div
                   v-else
-                  class="inline-block bg-gray-200 rounded animate-pulse"
+                  class="inline-block bg-white/5 rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>
@@ -141,21 +141,17 @@ watch(
   text-align: center;
   line-height: 1.6;
   background: #b0b0b0;
-  color: #fff;
 }
 
 .status-success-bg {
-  background: #051a77;
-  color: #c0c0c0;
+  background: #2440bd;
 }
 
 .status-error-bg {
-  background: #491602;
-  color: #c0c0c0;
+  background: #72290c;
 }
 
 .status-invalid-bg {
   background: #b0b0b0;
-  color: #fff;
 }
 </style>

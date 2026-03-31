@@ -1,6 +1,6 @@
 <template>
   <div class="club-page min-h-full pb-4">
-    <section class="mt-3 rounded-2xl border border-white/10 bg-white/5 p-3">
+    <section class="mt-3 rounded-2xl border border-white/8 bg-[#25282e] p-3">
       <div class="grid grid-cols-2 gap-2">
         <button
           v-for="tab in MAIN_TABS"
@@ -10,7 +10,7 @@
             'h-9 rounded-xl border text-xs font-medium transition-colors',
             activeMainTab === tab.key
               ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-              : 'border-white/10 bg-white/5 text-gray-300',
+              : 'border-white/8 bg-white/5 text-gray-300',
           ]"
           @click="activeMainTab = tab.key"
         >
@@ -27,7 +27,7 @@
             'h-8 rounded-xl border text-xs font-medium transition-colors',
             activeActivityTab === tab.key
               ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-              : 'border-white/10 bg-white/5 text-gray-300',
+              : 'border-white/8 bg-white/5 text-gray-300',
           ]"
           @click="activeActivityTab = tab.key"
         >
@@ -44,7 +44,7 @@
             'h-8 rounded-xl border text-xs font-medium transition-colors',
             activeHistoryTab === tab.key
               ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-              : 'border-white/10 bg-white/5 text-gray-300',
+              : 'border-white/8 bg-white/5 text-gray-300',
           ]"
           @click="activeHistoryTab = tab.key"
         >
@@ -60,7 +60,7 @@
         >
           <button
             type="button"
-            class="w-full h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-xs text-gray-100 inline-flex items-center justify-between"
+            class="w-full h-9 px-3 rounded-xl border border-white/8 bg-white/5 text-xs text-gray-100 inline-flex items-center justify-between"
             @click="showDateDropdown = !showDateDropdown"
           >
             <span class="truncate">{{ selectedDateLabel }}</span>
@@ -73,7 +73,7 @@
           <transition name="fade-slide">
             <div
               v-if="showDateDropdown"
-              class="absolute left-0 right-0 top-11 z-30 rounded-xl border border-white/10 bg-stone-900/95 backdrop-blur max-h-44 overflow-y-auto"
+              class="absolute left-0 right-0 top-11 z-30 rounded-xl border border-white/8 bg-stone-900/95 backdrop-blur max-h-44 overflow-y-auto"
             >
               <button
                 v-for="day in dateOptions"
@@ -95,7 +95,7 @@
 
         <button
           type="button"
-          class="h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-gray-200 text-xs font-medium flex items-center gap-1.5"
+          class="h-9 px-3 rounded-xl border border-white/8 bg-white/5 text-gray-200 text-xs font-medium flex items-center gap-1.5"
           @click="showFilters = !showFilters"
         >
           <i class="ri-equalizer-line text-sm"></i>
@@ -114,7 +114,7 @@
                 'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors',
                 selectedStatus === option.value
                   ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-                  : 'border-white/10 bg-white/5 text-gray-300',
+                  : 'border-white/8 bg-white/5 text-gray-300',
               ]"
               @click="selectedStatus = option.value"
             >
@@ -134,7 +134,7 @@
                 'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors',
                 selectedItemId === item.value
                   ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-                  : 'border-white/10 bg-white/5 text-gray-300',
+                  : 'border-white/8 bg-white/5 text-gray-300',
               ]"
               @click="selectedItemId = item.value"
             >
@@ -146,11 +146,11 @@
     </section>
 
     <section v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
-      <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+      <div class="rounded-xl border border-white/8 bg-white/5 p-3">
         <div class="text-[11px] text-gray-400">累计报名</div>
         <div class="mt-1 text-xl font-semibold text-white">{{ summary.joinNum }}</div>
       </div>
-      <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+      <div class="rounded-xl border border-white/8 bg-white/5 p-3">
         <div class="text-[11px] text-gray-400">有效签到</div>
         <div class="mt-1 text-xl font-semibold text-emerald-300">{{ summary.validNum }}</div>
       </div>
@@ -289,7 +289,7 @@
         <div
           v-for="idx in 4"
           :key="`skeleton-${idx}`"
-          class="rounded-2xl border border-white/10 bg-white/5 p-3 animate-pulse"
+          class="rounded-2xl border border-white/8 bg-white/5 p-3 animate-pulse"
         >
           <div class="h-4 w-2/3 bg-white/10 rounded"></div>
           <div class="mt-3 h-3 w-full bg-white/10 rounded"></div>
@@ -299,7 +299,7 @@
 
       <div
         v-else-if="cards.length === 0"
-        class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-gray-400"
+        class="rounded-2xl border border-white/8 bg-white/5 p-6 text-center text-sm text-gray-400"
       >
         {{ emptyMessage }}
       </div>
@@ -307,7 +307,7 @@
       <article
         v-for="card in cards"
         :key="card.key"
-        class="rounded-2xl border border-white/10 bg-white/5 p-3"
+        class="rounded-2xl border border-white/8 bg-white/5 p-3"
       >
         <template v-if="card.isHistoryRecord">
           <div class="flex items-start justify-between gap-3">
@@ -402,7 +402,7 @@
       >
         <button
           type="button"
-          class="w-full h-9 rounded-xl border border-white/10 bg-white/5 text-xs text-gray-200 inline-flex items-center justify-center gap-1.5"
+          class="w-full h-9 rounded-xl border border-white/8 bg-white/5 text-xs text-gray-200 inline-flex items-center justify-center gap-1.5"
           :disabled="historyLoadingMore"
           @click="loadMoreHistoryRecords"
         >
@@ -1752,7 +1752,9 @@ function isFutureActivityItem(item) {
 }
 
 function normalizeDateOnlyText(raw) {
-  const text = String(raw || '').trim().replace(/\//g, '-');
+  const text = String(raw || '')
+    .trim()
+    .replace(/\//g, '-');
   if (!text) return '';
 
   const datePart = text.split(' ')[0].split('T')[0];
@@ -1835,7 +1837,9 @@ async function cancelRushTask(task) {
   const pendingKey = task.cancelPendingKey;
   setClubActionPending(pendingKey, true);
   try {
-    const envelope = await autorunClient.cancelClubRush(token.value, { activity_id: task.activityId });
+    const envelope = await autorunClient.cancelClubRush(token.value, {
+      activity_id: task.activityId,
+    });
     const message = String(envelope?.data?.result?.message || '已取消待执行抢报任务').trim();
     showMessage(message, 'success');
     await loadClubRushStatus();

@@ -1,5 +1,5 @@
 <template>
-  <div class="app flex flex-col relative overflow-hidden bg-stone-950">
+  <div class="app flex flex-col relative overflow-hidden bg-black/90">
     <div class="app-container">
       <router-view />
     </div>
@@ -43,6 +43,16 @@ onUnmounted(() => {
   height: var(--app-vh, 100dvh);
   min-height: var(--app-vh, 100dvh);
   max-height: var(--app-vh, 100dvh);
+  width: 100vw;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image:
+    linear-gradient(rgba(120, 132, 152, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 132, 152, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: 0 0;
 }
 
 .app-container {
@@ -50,7 +60,7 @@ onUnmounted(() => {
   height: 100%;
   min-height: 0;
   margin: 0 auto;
-  max-width: 480px;
+  max-width: 600px;
   overflow: hidden;
 }
 </style>

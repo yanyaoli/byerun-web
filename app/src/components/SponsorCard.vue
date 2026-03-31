@@ -1,8 +1,8 @@
 <template>
-  <section class="rounded-2xl bg-stone-900 p-5 space-y-2">
+  <section class="rounded-2xl bg-white/5 border border-white/8 p-5 space-y-2">
     <div class="flex items-center justify-between gap-3">
       <div class="flex min-w-0 items-center gap-2">
-        <i class="ri-star-smile-line text-slate-500"></i>
+        <i class="ri-star-smile-fill text-slate-500"></i>
         <p class="truncate text-sm font-bold text-slate-400">{{ sponsor?.title }}</p>
       </div>
       <div class="flex items-center gap-2">
@@ -10,7 +10,7 @@
           v-if="wechatGroupQrcode"
           type="button"
           @click="openQrPreview({ url: wechatGroupQrcode })"
-          class="inline-flex w-auto cursor-pointer items-center justify-center rounded-full text-sm text-stone-700 hover:bg-stone-800 transition-colors"
+          class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm text-slate-500 hover:bg-white/5 transition-colors"
           aria-label="微信群二维码"
           title="微信群二维码"
         >
@@ -21,7 +21,7 @@
           :href="qqGroupUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex w-auto items-center justify-center rounded-full text-sm text-stone-700 hover:bg-stone-800 transition-colors"
+          class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm text-slate-500 hover:bg-white/5 transition-colors"
           aria-label="QQ 群"
           title="QQ 群"
         >
@@ -31,10 +31,10 @@
     </div>
 
     <div class="space-y-3">
-      <p class="text-sm text-slate-500">{{ sponsor?.desc }}</p>
+      <p class="text-sm text-gray-400">{{ sponsor?.desc }}</p>
       <div
         v-if="qrItems.length"
-        class="sponsor-pay-banner rounded-xl border border-stone-700/70 bg-stone-800/80 p-3"
+        class="sponsor-pay-banner rounded-xl border border-stone-700/70 bg-white/5 p-3"
       >
         <div class="flex items-center gap-2">
           <button
@@ -42,11 +42,11 @@
             :key="item.key"
             type="button"
             @click="openQrPreview(item)"
-            class="sponsor-pay-item flex-1 rounded-md px-2 py-3 transition-colors hover:bg-stone-950/50"
+            class="sponsor-pay-item flex-1 rounded-md px-2 py-3 transition-colors hover:bg-white/5"
           >
             <div class="flex flex-col items-center justify-center gap-1.5">
-              <span class="text-xs font-semibold text-slate-500">{{ item.label }}</span>
-              <i class="ri-qr-code-line text-lg text-slate-500"></i>
+              <span class="text-xs font-semibold text-slate-400">{{ item.label }}</span>
+              <i class="ri-qr-code-line text-lg text-slate-400"></i>
             </div>
           </button>
         </div>
@@ -56,7 +56,7 @@
           :href="sponsor?.alipay_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 rounded-full border bg-stone-900 px-3 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-100 transition-colors"
+          class="inline-flex items-center gap-1.5 bg-white/5 rounded-full border border-white/8 px-3 py-1.5 text-xs font-semibold text-sky-500 hover:bg-sky-100 transition-colors"
         >
           <i class="ri-alipay-fill"></i>
           <span>支付宝打赏</span>
@@ -68,7 +68,7 @@
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-1.5">
           <i class="ri-medal-fill text-slate-500"></i>
-          <p class="text-xs uppercase tracking-[0.16em] text-slate-500">赞助伙伴</p>
+          <p class="truncate text-sm font-bold text-slate-400">赞助伙伴</p>
         </div>
         <a
           v-if="qqGroupUrl"
@@ -109,20 +109,20 @@
 
     <div class="pt-4">
       <div class="flex items-center gap-1.5">
-        <i class="ri-time-line text-slate-500"></i>
-        <p class="text-xs uppercase tracking-[0.16em] text-slate-500">网站状态</p>
+        <i class="ri-time-fill text-slate-500"></i>
+        <p class="truncate text-sm font-bold text-slate-400">网站状态</p>
       </div>
       <div class="mt-2 flex items-center justify-between gap-3">
         <a
           :href="domainHref"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-sm font-semibold text-gray-500 underline-offset-4 hover:underline"
+          class="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 underline-offset-4 hover:underline"
         >
           <span class="truncate">{{ domain?.domain }}</span>
           <i class="ri-external-link-line text-xs text-slate-500"></i>
         </a>
-        <p class="shrink-0 text-xs font-medium text-slate-600 tabular-nums">
+        <p class="shrink-0 text-xs font-medium text-slate-500 tabular-nums">
           剩余{{ remainingDaysText }}
         </p>
       </div>

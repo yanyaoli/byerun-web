@@ -5,7 +5,7 @@
     @click.self="close"
   >
     <div
-      class="relative w-full max-w-[340px] rounded-3xl border border-white/10 bg-stone-950 p-5 shadow-2xl"
+      class="relative w-full max-w-[340px] rounded-3xl border border-white/8 bg-stone-950 p-5 shadow-2xl"
     >
       <div class="flex items-start justify-between gap-3">
         <div>

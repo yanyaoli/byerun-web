@@ -6,7 +6,7 @@
       <!-- 导航栏 -->
       <div
         ref="headerShellRef"
-        class="fixed left-0 right-0 z-[999] top-2 h-8 flex items-center max-w-[480px] mx-auto w-[calc(100%_-_24px)] px-2 border-none bg-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden"
+        class="fixed left-0 right-0 z-[999] top-1 h-10 flex items-center max-w-[480px] mx-auto w-[calc(100%_-_24px)] px-2 border border-white/10 bg-white/5 backdrop-blur-[8px] rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden"
       >
         <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
           <button
@@ -42,7 +42,7 @@
       <!-- 消息容器 -->
       <div
         ref="messagesContainer"
-        class="flex-1 max-w-full bg-stone-950 overflow-y-auto overflow-x-hidden overscroll-y-none px-4 space-y-4 relative"
+        class="flex-1 max-w-full overflow-y-auto overflow-x-hidden overscroll-y-none px-4 space-y-4 relative"
         :style="{
           paddingTop: `${messageListPaddingTop}px`,
           paddingBottom: `${messageBottomInset}px`,
@@ -159,14 +159,16 @@
 
                     <div
                       :class="[
-                        'relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
-                        isMe(m)
-                          ? 'bg-slate-600/20 text-gray-200 rounded-2xl rounded-br-[0.25rem]'
-                          : 'bg-stone-600/10 text-gray-300 rounded-2xl rounded-bl-[0.25rem]',
+                        'relative px-3 py-1.5 text-gray-300 rounded-xl rounded-br-[0.25rem] shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
+                        isMe(m) ? 'bg-slate-600/20' : 'bg-white/5',
                       ]"
                     >
                       <div v-if="!isMe(m)" class="text-[11px] text-zinc-500 mb-0.5 font-bold">
-                        {{ m.user?.nickname || m.nickname || '用户' }}
+                        {{
+                          m.user?.nickname ||
+                          m.nickname ||
+                          '用户' + String(m.user?.user_id).slice(-4)
+                        }}
                       </div>
 
                       <div
@@ -175,7 +177,11 @@
                         @click="scrollToOriginalMessage(m.reply)"
                       >
                         <div class="text-[10px] font-bold mb-0.5 opacity-60">
-                          {{ m.reply.user?.nickname || m.reply.nickname || '用户' }}
+                          {{
+                            m.reply.user?.nickname ||
+                            m.reply.nickname ||
+                            '用户' + String(m.reply.user?.user_id).slice(-4)
+                          }}
                         </div>
                         <div
                           class="truncate opacity-80"
@@ -262,7 +268,7 @@
       <!-- 输入区域 -->
       <div
         ref="composerShellRef"
-        class="fixed left-0 right-0 z-[999] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/10 border-none backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+        class="fixed left-0 right-0 z-[999] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/5 border border-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
         :style="{ bottom: `${composerBottomOffset}px` }"
       >
         <!-- 回复预览 -->
@@ -274,7 +280,12 @@
             <div
               class="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5"
             >
-              正在回复 {{ replyingTo.user?.nickname || replyingTo.nickname || '用户' }}
+              正在回复
+              {{
+                replyingTo.user?.nickname ||
+                replyingTo.nickname ||
+                '用户' + String(replyingTo.user?.user_id).slice(-4)
+              }}
             </div>
             <div
               class="text-xs text-gray-500 truncate opacity-80"
@@ -328,7 +339,7 @@
 
           <div
             v-if="showEmojiPicker"
-            class="absolute bottom-full left-0 w-full mb-2 p-4 bg-stone-900 backdrop-blur-md z-50 rounded-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
+            class="absolute bottom-full left-0 w-full max-w-[480px] mb-2 p-4 bg-stone-900 backdrop-blur-md z-50 rounded-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
           >
             <div class="flex items-center justify-between mb-4 px-1">
               <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
@@ -354,14 +365,7 @@
               </button>
             </div>
             <div class="max-h-60 overflow-y-auto pr-1 scrollbar-hide">
-              <div
-                v-if="stickerLoading"
-                class="flex flex-col items-center justify-center py-10 text-zinc-300"
-              >
-                <i class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest">正在加载表情...</span>
-              </div>
-              <div v-else-if="emojiActiveTab === 'emoji'" class="space-y-6">
+              <div v-if="emojiActiveTab === 'emoji'" class="space-y-6">
                 <div v-for="(group, name) in emojiGroups" :key="name">
                   <div
                     class="text-[9px] font-bold uppercase tracking-widest text-zinc-300 mb-3 ml-1"
@@ -400,12 +404,18 @@
                   />
                 </button>
               </div>
+              <div v-else class="flex flex-col items-center justify-center py-10 text-zinc-300">
+                <i v-if="stickerLoading" class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
+                <span class="text-[10px] font-bold uppercase tracking-widest">
+                  {{ stickerLoading ? '贴纸加载中...' : '贴纸准备中' }}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div ref="composerInputRowRef" class="flex items-end gap-2 max-w-5xl mx-auto min-w-0">
+          <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
-              class="flex-1 min-w-0 flex items-end gap-1 bg-stone-800 text-gray-300 rounded-2xl px-2 py-1.5 focus-within:bg-stone-900 transition-all shadow-inner"
+              class="flex-1 min-w-0 h-10 flex items-center gap-1 bg-white/5 text-gray-300 rounded-2xl px-2 focus-within:bg-stone-900 transition-all shadow-inner"
             >
               <div
                 ref="messageInput"
@@ -418,7 +428,7 @@
                 @mouseup="saveRange"
                 @touchend="saveRange"
                 :class="[
-                  'flex-1 min-w-0 w-full max-w-full bg-transparent border-none outline-none text-sm px-1 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-relaxed sticker-input',
+                  'flex-1 min-w-0 w-full h-full max-w-full bg-transparent border-none outline-none text-sm px-1 py-2 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-5 sticker-input',
                   !hasToken() ? 'pointer-events-none' : '',
                 ]"
               ></div>
@@ -435,7 +445,7 @@
             <button
               @click="send"
               :disabled="!hasToken() || !text.trim() || isSending"
-              class="w-10 h-10 flex-shrink-0 grid place-items-center bg-stone-800 text-gray-300 rounded-full active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none mb-0.5"
+              class="w-10 h-10 flex-shrink-0 grid place-items-center text-gray-300 rounded-xl active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none"
             >
               <i v-if="isSending" class="ri-loader-4-line animate-spin text-sm"></i>
               <i v-else class="fa-solid fa-paper-plane text-sm"></i>
@@ -449,15 +459,17 @@
         v-if="showSettings"
         class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
       >
-        <div class="bg-stone-900 w-full max-w-[280px] rounded-[2rem] shadow-2xl overflow-hidden">
+        <div
+          class="bg-white/5 border border-white/8 w-full max-w-[280px] rounded-[2rem] shadow-2xl overflow-hidden"
+        >
           <div class="p-6">
             <div class="flex flex-col items-center mb-6">
               <div
-                class="w-16 h-16 rounded-full bg-stone-800 flex items-center justify-center overflow-hidden border-2 border-stone-800/50 shadow-inner mb-2 relative"
+                class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center overflow-hidden border-2 border-stone-800/50 shadow-inner mb-2 relative"
               >
                 <div
                   v-if="loadingUserSettings"
-                  class="absolute inset-0 bg-stone-800 animate-pulse z-10"
+                  class="absolute inset-0 bg-white/5 animate-pulse z-10"
                 ></div>
                 <template v-if="user?.avatar_url">
                   <img
@@ -475,12 +487,12 @@
                 <label class="text-[9px] font-bold uppercase text-gray-400 ml-1">昵称</label>
                 <div
                   v-if="loadingUserSettings"
-                  class="h-9 w-full bg-stone-800 animate-pulse rounded-xl"
+                  class="h-9 w-full bg-white/5 animate-pulse rounded-xl"
                 ></div>
                 <input
                   v-else
                   v-model="settingsNickname"
-                  class="w-full px-4 py-2 bg-stone-800 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
+                  class="w-full px-4 py-2 bg-white/5 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
                 />
               </div>
               <div class="space-y-1">
@@ -489,12 +501,12 @@
                 >
                 <div
                   v-if="loadingUserSettings"
-                  class="h-9 w-full bg-stone-800 animate-pulse rounded-xl"
+                  class="h-9 w-full bg-white/5 animate-pulse rounded-xl"
                 ></div>
                 <input
                   v-else
                   v-model="settingsQQ"
-                  class="w-full px-4 py-2 bg-stone-800 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
+                  class="w-full px-4 py-2 bg-white/5 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
                 />
               </div>
             </div>
@@ -510,7 +522,7 @@
               <button
                 @click="applySettings"
                 :disabled="isSavingSettings"
-                class="py-2 bg-stone-800 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                class="py-2 bg-white/10 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <i v-if="isSavingSettings" class="ri-loader-4-line animate-spin"></i>
                 {{ isSavingSettings ? '正在保存' : '保存' }}
@@ -527,7 +539,7 @@
         @click.self="showProfileViewer = false"
       >
         <div
-          class="bg-stone-900 w-full max-w-[300px] rounded-[1.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
+          class="bg-white/5 border border-white/8 w-full max-w-[300px] rounded-[1.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
         >
           <!-- 关闭按钮 -->
           <button
@@ -565,7 +577,7 @@
                   v-else
                   class="text-base font-bold text-gray-300 truncate mb-0.5 whitespace-nowrap"
                 >
-                  {{ viewedProfile?.nickname || '用户' }}
+                  {{ viewedProfile?.nickname || '用户' + String(viewedProfile?.user_id).slice(-4) }}
                 </h3>
 
                 <p
@@ -579,7 +591,7 @@
                 <!-- 校友身份提示 -->
                 <div
                   v-if="viewedProfile?.is_alumni"
-                  class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-stone-800 text-blue-600 rounded-full text-[9px] font-bold"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/5 text-blue-600 rounded-full text-[9px] font-bold"
                 >
                   <i class="ri-graduation-cap-fill"></i>
                   TA是你的校友
@@ -597,19 +609,19 @@
         @click.self="showPrivacyInfo = false"
       >
         <div
-          class="bg-stone-900 w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          class="bg-white/5 border border-white/8 w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         >
           <div class="p-6">
             <div class="flex items-center gap-2 mb-4 text-gray-300">
               <i class="fa-solid fa-shield-halved text-blue-500"></i>
               <h3 class="font-bold text-sm">隐私与校友功能说明</h3>
             </div>
-            <div class="space-y-3">
-              <p class="text-[12px] text-gray-400 leading-relaxed">
+            <div class="space-y-3 text-[12px] leading-relaxed">
+              <p class="text-gray-400">
                 为了在留言板中实现在校校友身份识别，我们需要对您 UNIRUN
-                授权数据中的学校信息进行提取与比对。
+                授权数据中的学校ID进行提取与比对。
               </p>
-              <p class="text-[12px] text-gray-300/50 leading-relaxed">
+              <p class="text-gray-300">
                 <strong
                   >使用留言功能即视为您已知晓并同意我们基于学校标识字段进行校友匹配分析。</strong
                 >
@@ -617,7 +629,7 @@
             </div>
             <button
               @click="showPrivacyInfo = false"
-              class="mt-6 w-full py-2.5 bg-stone-800 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all"
+              class="mt-6 w-full py-2.5 bg-white/8 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all"
             >
               我知道了
             </button>
@@ -727,10 +739,10 @@ import {
 import Message from '@/components/Message.vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import emojiGroups from '@/assets/data/emojis.json';
-import stickerConfig from '@/assets/data/stickers.json';
 import { getViewportMetrics, restoreViewportPosition } from '@/utils/viewport';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
+import { useStickerCache } from '@/composables/useStickerCache';
 
 // ==================== 依赖注入 ====================
 const showMessage = inject('showMessage');
@@ -744,6 +756,8 @@ const {
   getCachedChatUserId,
   markChatSeen,
   clearChatData,
+  setChatStickerCache,
+  getChatStickerCache,
 } = useChatStore();
 
 // ==================== 常量配置 ====================
@@ -784,11 +798,18 @@ const messageInput = ref(null);
 const lastRange = ref(null);
 
 // 表情贴纸
-const stickerGroups = ref({});
-const stickerLoading = ref(false);
-const stickerLoaded = ref(false);
 const chatBootstrapFinished = ref(false);
 const emojiActiveTab = ref('emoji');
+const {
+  stickerGroups,
+  stickerLoading,
+  hydrateStickerCache,
+  ensureStickerTabReady,
+  triggerSilentStickerRefresh,
+} = useStickerCache({
+  getChatStickerCache,
+  setChatStickerCache,
+});
 
 // 设置相关
 const settingsNickname = ref('');
@@ -989,24 +1010,6 @@ function onBack() {
 }
 
 // ==================== 表情贴纸加载 ====================
-async function fetchStickers() {
-  if (stickerLoaded.value || stickerLoading.value) return;
-
-  stickerLoading.value = true;
-  try {
-    const results = await Promise.all(stickerConfig.map((url) => fetch(url).then((r) => r.json())));
-    const groups = {};
-    results.forEach((g, i) => {
-      groups[`sticker-${i}`] = g;
-    });
-    stickerGroups.value = groups;
-    stickerLoaded.value = true;
-  } catch (e) {
-    console.error('Failed to load stickers', e);
-  } finally {
-    stickerLoading.value = false;
-  }
-}
 
 // 保持光标位置
 function saveRange() {
@@ -1257,6 +1260,7 @@ async function fetchMessages(isSilent = false) {
     hasNext.value = data.hasNext ?? msgs.length === size;
     currentPage.value = 1;
     markChatSeen(getLatestMessageSeenAt(msgs));
+    triggerSilentStickerRefresh();
 
     loadingMessages.value = false;
     await nextTick();
@@ -1611,9 +1615,18 @@ function addSticker(groupId, sticker) {
 }
 
 watch([showEmojiPicker, chatBootstrapFinished], ([isOpen, isReady]) => {
-  if (isOpen && isReady) {
-    fetchStickers();
-  }
+  if (!isOpen || !isReady) return;
+
+  // cache
+  hydrateStickerCache();
+
+  // lazy loading
+  ensureStickerTabReady(emojiActiveTab.value);
+});
+
+watch(emojiActiveTab, (tab) => {
+  if (!showEmojiPicker.value || !chatBootstrapFinished.value) return;
+  ensureStickerTabReady(tab);
 });
 function formatLastSeen(s) {
   if (!s) return '离线';
@@ -1950,6 +1963,10 @@ onMounted(async () => {
     scheduleFloatingLayoutMeasure();
     bindMessageScrollLock();
   });
+
+  // 首屏先读取本地贴纸缓存，确保下次进入可直接渲染
+  hydrateStickerCache();
+
   window.addEventListener('resize', scheduleFloatingLayoutMeasure);
   window.addEventListener('orientationchange', scheduleFloatingLayoutMeasure);
   window.visualViewport?.addEventListener('resize', scheduleFloatingLayoutMeasure);
@@ -2083,8 +2100,15 @@ onUnmounted(() => {
   }
 }
 
+.sticker-input {
+  box-sizing: border-box;
+}
+
 .sticker-input:empty:before {
   content: attr(placeholder);
   color: #a1a1aa;
+  display: block;
+  line-height: inherit;
+  pointer-events: none;
 }
 </style>

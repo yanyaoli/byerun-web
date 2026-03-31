@@ -1,6 +1,9 @@
 <template>
-  <div class="map-preview-root">
-    <div ref="mapContainer" class="map-container" />
+  <div class="w-full min-h-80">
+    <div
+      ref="mapContainer"
+      class="block w-full h-[clamp(320px,42vh,420px)] min-h-80 rounded-lg overflow-hidden bg-black shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+    />
   </div>
 </template>
 
@@ -404,28 +407,14 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.map-preview-root {
-  width: 100%;
-  min-height: 320px;
-}
-
-.map-container {
-  display: block;
-  width: 100%;
-  height: clamp(320px, 42vh, 420px);
-  min-height: 320px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #1a2230;
-  border: 1px solid #1a2235;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-}
-
 :deep(.leaflet-container) {
   width: 100%;
   height: 100%;
-  background: #1a2230;
-  filter: brightness(0.5) contrast(1.15) saturate(0.75);
+  background: black;
+}
+
+:deep(.leaflet-tile-pane) {
+  filter: invert(1) hue-rotate(180deg) saturate(0.8) brightness(0.72) contrast(1.08);
 }
 
 :deep(.leaflet-div-icon) {

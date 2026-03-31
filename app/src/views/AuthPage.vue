@@ -1,8 +1,8 @@
 <template>
   <div
-    class="auth-page h-full min-h-0 w-full flex flex-col justify-center items-center relative px-4"
+    class="auth-page h-full min-h-0 w-full flex flex-col justify-center items-center relative px-4 text-slate-400"
   >
-    <div class="w-full max-w-[360px] p-6 border border-dashed border-gray-600 rounded-lg">
+    <div class="w-full max-w-[480px] p-6 rounded-2xl bg-white/5">
       <div class="flex justify-between items-center mb-4">
         <div class="h-[24px] w-[24px]">
           <img
@@ -11,41 +11,56 @@
             class="w-full h-full object-contain invert brightness-0 opacity-80 hover:brightness-0 hover:opacity-90"
           />
         </div>
-        <span class="text-sm text-gray-600 font-medium font-mono">UNORUN</span>
+        <span class="text-sm text-slate-300 font-medium font-mono">UNORUN</span>
       </div>
-      <div class="border border-dashed border-gray-600 mb-4"></div>
+      <div class="border border-gray-600 mb-4"></div>
       <form @submit.prevent="handleSubmit" @focusout="handleInputBlur">
         <div class="mb-4">
-          <label class="block text-sm text-gray-600 mb-2">手机号</label>
-          <input
-            v-model="phone"
-            placeholder="请输入手机号"
-            required
-            @blur="handleInputBlur"
-            class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
-          />
+          <label class="block text-sm mb-2">手机号</label>
+          <div class="relative">
+            <i
+              class="ri-smartphone-line absolute left-3 top-1/2 -translate-y-1/2 text- pointer-events-none"
+            ></i>
+            <input
+              v-model="phone"
+              placeholder="请输入手机号"
+              required
+              @blur="handleInputBlur"
+              class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+            />
+          </div>
         </div>
         <div v-if="mode === 'reset'" class="mb-4">
-          <label class="block text-sm text-gray-600 mb-2">新密码</label>
-          <input
-            v-model="password"
-            type="password"
-            placeholder="请设置新密码"
-            required
-            @blur="handleInputBlur"
-            class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
-          />
+          <label class="block text-sm mb-2">新密码</label>
+          <div class="relative">
+            <i
+              class="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+            ></i>
+            <input
+              v-model="password"
+              type="password"
+              placeholder="请设置新密码"
+              required
+              @blur="handleInputBlur"
+              class="block w-full p-2 pl-9 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+            />
+          </div>
         </div>
         <div v-if="mode === 'reset'" class="mb-4">
           <label class="block text-sm text-gray-600 mb-2">验证码</label>
           <div class="flex gap-2">
-            <input
-              v-model="code"
-              placeholder="请输入短信验证码"
-              required
-              @blur="handleInputBlur"
-              class="flex-1 p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
-            />
+            <div class="relative flex-1">
+              <i
+                class="ri-key-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              ></i>
+              <input
+                v-model="code"
+                placeholder="请输入短信验证码"
+                required
+                @blur="handleInputBlur"
+                class="w-full p-2 pl-9 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+              />
+            </div>
             <button
               type="button"
               @click="sendCode"
@@ -61,32 +76,37 @@
           </div>
         </div>
         <div v-if="mode === 'login'" class="mb-4">
-          <label class="block text-sm text-gray-600 mb-2">密码</label>
-          <input
-            v-model="password"
-            type="password"
-            placeholder="请输入密码"
-            required
-            @blur="handleInputBlur"
-            class="block w-full p-2 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
-          />
+          <label class="block text-sm mb-2">密码</label>
+          <div class="relative">
+            <i
+              class="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+            ></i>
+            <input
+              v-model="password"
+              type="password"
+              placeholder="请输入密码"
+              required
+              @blur="handleInputBlur"
+              class="block w-full p-2 pl-9 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+            />
+          </div>
         </div>
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mt-6 mb-8">
           <label v-if="mode === 'login'" class="flex items-center space-x-2 cursor-pointer group">
             <input type="checkbox" v-model="rememberMe" class="hidden" />
             <div
-              class="w-4 h-4 border border-slate-300 rounded flex items-center justify-center transition-colors"
+              class="w-2 h-2 border border-slate-300 rounded flex items-center justify-center transition-colors"
               :class="{ 'bg-slate-900 border-slate-900': rememberMe }"
             >
               <i v-if="rememberMe" class="ri-check-line text-[10px] text-white"></i>
             </div>
-            <span class="text-xs text-gray-600 group-hover:text-gray-800 transition">记住我</span>
+            <span class="text-xs text-gray-500 group-hover:text-gray-800 transition">记住我</span>
           </label>
           <a
             v-if="mode === 'login'"
             href="#"
             @click.prevent="mode = 'reset'"
-            class="text-xs text-gray-600 hover:text-gray-900"
+            class="text-xs text-gray-500 hover:text-gray-900"
             >忘记密码？</a
           >
         </div>
@@ -94,7 +114,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-stone-900 hover:bg-black/90 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full bg-blue-500 hover:bg-black/50 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="!loading">{{ mode === 'login' ? '登 录' : '重置密码' }}</span>
             <div
