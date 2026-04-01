@@ -164,10 +164,25 @@
               <div class="min-w-0 flex-1">
                 <h3 class="text-sm font-semibold text-cyan-50 truncate">
                   {{ signTaskCard.title }}
+                  <span v-if="signTaskCard.location" class="font-normal text-cyan-100/70"
+                    >· {{ signTaskCard.location }}</span
+                  >
                 </h3>
                 <p class="mt-1 text-xs text-cyan-100/80 truncate">{{ signTaskCard.subTitle }}</p>
               </div>
-              <span :class="signTaskCard.badgeClass">{{ signTaskCard.badgeText }}</span>
+              <div class="flex items-center gap-2">
+                <span
+                  :class="[
+                    'h-6 px-2 rounded-full text-[11px] inline-flex items-center border',
+                    clubAutoConfigEnabled
+                      ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
+                      : 'bg-white/5 text-gray-400 border-white/10',
+                  ]"
+                >
+                  {{ clubAutoConfigEnabled ? '已启用定时任务' : '未启用定时任务' }}
+                </span>
+                <span :class="signTaskCard.badgeClass">{{ signTaskCard.badgeText }}</span>
+              </div>
             </div>
 
             <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-cyan-50/90">
@@ -187,19 +202,34 @@
             >
               <button
                 type="button"
-                :disabled="clubAutoConfigOpening"
+                :disabled="clubAutoConfigToggling"
                 :class="[
-                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 bg-white/10 text-gray-200 hover:bg-white/15 transition-colors',
-                  clubAutoConfigOpening && 'opacity-70 cursor-not-allowed',
+                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+                  clubAutoConfigEnabled
+                    ? 'bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30'
+                    : 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-500/30',
+                  clubAutoConfigToggling && 'opacity-70 cursor-not-allowed',
                 ]"
-                @click="openClubAutoConfigModal"
+                @click="toggleClubAutoConfig"
               >
                 <i
-                  :class="
-                    clubAutoConfigOpening ? 'ri-loader-4-line animate-spin' : 'ri-settings-4-line'
-                  "
+                  :class="[
+                    clubAutoConfigToggling
+                      ? 'ri-loader-4-line animate-spin'
+                      : clubAutoConfigEnabled
+                        ? 'ri-indeterminate-circle-line'
+                        : 'ri-checkbox-circle-line',
+                  ]"
                 ></i>
-                <span>{{ clubAutoConfigOpening ? '加载中...' : '定时任务' }}</span>
+                <span>{{
+                  clubAutoConfigToggling
+                    ? clubAutoConfigEnabled
+                      ? '停用中...'
+                      : '启用中...'
+                    : clubAutoConfigEnabled
+                      ? '停用定时任务'
+                      : '启用定时任务'
+                }}</span>
               </button>
 
               <div class="flex flex-wrap justify-end gap-2">
@@ -411,18 +441,14 @@
         </button>
       </div>
     </section>
-
-    <ClubAutoConfigModal v-model:visible="showClubAutoConfigModal" />
   </div>
 </template>
 
 <script setup>
-import { computed, defineAsyncComponent, inject, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig } from '@/sdk/app';
 import { AutorunClient, scheduledTaskConfig } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
-
-const ClubAutoConfigModal = defineAsyncComponent(() => import('./ClubAutoConfig.vue'));
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表' },
@@ -500,8 +526,16 @@ const historyLoadingMore = ref(false);
 
 const signTask = ref(null);
 const signPendingType = ref('');
-const showClubAutoConfigModal = ref(false);
-const clubAutoConfigOpening = ref(false);
+const clubAutoConfigEnabled = ref(false);
+const clubAutoConfigToggling = ref(false);
+const clubAutoSignInStatus = ref('');
+const clubAutoSignOutStatus = ref('');
+const clubAutoSignInLeadMinutes = ref(10);
+const clubAutoSignOutDelayMinutes = ref(10);
+const clubAutoSignInWindowAt = ref('');
+const clubAutoSignOutWindowAt = ref('');
+const clubAutoLastAction = ref('');
+const clubAutoLastSuccessAt = ref('');
 const clubRushTasks = ref([]);
 
 const loading = ref(false);
@@ -640,33 +674,61 @@ const signTaskCard = computed(() => {
   if (!task) return null;
 
   const source = mergeActivityData(task, findLinkedActivityById(task.activityId));
+  const metaList = [
+    {
+      key: 'sign-in',
+      icon: 'ri-login-circle-line',
+      label: `签到时间：${source.signInTime || '--'}`,
+    },
+    {
+      key: 'sign-out',
+      icon: 'ri-logout-circle-r-line',
+      label: `签退时间：${source.signBackTime || source.signBackLimitTime || '--'}`,
+    },
+  ];
+
+  if (clubAutoConfigEnabled.value) {
+    if (clubAutoSignInStatus.value === '未签到' && clubAutoSignInWindowAt.value) {
+      metaList.push({
+        key: 'auto-in-window',
+        icon: 'ri-time-line',
+        label: `预计签到：${clubAutoSignInWindowAt.value}`,
+      });
+    }
+    if (clubAutoSignOutStatus.value === '未签退' && clubAutoSignOutWindowAt.value) {
+      metaList.push({
+        key: 'auto-out-window',
+        icon: 'ri-time-line',
+        label: `预计签退：${clubAutoSignOutWindowAt.value}`,
+      });
+    }
+    metaList.push({
+      key: 'auto-status',
+      icon: 'ri-checkbox-circle-line',
+      label: `签到状态：${clubAutoSignInStatus.value} · 签退状态：${clubAutoSignOutStatus.value}`,
+    });
+    const lastActionText =
+      clubAutoLastAction.value === 'sign_in'
+        ? '签到'
+        : clubAutoLastAction.value === 'sign_out'
+          ? '签退'
+          : '无';
+    const lastSuccessText = clubAutoLastSuccessAt.value ? `（${clubAutoLastSuccessAt.value}）` : '';
+    metaList.push({
+      key: 'auto-exec',
+      icon: 'ri-history-line',
+      label: `执行状态：已执行${lastActionText}${lastSuccessText}`,
+    });
+  }
+
   return {
     title: source.activityName || '未命名活动',
-    subTitle: resolveSignTaskSubTitle(source),
+    subTitle: formatTimeRange(source),
     badgeText: signTaskPanelStatus.value.text,
     badgeClass: signTaskPanelStatus.value.className,
-    metaList: [
-      {
-        key: 'time',
-        icon: 'ri-time-line',
-        label: formatTimeRange(source),
-      },
-      {
-        key: 'capacity',
-        icon: 'ri-team-line',
-        label: formatCapacity(source),
-      },
-      {
-        key: 'sign-in',
-        icon: 'ri-login-circle-line',
-        label: `签到时间：${source.signInTime || '--'}`,
-      },
-      {
-        key: 'sign-out',
-        icon: 'ri-logout-circle-r-line',
-        label: `签退时间：${source.signBackTime || source.signBackLimitTime || '--'}`,
-      },
-    ],
+    location: source.addressDetail || source.address || '',
+    autoEnabled: clubAutoConfigEnabled.value,
+    metaList,
   };
 });
 
@@ -774,7 +836,12 @@ watch(showFilters, async (next) => {
 
 onMounted(async () => {
   document.addEventListener('click', handleDocumentClick);
-  await Promise.all([loadCurrentList(), loadSignTask(), loadClubRushStatus()]);
+  await Promise.all([
+    loadCurrentList(),
+    loadSignTask(),
+    loadClubRushStatus(),
+    loadClubAutoConfigStatus(),
+  ]);
 });
 
 onUnmounted(() => {
@@ -951,9 +1018,9 @@ function resolveBadge(item) {
     case '6':
       return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
     case '7':
-      return createBadge('报名已满', 'bg-rose-500/20 text-rose-200');
+      return createBadge('人数已满', 'bg-rose-500/20 text-rose-200');
     case '3':
-      return createBadge('已有待参加', 'bg-white/10 text-gray-300');
+      return createBadge('已报名其他活动', 'bg-white/10 text-gray-300');
     case '4':
       return createBadge('已完成', 'bg-emerald-500/20 text-emerald-200');
     default:
@@ -1104,23 +1171,6 @@ function isSignTaskActionDisabled(action) {
   if (!action) return true;
   if (action.disabled) return true;
   return signPendingType.value !== '';
-}
-
-async function openClubAutoConfigModal() {
-  if (clubAutoConfigOpening.value || showClubAutoConfigModal.value) return;
-
-  clubAutoConfigOpening.value = true;
-  try {
-    if (typeof ClubAutoConfigModal.__asyncLoader === 'function') {
-      await ClubAutoConfigModal.__asyncLoader();
-    }
-    showClubAutoConfigModal.value = true;
-  } catch (error) {
-    console.error('openClubAutoConfigModal failed:', error);
-    showMessage('加载定时任务面板失败', 'error');
-  } finally {
-    clubAutoConfigOpening.value = false;
-  }
 }
 
 async function handleCardAction(card) {
@@ -1849,6 +1899,62 @@ async function cancelRushTask(task) {
   } finally {
     setClubActionPending(pendingKey, false);
   }
+}
+
+async function loadClubAutoConfigStatus() {
+  if (!autorunClient || !token.value) {
+    clubAutoConfigEnabled.value = false;
+    clubAutoSignInStatus.value = '';
+    clubAutoSignOutStatus.value = '';
+    clubAutoSignInWindowAt.value = '';
+    clubAutoSignOutWindowAt.value = '';
+    clubAutoLastAction.value = '';
+    clubAutoLastSuccessAt.value = '';
+    return;
+  }
+
+  try {
+    const envelope = await autorunClient.getClubAutoStatus(token.value);
+    const data = envelope?.data || {};
+    const isEnabled = Number(data.enabled) === 1 || data.enabled === true;
+    clubAutoConfigEnabled.value = isEnabled;
+    clubAutoSignInStatus.value = data.sign_in_status === 1 ? '已签到' : '未签到';
+    clubAutoSignOutStatus.value = data.sign_back_status === 1 ? '已签退' : '未签退';
+    clubAutoSignInWindowAt.value = String(data.sign_in_window_at || '');
+    clubAutoSignOutWindowAt.value = String(data.sign_out_window_at || '');
+    clubAutoLastAction.value = String(data.last_action || '');
+    clubAutoLastSuccessAt.value = String(data.last_success_at || '');
+  } catch (error) {
+    console.error('loadClubAutoConfigStatus failed:', error);
+    clubAutoConfigEnabled.value = false;
+    clubAutoSignInStatus.value = '';
+    clubAutoSignOutStatus.value = '';
+    clubAutoSignInWindowAt.value = '';
+    clubAutoSignOutWindowAt.value = '';
+    clubAutoLastAction.value = '';
+    clubAutoLastSuccessAt.value = '';
+  }
+}
+
+async function toggleClubAutoConfig() {
+  if (!autorunClient || clubAutoConfigToggling.value || !token.value) return;
+
+  clubAutoConfigToggling.value = true;
+  try {
+    const nextEnabled = !clubAutoConfigEnabled.value;
+    await autorunClient.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
+    await loadClubAutoConfigStatus();
+    showMessage(nextEnabled ? '定时任务已开启' : '定时任务已关闭', 'success');
+  } catch (error) {
+    console.error('toggleClubAutoConfig failed:', error);
+    showMessage(error?.message || '操作失败', 'error');
+  } finally {
+    clubAutoConfigToggling.value = false;
+  }
+}
+
+function handleClubAutoConfigSaved() {
+  loadClubAutoConfigStatus();
 }
 </script>
 
