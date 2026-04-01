@@ -55,11 +55,19 @@
           <i class="ri-logout-circle-r-line"></i>
           <span class="truncate">签退：{{ signOutStateText }}</span>
         </div>
-        <div class="meta-pill col-span-2">
+        <div v-if="signInWindowText" class="meta-pill col-span-2">
+          <i class="ri-time-line"></i>
+          <span class="truncate">预计签到：{{ signInWindowText }}</span>
+        </div>
+        <div v-else class="meta-pill col-span-2">
           <i class="ri-login-circle-line"></i>
           <span class="truncate">签到时间：{{ formatDisplayDateTime(task.signInTimeText) }}</span>
         </div>
-        <div class="meta-pill col-span-2">
+        <div v-if="signOutWindowText" class="meta-pill col-span-2">
+          <i class="ri-time-line"></i>
+          <span class="truncate">预计签退：{{ signOutWindowText }}</span>
+        </div>
+        <div v-else class="meta-pill col-span-2">
           <i class="ri-logout-circle-r-line"></i>
           <span class="truncate"
             >签退时间：{{ formatDisplayDateTime(task.signBackLimitTimeText) }}</span
@@ -102,10 +110,6 @@
         </button>
       </div>
 
-      <p class="mt-3 text-[11px] text-gray-500">
-        默认策略：签到前 {{ signInLeadMinutes }} 分钟，签退后 {{ signOutDelayMinutes }} 分钟
-      </p>
-
       <button
         type="button"
         class="absolute top-3 right-3 w-8 h-8 rounded-full text-gray-500 hover:text-white hover:bg-white/10 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -125,8 +129,9 @@ import { useDataStore } from '@/composables/useDataStore';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
+  enabled: { type: Boolean, default: false },
 });
-const emit = defineEmits(['update:visible', 'saved']);
+const emit = defineEmits(['update:visible', 'update:enabled', 'saved']);
 
 const showMessage = inject('showMessage', (message) => alert(message));
 const { token } = useDataStore();
@@ -161,11 +166,11 @@ const task = reactive({
   signBackStatus: 0,
   signInTimeText: '',
   signBackLimitTimeText: '',
+  signInWindowAt: '',
+  signOutWindowAt: '',
 });
 
 const enabled = computed(() => Number(status.enabled) === 1 || status.enabled === true);
-const signInLeadMinutes = computed(() => Number(status.sign_in_lead_minutes) || 10);
-const signOutDelayMinutes = computed(() => Number(status.sign_out_delay_minutes) || 10);
 const signInStateText = computed(() =>
   task.signInStatus === 1 || hasText(task.signInTimeText) ? '已签到' : '未签到',
 );
@@ -192,7 +197,22 @@ const executedSignOutText = computed(() => {
   return '未执行签退';
 });
 
+const signInWindowText = computed(() => {
+  if (task.signInStatus === 1 || hasText(task.signInTimeText)) {
+    return '';
+  }
+  return formatDisplayDateTime(task.signInWindowAt);
+});
+
+const signOutWindowText = computed(() => {
+  if (task.signBackStatus === 1 || hasText(task.signBackLimitTimeText)) {
+    return '';
+  }
+  return formatDisplayDateTime(task.signOutWindowAt);
+});
+
 function applyStatus(data = {}) {
+  const nextEnabled = Number(data.enabled) === 1 || data.enabled === true;
   status.enabled = data.enabled ?? 0;
   status.sign_in_lead_minutes = data.sign_in_lead_minutes ?? 10;
   status.sign_out_delay_minutes = data.sign_out_delay_minutes ?? 10;
@@ -204,6 +224,7 @@ function applyStatus(data = {}) {
   status.last_result = String(data.last_result || '');
   status.last_action = String(data.last_action || '');
   status.last_success_at = String(data.last_success_at || '');
+  emit('update:enabled', nextEnabled);
 }
 
 function applyTask(data = {}) {
@@ -216,6 +237,8 @@ function applyTask(data = {}) {
   task.signBackStatus = Number(data.sign_back_status || 0);
   task.signInTimeText = String(data.sign_in_time_text || '');
   task.signBackLimitTimeText = String(data.sign_back_limit_time_text || '');
+  task.signInWindowAt = String(data.sign_in_window_at || '');
+  task.signOutWindowAt = String(data.sign_out_window_at || '');
 }
 
 async function loadStatus() {
@@ -288,6 +311,14 @@ watch(
   () => props.visible,
   (next) => {
     if (next) loadStatus();
+  },
+  { immediate: true },
+);
+
+watch(
+  () => props.enabled,
+  (next) => {
+    status.enabled = next ? 1 : 0;
   },
   { immediate: true },
 );

@@ -337,81 +337,83 @@
             </button>
           </div>
 
-          <div
-            v-if="showEmojiPicker"
-            class="absolute bottom-full left-0 w-full max-w-[480px] mb-2 p-4 bg-stone-900 backdrop-blur-md z-50 rounded-2xl shadow-[0_-10px_25px_-5px_rgba(0,0,0,0.1)]"
-          >
-            <div class="flex items-center justify-between mb-4 px-1">
-              <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+          <transition>
+            <div
+              v-if="showEmojiPicker"
+              class="fixed left-0 right-0 z-[999] w-full bottom-full mb-2 p-4 bg-black/80 border border-white/8 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+            >
+              <div class="flex items-center justify-between mb-4 px-1">
+                <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
+                  <button
+                    v-for="(tab, id) in { emoji: { name: 'Twemoji' }, ...stickerGroups }"
+                    :key="id"
+                    @click="emojiActiveTab = id"
+                    :class="[
+                      'text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap px-1 pb-1',
+                      emojiActiveTab === id
+                        ? 'text-zinc-300 border-b-1 border-gray-600'
+                        : 'text-zinc-400',
+                    ]"
+                  >
+                    {{ tab.name }}
+                  </button>
+                </div>
                 <button
-                  v-for="(tab, id) in { emoji: { name: 'Twemoji' }, ...stickerGroups }"
-                  :key="id"
-                  @click="emojiActiveTab = id"
-                  :class="[
-                    'text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap px-1 pb-1',
-                    emojiActiveTab === id
-                      ? 'text-zinc-300 border-b-1 border-gray-600'
-                      : 'text-zinc-400',
-                  ]"
+                  @click="showEmojiPicker = false"
+                  class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300"
                 >
-                  {{ tab.name }}
+                  <i class="ri-close-fill"></i>
                 </button>
               </div>
-              <button
-                @click="showEmojiPicker = false"
-                class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300"
-              >
-                <i class="ri-close-fill"></i>
-              </button>
-            </div>
-            <div class="max-h-60 overflow-y-auto pr-1 scrollbar-hide">
-              <div v-if="emojiActiveTab === 'emoji'" class="space-y-6">
-                <div v-for="(group, name) in emojiGroups" :key="name">
-                  <div
-                    class="text-[9px] font-bold uppercase tracking-widest text-zinc-300 mb-3 ml-1"
-                  >
-                    {{ name }}
-                  </div>
-                  <div class="grid grid-cols-7 sm:grid-cols-8 gap-2">
-                    <button
-                      v-for="emoji in group"
-                      :key="emoji.code"
-                      @click="addEmoji(emoji.char)"
-                      class="aspect-square grid place-items-center hover:bg-stone-600 rounded-xl transition-all active:scale-95 group"
+              <div class="max-h-60 overflow-y-auto pr-1 scrollbar-hide">
+                <div v-if="emojiActiveTab === 'emoji'" class="space-y-6">
+                  <div v-for="(group, name) in emojiGroups" :key="name">
+                    <div
+                      class="text-[9px] font-bold uppercase tracking-widest text-zinc-300 mb-3 ml-1"
                     >
-                      <img
-                        :src="getEmojiUrl(emoji.code)"
-                        class="w-7 h-7 group-hover:scale-110 transition-transform"
-                      />
-                    </button>
+                      {{ name }}
+                    </div>
+                    <div class="grid grid-cols-7 sm:grid-cols-8 gap-2">
+                      <button
+                        v-for="emoji in group"
+                        :key="emoji.code"
+                        @click="addEmoji(emoji.char)"
+                        class="aspect-square grid place-items-center hover:bg-stone-600 rounded-xl transition-all active:scale-95 group"
+                      >
+                        <img
+                          :src="getEmojiUrl(emoji.code)"
+                          class="w-7 h-7 group-hover:scale-110 transition-transform"
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div
-                v-else-if="stickerGroups[emojiActiveTab]"
-                class="grid grid-cols-5 sm:grid-cols-6 gap-3 pb-2"
-              >
-                <button
-                  v-for="item in stickerGroups[emojiActiveTab].items"
-                  :key="item.key"
-                  @click="addSticker(emojiActiveTab, item)"
-                  class="aspect-square grid place-items-center hover:bg-zinc-300 rounded-xl transition-all active:scale-95 group p-1"
+                <div
+                  v-else-if="stickerGroups[emojiActiveTab]"
+                  class="grid grid-cols-5 sm:grid-cols-6 gap-3 pb-2"
                 >
-                  <img
-                    :src="item.val"
-                    loading="lazy"
-                    class="w-full h-full object-contain group-hover:scale-110 transition-transform"
-                  />
-                </button>
-              </div>
-              <div v-else class="flex flex-col items-center justify-center py-10 text-zinc-300">
-                <i v-if="stickerLoading" class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest">
-                  {{ stickerLoading ? '贴纸加载中...' : '贴纸准备中' }}
-                </span>
+                  <button
+                    v-for="item in stickerGroups[emojiActiveTab].items"
+                    :key="item.key"
+                    @click="addSticker(emojiActiveTab, item)"
+                    class="aspect-square grid place-items-center hover:bg-zinc-300 rounded-xl transition-all active:scale-95 group p-1"
+                  >
+                    <img
+                      :src="item.val"
+                      loading="lazy"
+                      class="w-full h-full object-contain group-hover:scale-110 transition-transform"
+                    />
+                  </button>
+                </div>
+                <div v-else class="flex flex-col items-center justify-center py-10 text-zinc-300">
+                  <i v-if="stickerLoading" class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
+                  <span class="text-[10px] font-bold uppercase tracking-widest">
+                    {{ stickerLoading ? '贴纸加载中...' : '贴纸准备中' }}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          </transition>
 
           <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
