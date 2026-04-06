@@ -83,7 +83,7 @@
 
           <div :class="ui.fieldItem">
             <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
-              >每日运行时间</label
+              >每日运行时间（10分钟误差）</label
             >
             <div class="flex items-center gap-2">
               <div
@@ -148,10 +148,24 @@
               ></div>
             </div>
           </div>
+
+          <div class="bg-stone-900/80 border border-white/5 rounded-xl px-3 py-2">
+            <div class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">
+              下次预跑步数据
+            </div>
+            <div
+              v-if="nextRunPreview.available"
+              class="mt-1 text-[12px] text-stone-200 font-medium"
+            >
+              {{ nextRunPreview.distance }} 米 · {{ nextRunPreview.time }} 分钟 · 配速
+              {{ nextRunPreview.paceText }}
+            </div>
+            <div v-else class="mt-1 text-[11px] text-stone-500">暂无预生成数据</div>
+          </div>
         </div>
 
         <button type="button" @click="handleSave" :disabled="submitting" :class="ui.saveButton">
-          <i v-if="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
+          <i v-if="submitting" class="ri-upload-cloud-line"></i>
           <span>{{ submitting ? 'SYNCING' : '保存配置' }}</span>
         </button>
       </div>
@@ -208,7 +222,7 @@ const ui = computed(() =>
         mapTrigger:
           'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-3 py-2 cursor-pointer hover:border-white/8 transition-all',
         saveButton:
-          'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
+          'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[14px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
       }
     : {
         wrapper: 'fixed inset-0 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md',
@@ -276,6 +290,21 @@ const enabledLabelClass = computed(() =>
     ? 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10'
     : 'text-stone-400 border-stone-600/40 bg-stone-700/20',
 );
+
+const nextRunPreview = computed(() => {
+  const current = status.value || {};
+  const distance = Number(current.next_run_distance || 0);
+  const time = Number(current.next_run_time || 0);
+  const pace = Number(current.next_run_pace || 0);
+  const available = Number.isFinite(distance) && distance > 0 && Number.isFinite(time) && time > 0;
+
+  return {
+    available,
+    distance: available ? Math.trunc(distance) : 0,
+    time: available ? Math.trunc(time) : 0,
+    paceText: Number.isFinite(pace) && pace > 0 ? `${pace.toFixed(2)} min/km` : '--',
+  };
+});
 
 const currentMapName = computed(() => {
   const selectedId = String(form.value.map_id || '');
@@ -426,6 +455,7 @@ watch(
 select {
   -webkit-appearance: none;
   -moz-appearance: none;
+  appearance: none;
   background: transparent;
 }
 
