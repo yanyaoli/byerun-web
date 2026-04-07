@@ -13,10 +13,10 @@
     >
       <div
         :class="[
-          'flex items-center gap-3 px-4 py-3 rounded-xl pointer-events-auto',
-          'shadow-lg backdrop-blur-xl border',
+          'flex items-center gap-3 px-4 py-1 rounded-full pointer-events-auto',
+          'shadow-lg backdrop-blur-md border',
           'min-w-[280px] max-w-md w-auto',
-          'transition-all duration-200',
+          'transition-all duration-500',
           styles[messageType].container,
         ]"
       >
@@ -52,28 +52,28 @@ const messageType = ref('info');
 
 const styles = {
   success: {
-    container: 'bg-emerald-50/95 border-emerald-200/50',
-    iconBg: 'bg-emerald-500/10',
-    icon: 'ri-checkbox-circle-fill text-emerald-600',
-    text: 'text-emerald-900',
+    container: 'bg-emerald-600 border-emerald-500',
+    iconBg: 'bg-white/20',
+    icon: 'ri-checkbox-circle-fill text-white',
+    text: 'text-white',
   },
   error: {
-    container: 'bg-rose-50/95 border-rose-200/50',
-    iconBg: 'bg-rose-500/10',
-    icon: 'ri-error-warning-fill text-rose-600',
-    text: 'text-rose-900',
+    container: 'bg-rose-600 border-rose-500',
+    iconBg: 'bg-white/20',
+    icon: 'ri-error-warning-fill text-white',
+    text: 'text-white',
   },
   info: {
-    container: 'bg-blue-50/95 border-blue-200/50',
-    iconBg: 'bg-blue-500/10',
-    icon: 'ri-information-fill text-blue-600',
-    text: 'text-blue-900',
+    container: 'bg-blue-600 border-blue-500',
+    iconBg: 'bg-white/20',
+    icon: 'ri-information-fill text-white',
+    text: 'text-white',
   },
   warning: {
-    container: 'bg-amber-50/95 border-amber-200/50',
-    iconBg: 'bg-amber-500/10',
-    icon: 'ri-alert-fill text-amber-600',
-    text: 'text-amber-900',
+    container: 'bg-amber-600 border-amber-500',
+    iconBg: 'bg-white/20',
+    icon: 'ri-alert-fill text-white',
+    text: 'text-white',
   },
 };
 

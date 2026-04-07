@@ -8,7 +8,7 @@
     >
       <div
         :class="[
-          'flex items-center top-1 h-10 backdrop-blur-[8px] border bg-white/5 border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
+          'flex items-center top-1 h-10 backdrop-blur-[8px] border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
           props.scrolled
             ? '!h-8 max-w-[380px] w-[calc(100%_-_52px)]'
             : 'max-w-[480px] w-[calc(100%_-_24px)]',
@@ -117,24 +117,24 @@ const messageType = ref('info');
 
 const messageStyles = {
   success: {
-    shell: 'bg-emerald-50/92 border-emerald-200/70',
-    icon: 'ri-checkbox-circle-fill text-emerald-600',
-    text: 'text-emerald-900',
+    shell: 'bg-emerald-600 border-emerald-500',
+    icon: 'ri-checkbox-circle-fill text-white',
+    text: 'text-white',
   },
   error: {
-    shell: 'bg-rose-50/92 border-rose-200/70',
-    icon: 'ri-error-warning-fill text-rose-600',
-    text: 'text-rose-900',
+    shell: 'bg-rose-600 border-rose-500',
+    icon: 'ri-error-warning-fill text-white',
+    text: 'text-white',
   },
   info: {
-    shell: 'bg-blue-50/92 border-blue-200/70',
-    icon: 'ri-information-fill text-blue-600',
-    text: 'text-blue-900',
+    shell: 'bg-blue-600 border-blue-500',
+    icon: 'ri-information-fill text-white',
+    text: 'text-white',
   },
   warning: {
-    shell: 'bg-amber-50/92 border-amber-200/70',
-    icon: 'ri-alert-fill text-amber-600',
-    text: 'text-amber-900',
+    shell: 'bg-amber-600 border-amber-500',
+    icon: 'ri-alert-fill text-white',
+    text: 'text-white',
   },
 };
 

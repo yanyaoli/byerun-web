@@ -114,7 +114,7 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-blue-500 hover:bg-black/50 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full bg-black/50 hover:bg-black/50 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span v-if="!loading">{{ mode === 'login' ? '登 录' : '重置密码' }}</span>
             <div

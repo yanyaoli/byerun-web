@@ -150,17 +150,54 @@
           </div>
 
           <div class="bg-stone-900/80 border border-white/5 rounded-xl px-3 py-2">
-            <div class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">
-              下次预跑步数据
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">
+                最新任务状态
+              </span>
+              <div class="flex items-center gap-2">
+                <span
+                  :class="[
+                    'text-[10px] font-bold px-2 py-0.5 rounded-md',
+                    latestExecResult.bgClass,
+                    latestExecResult.class,
+                  ]"
+                >
+                  {{ latestExecResult.text }}
+                </span>
+                <span class="text-[9px] text-stone-500 font-mono">{{
+                  status?.last_run_at || '-'
+                }}</span>
+              </div>
             </div>
-            <div
-              v-if="nextRunPreview.available"
-              class="mt-1 text-[12px] text-stone-200 font-medium"
-            >
-              {{ nextRunPreview.distance }} 米 · {{ nextRunPreview.time }} 分钟 · 配速
-              {{ nextRunPreview.paceText }}
+          </div>
+
+          <div class="bg-stone-900/80 border border-white/5 rounded-xl px-3 py-2">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">
+                下次随机数据
+              </span>
+              <span class="text-[9px] text-stone-500 mr-1">保存会重置随机数据</span>
             </div>
-            <div v-else class="mt-1 text-[11px] text-stone-500">暂无预生成数据</div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="bg-stone-800/50 rounded-lg px-2 py-1.5 text-center">
+                <div class="text-[9px] text-stone-500 uppercase tracking-wider">距离</div>
+                <div class="text-[13px] font-black text-stone-200 mt-0.5">
+                  {{ nextRunPreview.available ? nextRunPreview.distance + 'm' : '-' }}
+                </div>
+              </div>
+              <div class="bg-stone-800/50 rounded-lg px-2 py-1.5 text-center">
+                <div class="text-[9px] text-stone-500 uppercase tracking-wider">时间</div>
+                <div class="text-[13px] font-black text-stone-200 mt-0.5">
+                  {{ nextRunPreview.available ? nextRunPreview.time + 'min' : '-' }}
+                </div>
+              </div>
+              <div class="bg-stone-800/50 rounded-lg px-2 py-1.5 text-center">
+                <div class="text-[9px] text-stone-500 uppercase tracking-wider">配速</div>
+                <div class="text-[11px] font-bold text-stone-200 mt-0.5">
+                  {{ nextRunPreview.available ? nextRunPreview.paceText : '-' }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -264,6 +301,10 @@ const isTruthyFlag = (value) => value === true || value === 1 || value === '1';
 const isCompletedToday = computed(() => {
   const current = status.value || {};
 
+  if (current.today_executed !== undefined && current.today_executed !== null) {
+    return isTruthyFlag(current.today_executed);
+  }
+
   if (current.executed !== undefined && current.executed !== null) {
     return isTruthyFlag(current.executed);
   }
@@ -278,12 +319,41 @@ const isCompletedToday = computed(() => {
   return lastRunAtToday;
 });
 
-const statusLabelText = computed(() => (isCompletedToday.value ? '已完成' : '待执行'));
-const statusLabelClass = computed(() =>
-  isCompletedToday.value
-    ? 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10'
-    : 'text-orange-300 border-orange-500/30 bg-orange-500/10',
-);
+const todaySuccess = computed(() => {
+  const current = status.value || {};
+  if (current.today_success !== undefined && current.today_success !== null) {
+    return isTruthyFlag(current.today_success);
+  }
+  return null;
+});
+
+const todayResultText = computed(() => {
+  const current = status.value || {};
+  if (current.today_result) {
+    return String(current.today_result);
+  }
+  return '';
+});
+
+const statusLabelText = computed(() => {
+  if (!isCompletedToday.value) return '待执行';
+  if (todaySuccess.value === true) return '已完成';
+  if (todaySuccess.value === false) return todayResultText.value || '失败';
+  return '已完成';
+});
+
+const statusLabelClass = computed(() => {
+  if (!isCompletedToday.value) {
+    return 'text-orange-300 border-orange-500/30 bg-orange-500/10';
+  }
+  if (todaySuccess.value === true) {
+    return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
+  }
+  if (todaySuccess.value === false) {
+    return 'text-red-400 border-red-500/40 bg-red-500/10';
+  }
+  return 'text-emerald-400 border-emerald-500/40 bg-emerald-500/10';
+});
 const enabledLabelText = computed(() => (form.value.enabled ? '已启用' : '未启用'));
 const enabledLabelClass = computed(() =>
   form.value.enabled
@@ -304,6 +374,37 @@ const nextRunPreview = computed(() => {
     time: available ? Math.trunc(time) : 0,
     paceText: Number.isFinite(pace) && pace > 0 ? `${pace.toFixed(2)} min/km` : '--',
   };
+});
+
+const lastRunAtText = computed(() => {
+  const current = status.value || {};
+  if (!current.last_run_at) return '-';
+  return String(current.last_run_at).trim();
+});
+
+const latestExecResult = computed(() => {
+  const current = status.value || {};
+  const executed = isTruthyFlag(current.today_executed);
+  const success = isTruthyFlag(current.today_success);
+  const result = current.today_result ? String(current.today_result) : '';
+
+  if (!executed) {
+    return { text: '今日尚未执行', class: 'text-stone-500', bgClass: 'bg-stone-800/50' };
+  }
+  if (success && result === '成功') {
+    return { text: `执行成功`, class: 'text-emerald-400', bgClass: 'bg-emerald-500/10' };
+  }
+  if (!success || result) {
+    return { text: result || '执行失败', class: 'text-red-400', bgClass: 'bg-red-500/10' };
+  }
+  return { text: '执行完成', class: 'text-emerald-400', bgClass: 'bg-emerald-500/10' };
+});
+
+const lastScheduledText = computed(() => {
+  const current = status.value || {};
+  if (!current.last_scheduled) return '-';
+  const parts = String(current.last_scheduled).trim().split(' ');
+  return parts.length >= 2 ? parts.slice(1).join(' ') : parts[0] || '-';
 });
 
 const currentMapName = computed(() => {
