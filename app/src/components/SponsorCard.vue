@@ -59,58 +59,15 @@
           class="inline-flex items-center gap-1.5 bg-white/5 rounded-full border border-white/8 px-3 py-1.5 text-xs font-semibold text-sky-500 hover:bg-sky-100 transition-colors"
         >
           <i class="ri-alipay-fill"></i>
-          <span>支付宝打赏</span>
+          <span>跳转支付宝打赏</span>
         </a>
-      </div>
-    </div>
-
-    <div class="pt-4">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-1.5">
-          <i class="ri-medal-fill text-slate-500"></i>
-          <p class="truncate text-sm font-bold text-slate-400">赞助伙伴</p>
-        </div>
-        <a
-          v-if="qqGroupUrl"
-          :href="qqGroupUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="shrink-0 text-xs font-medium text-sky-600 underline-offset-4 hover:underline"
-        >
-          被遗漏？
-        </a>
-      </div>
-      <div v-if="sponsorNameRows.length" class="sponsor-marquee mt-2">
-        <div
-          v-for="(row, rowIndex) in sponsorNameRows"
-          :key="`sponsor-row-${rowIndex}`"
-          class="sponsor-row"
-        >
-          <div class="sponsor-row-track" :class="{ 'is-reverse': rowIndex % 2 === 1 }">
-            <div
-              v-for="copyIndex in 2"
-              :key="`row-${rowIndex}-copy-${copyIndex}`"
-              class="sponsor-row-group"
-              :aria-hidden="copyIndex === 2"
-            >
-              <span
-                v-for="(name, index) in row"
-                :key="`row-${rowIndex}-copy-${copyIndex}-name-${name}-${index}`"
-                class="sponsor-badge inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-                :style="getSponsorBadgeStyle(name)"
-              >
-                {{ name }}
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
     <div class="pt-4">
       <div class="flex items-center gap-1.5">
         <i class="ri-time-fill text-slate-500"></i>
-        <p class="truncate text-sm font-bold text-slate-400">网站状态</p>
+        <p class="truncate text-sm font-bold text-slate-400">网站续费状态</p>
       </div>
       <div class="mt-2 flex items-center justify-between gap-3">
         <a
@@ -123,8 +80,64 @@
           <i class="ri-external-link-line text-xs text-slate-500"></i>
         </a>
         <p class="shrink-0 text-xs font-medium text-slate-500 tabular-nums">
-          剩余{{ remainingDaysText }}
+          {{ remainingDaysText }}后到期
         </p>
+      </div>
+    </div>
+
+    <div class="pt-4">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-1.5">
+          <i class="ri-medal-fill text-slate-500"></i>
+          <p class="truncate text-sm font-bold text-slate-400">赞助伙伴们</p>
+        </div>
+        <a
+          v-if="qqGroupUrl"
+          :href="qqGroupUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="shrink-0 text-xs font-medium text-sky-600 underline-offset-4 hover:underline"
+        >
+          被遗漏？
+        </a>
+      </div>
+      <div class="sponsor-grid mt-2">
+        <div
+          v-for="(entry, index) in sortedSponsors"
+          :key="`sponsor-${entry.name}-${entry.date}-${entry.rank || 0}-${entry.remark || ''}`"
+          class="sponsor-card-wrapper"
+        >
+          <div
+            class="sponsor-card-item group inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-md"
+            :class="[
+              getSponsorBadgeClass(entry),
+              selectedSponsorIndex === index ? 'is-expanded' : '',
+            ]"
+            @click="handleSponsorBadgeClick(entry, index)"
+          >
+            <template v-if="selectedSponsorIndex === index">
+              <div class="sponsor-card-detail">
+                <span class="sponsor-card-name">{{ selectedSponsor.name }}</span>
+                <span v-if="selectedSponsor.remark" class="sponsor-card-remark">
+                  {{ selectedSponsor.remark }}
+                </span>
+                <span v-if="selectedSponsor.date" class="sponsor-card-date">
+                  {{ selectedSponsor.date }}
+                </span>
+              </div>
+            </template>
+            <template v-else>
+              <span v-if="entry.rank" class="sponsor-card-rank-badge"> #{{ entry.rank }} </span>
+              <span>{{ entry.name }}</span>
+              <i v-if="entry.remark" class="ri-quill-pen-line text-[11px] text-current"></i>
+              <i
+                v-if="entry._isLatest"
+                class="ri-sparkling-fill text-[11px] text-current latest-icon"
+                title="最新赞助"
+              ></i>
+            </template>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -179,28 +192,76 @@ const props = defineProps({
 const previewQrUrl = ref('');
 const previewVisible = ref(false);
 const previewLoading = ref(false);
-const macaronHues = [8, 22, 36, 50, 66, 88, 112, 136, 160, 182, 204, 226, 248, 272, 298, 324];
+const selectedSponsor = ref(null);
+const selectedSponsorIndex = ref(-1);
 const qqGroupUrl = computed(() => props.community?.qq_group_url || '');
 const wechatGroupQrcode = computed(() => props.community?.wechat_group_qrcode || '');
 const preloadedQrSet = new Set();
 const loadedQrSet = new Set();
 
-const sponsorNames = computed(() => {
+const sponsorEntries = computed(() => {
   if (!Array.isArray(props.sponsor?.sponsors)) return [];
-  return props.sponsor.sponsors.map((item) => item?.name).filter(Boolean);
+  return props.sponsor.sponsors
+    .map((item) => {
+      if (!item) return null;
+      if (typeof item === 'string') {
+        const name = item.trim();
+        return name ? { name, date: '', rank: null } : null;
+      }
+
+      const name = String(item.name || '').trim();
+      if (!name) return null;
+
+      const rankNum = Number(item.rank);
+      return {
+        name,
+        date: String(item.date || '').trim(),
+        remark: String(item.remark || '').trim(),
+        rank: Number.isInteger(rankNum) && rankNum >= 1 && rankNum <= 5 ? rankNum : null,
+      };
+    })
+    .filter(Boolean);
 });
 
-const sponsorNameRows = computed(() => {
-  if (!sponsorNames.value.length) return [];
-  const rowCount = Math.min(3, sponsorNames.value.length);
-  const rows = Array.from({ length: rowCount }, () => []);
-
-  sponsorNames.value.forEach((name, index) => {
-    rows[index % rowCount].push(name);
-  });
-
-  return rows.filter((row) => row.length);
+const sortedSponsors = computed(() => {
+  if (!sponsorEntries.value.length) return [];
+  const entries = [...sponsorEntries.value];
+  const ranked = entries
+    .filter((e) => e.rank)
+    .sort((a, b) => {
+      if (a.rank !== b.rank) return a.rank - b.rank;
+      return compareDate(a.date, b.date);
+    });
+  const remarkOnly = entries
+    .filter((e) => !e.rank && e.remark)
+    .sort((a, b) => compareDate(a.date, b.date));
+  const others = entries
+    .filter((e) => !e.rank && !e.remark)
+    .sort((a, b) => compareDate(a.date, b.date));
+  const priority = [...ranked, ...remarkOnly];
+  const allSorted = [...priority, ...others];
+  const latestEntry = findLatestEntry(entries);
+  return allSorted.map((e) => ({ ...e, _isLatest: e === latestEntry }));
 });
+
+const findLatestEntry = (entries) => {
+  let latest = null;
+  let latestDate = '';
+  for (const e of entries) {
+    if (e.date && e.date > latestDate) {
+      latestDate = e.date;
+      latest = e;
+    }
+  }
+  return latest;
+};
+
+const compareDate = (a, b) => {
+  if (!a && !b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return a.localeCompare(b);
+};
 
 const qrItems = computed(() =>
   [
@@ -212,7 +273,7 @@ const qrItems = computed(() =>
     },
     {
       key: 'wechat',
-      label: '微信赞赏',
+      label: '微信',
       url: props.sponsor?.wechat_qrcode,
       coverIcon: 'ri-wechat-pay-line',
     },
@@ -227,53 +288,37 @@ const domainHref = computed(() => {
 
 const remainingDaysText = computed(() => `${props.domain?.remaining_days}天`);
 
-const hashString = (value) => {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(i);
-    hash |= 0;
+const getSponsorBadgeClass = (entry) => {
+  const classes = [];
+  if (entry?.rank || entry?.remark) {
+    classes.push('is-priority');
   }
-  return Math.abs(hash);
+  if (entry?._isLatest) {
+    classes.push('is-latest');
+  }
+  return classes;
 };
 
-const getMacaronColor = (name) => {
-  const hash = hashString(name);
-  const baseHue = macaronHues[hash % macaronHues.length];
-  const hue = (baseHue + (hash % 9) - 4 + 360) % 360;
-  const saturation = 56 + ((hash >> 3) % 10);
-  const lightness = 84 + ((hash >> 5) % 6);
+const formatSponsorDate = (date) => {
+  const value = String(date || '').trim();
+  return value || '暂无记录';
+};
 
-  return {
-    text: `hsl(${hue}, ${Math.max(22, saturation - 26)}%, ${Math.max(26, lightness - 54)}%)`,
-    bg: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-    border: `hsl(${hue}, ${Math.max(34, saturation - 18)}%, ${Math.max(70, lightness - 10)}%)`,
-    shadow: `hsla(${hue}, ${Math.max(26, saturation - 24)}%, ${Math.max(34, lightness - 48)}%, 0.14)`,
+const handleSponsorBadgeClick = (entry, index) => {
+  if (!entry) return;
+  if (selectedSponsorIndex.value === index) {
+    selectedSponsor.value = null;
+    selectedSponsorIndex.value = -1;
+    return;
+  }
+  selectedSponsor.value = {
+    name: entry.name,
+    date: entry.date,
+    remark: entry.remark,
+    rank: entry.rank,
   };
+  selectedSponsorIndex.value = index;
 };
-
-const sponsorBadgeStyleMap = computed(() => {
-  const styles = new Map();
-  sponsorNames.value.forEach((name) => {
-    const color = getMacaronColor(name);
-    styles.set(name, {
-      color: color.text,
-      backgroundColor: color.bg,
-      borderColor: color.border,
-      boxShadow: `0 2px 4px ${color.shadow}`,
-    });
-  });
-  return styles;
-});
-
-const defaultSponsorBadgeStyle = {
-  color: '#6A6A6A',
-  backgroundColor: '#F2F2F2',
-  borderColor: '#DFDFDF',
-  boxShadow: '0 2px 4px rgba(106, 106, 106, 0.14)',
-};
-
-const getSponsorBadgeStyle = (name) =>
-  sponsorBadgeStyleMap.value.get(name) ?? defaultSponsorBadgeStyle;
 
 const preloadQrImage = (url) => {
   if (!url || preloadedQrSet.has(url)) return;
@@ -303,8 +348,15 @@ const handlePreviewLoaded = () => {
 };
 
 const handleKeydown = (event) => {
-  if (event.key !== 'Escape' || !previewVisible.value) return;
-  closeQrPreview();
+  if (event.key !== 'Escape') return;
+  if (previewVisible.value) {
+    closeQrPreview();
+    return;
+  }
+  if (selectedSponsorIndex.value !== -1) {
+    selectedSponsor.value = null;
+    selectedSponsorIndex.value = -1;
+  }
 };
 
 onMounted(() => {
@@ -333,59 +385,136 @@ watch(
 </script>
 
 <style scoped>
-.sponsor-badge {
-  position: relative;
-  flex-shrink: 0;
+.sponsor-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sponsor-card-item {
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sponsor-card-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sponsor-card-item.is-priority {
+  border-style: dashed;
+  border-color: rgba(110, 231, 183, 0.5);
+  background: rgba(52, 211, 153, 0.08);
+  color: #6ee7b7;
+}
+
+.sponsor-card-item.is-priority:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(110, 231, 183, 0.7);
+}
+
+.sponsor-card-item.is-expanded {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border-style: solid;
+  border-color: rgba(14, 165, 233, 0.5);
+  background: rgba(14, 165, 233, 0.08);
+  color: #cbd5e1;
+}
+
+.sponsor-card-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.05rem 0.35rem;
+  border-radius: 9999px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fde68a;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
   white-space: nowrap;
-  border: 1px solid transparent;
 }
 
-.sponsor-pay-banner {
-  position: relative;
-}
-
-.sponsor-pay-item {
-  min-height: 3rem;
-}
-
-.sponsor-marquee {
+.sponsor-card-detail {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
-.sponsor-row {
+.sponsor-card-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+  line-height: 1.3;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sponsor-row-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-  backface-visibility: hidden;
-  animation: sponsor-row-scroll 24s linear infinite;
+.sponsor-card-remark {
+  font-size: 10px;
+  font-weight: 500;
+  color: #a5f3fc;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sponsor-row-group {
-  display: flex;
-  flex-shrink: 0;
-  min-width: max-content;
-  gap: 0.5rem;
-  padding-right: 0.5rem;
+.sponsor-card-item.is-latest {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.06);
+  color: #fde68a;
+  animation: sponsor-latest-glow 2s ease-in-out infinite;
 }
 
-.sponsor-row-track.is-reverse {
-  animation-direction: reverse;
-  animation-duration: 30s;
+.sponsor-card-item.is-latest:hover {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.7);
 }
 
-@keyframes sponsor-row-scroll {
+.sponsor-card-item.is-latest.is-priority {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.08);
+  color: #fde68a;
+}
+
+.latest-icon {
+  animation: sponsor-latest-spin 3s linear infinite;
+}
+
+@keyframes sponsor-latest-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+  }
+  50% {
+    box-shadow: 0 0 8px 1px rgba(251, 191, 36, 0.2);
+  }
+}
+
+@keyframes sponsor-latest-spin {
   0% {
-    transform: translateX(0);
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.1);
   }
   100% {
-    transform: translateX(-50%);
+    transform: rotate(360deg) scale(1);
   }
+}
+
+.sponsor-card-date {
+  font-size: 9px;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.3;
+  white-space: nowrap;
+  tabular-nums: tabular-nums;
 }
 </style>
