@@ -102,42 +102,35 @@
         </a>
       </div>
       <div class="sponsor-grid mt-2">
-        <div
-          v-for="(entry, index) in sortedSponsors"
-          :key="`sponsor-${entry.name}-${entry.date}-${entry.rank || 0}-${entry.remark || ''}`"
-          class="sponsor-card-wrapper"
-        >
+        <template v-for="item in sponsorWithGroups" :key="item.key">
           <div
-            class="sponsor-card-item group inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-md"
-            :class="[
-              getSponsorBadgeClass(entry),
-              selectedSponsorIndex === index ? 'is-expanded' : '',
-            ]"
-            @click="handleSponsorBadgeClick(entry, index)"
+            v-if="item.type === 'group-header'"
+            class="sponsor-group-divider w-full flex items-center gap-2 py-2 text-xs text-slate-500"
           >
-            <template v-if="selectedSponsorIndex === index">
-              <div class="sponsor-card-detail">
-                <span class="sponsor-card-name">{{ selectedSponsor.name }}</span>
-                <span v-if="selectedSponsor.remark" class="sponsor-card-remark">
-                  {{ selectedSponsor.remark }}
-                </span>
-                <span v-if="selectedSponsor.date" class="sponsor-card-date">
-                  {{ selectedSponsor.date }}
-                </span>
-              </div>
-            </template>
-              <template v-else>
-              <span v-if="entry.rank" class="sponsor-card-rank-badge"> #{{ entry.rank }} </span>
-              <span>{{ entry.name }}</span>
-              <i v-if="entry.remark" class="ri-quill-pen-line text-[11px] text-current"></i>
+            <span class="font-medium">{{ item.year }}年{{ item.month }}月</span>
+            <div class="h-px flex-1 bg-white/10"></div>
+          </div>
+          <div
+            v-else-if="item.type === 'divider-end'"
+            class="w-full border-b border-white/5 my-1"
+          ></div>
+          <div v-else-if="item.type === 'sponsor'" class="sponsor-card-wrapper">
+            <div
+              class="sponsor-card-item group inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-md"
+              :class="getSponsorBadgeClass(item)"
+              @click="handleSponsorBadgeClick(item, -1)"
+            >
+              <span v-if="item.rank" class="sponsor-card-rank-badge"> #{{ item.rank }} </span>
+              <span>{{ item.name }}</span>
+              <i v-if="item.remark" class="ri-quill-pen-line text-[11px] text-current"></i>
               <i
-                v-if="entry._isLatest"
+                v-if="item._isLatest"
                 class="ri-sparkling-fill text-[11px] text-current latest-icon"
                 title="最新赞助"
               ></i>
-            </template>
+            </div>
           </div>
-        </div>
+        </template>
       </div>
     </div>
   </section>
@@ -213,11 +206,13 @@ const sponsorEntries = computed(() => {
       if (!name) return null;
 
       const rankNum = Number(item.rank);
+      const indexNum = Number(item.index);
       return {
         name,
         date: String(item.date || '').trim(),
         remark: String(item.remark || '').trim(),
         rank: Number.isInteger(rankNum) && rankNum >= 1 && rankNum <= 5 ? rankNum : null,
+        index: Number.isInteger(indexNum) && indexNum >= 1 ? indexNum : null,
       };
     })
     .filter(Boolean);
@@ -225,29 +220,39 @@ const sponsorEntries = computed(() => {
 
 const sortedSponsors = computed(() => {
   if (!sponsorEntries.value.length) return [];
-  const entries = [...sponsorEntries.value].sort((a, b) => compareDate(b.date, a.date));
-  const latestEntry = findLatestEntry(entries);
-  return entries.map((e) => ({ ...e, _isLatest: e === latestEntry }));
+  const entries = [...sponsorEntries.value].sort((a, b) => (b.index || 0) - (a.index || 0));
+  const maxIndex = entries[0]?.index || 0;
+  return entries.map((e) => ({
+    ...e,
+    _isLatest: e.index === maxIndex,
+  }));
 });
 
-const findLatestEntry = (entries) => {
-  let latest = null;
-  let latestDate = '';
-  for (const e of entries) {
-    if (e.date && e.date > latestDate) {
-      latestDate = e.date;
-      latest = e;
-    }
-  }
-  return latest;
-};
+const sponsorWithGroups = computed(() => {
+  const list = sortedSponsors.value;
+  if (!list.length) return [];
 
-const compareDate = (a, b) => {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  return a.localeCompare(b);
-};
+  const result = [];
+  let currentGroup = null;
+
+  for (const entry of list) {
+    const dateParts = entry.date ? entry.date.split('-') : [];
+    const year = dateParts[0] || '';
+    const month = dateParts[1] || '';
+    const groupKey = `${year}-${month}`;
+
+    if (!currentGroup || currentGroup.key !== groupKey) {
+      if (currentGroup) result.push({ type: 'divider-end', key: `div-end-${currentGroup.key}` });
+      result.push({ type: 'group-header', key: `group-${groupKey}`, year, month });
+      currentGroup = { key: groupKey, year, month };
+    }
+    result.push({ type: 'sponsor', ...entry, key: entry.name + entry.date + (entry.rank || '') });
+  }
+
+  if (currentGroup) result.push({ type: 'divider-end', key: `div-end-${currentGroup.key}` });
+
+  return result;
+});
 
 const qrItems = computed(() =>
   [
@@ -302,6 +307,7 @@ const handleSponsorBadgeClick = (entry, index) => {
     date: entry.date,
     remark: entry.remark,
     rank: entry.rank,
+    index: entry.index,
   };
   selectedSponsorIndex.value = index;
 };

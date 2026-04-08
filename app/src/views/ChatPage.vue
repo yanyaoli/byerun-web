@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full h-full min-h-0 max-w-[480px] mx-auto overflow-x-hidden">
+  <div class="w-full h-full min-h-0 mx-auto overflow-x-hidden">
     <div
       class="chat-section h-full min-h-0 flex flex-col w-full max-w-full relative overflow-hidden bg-transparent transition-all duration-300"
     >
@@ -269,7 +269,7 @@
       <!-- 输入区域 -->
       <div
         ref="composerShellRef"
-        class="fixed left-0 right-0 z-[999] max-w-[480px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/5 border border-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+        class="fixed left-0 right-0 z-[999] max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/5 border border-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
         :style="{ bottom: `${composerBottomOffset}px` }"
       >
         <!-- 回复预览 -->
