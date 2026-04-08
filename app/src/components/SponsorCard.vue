@@ -117,17 +117,30 @@
           <div v-else-if="item.type === 'sponsor'" class="sponsor-card-wrapper">
             <div
               class="sponsor-card-item group inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-md"
-              :class="getSponsorBadgeClass(item)"
-              @click="handleSponsorBadgeClick(item, -1)"
+              :class="[getSponsorBadgeClass(item), selectedSponsor?.name === item.name ? 'is-expanded' : '']"
+              @click="handleSponsorBadgeClick(item)"
             >
-              <span v-if="item.rank" class="sponsor-card-rank-badge"> #{{ item.rank }} </span>
-              <span>{{ item.name }}</span>
-              <i v-if="item.remark" class="ri-quill-pen-line text-[11px] text-current"></i>
-              <i
-                v-if="item._isLatest"
-                class="ri-sparkling-fill text-[11px] text-current latest-icon"
-                title="最新赞助"
-              ></i>
+              <template v-if="selectedSponsor?.name === item.name">
+                <div class="sponsor-card-detail">
+                  <span class="sponsor-card-name">{{ selectedSponsor.name }}</span>
+                  <span v-if="selectedSponsor.remark" class="sponsor-card-remark">
+                    {{ selectedSponsor.remark }}
+                  </span>
+                  <span v-if="selectedSponsor.date" class="sponsor-card-date">
+                    {{ selectedSponsor.date }}
+                  </span>
+                </div>
+              </template>
+              <template v-else>
+                <span v-if="item.rank" class="sponsor-card-rank-badge"> #{{ item.rank }} </span>
+                <span>{{ item.name }}</span>
+                <i v-if="item.remark" class="ri-quill-pen-line text-[11px] text-current"></i>
+                <i
+                  v-if="item._isLatest"
+                  class="ri-sparkling-fill text-[11px] text-current latest-icon"
+                  title="最新赞助"
+                ></i>
+              </template>
             </div>
           </div>
         </template>
@@ -186,7 +199,6 @@ const previewQrUrl = ref('');
 const previewVisible = ref(false);
 const previewLoading = ref(false);
 const selectedSponsor = ref(null);
-const selectedSponsorIndex = ref(-1);
 const qqGroupUrl = computed(() => props.community?.qq_group_url || '');
 const wechatGroupQrcode = computed(() => props.community?.wechat_group_qrcode || '');
 const preloadedQrSet = new Set();
@@ -295,11 +307,10 @@ const formatSponsorDate = (date) => {
   return value || '暂无记录';
 };
 
-const handleSponsorBadgeClick = (entry, index) => {
+const handleSponsorBadgeClick = (entry) => {
   if (!entry) return;
-  if (selectedSponsorIndex.value === index) {
+  if (selectedSponsor.value?.name === entry.name) {
     selectedSponsor.value = null;
-    selectedSponsorIndex.value = -1;
     return;
   }
   selectedSponsor.value = {
@@ -309,7 +320,6 @@ const handleSponsorBadgeClick = (entry, index) => {
     rank: entry.rank,
     index: entry.index,
   };
-  selectedSponsorIndex.value = index;
 };
 
 const preloadQrImage = (url) => {
@@ -345,9 +355,9 @@ const handleKeydown = (event) => {
     closeQrPreview();
     return;
   }
-  if (selectedSponsorIndex.value !== -1) {
+  if (selectedSponsor.value) {
     selectedSponsor.value = null;
-    selectedSponsorIndex.value = -1;
+    return;
   }
 };
 
