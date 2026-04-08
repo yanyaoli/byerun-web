@@ -57,13 +57,31 @@ function clearLegacyStickerCache() {
 
 async function computeConfigHash() {
   const configStr = JSON.stringify(stickerConfig);
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(configStr));
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray
-    .map((byte) => byte.toString(16).padStart(2, '0'))
-    .join('')
-    .slice(0, 16);
+
+  // Non-secure contexts may not expose crypto.subtle; fallback keeps cache logic working.
+  if (globalThis.crypto?.subtle && typeof TextEncoder !== 'undefined') {
+    try {
+      const encoder = new TextEncoder();
+      const hashBuffer = await globalThis.crypto.subtle.digest(
+        'SHA-256',
+        encoder.encode(configStr),
+      );
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray
+        .map((byte) => byte.toString(16).padStart(2, '0'))
+        .join('')
+        .slice(0, 16);
+    } catch (e) {
+      console.warn('Failed to compute SHA-256 sticker hash, using fallback hash', e);
+    }
+  }
+
+  let hash = 2166136261;
+  for (let i = 0; i < configStr.length; i++) {
+    hash ^= configStr.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `fnv1a-${(hash >>> 0).toString(16).padStart(8, '0')}`;
 }
 
 async function fetchStickerGroups() {
@@ -102,16 +120,31 @@ export function useStickerCache(options = {}) {
   let loadTask = null;
   let silentRefreshTriggered = false;
 
-  const getStoredCache = () => normalizeStickerCache(getChatStickerCache?.());
+  const getStoredCache = () => {
+    console.log(
+      '[Sticker] getStoredCache called, getChatStickerCache:',
+      typeof getChatStickerCache,
+    );
+    const raw = getChatStickerCache?.();
+    console.log('[Sticker] raw cache from store:', raw);
+    return normalizeStickerCache(raw);
+  };
 
   const persistCache = (payload) => {
     const normalized = normalizeStickerCache(payload);
     if (!normalized) return;
+    console.log('[Sticker] persistCache, groups:', Object.keys(normalized.groups).length);
     setChatStickerCache?.(normalized);
   };
 
   function hydrateStickerCache() {
+    console.log('[Sticker] hydrateStickerCache called');
     const stored = getStoredCache();
+    console.log(
+      '[Sticker] stored cache:',
+      stored ? 'exists' : 'null',
+      stored?.groups ? Object.keys(stored.groups).length : 0,
+    );
     if (stored) {
       stickerGroups.value = stored.groups;
       stickerLoaded.value = true;
@@ -132,7 +165,7 @@ export function useStickerCache(options = {}) {
     const { forceRefresh = false, silent = false } = loadOptions;
 
     if (loadTask) return loadTask;
-    if (stickerLoaded.value && !forceRefresh) return;
+    if (stickerLoaded.value && !forceRefresh && Object.keys(stickerGroups.value).length > 0) return;
 
     const cached = hydrateStickerCache();
     if (!silent) {
@@ -189,14 +222,19 @@ export function useStickerCache(options = {}) {
   }
 
   function triggerSilentStickerRefresh() {
-    if (silentRefreshTriggered) return;
+    if (silentRefreshTriggered && Object.keys(stickerGroups.value).length > 0) return;
     silentRefreshTriggered = true;
 
-    setTimeout(() => {
-      loadStickers({ forceRefresh: true, silent: true }).catch((e) => {
+    loadStickers({ forceRefresh: true, silent: true })
+      .catch((e) => {
         console.warn('Silent sticker refresh failed', e);
+      })
+      .finally(() => {
+        // If load still has no groups, allow next trigger to retry.
+        if (Object.keys(stickerGroups.value).length === 0) {
+          silentRefreshTriggered = false;
+        }
       });
-    }, 0);
   }
 
   async function ensureStickerTabReady(tabId) {

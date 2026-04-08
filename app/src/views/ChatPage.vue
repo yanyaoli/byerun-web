@@ -167,7 +167,7 @@
                         {{
                           m.user?.nickname ||
                           m.nickname ||
-                          '用户' + String(m.user?.user_id).slice(-4)
+                          '用户' + String(m.user?.user_id).slice(-5)
                         }}
                       </div>
 
@@ -179,8 +179,9 @@
                         <div class="text-[10px] font-bold mb-0.5 opacity-60">
                           {{
                             m.reply.user?.nickname ||
-                            m.reply.nickname ||
-                            '用户' + String(m.reply.user?.user_id).slice(-4)
+                            (m.reply.user?.user_id
+                              ? '用户' + String(m.reply.user.user_id).slice(-5)
+                              : '用户')
                           }}
                         </div>
                         <div
@@ -283,8 +284,9 @@
               正在回复
               {{
                 replyingTo.user?.nickname ||
-                replyingTo.nickname ||
-                '用户' + String(replyingTo.user?.user_id).slice(-4)
+                (replyingTo.user?.user_id
+                  ? '用户' + String(replyingTo.user.user_id).slice(-5)
+                  : '用户')
               }}
             </div>
             <div
@@ -579,7 +581,12 @@
                   v-else
                   class="text-base font-bold text-gray-300 truncate mb-0.5 whitespace-nowrap"
                 >
-                  {{ viewedProfile?.nickname || '用户' + String(viewedProfile?.user_id).slice(-4) }}
+                  {{
+                    viewedProfile?.nickname ||
+                    (viewedProfile?.user_id
+                      ? '用户' + String(viewedProfile.user_id).slice(-5)
+                      : '用户')
+                  }}
                 </h3>
 
                 <p
@@ -736,6 +743,7 @@ import {
   getEmojiUrl,
   messageSdkConfig,
   normalizeAvatarUrl,
+  getCachedAvatarUrl,
   renderContent,
 } from '@/sdk/message';
 import Message from '@/components/Message.vue';
@@ -807,11 +815,19 @@ const {
   stickerLoading,
   hydrateStickerCache,
   ensureStickerTabReady,
+  loadStickers,
   triggerSilentStickerRefresh,
 } = useStickerCache({
   getChatStickerCache,
   setChatStickerCache,
 });
+
+console.log(
+  '[ChatPage] useStickerCache initialized, getChatStickerCache:',
+  typeof getChatStickerCache,
+  'setChatStickerCache:',
+  typeof setChatStickerCache,
+);
 
 // 设置相关
 const settingsNickname = ref('');

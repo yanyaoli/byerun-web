@@ -126,7 +126,7 @@
                 </span>
               </div>
             </template>
-            <template v-else>
+              <template v-else>
               <span v-if="entry.rank" class="sponsor-card-rank-badge"> #{{ entry.rank }} </span>
               <span>{{ entry.name }}</span>
               <i v-if="entry.remark" class="ri-quill-pen-line text-[11px] text-current"></i>
@@ -225,23 +225,9 @@ const sponsorEntries = computed(() => {
 
 const sortedSponsors = computed(() => {
   if (!sponsorEntries.value.length) return [];
-  const entries = [...sponsorEntries.value];
-  const ranked = entries
-    .filter((e) => e.rank)
-    .sort((a, b) => {
-      if (a.rank !== b.rank) return a.rank - b.rank;
-      return compareDate(a.date, b.date);
-    });
-  const remarkOnly = entries
-    .filter((e) => !e.rank && e.remark)
-    .sort((a, b) => compareDate(a.date, b.date));
-  const others = entries
-    .filter((e) => !e.rank && !e.remark)
-    .sort((a, b) => compareDate(a.date, b.date));
-  const priority = [...ranked, ...remarkOnly];
-  const allSorted = [...priority, ...others];
+  const entries = [...sponsorEntries.value].sort((a, b) => compareDate(b.date, a.date));
   const latestEntry = findLatestEntry(entries);
-  return allSorted.map((e) => ({ ...e, _isLatest: e === latestEntry }));
+  return entries.map((e) => ({ ...e, _isLatest: e === latestEntry }));
 });
 
 const findLatestEntry = (entries) => {

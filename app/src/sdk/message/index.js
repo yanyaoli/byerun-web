@@ -24,4 +24,4 @@ export const checkHasUnreadMessages = async (token) => {
 };
 
 export { MessageClient, messageSdkConfig };
-export { formatTime, getEmojiUrl, normalizeAvatarUrl, renderContent } from './render';
+export { formatTime, getEmojiUrl, normalizeAvatarUrl, getCachedAvatarUrl, renderContent } from './render';

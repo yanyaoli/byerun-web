@@ -4,10 +4,24 @@ const API_BASE = messageSdkConfig.apiBaseUrl;
 const EMOJI_REGEX = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
 const STICKER_PATTERN = /(&lt;|<)img\s+[^>]*?src=("|&quot;)([^"&]+)("|&quot;)[^>]*?atk-emoticon=("|&quot;)([^"&]+)("|&quot;)[^>]*?(&gt;|>)/g;
 
+const avatarUrlCache = new Map();
+
 export function normalizeAvatarUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
+  if (url.startsWith('/api/avatar/')) {
+    return API_BASE + url;
+  }
   return API_BASE + (url.startsWith('/') ? '' : '/') + url;
+}
+
+export function getCachedAvatarUrl(userId) {
+  if (!userId) return null;
+  const cached = avatarUrlCache.get(userId);
+  if (cached) return cached;
+  const url = `${API_BASE}/api/avatar/${encodeURIComponent(String(userId))}`;
+  avatarUrlCache.set(userId, url);
+  return url;
 }
 
 export function getEmojiUrl(code) {
@@ -33,7 +47,9 @@ function normalizeStickerTag(match, l, q1, src, q2, q3, atk) {
 }
 
 function findStickerByKey(stickerGroups, key) {
-  if (!stickerGroups || typeof stickerGroups !== 'object') return null;
+  if (!stickerGroups || typeof stickerGroups !== 'object' || Object.keys(stickerGroups).length === 0) {
+    return null;
+  }
 
   for (const group of Object.values(stickerGroups)) {
     const item = group?.items?.find((sticker) => sticker.key === key);
@@ -44,6 +60,10 @@ function findStickerByKey(stickerGroups, key) {
 }
 
 function renderSticker(value, stickerGroups) {
+  if (!stickerGroups || typeof stickerGroups !== 'object' || Object.keys(stickerGroups).length === 0) {
+    return `<img src="${value}" atk-emoticon="${value}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+  }
+
   const item = findStickerByKey(stickerGroups, value);
   if (item) {
     return `<img src="${item.val}" atk-emoticon="${item.key}" class="atk-emoticon" loading="lazy" alt="sticker" />`;

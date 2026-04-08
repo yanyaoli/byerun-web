@@ -78,6 +78,7 @@ const useChatStateStore = defineStore(
     };
 
     const setChatStickerCache = (cache) => {
+      console.log('[Store] setChatStickerCache called:', cache ? 'has value' : 'null');
       if (!cache || typeof cache !== 'object') {
         chatStickerCache.value = null;
         return;
@@ -99,6 +100,7 @@ const useChatStateStore = defineStore(
         updatedAt: Number(cache.updatedAt || Date.now()),
         groups,
       };
+      console.log('[Store] chatStickerCache set, groups:', Object.keys(groups).length);
     };
 
     const getChatStickerCache = () => {
