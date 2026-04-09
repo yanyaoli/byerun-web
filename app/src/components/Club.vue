@@ -200,18 +200,19 @@
               v-if="signTaskButtons.length > 0"
               class="mt-3 flex items-center justify-between gap-2"
             >
-              <button
-                type="button"
-                :disabled="clubAutoConfigToggling"
-                :class="[
-                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
-                  clubAutoConfigEnabled
-                    ? 'bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30'
-                    : 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-500/30',
-                  clubAutoConfigToggling && 'opacity-70 cursor-not-allowed',
-                ]"
-                @click="toggleClubAutoConfig"
-              >
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  :disabled="clubAutoConfigToggling"
+                  :class="[
+                    'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+                    clubAutoConfigEnabled
+                      ? 'bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30'
+                      : 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-500/30',
+                    clubAutoConfigToggling && 'opacity-70 cursor-not-allowed',
+                  ]"
+                  @click="toggleClubAutoConfig"
+                >
                 <i
                   :class="[
                     clubAutoConfigToggling
@@ -231,6 +232,14 @@
                       : '启用定时任务'
                 }}</span>
               </button>
+                <button
+                  type="button"
+                  class="h-8 w-8 rounded-full border border-white/8 bg-white/5 text-white/70 hover:bg-white/10 transition-colors flex items-center justify-center"
+                  @click="openTipModal"
+                >
+                  <i class="ri-information-line"></i>
+                </button>
+              </div>
 
               <div class="flex flex-wrap justify-end gap-2">
                 <button
@@ -441,6 +450,56 @@
         </button>
       </div>
     </section>
+
+    <Teleport to="body">
+      <transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div
+          v-if="showTipModal"
+          class="fixed inset-0 z-[1000] grid place-items-center p-4 sm:p-40 bg-black/70 backdrop-blur-sm"
+          @click.self="closeTipModal"
+        >
+          <div
+            class="bg-[#25282e] border border-white/8 w-full max-w-[460px] max-h-[90vh] overflow-auto rounded-2xl shadow-2xl shadow-black/50 overflow-hidden p-7"
+          >
+            <h3 class="text-center text-lg font-semibold text-white mb-6">提示信息</h3>
+            <div class="text-sm text-gray-300 leading-relaxed">
+              <p class="mb-4">
+                启用定时任务后，请不要在其他客户端登录当前账号。若您在别处登录该账号，当前客户端的账号将自动登录失效，可能导致定时任务中断或执行异常。
+              </p>
+              <p class="pt-4 border-t border-white/10">
+                如果要查看定时任务完成情况，请在当前网址查看：<br>
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="flex-1 px-3 py-2 rounded-lg bg-white/5 text-cyan-400 text-xs break-all">
+                    {{ currentWebsiteUrl }}
+                  </span>
+                  <button
+                    type="button"
+                    @click="copyUrl"
+                    class="h-8 px-3 rounded-lg border border-white/8 bg-white/5 text-white/70 text-xs font-medium hover:bg-white/10 transition-colors flex items-center gap-1"
+                  >
+                    <i class="ri-file-copy-line"></i>
+                    <span>复制</span>
+                  </button>
+                </div>
+              </p>
+            </div>
+            <button
+              @click="closeTipModal"
+              class="w-full mt-6 h-10 rounded-lg border border-cyan-400/30 bg-cyan-500/20 text-cyan-200 text-sm font-medium hover:bg-cyan-500/30 transition-colors"
+            >
+              我知道了
+            </button>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -537,6 +596,9 @@ const clubAutoSignOutWindowAt = ref('');
 const clubAutoLastAction = ref('');
 const clubAutoLastSuccessAt = ref('');
 const clubRushTasks = ref([]);
+
+const showTipModal = ref(false);
+const currentWebsiteUrl = ref('');
 
 const loading = ref(false);
 const clubActionPendingMap = ref({});
@@ -1955,6 +2017,35 @@ async function toggleClubAutoConfig() {
 
 function handleClubAutoConfigSaved() {
   loadClubAutoConfigStatus();
+}
+
+function openTipModal() {
+  currentWebsiteUrl.value = getCurrentUrl();
+  showTipModal.value = true;
+}
+
+function closeTipModal() {
+  showTipModal.value = false;
+}
+
+function getCurrentUrl() {
+  return window.location.href;
+}
+
+async function copyUrl() {
+  try {
+    await navigator.clipboard.writeText(currentWebsiteUrl.value);
+    showMessage('网址已复制到剪贴板', 'success');
+  } catch (error) {
+    const textArea = document.createElement('textarea');
+    textArea.value = currentWebsiteUrl.value;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showMessage('网址已复制到剪贴板', 'success');
+  }
+    closeTipModal();
 }
 </script>
 
