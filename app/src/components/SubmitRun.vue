@@ -27,7 +27,7 @@
 
     <!-- 提交表单 -->
     <form @submit.prevent="onFormSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
-      <div class="theme-card rounded-2xl w-full box-border mb-5 p-5">
+      <div class="theme-card rounded-2xl w-full box-border mb-5 p-5 form-card-container">
         <!-- Tab 按钮行 -->
         <div class="flex items-center mb-4 border-b border-dashed theme-card-divider pb-2">
           <button
@@ -544,11 +544,18 @@ loadMaps().then(async () => {
 </script>
 
 <style scoped>
+/* 表单卡片容器 - 确保浮于路线预览之上 */
+.form-card-container {
+  position: relative;
+  z-index: 10;
+}
+
 .route-dropdown {
   position: relative;
   user-select: none;
   box-sizing: border-box;
   overflow: visible;
+  z-index: 100;
 }
 
 .dropdown-arrow {
@@ -571,10 +578,17 @@ loadMaps().then(async () => {
   right: 0;
   top: 110%;
   border-radius: 8px;
-  z-index: 9999;
+  z-index: 10000;
   padding: 4px 0;
   max-height: 300px;
   overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  pointer-events: auto;
+}
+
+/* 确保表单卡片容器允许下拉菜单溢出 */
+:deep(.form-card-container) {
+  overflow: visible;
 }
 
 .route-option {
