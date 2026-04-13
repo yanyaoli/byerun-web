@@ -1,40 +1,37 @@
 <template>
   <div
-    class="auth-page h-full min-h-0 w-full flex flex-col justify-center items-center relative px-4 text-slate-400"
+    class="auth-page h-full min-h-0 w-full flex flex-col justify-center items-center relative px-4 pt-14 theme-text-primary"
   >
-    <div class="w-full max-w-[480px] p-6 rounded-2xl bg-white/5">
-      <div class="flex justify-between items-center mb-4">
-        <div class="h-[24px] w-[24px]">
-          <img
-            src="../assets/logo.png"
-            alt="App Logo"
-            class="w-full h-full object-contain invert brightness-0 opacity-80 hover:brightness-0 hover:opacity-90"
-          />
-        </div>
-        <span class="text-sm text-slate-300 font-medium font-mono">UNORUN</span>
+    <AppHeader ref="appHeaderRef" :show-github="false" />
+
+    <div class="w-full max-w-[480px] p-6">
+      <div class="mb-4 text-center">
+        <h1 class="text-3xl font-black theme-text-primary mb-4 tracking-tight">Byerun Web</h1>
+        <p class="theme-text-secondary mb-8 text-xm max-w-xs mx-auto leading-relaxed">
+          免费且开源的校园生存工具
+        </p>
       </div>
-      <div class="border border-gray-600 mb-4"></div>
       <form @submit.prevent="handleSubmit" @focusout="handleInputBlur">
         <div class="mb-4">
-          <label class="block text-sm mb-2">手机号</label>
+          <label class="block text-sm mb-2 theme-text-secondary">手机号</label>
           <div class="relative">
             <i
-              class="ri-smartphone-line absolute left-3 top-1/2 -translate-y-1/2 text- pointer-events-none"
+              class="ri-smartphone-line absolute left-3 top-1/2 -translate-y-1/2 theme-input-icon pointer-events-none"
             ></i>
             <input
               v-model="phone"
               placeholder="请输入手机号"
               required
               @blur="handleInputBlur"
-              class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+              class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
             />
           </div>
         </div>
         <div v-if="mode === 'reset'" class="mb-4">
-          <label class="block text-sm mb-2">新密码</label>
+          <label class="block text-sm mb-2 theme-text-secondary">新密码</label>
           <div class="relative">
             <i
-              class="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              class="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 theme-input-icon pointer-events-none"
             ></i>
             <input
               v-model="password"
@@ -42,30 +39,30 @@
               placeholder="请设置新密码"
               required
               @blur="handleInputBlur"
-              class="block w-full p-2 pl-9 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+              class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
             />
           </div>
         </div>
         <div v-if="mode === 'reset'" class="mb-4">
-          <label class="block text-sm text-gray-600 mb-2">验证码</label>
+          <label class="block text-sm theme-text-secondary mb-2">验证码</label>
           <div class="flex gap-2">
             <div class="relative flex-1">
               <i
-                class="ri-key-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+                class="ri-key-2-line absolute left-3 top-1/2 -translate-y-1/2 theme-input-icon pointer-events-none"
               ></i>
               <input
                 v-model="code"
                 placeholder="请输入短信验证码"
                 required
                 @blur="handleInputBlur"
-                class="w-full p-2 pl-9 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+                class="w-full p-2 pl-9 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
               />
             </div>
             <button
               type="button"
               @click="sendCode"
               :disabled="sending"
-              class="px-3 py-2 bg-stone-900 text-gray-300 rounded-md hover:text-black/90 text-sm text-black/80 font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              class="px-3 py-2 rounded-md text-sm font-medium flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap theme-button-primary"
             >
               <span v-if="!sending">发送验证码</span>
               <div
@@ -76,10 +73,10 @@
           </div>
         </div>
         <div v-if="mode === 'login'" class="mb-4">
-          <label class="block text-sm mb-2">密码</label>
+          <label class="block text-sm mb-2 theme-text-secondary">密码</label>
           <div class="relative">
             <i
-              class="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+              class="ri-lock-2-line absolute left-3 top-1/2 -translate-y-1/2 theme-input-icon pointer-events-none"
             ></i>
             <input
               v-model="password"
@@ -87,7 +84,7 @@
               placeholder="请输入密码"
               required
               @blur="handleInputBlur"
-              class="block w-full p-2 pl-9 text-sm text-gray-500 border border-dashed rounded-lg border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 placeholder:text-sm placeholder:text-gray-600"
+              class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
             />
           </div>
         </div>
@@ -95,18 +92,18 @@
           <label v-if="mode === 'login'" class="flex items-center space-x-2 cursor-pointer group">
             <input type="checkbox" v-model="rememberMe" class="hidden" />
             <div
-              class="w-2 h-2 border border-slate-300 rounded flex items-center justify-center transition-colors"
-              :class="{ 'bg-slate-900 border-slate-900': rememberMe }"
+              class="w-2 h-2 border rounded flex items-center justify-center transition-colors auth-remember-box"
+              :class="{ 'is-checked': rememberMe }"
             >
               <i v-if="rememberMe" class="ri-check-line text-[10px] text-white"></i>
             </div>
-            <span class="text-xs text-gray-500 group-hover:text-gray-800 transition">记住我</span>
+            <span class="text-xs theme-link transition">记住我</span>
           </label>
           <a
             v-if="mode === 'login'"
             href="#"
             @click.prevent="mode = 'reset'"
-            class="text-xs text-gray-500 hover:text-gray-900"
+            class="text-xs theme-link"
             >忘记密码？</a
           >
         </div>
@@ -114,9 +111,9 @@
           <button
             type="submit"
             :disabled="loading"
-            class="w-full bg-black/50 hover:bg-black/50 text-gray-200 text-md rounded-lg py-2 font-medium flex items-center justify-center active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full font-bold text-base rounded-full py-3 shadow-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 theme-button-primary"
           >
-            <span v-if="!loading">{{ mode === 'login' ? '登 录' : '重置密码' }}</span>
+            <span v-if="!loading">{{ mode === 'login' ? '立即登录' : '重置密码' }}</span>
             <div
               v-else
               class="w-5 h-5 border-2 border-white/30 rounded-full border-t-white animate-spin mx-auto"
@@ -124,12 +121,7 @@
           </button>
         </div>
         <div v-if="mode === 'reset'" class="text-center mt-4">
-          <a
-            href="#"
-            @click.prevent="mode = 'login'"
-            class="text-xs text-gray-600 hover:text-gray-900"
-            >返回登录</a
-          >
+          <a href="#" @click.prevent="mode = 'login'" class="text-xs theme-link">返回登录</a>
         </div>
       </form>
     </div>
@@ -137,14 +129,16 @@
 </template>
 
 <script setup>
-import { ref, inject, watch, onMounted, onUnmounted } from 'vue';
+import { ref, inject, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import AppHeader from '@/components/layout/AppHeader.vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 
-const showMessage = inject('showMessage');
+const rootShowMessage = inject('showMessage', null);
 const { userInfo, fetchUserData, rememberLogin, savedPhone } = useDataStore();
 const router = useRouter();
+const appHeaderRef = ref(null);
 
 const mode = ref('login');
 const phone = ref('');
@@ -157,6 +151,17 @@ const keyboardInset = ref(0);
 const viewportBaseHeight = ref(0);
 let keyboardWasVisible = false;
 let keyboardMeasureTimer = 0;
+
+function showMessage(message, type = 'info') {
+  if (appHeaderRef.value?.show) {
+    appHeaderRef.value.show(message, type);
+    return;
+  }
+
+  if (typeof rootShowMessage === 'function') {
+    rootShowMessage(message, type);
+  }
+}
 
 function restoreViewportPosition() {
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
@@ -318,3 +323,14 @@ const handleSubmit = () => {
   }
 };
 </script>
+
+<style scoped>
+.auth-remember-box {
+  border-color: var(--card-divider);
+}
+
+.auth-remember-box.is-checked {
+  background-color: var(--button-primary-bg);
+  border-color: var(--button-primary-bg);
+}
+</style>

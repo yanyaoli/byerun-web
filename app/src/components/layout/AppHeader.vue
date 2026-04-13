@@ -2,17 +2,16 @@
   <div>
     <header
       ref="headerRef"
-      :class="[
-        'fixed left-0 right-0 px-2 z-[999] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]',
-      ]"
+      class="fixed top-2 left-0 right-0 z-999 flex justify-center pointer-events-none transition-all duration-300"
     >
       <div
         :class="[
-          'flex items-center top-1 h-10 backdrop-blur-[8px] border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative mx-auto pointer-events-auto transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden',
-          props.scrolled
-            ? '!h-8 max-w-[380px] w-[calc(100%_-_52px)]'
-            : 'max-w-[480px] w-[calc(100%_-_24px)]',
-          messageVisible ? messageStyles[messageType].shell : 'bg-white/5',
+          'flex items-center h-10 max-w-[480px] w-[calc(100%_-_24px)] backdrop-blur-2xl border rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-auto transition-all duration-300 overflow-hidden',
+          'theme-card',
+          messageVisible ? messageStyles[messageType].shell : '',
+          props.notifyOnly && !messageVisible
+            ? 'opacity-0 scale-95 pointer-events-none !border-transparent !shadow-none !bg-transparent'
+            : '',
         ]"
       >
         <transition
@@ -31,56 +30,61 @@
             </span>
           </div>
 
-          <div v-else key="default" class="flex items-center w-full h-full">
-            <div
-              class="flex items-center flex-1 min-w-0 h-6 pl-4 pr-2 overflow-hidden pointer-events-none"
-            >
-              <div class="welcome-sequence">
-                <div
-                  class="welcome-sequence-logo h-6 w-6 flex items-center justify-center"
-                  :class="{ 'is-visible': welcomePhase !== 'text' }"
-                >
-                  <img
-                    src="/logo.png"
-                    alt="App Logo"
-                    class="max-h-full max-w-full object-contain"
-                  />
-                </div>
-
-                <span
-                  class="welcome-sequence-text"
-                  :class="{ 'is-visible': welcomePhase === 'text' }"
-                >
-                  {{ welcomeText }}
-                </span>
-              </div>
-            </div>
-
-            <!-- <button
-              :class="[
-                'inline-flex items-center justify-center p-0.5 text-[rgba(60,60,67,0.8)] rounded-full font-semibold transition-all duration-150 border-none outline-none shadow-none hover:bg-red-100 hover:text-red-700 ml-auto mr-4 shrink-0',
-                props.scrolled ? 'h-5 w-5' : 'h-6 w-6',
-              ]"
-              @click="handleLogout"
-              title="退出登录"
-            >
-              <i
-                :class="['ri-logout-circle-r-line', props.scrolled ? 'text-[14px]' : 'text-[16px]']"
-              ></i>
-            </button> -->
-            <div class="flex items-center">
-              <a
-                :href="githubUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center justify-center h-6 w-6 text-gray-400 hover:bg-white/10 transition-colors ml-auto mr-4 shrink-0 rounded-md"
-                aria-label="GitHub"
-                title="GitHub"
+          <div v-else-if="!props.notifyOnly" key="default" class="flex items-center w-full h-full">
+            <slot name="content">
+              <div
+                class="flex items-center flex-1 min-w-0 h-6 pl-4 pr-2 overflow-hidden ml-auto mr-3 shrink-0 gap-3 pointer-events-auto"
               >
-                <i class="ri-github-line text-[20px]"></i>
-              </a>
-            </div>
+                <div
+                  class="welcome-sequence"
+                  :class="isDark ? 'welcome-sequence--dark' : 'welcome-sequence--light'"
+                >
+                  <div
+                    class="welcome-sequence-logo h-5 w-5 flex items-center justify-center"
+                    :class="{ 'is-visible': welcomePhase !== 'text' }"
+                  >
+                    <img
+                      src="/logo.png"
+                      alt="App Logo"
+                      class="max-h-full max-w-full object-contain"
+                    />
+                  </div>
+
+                  <span
+                    class="welcome-sequence-text"
+                    :class="{ 'is-visible': welcomePhase === 'text' }"
+                  >
+                    {{ welcomeText }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center ml-auto mr-3 shrink-0 gap-3 pointer-events-auto">
+                <a
+                  v-if="props.showGithub"
+                  :href="githubUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center justify-center h-6 w-6 transition-colors rounded-md header-action-btn"
+                  aria-label="GitHub"
+                  title="GitHub"
+                >
+                  <i class="ri-github-line text-[19px]"></i>
+                </a>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center h-6 w-6 transition-colors rounded-md header-action-btn"
+                  :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                  @click="themeStore.toggle()"
+                >
+                  <i v-if="isDark" class="ri-sun-fill text-[17px]"></i>
+                  <i v-else class="ri-moon-clear-fill text-[17px]"></i>
+                </button>
+              </div>
+            </slot>
           </div>
+
+          <div v-else key="notify-placeholder" class="w-full h-full"></div>
         </transition>
       </div>
     </header>
@@ -95,17 +99,22 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import { urls } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
+import { useThemeStore } from '@/composables/useTheme';
 
 const githubUrl = urls.github || 'https://github.com/yanyaoli/byerun-web';
 
 const props = defineProps({
   scrolled: { type: Boolean, default: false },
+  showGithub: { type: Boolean, default: true },
+  notifyOnly: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['logout']);
 
 const headerRef = ref(null);
 const confirmDialogRef = ref(null);
+const themeStore = useThemeStore();
+const isDark = computed(() => themeStore.isDark);
 const { userInfo, clearAllData } = useDataStore();
 const { clearChatData } = useChatStore();
 const welcomePhase = ref('logo');
@@ -117,24 +126,24 @@ const messageType = ref('info');
 
 const messageStyles = {
   success: {
-    shell: 'bg-emerald-600 border-emerald-500',
-    icon: 'ri-checkbox-circle-fill text-white',
-    text: 'text-white',
+    shell: '!bg-emerald-600 !border-emerald-500',
+    icon: 'ri-checkbox-circle-fill text-black dark:text-white',
+    text: 'text-black dark:text-white',
   },
   error: {
-    shell: 'bg-rose-600 border-rose-500',
-    icon: 'ri-error-warning-fill text-white',
-    text: 'text-white',
+    shell: '!bg-rose-600 !border-rose-500',
+    icon: 'ri-error-warning-fill text-black dark:text-white',
+    text: 'text-black dark:text-white',
   },
   info: {
-    shell: 'bg-blue-600 border-blue-500',
-    icon: 'ri-information-fill text-white',
-    text: 'text-white',
+    shell: '!bg-blue-600 !border-blue-500',
+    icon: 'ri-information-fill text-black dark:text-white',
+    text: 'text-black dark:text-white',
   },
   warning: {
-    shell: 'bg-amber-600 border-amber-500',
-    icon: 'ri-alert-fill text-white',
-    text: 'text-white',
+    shell: '!bg-amber-600 !border-amber-500',
+    icon: 'ri-alert-fill text-black dark:text-white',
+    text: 'text-black dark:text-white',
   },
 };
 
@@ -243,6 +252,21 @@ defineExpose({
   height: 24px;
   display: flex;
   align-items: center;
+  --welcome-logo-filter-hidden: brightness(0) saturate(100%) invert(22%) sepia(10%) saturate(341%)
+    hue-rotate(181deg) brightness(92%) contrast(89%) blur(5px);
+  --welcome-logo-filter-visible: brightness(0) saturate(100%) invert(22%) sepia(10%) saturate(341%)
+    hue-rotate(181deg) brightness(92%) contrast(89%) blur(0);
+  --welcome-logo-opacity-visible: 0.82;
+  --welcome-text-color: #4b5563;
+}
+
+.welcome-sequence--dark {
+  --welcome-logo-filter-hidden: brightness(0) saturate(100%) invert(92%) sepia(6%) saturate(222%)
+    hue-rotate(182deg) brightness(97%) contrast(93%) blur(5px);
+  --welcome-logo-filter-visible: brightness(0) saturate(100%) invert(92%) sepia(6%) saturate(222%)
+    hue-rotate(182deg) brightness(97%) contrast(93%) blur(0);
+  --welcome-logo-opacity-visible: 0.72;
+  --welcome-text-color: #979797;
 }
 
 .welcome-sequence-logo,
@@ -254,15 +278,15 @@ defineExpose({
   opacity: 0;
   filter: blur(5px);
   transition:
-    opacity 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 520ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 520ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 300ms cubic-bezier(0.22, 1, 0.36, 1),
+    color 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .welcome-sequence-logo {
   opacity: 0;
-  filter: brightness(0) saturate(100%) invert(92%) sepia(6%) saturate(222%) hue-rotate(182deg)
-    brightness(97%) contrast(93%) blur(5px);
+  filter: var(--welcome-logo-filter-hidden);
 }
 
 .welcome-sequence-text {
@@ -273,19 +297,27 @@ defineExpose({
   text-overflow: ellipsis;
   font-size: 13px;
   font-weight: 500;
-  color: #979797;
+  color: var(--welcome-text-color);
 }
 
 .welcome-sequence-logo.is-visible {
   transform: translateY(-50%) scale(1);
-  opacity: 0.72;
-  filter: brightness(0) saturate(100%) invert(92%) sepia(6%) saturate(222%) hue-rotate(182deg)
-    brightness(97%) contrast(93%) blur(0);
+  opacity: var(--welcome-logo-opacity-visible);
+  filter: var(--welcome-logo-filter-visible);
 }
 
 .welcome-sequence-text.is-visible {
   transform: translateY(-50%) scale(1);
   opacity: 1;
   filter: blur(0);
+}
+
+.header-action-btn {
+  color: var(--text-tertiary);
+}
+
+.header-action-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
 }
 </style>

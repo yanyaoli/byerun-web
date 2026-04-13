@@ -1,12 +1,12 @@
 ﻿<template>
-  <div class="h-full min-h-0 flex flex-col bg-transparent overflow-hidden">
+  <div class="h-full min-h-0 flex flex-col overflow-hidden">
     <AppHeader v-show="activeKey !== 'chat'" ref="appHeaderRef" :scrolled="headerCompact" />
 
-    <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative bg-transparent">
+    <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative">
       <main
         v-show="activeKey !== 'chat'"
         ref="mainScrollRef"
-        class="main-scroll-area relative overflow-y-auto w-full box-border px-4"
+        class="relative overflow-y-auto w-full box-border px-4"
         :style="{
           paddingTop: `${headerHeight}px`,
           paddingBottom: `${bottomBarOverlayHeight + BOTTOM_BAR_CLEARANCE_GAP}px`,
@@ -37,13 +37,14 @@
       ref="bottomBarRef"
       :active="activeKey"
       :chat-unread="chatUnread"
+      :is-dark-mode="isDark"
       @update:active="setActiveKey"
     />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, nextTick, watch, provide, inject } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch, provide, inject } from 'vue';
 import RunRecords from '@/components/RunRecords.vue';
 import Club from '@/components/Club.vue';
 import SubmitRun from '@/components/SubmitRun.vue';
@@ -53,12 +54,15 @@ import BottomTabBar from '@/components/layout/BottomTabBar.vue';
 import MyPage from '@/views/MyPage.vue';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
+import { useThemeStore } from '@/composables/useTheme';
 import { preloadAutorunPingMeta } from '@/sdk/autorun';
 import { checkHasUnreadMessages } from '@/sdk/message';
 import { getViewportMetrics } from '@/utils/viewport';
 
 const { fetchUserData, activeTab, userInfo, token } = useDataStore();
 const { chatUnread, setChatUnread, markChatSeen } = useChatStore();
+const themeStore = useThemeStore();
+const isDark = computed(() => themeStore.isDark);
 const rootShowMessage = inject('showMessage', null);
 
 const appHeaderRef = ref(null);

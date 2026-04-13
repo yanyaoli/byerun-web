@@ -4,20 +4,20 @@
     class="fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/85"
     @click.self="close"
   >
-    <div
-      class="relative w-full max-w-[340px] rounded-3xl border border-white/8 bg-stone-950 p-5 shadow-2xl"
-    >
+    <div class="relative w-full max-w-[340px] rounded-3xl theme-card p-5 shadow-2xl">
       <div class="flex items-start justify-between gap-3">
         <div>
-          <h3 class="text-sm font-semibold text-white">俱乐部定时任务</h3>
-          <p class="mt-1 text-xs text-gray-400 truncate">{{ task.activityName || '暂无活动' }}</p>
+          <h3 class="text-sm font-semibold theme-text-primary">俱乐部定时任务</h3>
+          <p class="mt-1 text-xs theme-text-secondary truncate">
+            {{ task.activityName || '暂无活动' }}
+          </p>
         </div>
         <span
           class="h-7 px-3 rounded-full border text-xs inline-flex items-center"
           :class="
             enabled
-              ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-200'
-              : 'border-amber-400/50 bg-amber-500/15 text-amber-200'
+              ? 'theme-success-border theme-success-bg theme-success'
+              : 'theme-warning-border theme-warning-bg theme-warning'
           "
         >
           {{ enabled ? '已启用' : '未启用' }}
@@ -25,24 +25,24 @@
       </div>
 
       <div v-if="loading" class="mt-4 space-y-3">
-        <div class="h-4 w-1/2 rounded-xl bg-white/15 animate-pulse"></div>
+        <div class="h-4 w-1/2 rounded-xl theme-card-soft animate-pulse"></div>
 
         <div class="grid grid-cols-2 gap-2">
-          <div class="h-7 rounded-xl bg-white/10 animate-pulse"></div>
-          <div class="h-7 rounded-xl bg-white/10 animate-pulse"></div>
-          <div class="h-7 rounded-xl bg-white/10 animate-pulse"></div>
-          <div class="h-7 rounded-xl bg-white/10 animate-pulse"></div>
+          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
+          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
+          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
+          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
-          <div class="h-7 rounded-xl bg-white/10 animate-pulse"></div>
-          <div class="h-7 rounded-xl bg-white/10 animate-pulse"></div>
-          <div class="h-7 col-span-2 rounded-xl bg-white/10 animate-pulse"></div>
-          <div class="h-7 col-span-2 rounded-xl bg-white/10 animate-pulse"></div>
+          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
+          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
+          <div class="h-7 col-span-2 rounded-xl theme-card-soft animate-pulse"></div>
+          <div class="h-7 col-span-2 rounded-xl theme-card-soft animate-pulse"></div>
         </div>
       </div>
 
-      <div v-else class="mt-4 grid grid-cols-2 gap-2 text-xs text-gray-300">
+      <div v-else class="mt-4 grid grid-cols-2 gap-2 text-xs theme-text-secondary">
         <div class="meta-pill col-span-2">
           <i class="ri-time-line"></i>
           <span class="truncate">活动时间：{{ taskTimeText }}</span>
@@ -87,7 +87,7 @@
         <button
           type="button"
           :class="[
-            'h-8 px-3 rounded-lg text-xs font-medium bg-cyan-500 text-white hover:bg-cyan-400 transition-colors',
+            'h-8 px-3 rounded-lg text-xs font-medium theme-accent-bg theme-accent text-white hover:theme-accent-bg transition-colors',
             (loading || submitting || triggering) && 'opacity-70 cursor-not-allowed',
           ]"
           :disabled="loading || submitting || triggering"
@@ -100,8 +100,8 @@
           class="h-8 px-3 rounded-lg text-xs font-medium"
           :class="
             enabled
-              ? 'bg-rose-500 text-white hover:bg-rose-400'
-              : 'bg-emerald-500 text-white hover:bg-emerald-400'
+              ? 'theme-danger-bg theme-danger text-white hover:theme-danger-bg'
+              : 'theme-success-bg theme-success text-white hover:theme-success-bg'
           "
           :disabled="loading || submitting || triggering"
           @click="toggleEnabled"
@@ -112,7 +112,7 @@
 
       <button
         type="button"
-        class="absolute top-3 right-3 w-8 h-8 rounded-full text-gray-500 hover:text-white hover:bg-white/10 disabled:opacity-60 disabled:cursor-not-allowed"
+        class="absolute top-3 right-3 w-8 h-8 rounded-full club-auto-close disabled:opacity-60 disabled:cursor-not-allowed"
         :disabled="submitting || triggering"
         @click="close"
       >
@@ -328,11 +328,20 @@ watch(
 .meta-pill {
   height: 28px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--card-soft-bg);
+  border: 1px solid var(--card-border);
   padding: 0 8px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.club-auto-close {
+  color: var(--text-tertiary);
+}
+
+.club-auto-close:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
 }
 </style>

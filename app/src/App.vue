@@ -1,6 +1,24 @@
 <template>
-  <div class="app flex flex-col relative overflow-hidden bg-black/90">
-    <div class="app-container">
+  <div :class="['app relative overflow-hidden', isDark ? 'bg-[#050505]' : 'bg-[#f5f5f7]']">
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+      <template v-if="isDark">
+        <div
+          class="absolute top-[-20%] left-[20%] w-[800px] h-[800px] bg-white/[0.03] rounded-full blur-[120px]"
+        ></div>
+        <div
+          class="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-blue-900/[0.05] rounded-full blur-[100px]"
+        ></div>
+      </template>
+      <template v-else>
+        <div
+          class="absolute top-[-20%] right-[-20%] w-[600px] h-[600px] bg-blue-100/60 rounded-full blur-[100px]"
+        ></div>
+        <div
+          class="absolute bottom-[-20%] left-[-20%] w-[600px] h-[600px] bg-purple-100/60 rounded-full blur-[100px]"
+        ></div>
+      </template>
+    </div>
+    <div class="app-content h-full w-full max-w-[600px] mx-auto overflow-hidden relative z-10">
       <router-view />
     </div>
     <Message ref="messageRef" />
@@ -8,17 +26,18 @@
 </template>
 
 <script setup>
-import { ref, provide, onMounted, onUnmounted } from 'vue';
+import { ref, provide, onMounted, onUnmounted, computed } from 'vue';
 import Message from './components/Message.vue';
+import { useThemeStore } from './composables/useTheme';
+
+const themeStore = useThemeStore();
 
 const messageRef = ref(null);
 
-// 全局消息方法
 const showMessage = (message, type = 'info') => {
   messageRef.value?.show(message, type);
 };
 
-// 提供给子组件使用
 provide('showMessage', showMessage);
 
 const setViewportHeightVar = () => {
@@ -36,6 +55,8 @@ onUnmounted(() => {
   window.removeEventListener('resize', setViewportHeightVar);
   window.removeEventListener('orientationchange', setViewportHeightVar);
 });
+
+const isDark = computed(() => themeStore.isDark);
 </script>
 
 <style scoped>
@@ -43,24 +64,12 @@ onUnmounted(() => {
   height: var(--app-vh, 100dvh);
   min-height: var(--app-vh, 100dvh);
   max-height: var(--app-vh, 100dvh);
-  width: 100vw;
+  width: 100%;
   margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-image:
-    linear-gradient(rgba(120, 132, 152, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 132, 152, 0.05) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-position: 0 0;
 }
 
-.app-container {
-  width: 100%;
+.app-content {
   height: 100%;
   min-height: 0;
-  margin: 0 auto;
-  max-width: 600px;
-  overflow: hidden;
 }
 </style>

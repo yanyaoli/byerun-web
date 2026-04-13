@@ -53,25 +53,25 @@ const messageType = ref('info');
 const styles = {
   success: {
     container: 'bg-emerald-600 border-emerald-500',
-    iconBg: 'bg-white/20',
+    iconBg: 'message-icon-bg',
     icon: 'ri-checkbox-circle-fill text-white',
     text: 'text-white',
   },
   error: {
     container: 'bg-rose-600 border-rose-500',
-    iconBg: 'bg-white/20',
+    iconBg: 'message-icon-bg',
     icon: 'ri-error-warning-fill text-white',
     text: 'text-white',
   },
   info: {
     container: 'bg-blue-600 border-blue-500',
-    iconBg: 'bg-white/20',
+    iconBg: 'message-icon-bg',
     icon: 'ri-information-fill text-white',
     text: 'text-white',
   },
   warning: {
     container: 'bg-amber-600 border-amber-500',
-    iconBg: 'bg-white/20',
+    iconBg: 'message-icon-bg',
     icon: 'ri-alert-fill text-white',
     text: 'text-white',
   },
@@ -92,3 +92,9 @@ const show = (message, type = 'info') => {
 
 defineExpose({ show });
 </script>
+
+<style scoped>
+.message-icon-bg {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+</style>

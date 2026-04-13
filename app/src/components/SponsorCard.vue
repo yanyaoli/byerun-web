@@ -1,16 +1,16 @@
 <template>
-  <section class="rounded-2xl bg-white/5 border border-white/8 p-5 space-y-2">
+  <section class="theme-card rounded-2xl p-5 space-y-2">
     <div class="flex items-center justify-between gap-3">
       <div class="flex min-w-0 items-center gap-2">
-        <i class="ri-star-smile-fill text-slate-500"></i>
-        <p class="truncate text-sm font-bold text-slate-400">{{ sponsor?.title }}</p>
+        <i class="ri-star-smile-fill theme-text-tertiary"></i>
+        <p class="truncate text-sm font-bold theme-text-secondary">{{ sponsor?.title }}</p>
       </div>
       <div class="flex items-center gap-2">
         <button
           v-if="wechatGroupQrcode"
           type="button"
           @click="openQrPreview({ url: wechatGroupQrcode })"
-          class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm text-slate-500 hover:bg-white/5 transition-colors"
+          class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm theme-text-tertiary transition-colors"
           aria-label="微信群二维码"
           title="微信群二维码"
         >
@@ -21,7 +21,7 @@
           :href="qqGroupUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm text-slate-500 hover:bg-white/5 transition-colors"
+          class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm theme-text-tertiary transition-colors"
           aria-label="QQ 群"
           title="QQ 群"
         >
@@ -31,22 +31,19 @@
     </div>
 
     <div class="space-y-3">
-      <p class="text-sm text-gray-400">{{ sponsor?.desc }}</p>
-      <div
-        v-if="qrItems.length"
-        class="sponsor-pay-banner rounded-xl border border-stone-700/70 bg-white/5 p-3"
-      >
+      <p class="text-sm theme-text-secondary">{{ sponsor?.desc }}</p>
+      <div v-if="qrItems.length" class="sponsor-pay-banner theme-card-soft rounded-xl p-3">
         <div class="flex items-center gap-2">
           <button
             v-for="item in qrItems"
             :key="item.key"
             type="button"
             @click="openQrPreview(item)"
-            class="sponsor-pay-item flex-1 rounded-md px-2 py-3 transition-colors hover:bg-white/5"
+            class="sponsor-pay-item flex-1 rounded-md px-2 py-3 transition-colors"
           >
             <div class="flex flex-col items-center justify-center gap-1.5">
-              <span class="text-xs font-semibold text-slate-400">{{ item.label }}</span>
-              <i class="ri-qr-code-line text-lg text-slate-400"></i>
+              <span class="text-xs font-semibold theme-text-secondary">{{ item.label }}</span>
+              <i class="ri-qr-code-line text-lg theme-text-secondary"></i>
             </div>
           </button>
         </div>
@@ -56,7 +53,7 @@
           :href="sponsor?.alipay_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1.5 bg-white/5 rounded-full border border-white/8 px-3 py-1.5 text-xs font-semibold text-sky-500 hover:bg-sky-100 transition-colors"
+          class="inline-flex items-center gap-1.5 theme-card-soft rounded-full px-3 py-1.5 text-xs font-semibold text-sky-500 transition-colors"
         >
           <i class="ri-alipay-fill"></i>
           <span>跳转支付宝打赏</span>
@@ -66,20 +63,20 @@
 
     <div class="pt-4">
       <div class="flex items-center gap-1.5">
-        <i class="ri-time-fill text-slate-500"></i>
-        <p class="truncate text-sm font-bold text-slate-400">网站续费状态</p>
+        <i class="ri-time-fill theme-text-tertiary"></i>
+        <p class="truncate text-sm font-bold theme-text-secondary">网站续费状态</p>
       </div>
       <div class="mt-2 flex items-center justify-between gap-3">
         <a
           :href="domainHref"
           target="_blank"
           rel="noopener noreferrer"
-          class="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 underline-offset-4 hover:underline"
+          class="inline-flex items-center gap-1 text-xs font-semibold theme-link underline-offset-4 hover:underline"
         >
           <span class="truncate">{{ domain?.domain }}</span>
-          <i class="ri-external-link-line text-xs text-slate-500"></i>
+          <i class="ri-external-link-line text-xs theme-text-tertiary"></i>
         </a>
-        <p class="shrink-0 text-xs font-medium text-slate-500 tabular-nums">
+        <p class="shrink-0 text-xs font-medium theme-text-tertiary tabular-nums">
           {{ remainingDaysText }}后到期
         </p>
       </div>
@@ -88,15 +85,15 @@
     <div class="pt-4">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-1.5">
-          <i class="ri-medal-fill text-slate-500"></i>
-          <p class="truncate text-sm font-bold text-slate-400">赞助伙伴们</p>
+          <i class="ri-medal-fill theme-text-tertiary"></i>
+          <p class="truncate text-sm font-bold theme-text-secondary">赞助伙伴们</p>
         </div>
         <a
           v-if="qqGroupUrl"
           :href="qqGroupUrl"
           target="_blank"
           rel="noopener noreferrer"
-          class="shrink-0 text-xs font-medium text-sky-600 underline-offset-4 hover:underline"
+          class="shrink-0 text-xs font-medium theme-link underline-offset-4 hover:underline"
         >
           被遗漏？
         </a>
@@ -105,19 +102,22 @@
         <template v-for="item in sponsorWithGroups" :key="item.key">
           <div
             v-if="item.type === 'group-header'"
-            class="sponsor-group-divider w-full flex items-center gap-2 py-2 text-xs text-slate-500"
+            class="sponsor-group-divider w-full flex items-center gap-2 py-2 text-xs theme-text-tertiary"
           >
             <span class="font-medium">{{ item.year }}年{{ item.month }}月</span>
-            <div class="h-px flex-1 bg-white/10"></div>
+            <div class="h-px flex-1 theme-divider-bg"></div>
           </div>
           <div
             v-else-if="item.type === 'divider-end'"
-            class="w-full border-b border-white/5 my-1"
+            class="w-full border-b theme-card-divider my-1"
           ></div>
           <div v-else-if="item.type === 'sponsor'" class="sponsor-card-wrapper">
             <div
               class="sponsor-card-item group inline-flex cursor-pointer items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5 hover:shadow-md"
-              :class="[getSponsorBadgeClass(item), selectedSponsor?.name === item.name ? 'is-expanded' : '']"
+              :class="[
+                getSponsorBadgeClass(item),
+                selectedSponsor?.name === item.name ? 'is-expanded' : '',
+              ]"
               @click="handleSponsorBadgeClick(item)"
             >
               <template v-if="selectedSponsor?.name === item.name">
@@ -150,20 +150,20 @@
 
   <div
     v-show="previewVisible && previewQrUrl"
-    class="fixed inset-0 flex items-center justify-center bg-black/60 px-4"
+    class="fixed inset-0 z-[1200] flex items-center justify-center sponsor-preview-overlay px-4"
   >
-    <div class="relative w-full max-w-sm rounded-2xl bg-none p-4 shadow-2xl">
+    <div class="relative w-full max-w-sm rounded-2xl bg-none p-4">
       <button
         type="button"
         @click="closeQrPreview"
-        class="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-stone-900 text-gray-100"
+        class="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full sponsor-preview-close"
         aria-label="关闭预览"
       >
         <i class="ri-close-line text-base"></i>
       </button>
       <div
         v-if="previewLoading"
-        class="mx-auto mt-3 aspect-square w-full animate-pulse rounded-xl border border-stone-700/60 bg-stone-800/70"
+        class="mx-auto mt-3 aspect-square w-full animate-pulse rounded-xl theme-card-soft"
       ></div>
       <img
         :src="previewQrUrl"
@@ -393,27 +393,37 @@ watch(
   gap: 0.35rem;
 }
 
+.sponsor-pay-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.sponsor-pay-item:hover {
+  background: var(--action-hover-bg);
+  border-color: var(--card-divider);
+}
+
 .sponsor-card-item {
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--text-secondary);
+  background: var(--card-soft-bg);
+  border: 1px solid var(--card-border);
 }
 
 .sponsor-card-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--action-hover-bg);
+  border-color: var(--card-divider);
 }
 
 .sponsor-card-item.is-priority {
   border-style: dashed;
-  border-color: rgba(110, 231, 183, 0.5);
-  background: rgba(52, 211, 153, 0.08);
-  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.5);
+  background: rgba(16, 185, 129, 0.06);
+  color: #10b981;
 }
 
 .sponsor-card-item.is-priority:hover {
-  background: rgba(52, 211, 153, 0.15);
-  border-color: rgba(110, 231, 183, 0.7);
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.7);
 }
 
 .sponsor-card-item.is-expanded {
@@ -423,8 +433,8 @@ watch(
   padding: 0.4rem 0.5rem;
   border-style: solid;
   border-color: rgba(14, 165, 233, 0.5);
-  background: rgba(14, 165, 233, 0.08);
-  color: #cbd5e1;
+  background: rgba(14, 165, 233, 0.06);
+  color: var(--text-secondary);
 }
 
 .sponsor-card-rank-badge {
@@ -432,8 +442,8 @@ watch(
   align-items: center;
   padding: 0.05rem 0.35rem;
   border-radius: 9999px;
-  background: rgba(251, 191, 36, 0.15);
-  color: #fde68a;
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
   font-size: 10px;
   font-weight: 700;
   line-height: 1.3;
@@ -450,7 +460,7 @@ watch(
 .sponsor-card-name {
   font-size: 11px;
   font-weight: 600;
-  color: #e2e8f0;
+  color: var(--text-primary);
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -460,7 +470,7 @@ watch(
 .sponsor-card-remark {
   font-size: 10px;
   font-weight: 500;
-  color: #a5f3fc;
+  color: #06b6d4;
   line-height: 1.3;
   white-space: nowrap;
   overflow: hidden;
@@ -468,21 +478,21 @@ watch(
 }
 
 .sponsor-card-item.is-latest {
-  border-color: rgba(251, 191, 36, 0.5);
-  background: rgba(251, 191, 36, 0.06);
-  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.05);
+  color: #f59e0b;
   animation: sponsor-latest-glow 2s ease-in-out infinite;
 }
 
 .sponsor-card-item.is-latest:hover {
-  background: rgba(251, 191, 36, 0.12);
-  border-color: rgba(251, 191, 36, 0.7);
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.7);
 }
 
 .sponsor-card-item.is-latest.is-priority {
-  border-color: rgba(251, 191, 36, 0.5);
-  background: rgba(251, 191, 36, 0.08);
-  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.06);
+  color: #f59e0b;
 }
 
 .latest-icon {
@@ -492,10 +502,10 @@ watch(
 @keyframes sponsor-latest-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
   }
   50% {
-    box-shadow: 0 0 8px 1px rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 8px 1px rgba(245, 158, 11, 0.2);
   }
 }
 
@@ -514,9 +524,69 @@ watch(
 .sponsor-card-date {
   font-size: 9px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--text-tertiary);
   line-height: 1.3;
   white-space: nowrap;
-  tabular-nums: tabular-nums;
+  font-variant-numeric: tabular-nums;
+}
+
+.sponsor-preview-overlay {
+  z-index: 1200;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.sponsor-preview-close {
+  color: var(--text-primary);
+  background-color: var(--card-bg-strong);
+  border: 1px solid var(--card-border);
+}
+
+.dark .sponsor-card-item.is-priority {
+  border-color: rgba(110, 231, 183, 0.5);
+  background: rgba(52, 211, 153, 0.08);
+  color: #6ee7b7;
+}
+
+.dark .sponsor-card-item.is-priority:hover {
+  background: rgba(52, 211, 153, 0.15);
+  border-color: rgba(110, 231, 183, 0.7);
+}
+
+.dark .sponsor-card-item.is-expanded {
+  border-color: rgba(14, 165, 233, 0.5);
+  background: rgba(14, 165, 233, 0.08);
+  color: #cbd5e1;
+}
+
+.dark .sponsor-card-rank-badge {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fde68a;
+}
+
+.dark .sponsor-card-remark {
+  color: #a5f3fc;
+}
+
+.dark .sponsor-card-item.is-latest {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.06);
+  color: #fde68a;
+}
+
+.dark .sponsor-card-item.is-latest:hover {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.7);
+}
+
+.dark .sponsor-card-item.is-latest.is-priority {
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.08);
+  color: #fde68a;
+}
+
+.dark .sponsor-preview-overlay {
+  background-color: rgba(0, 0, 0, 0.6);
 }
 </style>

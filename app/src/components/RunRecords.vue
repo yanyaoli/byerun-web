@@ -6,20 +6,20 @@
           <div
             v-for="(record, index) in loading ? Array(5).fill(null) : records"
             :key="loading ? index : record.key"
-            class="bg-white/5 border border-white/8 rounded-2xl overflow-hidden mb-4 transition-shadow p-0 flex flex-col"
+            class="theme-card rounded-2xl overflow-hidden mb-4 transition-shadow p-0 flex flex-col"
           >
             <div
-              class="flex justify-between items-center bg-white/5 border-b border-white/8 rounded-t-lg px-4 pt-4 pb-2"
+              class="flex justify-between items-center theme-card-header rounded-t-lg px-4 pt-4 pb-2"
             >
-              <div class="text-slate-300 font-semibold text-base">
+              <div class="theme-text-primary font-semibold text-base">
                 <span v-if="!loading">{{ formatCreateTime(record.createTime) }}</span>
                 <div
                   v-else
-                  class="inline-block bg-white/5 rounded animate-pulse"
+                  class="inline-block theme-card-soft rounded animate-pulse"
                   style="width: 140px; height: 20px"
                 ></div>
               </div>
-              <div class="text-sm flex items-center text-slate-300">
+              <div class="text-sm flex items-center theme-text-primary">
                 <span
                   v-if="!loading"
                   class="defeated-info"
@@ -28,46 +28,46 @@
                 >
                 <div
                   v-else
-                  class="inline-block bg-white/5 rounded-full animate-pulse"
+                  class="inline-block theme-card-soft rounded-full animate-pulse"
                   style="width: 60px; height: 20px"
                 ></div>
               </div>
             </div>
             <div
-              class="flex justify-between items-center px-4 py-1.5 border-b border-gray-50/10 text-sm"
+              class="flex justify-between items-center px-4 py-1.5 border-b theme-card-divider text-sm"
             >
-              <div class="text-gray-400 text-sm">跑步里程</div>
-              <div class="text-gray-400 text-sm font-medium text-right min-w-[60px]">
+              <div class="theme-text-secondary text-sm">跑步里程</div>
+              <div class="theme-text-secondary text-sm font-medium text-right min-w-[60px]">
                 <span v-if="!loading">{{ (record.runDistance / 1000).toFixed(2) }}km</span>
                 <div
                   v-else
-                  class="inline-block bg-white/5 rounded animate-pulse"
+                  class="inline-block theme-card-soft rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>
             </div>
             <div
-              class="flex justify-between items-center px-4 py-1.5 border-b border-gray-50/10 text-sm"
+              class="flex justify-between items-center px-4 py-1.5 border-b theme-card-divider text-sm"
             >
-              <div class="text-gray-400 text-sm">跑步时长</div>
-              <div class="text-gray-400 text-sm font-medium text-right min-w-[60px]">
+              <div class="theme-text-secondary text-sm">跑步时长</div>
+              <div class="theme-text-secondary text-sm font-medium text-right min-w-[60px]">
                 <span v-if="!loading">{{ record.runTime }}分钟</span>
                 <div
                   v-else
-                  class="inline-block bg-white/5 rounded animate-pulse"
+                  class="inline-block theme-card-soft rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>
             </div>
             <div class="flex justify-between items-center px-4 py-1.5 text-sm">
-              <div class="text-gray-400 text-sm">平均配速</div>
-              <div class="text-gray-400 text-sm font-medium text-right min-w-[60px]">
+              <div class="theme-text-secondary text-sm">平均配速</div>
+              <div class="theme-text-secondary text-sm font-medium text-right min-w-[60px]">
                 <span v-if="!loading">{{
                   formatPaceDetail(record.runTime, record.runDistance)
                 }}</span>
                 <div
                   v-else
-                  class="inline-block bg-white/5 rounded animate-pulse"
+                  class="inline-block theme-card-soft rounded animate-pulse"
                   style="width: 80px; height: 16px"
                 ></div>
               </div>
@@ -87,7 +87,7 @@
 
       <!-- 空状态 -->
       <div v-else class="flex items-center justify-center py-10 w-full">
-        <h3 class="text-gray-400 text-base">暂无跑步记录</h3>
+        <h3 class="theme-text-secondary text-base">暂无跑步记录</h3>
       </div>
     </div>
   </div>
@@ -140,18 +140,35 @@ watch(
   min-width: 48px;
   text-align: center;
   line-height: 1.6;
-  background: #b0b0b0;
+  background: #a1a1aa;
+  color: #ffffff;
 }
 
 .status-success-bg {
-  background: #2440bd;
+  background: #2563eb;
 }
 
 .status-error-bg {
-  background: #72290c;
+  background: #b45309;
 }
 
 .status-invalid-bg {
-  background: #b0b0b0;
+  background: #a1a1aa;
+}
+
+.dark .defeated-info {
+  background: #52525b;
+}
+
+.dark .status-success-bg {
+  background: #3b82f6;
+}
+
+.dark .status-error-bg {
+  background: #c2410c;
+}
+
+.dark .status-invalid-bg {
+  background: #52525b;
 }
 </style>
