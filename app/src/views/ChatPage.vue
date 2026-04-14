@@ -3,33 +3,33 @@
     <div
       class="chat-section h-full min-h-0 flex flex-col w-full max-w-full relative overflow-hidden bg-transparent transition-all duration-300"
     >
-      <!-- 导航栏 -->
-      <div
-        ref="headerShellRef"
-        class="fixed left-0 right-0 z-[999] top-1 h-10 flex items-center max-w-[480px] mx-auto w-[calc(100%_-_24px)] px-2 border border-white/10 bg-white/5 backdrop-blur-[8px] rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-hidden"
-      >
-        <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
-          <button
-            @click="onBack"
-            title="返回"
-            class="w-7 h-7 flex items-center justify-center text-gray-200 hover:bg-white/5 rounded-full transition-all"
-          >
-            <i class="ri-arrow-left-line text-sm"></i>
-          </button>
-          <div class="flex items-center min-w-0">
-            <div class="text-[14px] font-semibold text-gray-200 truncate">消息</div>
+      <AppHeader ref="appHeaderRef" :show-github="false">
+        <template #content>
+          <div class="flex items-center w-full h-full px-2">
+            <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
+              <button
+                @click="onBack"
+                title="返回"
+                class="w-7 h-7 flex items-center justify-center chat-nav-action rounded-full transition-all"
+              >
+                <i class="ri-arrow-left-line text-sm"></i>
+              </button>
+              <div class="flex items-center min-w-0">
+                <div class="text-[14px] font-semibold theme-text-primary truncate">消息</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 pointer-events-auto ml-auto">
+              <button
+                @click="showPrivacyInfo = true"
+                title="Usage Notes"
+                class="w-7 h-7 flex items-center justify-center chat-nav-action rounded-full transition-all"
+              >
+                <i class="ri-information-line text-sm"></i>
+              </button>
+            </div>
           </div>
-        </div>
-        <div class="flex items-center gap-1.5 pointer-events-auto ml-auto">
-          <button
-            @click="showPrivacyInfo = true"
-            title="Usage Notes"
-            class="w-7 h-7 flex items-center justify-center text-gray-200 hover:bg-white/5 rounded-full transition-all"
-          >
-            <i class="ri-information-line text-sm"></i>
-          </button>
-        </div>
-      </div>
+        </template>
+      </AppHeader>
 
       <!-- 登录提示 -->
       <div
@@ -56,14 +56,17 @@
             ref="loadMoreSentinel"
             class="h-8 w-full flex justify-center items-center"
           >
-            <i v-if="loadingMore" class="ri-loader-4-line animate-spin text-zinc-300 text-xs"></i>
+            <i
+              v-if="loadingMore"
+              class="ri-loader-4-line animate-spin theme-text-secondary text-xs"
+            ></i>
           </div>
 
           <div v-for="(m, i) in messages" :key="m.id" :id="'msg-' + m.id">
             <!-- 时间分割 -->
             <div v-if="shouldShowDate(i)" class="flex justify-center my-6">
               <span
-                class="px-3 py-1 text-[10px] font-medium text-gray-400 bg-stone-900/30 rounded-full backdrop-blur-sm"
+                class="px-3 py-1 text-[10px] font-medium theme-text-secondary theme-card-soft rounded-full"
               >
                 {{ formatDateSeparator(m.created_at) }}
               </span>
@@ -79,7 +82,7 @@
               <div
                 v-if="swipeOffsets[m.id]"
                 :class="[
-                  'absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-zinc-200/50 flex items-center justify-center text-zinc-500 transition-all',
+                  'absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center transition-all chat-swipe-indicator',
                   isMe(m) ? 'left-2' : 'right-2',
                 ]"
                 :style="{
@@ -95,7 +98,7 @@
 
               <div
                 :class="[
-                  'flex items-end gap-2 mb-1 w-full transition-transform text-zinc-900',
+                  'flex items-end gap-2 mb-1 w-full transition-transform theme-text-primary',
                   isMe(m) ? 'flex-row-reverse' : 'flex-row',
                 ]"
                 :style="{
@@ -111,9 +114,9 @@
                   @click="openUserProfile(m.user)"
                 >
                   <div
-                    class="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center overflow-hidden shadow-sm cursor-pointer relative"
+                    class="w-8 h-8 rounded-full theme-card-soft flex items-center justify-center overflow-hidden shadow-sm cursor-pointer relative"
                   >
-                    <div class="absolute inset-0 bg-stone-900 animate-pulse"></div>
+                    <div class="absolute inset-0 theme-card-soft animate-pulse"></div>
                     <img
                       v-if="m.user?.avatar_url"
                       :src="normalizeAvatarUrl(m.user.avatar_url)"
@@ -121,11 +124,11 @@
                       loading="lazy"
                       class="w-full h-full object-cover rounded-full z-10 avatar-fade-in"
                     />
-                    <i v-else class="ri-user-3-fill text-zinc-400 text-[10px] z-10"></i>
+                    <i v-else class="ri-user-3-fill theme-text-secondary text-[10px] z-10"></i>
                   </div>
                   <div
                     v-if="m.user?.is_alumni"
-                    class="absolute -bottom-0.5 right-0 translate-x-1/4 translate-y-1/4 w-3.5 h-3.5 bg-blue-600 border-2 border-stone-800 rounded-full flex items-center justify-center z-20 shadow-sm overflow-hidden"
+                    class="absolute -bottom-0.5 right-0 translate-x-1/4 translate-y-1/4 w-3.5 h-3.5 chat-alumni-badge rounded-full flex items-center justify-center z-20 shadow-sm overflow-hidden"
                     title="认证校友"
                   >
                     <i class="ri-graduation-cap-fill text-white text-[7px]"></i>
@@ -147,23 +150,28 @@
                       class="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-colors active:scale-90 mb-0.5"
                     >
                       <template v-if="isMe(m) && m.__status === 'sending'">
-                        <i class="ri-loader-4-line animate-spin text-[9px] text-zinc-400"></i>
+                        <i
+                          class="ri-loader-4-line animate-spin text-[9px] theme-text-secondary"
+                        ></i>
                       </template>
                       <template v-else-if="isMe(m) && m.__status === 'failed'">
                         <i class="fa-solid fa-rotate-right text-[9px] text-rose-500"></i>
                       </template>
                       <template v-else>
-                        <i class="ri-reply-fill text-[9px] text-zinc-300 hover:text-zinc-600"></i>
+                        <i class="ri-reply-fill text-[9px] chat-reply-trigger"></i>
                       </template>
                     </button>
 
                     <div
                       :class="[
-                        'relative px-3 py-1.5 text-gray-300 rounded-xl rounded-br-[0.25rem] shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
-                        isMe(m) ? 'bg-slate-600/20' : 'bg-white/5',
+                        'relative px-3 py-1.5 theme-text-primary rounded-xl rounded-br-[0.25rem] shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
+                        isMe(m) ? 'chat-bubble-me' : 'chat-bubble-peer',
                       ]"
                     >
-                      <div v-if="!isMe(m)" class="text-[11px] text-zinc-500 mb-0.5 font-bold">
+                      <div
+                        v-if="!isMe(m)"
+                        class="text-[11px] theme-text-secondary mb-0.5 font-bold"
+                      >
                         {{
                           m.user?.nickname ||
                           m.nickname ||
@@ -173,7 +181,10 @@
 
                       <div
                         v-if="m.reply?.content"
-                        class="mb-1 p-2 bg-black/5 border-l-2 border-gray-400/50 text-[11px] text-zinc-500 cursor-pointer overflow-hidden"
+                        :class="[
+                          'mb-1 p-2 text-[11px] cursor-pointer overflow-hidden chat-reply-quote',
+                          isMe(m) ? 'chat-reply-quote--me' : 'chat-reply-quote--peer',
+                        ]"
                         @click="scrollToOriginalMessage(m.reply)"
                       >
                         <div class="text-[10px] font-bold mb-0.5 opacity-60">
@@ -198,7 +209,7 @@
                         v-html="renderContent(m.content, undefined, stickerGroups)"
                       ></div>
 
-                      <div class="text-[9px] mt-0.5 text-zinc-400/60 text-right">
+                      <div class="text-[9px] mt-0.5 theme-text-tertiary text-right">
                         {{ formatTime(m.created_at) }}
                       </div>
                     </div>
@@ -213,25 +224,25 @@
           <!-- 实时预览气泡 -->
           <div
             v-if="showPreviewBubble"
-            class="flex items-end gap-2 mb-1 w-full text-zinc-900 flex-row-reverse"
+            class="flex items-end gap-2 mb-1 w-full theme-text-primary flex-row-reverse"
           >
             <div class="flex flex-col min-w-0 relative flex-1 items-end">
               <div class="flex items-end gap-1 max-w-[92%] relative flex-row">
                 <button
-                  class="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-colors active:scale-90 mb-0.5 text-zinc-400"
+                  class="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-colors active:scale-90 mb-0.5 theme-text-secondary"
                 >
                   <i class="ri-loader-4-line animate-spin text-[9px]"></i>
                 </button>
                 <div
-                  class="relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words bg-[#effdde] text-zinc-800 rounded-2xl rounded-br-[0.25rem] opacity-75"
+                  class="relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words rounded-2xl rounded-br-[0.25rem] opacity-75 chat-bubble-preview"
                 >
                   <div
                     v-if="text"
                     class="whitespace-pre-wrap break-words leading-relaxed text-[13.5px]"
                     v-html="renderContent(text, undefined, stickerGroups)"
                   ></div>
-                  <div v-if="!text" class="text-[13.5px] text-zinc-400 italic">预览消息</div>
-                  <div class="text-[9px] mt-0.5 text-zinc-400/60 text-right">
+                  <div v-if="!text" class="text-[13.5px] theme-text-secondary italic">预览消息</div>
+                  <div class="text-[9px] mt-0.5 theme-text-tertiary text-right">
                     {{ isSending ? '发送中...' : '即将发送' }}
                   </div>
                 </div>
@@ -251,15 +262,18 @@
             ]"
           >
             <!-- 消息头像骨架 -->
-            <div v-if="n % 3 !== 0" class="w-8 h-8 rounded-full bg-zinc-200/60 flex-shrink-0"></div>
+            <div
+              v-if="n % 3 !== 0"
+              class="w-8 h-8 rounded-full flex-shrink-0 chat-skeleton-avatar"
+            ></div>
             <div :class="['flex flex-col space-y-2', n % 3 === 0 ? 'items-end' : 'items-start']">
-              <div class="w-16 h-2 bg-zinc-200/40 rounded"></div>
+              <div class="w-16 h-2 rounded chat-skeleton-line"></div>
               <div
-                class="px-3 py-1.5 bg-zinc-200/30 rounded-2xl min-h-[40px]"
+                class="px-3 py-1.5 rounded-2xl min-h-[40px] chat-skeleton-bubble"
                 :style="{ width: Math.random() * 100 + 100 + 'px' }"
               >
-                <div class="w-full h-2 bg-zinc-200/20 rounded mb-2"></div>
-                <div class="w-2/3 h-2 bg-zinc-200/20 rounded"></div>
+                <div class="w-full h-2 rounded mb-2 chat-skeleton-line"></div>
+                <div class="w-2/3 h-2 rounded chat-skeleton-line"></div>
               </div>
             </div>
           </div>
@@ -269,17 +283,20 @@
       <!-- 输入区域 -->
       <div
         ref="composerShellRef"
-        class="fixed left-0 right-0 z-[999] max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 bg-white/5 border border-white/10 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+        :class="[
+          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 border rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 overflow-visible backdrop-blur-2xl',
+          'theme-card-strong',
+        ]"
         :style="{ bottom: `${composerBottomOffset}px` }"
       >
         <!-- 回复预览 -->
         <div
           v-if="replyingTo?.content"
-          class="mx-1 mb-3 px-3 py-2 bg-stone-900/50 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300"
+          class="mx-1 mb-3 px-3 py-2 theme-card-soft rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300"
         >
           <div class="flex-1 min-w-0 pr-2">
             <div
-              class="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5"
+              class="text-[9px] theme-text-secondary font-bold uppercase tracking-wider mb-0.5 flex items-center gap-1.5"
             >
               正在回复
               {{
@@ -290,13 +307,13 @@
               }}
             </div>
             <div
-              class="text-xs text-gray-500 truncate opacity-80"
+              class="text-xs theme-text-tertiary truncate opacity-80"
               v-html="renderContent(replyingTo.content, replyingTo.type || 'text', stickerGroups)"
             ></div>
           </div>
           <button
             @click="cancelReply"
-            class="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-zinc-500 active:scale-90 transition-all"
+            class="w-7 h-7 flex items-center justify-center chat-nav-action active:scale-90 transition-all"
           >
             <i class="ri-close-fill text-lg"></i>
           </button>
@@ -308,13 +325,13 @@
               <button
                 @click="showEmojiPicker = !showEmojiPicker"
                 title="Emoji"
-                class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full text-gray-300 hover:text-gray-200 hover:bg-black/5 cursor-pointer transition-colors"
+                class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full chat-toolbar-action cursor-pointer transition-colors"
               >
                 <i class="ri-emotion-happy-fill text-lg"></i>
               </button>
 
               <label
-                class="w-8 h-8 inline-flex items-center justify-center rounded-full text-gray-300 hover:text-gray-200 hover:bg-black/5 cursor-pointer transition-colors"
+                class="w-8 h-8 inline-flex items-center justify-center rounded-full chat-toolbar-action cursor-pointer transition-colors"
               >
                 <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
                 <i class="ri-image-fill text-lg"></i>
@@ -327,7 +344,7 @@
               class="w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer transition-colors"
             >
               <span
-                class="w-6 h-6 rounded-full bg-stone-800 overflow-hidden flex items-center justify-center"
+                class="w-6 h-6 rounded-full theme-card-soft overflow-hidden flex items-center justify-center"
               >
                 <img
                   v-if="user?.avatar_url"
@@ -342,7 +359,7 @@
           <transition>
             <div
               v-if="showEmojiPicker"
-              class="fixed left-0 right-0 z-[999] w-full bottom-full mb-2 p-4 bg-black/80 border border-white/8 backdrop-blur-[16px] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)] overflow-visible"
+              class="fixed left-0 right-0 z-[999] w-full bottom-full mb-2 p-4 theme-card-strong rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 overflow-visible"
             >
               <div class="flex items-center justify-between mb-4 px-1">
                 <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
@@ -353,8 +370,8 @@
                     :class="[
                       'text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap px-1 pb-1',
                       emojiActiveTab === id
-                        ? 'text-zinc-300 border-b-1 border-gray-600'
-                        : 'text-zinc-400',
+                        ? 'theme-text-primary border-b-1 border-[var(--card-divider)]'
+                        : 'theme-text-secondary',
                     ]"
                   >
                     {{ tab.name }}
@@ -362,7 +379,7 @@
                 </div>
                 <button
                   @click="showEmojiPicker = false"
-                  class="w-8 h-8 flex-shrink-0 flex items-center justify-center text-gray-400 hover:text-gray-300"
+                  class="w-8 h-8 flex-shrink-0 flex items-center justify-center chat-nav-action"
                 >
                   <i class="ri-close-fill"></i>
                 </button>
@@ -371,7 +388,7 @@
                 <div v-if="emojiActiveTab === 'emoji'" class="space-y-6">
                   <div v-for="(group, name) in emojiGroups" :key="name">
                     <div
-                      class="text-[9px] font-bold uppercase tracking-widest text-zinc-300 mb-3 ml-1"
+                      class="text-[9px] font-bold uppercase tracking-widest theme-text-secondary mb-3 ml-1"
                     >
                       {{ name }}
                     </div>
@@ -380,7 +397,7 @@
                         v-for="emoji in group"
                         :key="emoji.code"
                         @click="addEmoji(emoji.char)"
-                        class="aspect-square grid place-items-center hover:bg-stone-600 rounded-xl transition-all active:scale-95 group"
+                        class="aspect-square grid place-items-center rounded-xl transition-all active:scale-95 group chat-emoji-btn"
                       >
                         <img
                           :src="getEmojiUrl(emoji.code)"
@@ -398,7 +415,7 @@
                     v-for="item in stickerGroups[emojiActiveTab].items"
                     :key="item.key"
                     @click="addSticker(emojiActiveTab, item)"
-                    class="aspect-square grid place-items-center hover:bg-zinc-300 rounded-xl transition-all active:scale-95 group p-1"
+                    class="aspect-square grid place-items-center rounded-xl transition-all active:scale-95 group p-1 chat-emoji-btn"
                   >
                     <img
                       :src="item.val"
@@ -407,7 +424,10 @@
                     />
                   </button>
                 </div>
-                <div v-else class="flex flex-col items-center justify-center py-10 text-zinc-300">
+                <div
+                  v-else
+                  class="flex flex-col items-center justify-center py-10 theme-text-secondary"
+                >
                   <i v-if="stickerLoading" class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
                   <span class="text-[10px] font-bold uppercase tracking-widest">
                     {{ stickerLoading ? '贴纸加载中...' : '贴纸准备中' }}
@@ -419,7 +439,7 @@
 
           <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
-              class="flex-1 min-w-0 h-10 flex items-center gap-1 bg-white/5 text-gray-300 rounded-2xl px-2 focus-within:bg-stone-900 transition-all shadow-inner"
+              class="flex-1 min-w-0 h-10 flex items-center gap-1 rounded-2xl px-2 transition-all shadow-inner chat-composer-input"
             >
               <div
                 ref="messageInput"
@@ -440,7 +460,7 @@
               <button
                 v-if="text"
                 @click="clearText"
-                class="w-9 h-9 flex-shrink-0 grid place-items-center text-zinc-300 hover:text-rose-400 transition-colors"
+                class="w-9 h-9 flex-shrink-0 grid place-items-center theme-text-secondary hover:text-rose-400 transition-colors"
               >
                 <i class="ri-close-line text-lg"></i>
               </button>
@@ -449,7 +469,7 @@
             <button
               @click="send"
               :disabled="!hasToken() || !text.trim() || isSending"
-              class="w-10 h-10 flex-shrink-0 grid place-items-center text-gray-300 rounded-xl active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none"
+              class="w-10 h-10 flex-shrink-0 grid place-items-center rounded-xl active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none theme-button-primary"
             >
               <i v-if="isSending" class="ri-loader-4-line animate-spin text-sm"></i>
               <i v-else class="fa-solid fa-paper-plane text-sm"></i>
@@ -461,19 +481,17 @@
       <!-- 资料设置 -->
       <div
         v-if="showSettings"
-        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 theme-overlay"
       >
-        <div
-          class="bg-white/5 border border-white/8 w-full max-w-[280px] rounded-[2rem] shadow-2xl overflow-hidden"
-        >
+        <div class="theme-card w-full max-w-[280px] rounded-[2rem] shadow-2xl overflow-hidden">
           <div class="p-6">
             <div class="flex flex-col items-center mb-6">
               <div
-                class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center overflow-hidden border-2 border-stone-800/50 shadow-inner mb-2 relative"
+                class="w-16 h-16 rounded-full theme-card-soft flex items-center justify-center overflow-hidden shadow-inner mb-2 relative"
               >
                 <div
                   v-if="loadingUserSettings"
-                  class="absolute inset-0 bg-white/5 animate-pulse z-10"
+                  class="absolute inset-0 theme-card-soft animate-pulse z-10"
                 ></div>
                 <template v-if="user?.avatar_url">
                   <img
@@ -481,36 +499,36 @@
                     class="w-full h-full object-cover"
                   />
                 </template>
-                <i v-else class="ri-user-3-fill text-zinc-300 text-2xl"></i>
+                <i v-else class="ri-user-3-fill theme-text-secondary text-2xl"></i>
               </div>
-              <h3 class="text-base font-bold text-gray-300">个人设置</h3>
-              <p class="text-[10px] text-gray-400">修改昵称和同步 QQ 头像</p>
+              <h3 class="text-base font-bold theme-text-primary">个人设置</h3>
+              <p class="text-[10px] theme-text-secondary">修改昵称和同步 QQ 头像</p>
             </div>
             <div class="space-y-4">
               <div class="space-y-1">
-                <label class="text-[9px] font-bold uppercase text-gray-400 ml-1">昵称</label>
+                <label class="text-[9px] font-bold uppercase theme-text-secondary ml-1">昵称</label>
                 <div
                   v-if="loadingUserSettings"
-                  class="h-9 w-full bg-white/5 animate-pulse rounded-xl"
+                  class="h-9 w-full theme-card-soft animate-pulse rounded-xl"
                 ></div>
                 <input
                   v-else
                   v-model="settingsNickname"
-                  class="w-full px-4 py-2 bg-white/5 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
+                  class="w-full px-4 py-2 theme-input theme-card-soft rounded-xl text-sm outline-none transition-all"
                 />
               </div>
               <div class="space-y-1">
-                <label class="text-[9px] font-bold uppercase text-gray-400 ml-1"
+                <label class="text-[9px] font-bold uppercase theme-text-secondary ml-1"
                   >QQ 号 (同步头像)</label
                 >
                 <div
                   v-if="loadingUserSettings"
-                  class="h-9 w-full bg-white/5 animate-pulse rounded-xl"
+                  class="h-9 w-full theme-card-soft animate-pulse rounded-xl"
                 ></div>
                 <input
                   v-else
                   v-model="settingsQQ"
-                  class="w-full px-4 py-2 bg-white/5 text-gray-400 rounded-xl text-sm outline-none focus:ring-1 focus:ring-gray-600 transition-all"
+                  class="w-full px-4 py-2 theme-input theme-card-soft rounded-xl text-sm outline-none transition-all"
                 />
               </div>
             </div>
@@ -519,14 +537,14 @@
               <button
                 @click="showSettings = false"
                 :disabled="isSavingSettings"
-                class="py-2 text-gray-400 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50"
+                class="py-2 theme-link rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50"
               >
                 取消
               </button>
               <button
                 @click="applySettings"
                 :disabled="isSavingSettings"
-                class="py-2 bg-white/10 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                class="py-2 theme-button-primary rounded-xl text-xs font-bold active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <i v-if="isSavingSettings" class="ri-loader-4-line animate-spin"></i>
                 {{ isSavingSettings ? '正在保存' : '保存' }}
@@ -539,16 +557,16 @@
       <!-- 他人资料卡 -->
       <div
         v-if="showProfileViewer"
-        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-4 theme-overlay"
         @click.self="showProfileViewer = false"
       >
         <div
-          class="bg-white/5 border border-white/8 w-full max-w-[300px] rounded-[1.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
+          class="theme-card w-full max-w-[300px] rounded-[1.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
         >
           <!-- 关闭按钮 -->
           <button
             @click="showProfileViewer = false"
-            class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-gray-300 active:scale-90 transition-all z-10"
+            class="absolute top-4 right-4 w-7 h-7 flex items-center justify-center theme-text-secondary chat-close-btn active:scale-90 transition-all z-10"
           >
             <i class="ri-close-fill text-lg"></i>
           </button>
@@ -567,7 +585,7 @@
                       class="w-full h-full object-cover"
                     />
                   </template>
-                  <i v-else class="ri-user-3-fill text-gray-300 text-2xl"></i>
+                  <i v-else class="ri-user-3-fill theme-text-secondary text-2xl"></i>
                 </div>
               </div>
 
@@ -575,11 +593,11 @@
               <div class="flex-1 min-w-0">
                 <h3
                   v-if="loadingProfile && !viewedProfile?.nickname"
-                  class="h-5 w-24 bg-gray-300 animate-pulse rounded mb-1"
+                  class="h-5 w-24 theme-skeleton-line animate-pulse rounded mb-1"
                 ></h3>
                 <h3
                   v-else
-                  class="text-base font-bold text-gray-300 truncate mb-0.5 whitespace-nowrap"
+                  class="text-base font-bold theme-text-primary truncate mb-0.5 whitespace-nowrap"
                 >
                   {{
                     viewedProfile?.nickname ||
@@ -591,16 +609,16 @@
 
                 <p
                   v-if="loadingProfile"
-                  class="h-3 w-32 bg-zinc-50 animate-pulse rounded mb-1.5"
+                  class="h-3 w-32 theme-skeleton-line animate-pulse rounded mb-1.5"
                 ></p>
-                <p v-else class="text-[10px] text-zinc-400">
+                <p v-else class="text-[10px] theme-text-secondary">
                   {{ formatLastSeen(viewedProfile?.last_seen_at) }}
                 </p>
 
                 <!-- 校友身份提示 -->
                 <div
                   v-if="viewedProfile?.is_alumni"
-                  class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-white/5 text-blue-600 rounded-full text-[9px] font-bold"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 theme-card-soft text-blue-600 rounded-full text-[9px] font-bold"
                 >
                   <i class="ri-graduation-cap-fill"></i>
                   TA是你的校友
@@ -614,23 +632,23 @@
       <!-- 隐私说明弹窗 -->
       <div
         v-if="showPrivacyInfo"
-        class="fixed inset-0 z-[1000] flex items-center justify-center p-6 bg-zinc-950/20 backdrop-blur-sm"
+        class="fixed inset-0 z-[1000] flex items-center justify-center p-6 theme-overlay"
         @click.self="showPrivacyInfo = false"
       >
         <div
-          class="bg-white/5 border border-white/8 w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          class="theme-card w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
         >
           <div class="p-6">
-            <div class="flex items-center gap-2 mb-4 text-gray-300">
+            <div class="flex items-center gap-2 mb-4 theme-text-primary">
               <i class="fa-solid fa-shield-halved text-blue-500"></i>
               <h3 class="font-bold text-sm">隐私与校友功能说明</h3>
             </div>
             <div class="space-y-3 text-[12px] leading-relaxed">
-              <p class="text-gray-400">
+              <p class="theme-text-secondary">
                 为了在留言板中实现在校校友身份识别，我们需要对您 UNIRUN
                 授权数据中的学校ID进行提取与比对。
               </p>
-              <p class="text-gray-300">
+              <p class="theme-text-primary">
                 <strong
                   >使用留言功能即视为您已知晓并同意我们基于学校标识字段进行校友匹配分析。</strong
                 >
@@ -638,7 +656,7 @@
             </div>
             <button
               @click="showPrivacyInfo = false"
-              class="mt-6 w-full py-2.5 bg-white/8 text-gray-300 rounded-xl text-xs font-bold active:scale-95 transition-all"
+              class="mt-6 w-full py-2.5 theme-button-primary rounded-xl text-xs font-bold active:scale-95 transition-all"
             >
               我知道了
             </button>
@@ -656,7 +674,7 @@
           @scroll.prevent
         >
           <div
-            class="absolute bg-stone-800 backdrop-blur-xl shadow-2xl rounded-2xl p-1.5 min-w-[140px] shadow-black/50"
+            class="absolute theme-card-strong backdrop-blur-xl shadow-2xl rounded-2xl p-1.5 min-w-[140px] chat-menu-shadow"
             :class="[
               contextMenu.direction === 'down'
                 ? 'menu-pop-animation origin-top'
@@ -671,7 +689,7 @@
                 closeMenu();
               "
               :disabled="isDeleting"
-              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-stone-900/80 text-rose-500 rounded-xl transition-colors disabled:opacity-50"
+              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 chat-context-item text-rose-500 rounded-xl transition-colors disabled:opacity-50"
             >
               <i v-if="isDeleting" class="ri-loader-4-line animate-spin"></i>
               <i v-else class="ri-delete-bin-line"></i>
@@ -682,9 +700,9 @@
                 startReply(contextMenu.message);
                 closeMenu();
               "
-              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-stone-900/80 text-gray-300 rounded-xl transition-colors"
+              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 chat-context-item theme-text-primary rounded-xl transition-colors"
             >
-              <i class="ri-reply-fill text-gray-300"></i>
+              <i class="ri-reply-fill theme-text-primary"></i>
               回复
             </button>
           </div>
@@ -709,11 +727,11 @@
             <!-- 加载占位: 保持固定的最大尺寸以减少布局跳动 -->
             <div
               v-if="imageModalLoading"
-              class="w-[70vw] max-w-[900px] h-[60vh] bg-zinc-800/10 rounded-md flex items-center justify-center animate-pulse"
+              class="w-[70vw] max-w-[900px] h-[60vh] theme-card-soft rounded-md flex items-center justify-center animate-pulse"
             >
               <div class="flex flex-col items-center gap-3">
-                <i class="ri-loader-4-line animate-spin text-2xl text-zinc-500"></i>
-                <div class="text-sm text-zinc-400">图片加载中...</div>
+                <i class="ri-loader-4-line animate-spin text-2xl theme-text-secondary"></i>
+                <div class="text-sm theme-text-tertiary">图片加载中...</div>
               </div>
             </div>
 
@@ -728,15 +746,15 @@
         </div>
       </Teleport>
 
-      <Message ref="messageRef" />
       <ConfirmDialog ref="confirmRef" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, watch, inject, nextTick, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, watch, inject, nextTick, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import AppHeader from '@/components/layout/AppHeader.vue';
 import {
   MessageClient,
   formatTime,
@@ -746,13 +764,13 @@ import {
   getCachedAvatarUrl,
   renderContent,
 } from '@/sdk/message';
-import Message from '@/components/Message.vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import emojiGroups from '@/assets/data/emojis.json';
 import { getViewportMetrics, restoreViewportPosition } from '@/utils/viewport';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useStickerCache } from '@/composables/useStickerCache';
+import { useThemeStore } from '@/composables/useTheme';
 
 // ==================== 依赖注入 ====================
 const showMessage = inject('showMessage');
@@ -769,6 +787,8 @@ const {
   setChatStickerCache,
   getChatStickerCache,
 } = useChatStore();
+const themeStore = useThemeStore();
+const isDark = computed(() => themeStore.isDark);
 
 // ==================== 常量配置 ====================
 const API_BASE = messageSdkConfig.apiBaseUrl;
@@ -851,10 +871,9 @@ const contextMenu = reactive({
 // DOM 引用
 const messagesContainer = ref(null);
 const loadMoreSentinel = ref(null);
-const headerShellRef = ref(null);
 const composerShellRef = ref(null);
 const composerInputRowRef = ref(null);
-const messageRef = ref(null);
+const appHeaderRef = ref(null);
 const confirmRef = ref(null);
 const viewedImage = ref(null);
 const imageModalLoading = ref(false);
@@ -887,7 +906,8 @@ function measureFloatingLayout() {
   keyboardWasVisible = keyboardVisible;
 
   const messageRect = messagesContainer.value?.getBoundingClientRect?.();
-  const headerRect = headerShellRef.value?.getBoundingClientRect?.();
+  const headerElement = appHeaderRef.value?.getHeaderElement?.();
+  const headerRect = headerElement?.getBoundingClientRect?.();
   const composerRect = composerShellRef.value?.getBoundingClientRect?.();
   const inputRowRect = composerInputRowRef.value?.getBoundingClientRect?.();
   const messageContainerEl = messagesContainer.value;
@@ -999,8 +1019,12 @@ const isMe = (m) => {
 };
 
 const showToast = (msg, type = 'info') => {
+  if (appHeaderRef.value?.show) {
+    appHeaderRef.value.show(msg, type);
+    return;
+  }
+
   if (showMessage) showMessage(msg, type);
-  else messageRef.value?.show?.(msg, type);
 };
 
 // ==================== 导航处理 ====================
@@ -2022,7 +2046,8 @@ onMounted(async () => {
     floatingLayoutObserver = new ResizeObserver(() => {
       scheduleFloatingLayoutMeasure();
     });
-    if (headerShellRef.value) floatingLayoutObserver.observe(headerShellRef.value);
+    const headerElement = appHeaderRef.value?.getHeaderElement?.();
+    if (headerElement) floatingLayoutObserver.observe(headerElement);
     if (composerShellRef.value) floatingLayoutObserver.observe(composerShellRef.value);
     if (composerInputRowRef.value) floatingLayoutObserver.observe(composerInputRowRef.value);
   }
@@ -2120,13 +2145,125 @@ onUnmounted(() => {
 
 .sticker-input {
   box-sizing: border-box;
+  color: var(--text-primary);
 }
 
 .sticker-input:empty:before {
   content: attr(placeholder);
-  color: #a1a1aa;
+  color: var(--input-placeholder-color);
   display: block;
   line-height: inherit;
   pointer-events: none;
+}
+
+.chat-nav-action {
+  color: var(--text-tertiary);
+}
+
+.chat-nav-action:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
+}
+
+.chat-composer-input {
+  background-color: var(--card-soft-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+}
+
+.chat-composer-input:focus-within {
+  background-color: var(--card-bg);
+}
+
+.chat-toolbar-action {
+  color: var(--text-secondary);
+}
+
+.chat-toolbar-action:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
+}
+
+.chat-context-item:hover {
+  background-color: var(--action-hover-bg);
+}
+
+.chat-swipe-indicator {
+  background-color: var(--card-soft-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+}
+
+.chat-alumni-badge {
+  background-color: #2563eb;
+  border: 2px solid var(--card-bg-strong);
+}
+
+.chat-reply-trigger {
+  color: var(--text-tertiary);
+}
+
+.chat-reply-trigger:hover {
+  color: var(--text-primary);
+}
+
+.chat-reply-quote {
+  color: var(--text-secondary);
+}
+
+.chat-reply-quote--peer {
+  background-color: var(--chat-reply-quote-bg);
+  border-left: 2px solid var(--chat-reply-quote-border);
+}
+
+.chat-reply-quote--me {
+  background-color: var(--chat-reply-quote-me-bg);
+  border-left: 2px solid var(--chat-reply-quote-me-border);
+  color: var(--chat-reply-quote-me-text);
+}
+
+.chat-bubble-preview {
+  background-color: var(--chat-preview-bubble-bg);
+  border: 1px dashed var(--chat-preview-bubble-border);
+  color: var(--text-secondary);
+}
+
+.chat-skeleton-avatar,
+.chat-skeleton-line,
+.chat-skeleton-bubble,
+.theme-skeleton-line {
+  background-color: var(--card-soft-bg);
+}
+
+.chat-emoji-btn:hover {
+  background-color: var(--action-hover-bg);
+}
+
+.theme-overlay {
+  background-color: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.chat-close-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
+  border-radius: 9999px;
+}
+
+.chat-menu-shadow {
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
+}
+
+.chat-bubble-peer {
+  background-color: var(--chat-bubble-peer-bg);
+  border: 1px solid var(--chat-bubble-peer-border);
+  color: var(--chat-bubble-peer-text);
+}
+
+.chat-bubble-me {
+  background: var(--chat-bubble-me-bg);
+  border: 1px solid var(--chat-bubble-me-border);
+  color: var(--chat-bubble-me-text);
 }
 </style>

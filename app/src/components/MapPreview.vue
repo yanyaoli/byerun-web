@@ -2,13 +2,14 @@
   <div class="w-full min-h-80">
     <div
       ref="mapContainer"
-      class="block w-full h-[clamp(320px,42vh,420px)] min-h-80 rounded-lg overflow-hidden bg-black shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+      class="map-preview-shell block w-full h-[clamp(320px,42vh,420px)] min-h-80 rounded-lg overflow-hidden"
+      :style="mapThemeVars"
     />
   </div>
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import L from 'leaflet';
 
 const props = defineProps({
@@ -22,7 +23,11 @@ const props = defineProps({
   },
   mapStyle: {
     type: String,
-    default: 'dark',
+    default: '',
+  },
+  isDarkMode: {
+    type: Boolean,
+    default: undefined,
   },
 });
 
@@ -30,14 +35,33 @@ const mapContainer = ref(null);
 
 const DEFAULT_CENTER = [30.572269, 104.066541];
 const DEFAULT_ZOOM = 12;
-const TRACK_COLOR = '#38bdf8';
-const REPEAT_SEGMENT_COLOR = '#f59e0b';
-
-const STYLE_CODE_MAP = {
-  city: 7,
-  light: 7,
-  dark: 8,
-  darkMatter: 8,
+const MAP_THEME_CONFIG = {
+  light: {
+    styleCode: 7,
+    tileFilter: 'none',
+    trackColor: '#0284c7',
+    repeatSegmentColor: '#ea580c',
+    repeatSegmentOpacity: 0.62,
+    containerBg: '#d9e6f7',
+    containerShadow: '0 12px 30px rgba(15, 23, 42, 0.18)',
+    markerShadow: '0 4px 12px rgba(15, 23, 42, 0.32)',
+    attributionBg: 'rgba(255, 255, 255, 0.86)',
+    attributionColor: '#334155',
+    attributionLink: '#0f172a',
+  },
+  dark: {
+    styleCode: 8,
+    tileFilter: 'invert(1) hue-rotate(180deg) saturate(0.8) brightness(0.72) contrast(1.08)',
+    trackColor: '#38bdf8',
+    repeatSegmentColor: '#f59e0b',
+    repeatSegmentOpacity: 0.5,
+    containerBg: '#020617',
+    containerShadow: '0 12px 30px rgba(0, 0, 0, 0.35)',
+    markerShadow: '0 4px 12px rgba(0, 0, 0, 0.45)',
+    attributionBg: 'rgba(10, 16, 30, 0.75)',
+    attributionColor: '#94a3b8',
+    attributionLink: '#cbd5e1',
+  },
 };
 
 const GAODE_TILE_URL =
@@ -55,6 +79,43 @@ let endMarker = null;
 let drawVersion = 0;
 let animationTimer = null;
 let rawTrackPoints = [];
+
+function resolveMapThemeKey(styleKey, isDarkMode) {
+  const normalized = typeof styleKey === 'string' ? styleKey.trim().toLowerCase() : '';
+
+  if (normalized === 'light' || normalized === 'city') {
+    return 'light';
+  }
+
+  if (normalized === 'dark' || normalized === 'darkmatter') {
+    return 'dark';
+  }
+
+  if (typeof isDarkMode === 'boolean') {
+    return isDarkMode ? 'dark' : 'light';
+  }
+
+  return 'dark';
+}
+
+const activeMapThemeKey = computed(() => resolveMapThemeKey(props.mapStyle, props.isDarkMode));
+
+function getThemeConfig(themeKey) {
+  return MAP_THEME_CONFIG[themeKey] ?? MAP_THEME_CONFIG.dark;
+}
+
+const mapThemeVars = computed(() => {
+  const theme = getThemeConfig(activeMapThemeKey.value);
+  return {
+    '--map-surface': theme.containerBg,
+    '--map-shadow': theme.containerShadow,
+    '--map-tile-filter': theme.tileFilter,
+    '--map-marker-shadow': theme.markerShadow,
+    '--map-attribution-bg': theme.attributionBg,
+    '--map-attribution-text': theme.attributionColor,
+    '--map-attribution-link': theme.attributionLink,
+  };
+});
 
 function parseTrack(rawTrack) {
   if (!rawTrack) return [];
@@ -126,11 +187,7 @@ function scheduleInitialInvalidate() {
   setTimeout(invalidateMapSize, 320);
 }
 
-function resolveStyleCode(styleKey) {
-  return STYLE_CODE_MAP[styleKey] ?? STYLE_CODE_MAP.city;
-}
-
-function applyGaodeBasemap(styleKey) {
+function applyGaodeBasemap(themeKey) {
   if (!map) return;
 
   if (baseLayer) {
@@ -138,7 +195,7 @@ function applyGaodeBasemap(styleKey) {
     baseLayer = null;
   }
 
-  const styleCode = resolveStyleCode(styleKey);
+  const styleCode = getThemeConfig(themeKey).styleCode;
   baseLayer = L.tileLayer(GAODE_TILE_URL, {
     subdomains: '1234',
     style: styleCode,
@@ -156,9 +213,11 @@ function applyGaodeBasemap(styleKey) {
 function ensureTrackLayers() {
   if (!map) return;
 
+  const theme = getThemeConfig(activeMapThemeKey.value);
+
   if (!trackPolyline) {
     trackPolyline = L.polyline([], {
-      color: TRACK_COLOR,
+      color: theme.trackColor,
       weight: 5,
       opacity: 0.9,
       lineCap: 'round',
@@ -168,6 +227,25 @@ function ensureTrackLayers() {
 
   if (!repeatedSegmentLayer) {
     repeatedSegmentLayer = L.layerGroup().addTo(map);
+  }
+}
+
+function applyTrackTheme() {
+  const theme = getThemeConfig(activeMapThemeKey.value);
+
+  if (trackPolyline) {
+    trackPolyline.setStyle({ color: theme.trackColor });
+  }
+
+  if (repeatedSegmentLayer) {
+    repeatedSegmentLayer.eachLayer((layer) => {
+      if (layer && typeof layer.setStyle === 'function') {
+        layer.setStyle({
+          color: theme.repeatSegmentColor,
+          opacity: theme.repeatSegmentOpacity,
+        });
+      }
+    });
   }
 }
 
@@ -210,13 +288,14 @@ function updateTrackPolyline(points) {
 function updateRepeatedSegments(points) {
   if (!repeatedSegmentLayer) return;
   repeatedSegmentLayer.clearLayers();
+  const theme = getThemeConfig(activeMapThemeKey.value);
 
   const segments = buildRepeatedSegments(points);
   for (const segment of segments) {
     L.polyline(segment, {
-      color: REPEAT_SEGMENT_COLOR,
+      color: theme.repeatSegmentColor,
       weight: 5,
-      opacity: 0.5,
+      opacity: theme.repeatSegmentOpacity,
       lineCap: 'round',
       lineJoin: 'round',
     }).addTo(repeatedSegmentLayer);
@@ -298,6 +377,7 @@ async function redrawTrack() {
 
   const currentVersion = ++drawVersion;
   ensureTrackLayers();
+  applyTrackTheme();
   const displayPoints = getDisplayTrackPoints(rawTrackPoints);
 
   if (!props.ready || displayPoints.length < 2) {
@@ -337,7 +417,7 @@ async function initMap() {
     })
     .addTo(map);
 
-  applyGaodeBasemap(props.mapStyle);
+  applyGaodeBasemap(activeMapThemeKey.value);
 
   await new Promise((resolve) => map.whenReady(resolve));
   await nextTick();
@@ -362,10 +442,11 @@ watch(
 );
 
 watch(
-  () => props.mapStyle,
-  async (nextStyle, prevStyle) => {
-    if (!map || nextStyle === prevStyle) return;
-    applyGaodeBasemap(nextStyle);
+  () => activeMapThemeKey.value,
+  async (nextTheme, prevTheme) => {
+    if (!map || nextTheme === prevTheme) return;
+    applyGaodeBasemap(nextTheme);
+    applyTrackTheme();
     await redrawTrack();
   },
 );
@@ -407,14 +488,31 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.map-preview-shell {
+  background: var(--map-surface);
+  box-shadow: var(--map-shadow);
+  position: relative;
+  z-index: 0;
+}
+
 :deep(.leaflet-container) {
   width: 100%;
   height: 100%;
-  background: black;
+  background: var(--map-surface);
+}
+
+:deep(.leaflet-pane),
+:deep(.leaflet-map-pane),
+:deep(.leaflet-map-pane canvas) {
+  z-index: 1 !important;
+}
+
+:deep(.leaflet-control-container) {
+  z-index: 2 !important;
 }
 
 :deep(.leaflet-tile-pane) {
-  filter: invert(1) hue-rotate(180deg) saturate(0.8) brightness(0.72) contrast(1.08);
+  filter: var(--map-tile-filter);
 }
 
 :deep(.leaflet-div-icon) {
@@ -432,7 +530,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   font-weight: 700;
   border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--map-marker-shadow);
   line-height: 1;
   text-align: center;
 }
@@ -446,11 +544,11 @@ onBeforeUnmount(() => {
 }
 
 :deep(.leaflet-control-attribution) {
-  background: rgba(10, 16, 30, 0.75);
-  color: #94a3b8;
+  background: var(--map-attribution-bg);
+  color: var(--map-attribution-text);
 }
 
 :deep(.leaflet-control-attribution a) {
-  color: #cbd5e1;
+  color: var(--map-attribution-link);
 }
 </style>

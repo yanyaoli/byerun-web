@@ -2,8 +2,10 @@
   <div v-if="props.inline || props.visible" :class="ui.wrapper" @click.self="handleWrapperClick">
     <div :class="ui.panel">
       <div v-if="pinging" :class="ui.feedback">
-        <i class="fa-brands fa-connectdevelop text-white text-3xl animate-bounce"></i>
-        <p class="text-[10px] text-stone-600 font-black tracking-[0.3em] uppercase">连接服务中</p>
+        <i class="fa-brands fa-connectdevelop theme-text-primary text-3xl animate-bounce"></i>
+        <p class="text-[10px] theme-text-secondary font-black tracking-[0.3em] uppercase">
+          连接服务中
+        </p>
       </div>
 
       <div v-else-if="initError" :class="ui.feedback">
@@ -12,13 +14,13 @@
           <div class="absolute -inset-2 bg-red-500/20 blur-xl rounded-full"></div>
         </div>
         <div class="text-center px-6">
-          <p class="text-stone-200 text-xs font-bold">连接失败</p>
-          <p class="text-stone-500 text-[10px] mt-1 line-clamp-2">{{ initError }}</p>
+          <p class="theme-text-primary text-xs font-bold">连接失败</p>
+          <p class="theme-text-secondary text-[10px] mt-1 line-clamp-2">{{ initError }}</p>
         </div>
         <button
           type="button"
           @click="init"
-          class="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-stone-300 text-[10px] font-bold rounded-xl transition-colors"
+          class="px-4 py-2 theme-button-primary text-[10px] font-bold rounded-xl transition-colors"
         >
           重新尝试
         </button>
@@ -27,8 +29,10 @@
       <div v-else :class="ui.content">
         <div :class="ui.header">
           <div class="space-y-0.5">
-            <h2 class="text-sm font-black text-stone-200 uppercase tracking-widest">自动任务</h2>
-            <p class="text-[9px] text-stone-700 font-mono">{{ versionLabel }}</p>
+            <h2 class="text-sm font-black theme-text-primary uppercase tracking-widest">
+              自动任务
+            </h2>
+            <p class="text-[9px] theme-text-tertiary font-mono">{{ versionLabel }}</p>
           </div>
           <div class="flex items-center gap-2">
             <span
@@ -52,28 +56,28 @@
 
         <div :class="ui.fields">
           <div :class="ui.fieldItem">
-            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
+            <label class="text-[10px] font-black theme-text-tertiary uppercase tracking-widest ml-1"
               >学校地图</label
             >
             <div class="relative">
               <div @click="showMapList = !showMapList" :class="ui.mapTrigger">
-                <span class="text-[12px] text-stone-200 font-medium">{{ currentMapName }}</span>
+                <span class="text-[12px] theme-text-primary font-medium">{{ currentMapName }}</span>
                 <i
                   :class="[
-                    'fa-solid fa-chevron-down text-[10px] text-stone-600 transition-transform',
+                    'fa-solid fa-chevron-down text-[10px] theme-text-tertiary transition-transform',
                     showMapList ? 'rotate-180' : '',
                   ]"
                 ></i>
               </div>
               <div
                 v-if="showMapList"
-                class="absolute z-50 w-full mt-1 bg-stone-900 border border-white/8 rounded-xl shadow-2xl py-1 max-h-[120px] overflow-y-auto"
+                class="absolute z-50 w-full mt-1 theme-card-strong rounded-xl shadow-2xl py-1 max-h-[120px] overflow-y-auto"
               >
                 <div
                   v-for="map in maps"
                   :key="map.id"
                   @click="selectMap(map)"
-                  class="px-4 py-2 text-[12px] text-stone-400 hover:bg-white/5 hover:text-white cursor-pointer transition-colors"
+                  class="px-4 py-2 text-[12px] theme-link auto-config-option cursor-pointer transition-colors"
                 >
                   {{ map.name }}
                 </div>
@@ -82,46 +86,32 @@
           </div>
 
           <div :class="ui.fieldItem">
-            <label class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1"
+            <label class="text-[10px] font-black theme-text-tertiary uppercase tracking-widest ml-1"
               >每日运行时间（10分钟误差）</label
             >
             <div class="flex items-center gap-2">
-              <div
-                class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1"
-              >
+              <div class="flex-1 flex items-center theme-card-soft rounded-xl p-1">
                 <select
                   v-model="timeObj.h"
-                  class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1"
+                  class="w-full bg-transparent text-center text-sm font-mono theme-text-primary outline-none appearance-none py-1"
                 >
-                  <option
-                    v-for="h in 24"
-                    :key="h - 1"
-                    :value="h - 1"
-                    class="bg-stone-900 text-white"
-                  >
+                  <option v-for="h in 24" :key="h - 1" :value="h - 1" class="theme-option">
                     {{ String(h - 1).padStart(2, '0') }}
                   </option>
                 </select>
-                <span class="text-[9px] text-stone-600 pr-2 italic">时</span>
+                <span class="text-[9px] theme-text-tertiary pr-2 italic">时</span>
               </div>
-              <span class="text-stone-800 font-bold">:</span>
-              <div
-                class="flex-1 flex items-center bg-stone-900 border border-white/5 rounded-xl p-1"
-              >
+              <span class="theme-text-tertiary font-bold">:</span>
+              <div class="flex-1 flex items-center theme-card-soft rounded-xl p-1">
                 <select
                   v-model="timeObj.m"
-                  class="w-full bg-transparent text-center text-sm font-mono text-white outline-none appearance-none py-1"
+                  class="w-full bg-transparent text-center text-sm font-mono theme-text-primary outline-none appearance-none py-1"
                 >
-                  <option
-                    v-for="m in 60"
-                    :key="m - 1"
-                    :value="m - 1"
-                    class="bg-stone-900 text-white"
-                  >
+                  <option v-for="m in 60" :key="m - 1" :value="m - 1" class="theme-option">
                     {{ String(m - 1).padStart(2, '0') }}
                   </option>
                 </select>
-                <span class="text-[9px] text-stone-600 pr-2 italic">分</span>
+                <span class="text-[9px] theme-text-tertiary pr-2 italic">分</span>
               </div>
             </div>
           </div>
@@ -131,27 +121,31 @@
             class="flex items-center justify-between p-1 cursor-pointer group"
           >
             <span
-              class="text-[11px] font-bold text-stone-500 group-hover:text-stone-300 transition-colors"
+              class="text-[11px] font-bold theme-text-secondary group-hover:text-[var(--text-primary)] transition-colors"
               >启用每日自动任务</span
             >
             <div
               :class="[
                 'w-9 h-5 rounded-full transition-all relative',
-                form.enabled ? 'bg-stone-200' : 'bg-stone-800',
+                form.enabled ? 'bg-[var(--text-primary)]' : 'bg-[var(--card-divider)]',
               ]"
             >
               <div
                 :class="[
                   'absolute top-1 w-3 h-3 rounded-full transition-all',
-                  form.enabled ? 'left-5 bg-black' : 'left-1 bg-stone-500',
+                  form.enabled
+                    ? 'left-5 bg-[var(--bg-primary)]'
+                    : 'left-1 bg-[var(--text-tertiary)]',
                 ]"
               ></div>
             </div>
           </div>
 
-          <div class="bg-stone-900/80 border border-white/5 rounded-xl px-3 py-2">
+          <div class="theme-card-soft rounded-xl px-3 py-2">
             <div class="flex items-center justify-between">
-              <span class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">
+              <span
+                class="text-[10px] font-black theme-text-tertiary uppercase tracking-widest ml-1"
+              >
                 最新任务状态
               </span>
               <div class="flex items-center gap-2">
@@ -164,36 +158,38 @@
                 >
                   {{ latestExecResult.text }}
                 </span>
-                <span class="text-[9px] text-stone-500 font-mono">{{
+                <span class="text-[9px] theme-text-secondary font-mono">{{
                   status?.last_run_at || '-'
                 }}</span>
               </div>
             </div>
           </div>
 
-          <div class="bg-stone-900/80 border border-white/5 rounded-xl px-3 py-2">
+          <div class="theme-card-soft rounded-xl px-3 py-2">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-black text-stone-600 uppercase tracking-widest ml-1">
+              <span
+                class="text-[10px] font-black theme-text-tertiary uppercase tracking-widest ml-1"
+              >
                 下次随机数据
               </span>
-              <span class="text-[9px] text-stone-500 mr-1">保存会重置随机数据</span>
+              <span class="text-[9px] theme-text-secondary mr-1">保存会重置随机数据</span>
             </div>
             <div class="grid grid-cols-3 gap-2">
-              <div class="bg-stone-800/50 rounded-lg px-2 py-1.5 text-center">
-                <div class="text-[9px] text-stone-500 uppercase tracking-wider">距离</div>
-                <div class="text-[13px] font-black text-stone-200 mt-0.5">
+              <div class="theme-card-header rounded-lg px-2 py-1.5 text-center">
+                <div class="text-[9px] theme-text-tertiary uppercase tracking-wider">距离</div>
+                <div class="text-[13px] font-black theme-text-primary mt-0.5">
                   {{ nextRunPreview.available ? nextRunPreview.distance + 'm' : '-' }}
                 </div>
               </div>
-              <div class="bg-stone-800/50 rounded-lg px-2 py-1.5 text-center">
-                <div class="text-[9px] text-stone-500 uppercase tracking-wider">时间</div>
-                <div class="text-[13px] font-black text-stone-200 mt-0.5">
+              <div class="theme-card-header rounded-lg px-2 py-1.5 text-center">
+                <div class="text-[9px] theme-text-tertiary uppercase tracking-wider">时间</div>
+                <div class="text-[13px] font-black theme-text-primary mt-0.5">
                   {{ nextRunPreview.available ? nextRunPreview.time + 'min' : '-' }}
                 </div>
               </div>
-              <div class="bg-stone-800/50 rounded-lg px-2 py-1.5 text-center">
-                <div class="text-[9px] text-stone-500 uppercase tracking-wider">配速</div>
-                <div class="text-[11px] font-bold text-stone-200 mt-0.5">
+              <div class="theme-card-header rounded-lg px-2 py-1.5 text-center">
+                <div class="text-[9px] theme-text-tertiary uppercase tracking-wider">配速</div>
+                <div class="text-[11px] font-bold theme-text-primary mt-0.5">
                   {{ nextRunPreview.available ? nextRunPreview.paceText : '-' }}
                 </div>
               </div>
@@ -211,7 +207,7 @@
         v-if="!props.inline"
         type="button"
         @click="close"
-        class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5 text-stone-600 hover:text-white transition-all"
+        class="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full auto-config-close transition-all"
       >
         <i class="fa-solid fa-xmark text-sm"></i>
       </button>
@@ -250,30 +246,30 @@ const ui = computed(() =>
   props.inline
     ? {
         wrapper: 'w-full',
-        panel: 'relative w-full bg-stone-950 border border-white/8 rounded-lg p-4',
+        panel: 'relative w-full theme-card rounded-lg p-4',
         feedback: 'py-8 flex flex-col items-center justify-center space-y-4',
         content: 'p-4 space-y-4',
         header: 'flex justify-between items-center gap-3',
         fields: 'space-y-3',
         fieldItem: 'space-y-1',
         mapTrigger:
-          'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-3 py-2 cursor-pointer hover:border-white/8 transition-all',
+          'flex items-center justify-between theme-card-soft rounded-xl px-3 py-2 cursor-pointer transition-all',
         saveButton:
-          'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-2 rounded-xl font-black text-[14px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
+          'w-full theme-button-primary py-2 rounded-xl font-black text-[14px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
       }
     : {
         wrapper: 'fixed inset-0 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md',
         panel:
-          'relative w-full max-w-[300px] bg-stone-950 border border-white/8 rounded-[2rem] shadow-2xl transition-all overflow-hidden',
+          'relative w-full max-w-[300px] theme-card rounded-[2rem] shadow-2xl transition-all overflow-hidden',
         feedback: 'py-16 flex flex-col items-center justify-center space-y-4',
         content: 'p-6 space-y-5',
         header: 'flex justify-between items-center gap-3 pr-8',
         fields: 'space-y-4',
         fieldItem: 'space-y-1.5',
         mapTrigger:
-          'flex items-center justify-between bg-stone-900 border border-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:border-white/8 transition-all',
+          'flex items-center justify-between theme-card-soft rounded-xl px-4 py-2.5 cursor-pointer transition-all',
         saveButton:
-          'w-full bg-stone-800 hover:bg-stone-700 text-stone-200 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
+          'w-full theme-button-primary py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all active:scale-[0.97] disabled:opacity-20 flex items-center justify-center gap-2',
       },
 );
 
@@ -358,7 +354,7 @@ const enabledLabelText = computed(() => (form.value.enabled ? '已启用' : '未
 const enabledLabelClass = computed(() =>
   form.value.enabled
     ? 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10'
-    : 'text-stone-400 border-stone-600/40 bg-stone-700/20',
+    : 'theme-text-secondary border-[var(--card-border)] theme-card-soft',
 );
 
 const nextRunPreview = computed(() => {
@@ -389,7 +385,7 @@ const latestExecResult = computed(() => {
   const result = current.today_result ? String(current.today_result) : '';
 
   if (!executed) {
-    return { text: '今日尚未执行', class: 'text-stone-500', bgClass: 'bg-stone-800/50' };
+    return { text: '今日尚未执行', class: 'theme-text-secondary', bgClass: 'theme-card-header' };
   }
   if (success && result === '成功') {
     return { text: `执行成功`, class: 'text-emerald-400', bgClass: 'bg-emerald-500/10' };
@@ -570,7 +566,25 @@ select {
 }
 
 option {
-  background-color: #0c0a09;
-  color: #e7e5e4;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.theme-option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.auto-config-close {
+  color: var(--text-tertiary);
+}
+
+.auto-config-close:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
+}
+
+.auto-config-option:hover {
+  background-color: var(--action-hover-bg);
 }
 </style>

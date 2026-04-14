@@ -1,30 +1,29 @@
 ﻿<template>
   <nav
-    class="fixed left-0 right-0 bottom-[calc(1rem+env(safe-area-inset-bottom))] h-16 z-[999] transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]"
+    class="fixed left-0 right-0 bottom-4 z-[999] transition-all duration-300"
+    :style="{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }"
   >
     <div
-      class="flex items-center h-full bg-white/5 backdrop-blur-[16px] border border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[600px] mx-auto w-[calc(100%_-_24px)]"
+      :class="[
+        'flex items-center h-full backdrop-blur-2xl border rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[600px] mx-auto w-[calc(100%_-_24px)] px-5 py-3 gap-2',
+        'theme-card-strong',
+      ]"
     >
       <button
         v-for="item in tabs"
         :key="item.key"
         type="button"
         :class="[
-          'relative flex flex-col items-center justify-center cursor-pointer rounded-full transition-all duration-[300ms] outline-none flex-1 h-full',
-          active === item.key ? 'text-gray-100 bg-white/5' : 'text-gray-300',
+          'relative flex flex-col items-center justify-center cursor-pointer rounded-full transition-all duration-300 outline-none flex-1 h-12',
+          active === item.key ? 'bottom-tab-active' : 'bottom-tab-inactive',
         ]"
         @click="handleClick(item)"
       >
-        <div
-          v-if="active === item.key"
-          class="absolute w-12 h-12 rounded-full bg-white/5 shadow-[0_8px_32px_rgba(0,0,0,0.1)] pointer-events-none"
-        ></div>
-
         <div class="relative flex items-center justify-center w-6 h-6 z-10">
           <i :class="item.icon" class="text-[19px]"></i>
           <span
             v-if="item.key === 'chat' && chatUnread && active !== 'chat'"
-            class="absolute -top-0.5 -right-1 h-2.5 w-2.5 rounded-full bg-rose-500 border border-white"
+            class="absolute -top-1 -right-1.5 h-2.5 w-2.5 rounded-full bg-rose-500 border border-white"
           ></span>
         </div>
         <div class="text-[10px] mt-0.5 text-center z-10">{{ item.label }}</div>
@@ -39,6 +38,7 @@ const emit = defineEmits(['update:active', 'switch']);
 defineProps({
   active: { type: String, default: 'submit' },
   chatUnread: { type: Boolean, default: false },
+  isDarkMode: { type: Boolean, default: false },
   tabs: {
     type: Array,
     default: () => [
@@ -56,3 +56,19 @@ function handleClick(item) {
   emit('switch', item.key);
 }
 </script>
+
+<style scoped>
+.bottom-tab-active {
+  color: var(--text-primary);
+  background-color: var(--tab-action-bg);
+}
+
+.bottom-tab-inactive {
+  color: var(--text-secondary);
+}
+
+.bottom-tab-inactive:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
+}
+</style>

@@ -1,10 +1,10 @@
 ﻿<template>
   <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
     <!-- 完成情况卡片 -->
-    <div class="bg-white/5 border border-white/8 rounded-2xl p-5 mb-5 w-full box-border">
-      <div class="flex justify-between items-center border-b border-dashed border-white/20 pb-2">
-        <div class="text-sm font-semibold text-slate-300">完成情况</div>
-        <div class="text-sm text-slate-400">
+    <div class="theme-card rounded-2xl p-5 mb-5 w-full box-border">
+      <div class="flex justify-between items-center border-b border-dashed theme-card-divider pb-2">
+        <div class="text-sm font-semibold theme-text-primary">完成情况</div>
+        <div class="text-sm theme-text-secondary">
           <i class="ri-hourglass-fill"></i> {{ stats.semesterEndDateText }}
         </div>
       </div>
@@ -12,13 +12,13 @@
         <div
           v-for="card in summaryCards"
           :key="card.label"
-          class="flex-1 bg-white/5 border border-white/8 rounded-xl p-3 flex flex-col items-center"
+          class="flex-1 theme-card-soft rounded-xl p-3 flex flex-col items-center"
         >
-          <div class="text-lg text-gray-400 mb-1">
+          <div class="text-lg theme-text-secondary mb-1">
             {{ card.value }}
           </div>
-          <div class="text-sm font-semibold text-gray-300 mb-1 truncate">{{ card.label }}</div>
-          <div class="text-sm text-gray-400 mb-2">
+          <div class="text-sm font-semibold theme-text-primary mb-1 truncate">{{ card.label }}</div>
+          <div class="text-sm theme-text-secondary mb-2">
             {{ card.detail }}
           </div>
         </div>
@@ -27,9 +27,9 @@
 
     <!-- 提交表单 -->
     <form @submit.prevent="onFormSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
-      <div class="bg-white/5 border border-white/8 rounded-2xl w-full box-border mb-5 p-5">
+      <div class="theme-card rounded-2xl w-full box-border mb-5 p-5 form-card-container">
         <!-- Tab 按钮行 -->
-        <div class="flex items-center mb-4 border-b border-dashed border-white/20 pb-2">
+        <div class="flex items-center mb-4 border-b border-dashed theme-card-divider pb-2">
           <button
             v-for="tab in tabs"
             :key="tab.key"
@@ -38,8 +38,8 @@
             :class="[
               'flex-1 text-base h-8 font-semibold transition-all text-center rounded-full',
               activeTab === tab.key
-                ? 'text-slate-300 bg-white/5 border border-white/8'
-                : 'text-slate-400 border-none hover:text-gray-400 hover:bg-stone-950/50',
+                ? 'theme-text-primary theme-card-soft'
+                : 'submit-tab-inactive border-none',
             ]"
           >
             <i :class="tab.icon" class="mr-2"></i>{{ tab.label }}
@@ -50,13 +50,13 @@
           <!-- 提交记录表单 -->
           <div v-show="activeTab === 'submit'">
             <div class="form-group mb-4">
-              <label class="block text-sm text-slate-300 mb-2 font-medium">选择地图</label>
+              <label class="block text-sm theme-text-secondary mb-2 font-medium">选择地图</label>
               <div
-                class="route-dropdown bg-white/5 border border-white/8 rounded-md p-2 cursor-pointer relative w-full box-border"
+                class="route-dropdown theme-card-soft rounded-md p-2 cursor-pointer relative w-full box-border"
                 @click="mapsLoaded && !submitting ? (showRouteOptions = !showRouteOptions) : null"
               >
                 <div
-                  class="selected-route flex items-center justify-between text-sm text-slate-400"
+                  class="selected-route flex items-center justify-between text-sm theme-text-secondary"
                   :class="{ disabled: !mapsLoaded || submitting }"
                 >
                   <span v-if="!mapsLoaded">加载地图中...</span>
@@ -70,12 +70,12 @@
                 <transition name="dropdown">
                   <div
                     v-show="showRouteOptions && mapsLoaded"
-                    class="route-options bg-white/5 backdrop-blur-[16px] border border-white/8"
+                    class="route-options theme-card-strong"
                   >
                     <div
                       v-for="(name, value) in routeOptions"
                       :key="value"
-                      class="route-option text-sm text-slate-400 cursor-pointer"
+                      class="route-option text-sm theme-text-secondary cursor-pointer"
                       :class="{ selected: form.route === value }"
                       @click.stop="selectRoute(value)"
                     >
@@ -93,29 +93,27 @@
             </div>
 
             <div class="form-group mb-4">
-              <label class="block text-sm text-slate-300 mt-2 mb-2 font-medium">
+              <label class="block text-sm theme-text-secondary mt-2 mb-2 font-medium">
                 <div class="flex justify-between items-center">
                   <span>跑步里程</span>
-                  <span class="text-xs text-slate-400">配速 {{ paceDisplay }}</span>
+                  <span class="text-xs theme-text-tertiary">配速 {{ paceDisplay }}</span>
                 </div>
               </label>
               <div class="input-container flex items-center">
-                <div
-                  class="input-wrapper flex-1 flex items-center bg-white/5 border border-white/8 rounded-md px-3"
-                >
+                <div class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3">
                   <input
                     v-model.number="form.distance"
                     type="number"
                     step="1"
                     placeholder="输入里程"
                     required
-                    class="flex-1 py-2 text-sm text-slate-400 outline-none pr-2"
+                    class="flex-1 py-2 text-sm theme-text-secondary outline-none pr-2"
                   />
-                  <span class="unit text-sm text-slate-500 pl-2">米</span>
+                  <span class="unit text-sm theme-text-tertiary pl-2">米</span>
                 </div>
                 <button
                   type="button"
-                  class="ml-3 px-3 py-2 bg-white/5 border border-white/8 text-sm text-gray-400 cursor-pointer hover:bg-stone-950/80 disabled:opacity-50 rounded-md"
+                  class="ml-3 px-3 py-2 theme-card-soft text-sm theme-text-secondary cursor-pointer disabled:opacity-50 rounded-md"
                   @click="onRandomFill"
                   :disabled="submitting || randomizing"
                   aria-label="随机里程"
@@ -130,7 +128,7 @@
                 v-if="!awaitingSubmitConfirm"
                 key="single-submit"
                 type="submit"
-                class="w-full p-2 font-semibold text-gray-300 bg-white/5 backdrop-blur-[8px] border border-white/15 rounded-full hover:bg-stone-950/80 disabled:cursor-not-allowed disabled:bg-gray-200"
+                class="w-full p-2 font-semibold theme-text-primary theme-card-soft rounded-full disabled:cursor-not-allowed disabled:opacity-60"
                 :disabled="submitting || !isDistanceValid"
               >
                 提交记录
@@ -138,7 +136,7 @@
               <div v-else key="double-submit" class="flex w-full gap-3">
                 <button
                   type="button"
-                  class="flex-1 p-2 text-gray-300 border border-dashed border-gray-950 rounded-full hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-70"
+                  class="flex-1 p-2 rounded-full submit-confirm-cancel disabled:cursor-not-allowed disabled:opacity-70"
                   :disabled="submitting || randomizing"
                   @click="cancelSubmitConfirm"
                 >
@@ -146,7 +144,7 @@
                 </button>
                 <button
                   type="button"
-                  class="flex-1 p-2 text-gray-300 bg-stone-950/50 rounded-full hover:bg-stone-950 disabled:cursor-not-allowed disabled:opacity-70"
+                  class="flex-1 p-2 rounded-full submit-confirm-ok disabled:cursor-not-allowed disabled:opacity-70"
                   :disabled="submitting || !isDistanceValid"
                   @click="confirmSubmit"
                 >
@@ -169,20 +167,18 @@
     </form>
 
     <!-- 路线预览 -->
-    <div
-      v-show="activeTab === 'submit'"
-      class="bg-white/5 border border-white/8 rounded-2xl p-5 mb-5 w-full box-border"
-    >
-      <div class="flex justify-between items-center border-b border-dashed border-white/20 pb-2">
-        <div class="text-sm font-semibold text-gray-400">路线预览</div>
+    <div v-show="activeTab === 'submit'" class="theme-card rounded-2xl p-5 mb-5 w-full box-border">
+      <div class="flex justify-between items-center border-b border-dashed theme-card-divider pb-2">
+        <div class="text-sm font-semibold theme-text-secondary">路线预览</div>
       </div>
       <MapPreview
         v-if="mapRenderUnlocked"
         :track="generatedTrack"
         :ready="mapReady"
+        :map-style="isDark ? 'dark' : 'light'"
         class="pt-2 w-full transition-all duration-300"
       />
-      <div v-else class="pt-2 text-xs text-gray-400"></div>
+      <div v-else class="pt-2 text-xs theme-text-tertiary"></div>
     </div>
   </div>
 </template>
@@ -191,6 +187,7 @@
 import { ref, computed, watch, inject, defineAsyncComponent, onMounted } from 'vue';
 import { submitRun as submitRunApi, useRouteGenerator } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
+import { useThemeStore } from '@/composables/useTheme';
 import { waitForAutorunPingReady } from '@/sdk/autorun';
 import {
   calculatePaceMinutesPerKm,
@@ -239,6 +236,9 @@ const submitting = ref(false);
 const randomizing = ref(false);
 const awaitingSubmitConfirm = ref(false);
 const showRouteOptions = ref(false);
+
+const themeStore = useThemeStore();
+const isDark = computed(() => themeStore.isDark);
 
 const distanceBounds = computed(() =>
   resolveRunBoundsFromStandard(userInfo.value || {}, runStandard.value || {}),
@@ -544,11 +544,18 @@ loadMaps().then(async () => {
 </script>
 
 <style scoped>
+/* 表单卡片容器 - 确保浮于路线预览之上 */
+.form-card-container {
+  position: relative;
+  z-index: 10;
+}
+
 .route-dropdown {
   position: relative;
   user-select: none;
   box-sizing: border-box;
   overflow: visible;
+  z-index: 100;
 }
 
 .dropdown-arrow {
@@ -556,7 +563,7 @@ loadMaps().then(async () => {
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 6px solid #b0b0b0;
+  border-top: 6px solid var(--text-tertiary);
   margin-left: 8px;
   transition: transform 0.2s;
 }
@@ -571,10 +578,17 @@ loadMaps().then(async () => {
   right: 0;
   top: 110%;
   border-radius: 8px;
-  z-index: 9999;
+  z-index: 10000;
   padding: 4px 0;
   max-height: 300px;
   overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  pointer-events: auto;
+}
+
+/* 确保表单卡片容器允许下拉菜单溢出 */
+:deep(.form-card-container) {
+  overflow: visible;
 }
 
 .route-option {
@@ -584,8 +598,8 @@ loadMaps().then(async () => {
 }
 .route-option.selected,
 .route-option:hover {
-  background: #313131;
-  color: #f3f3f3;
+  background: var(--action-hover-bg);
+  color: var(--text-primary);
 }
 
 .loader {
@@ -609,6 +623,34 @@ loadMaps().then(async () => {
 .confirm-actions-leave-to {
   opacity: 0;
   transform: translateY(4px) scale(0.985);
+}
+
+.submit-tab-inactive {
+  color: var(--text-secondary);
+}
+
+.submit-tab-inactive:hover {
+  color: var(--text-primary);
+  background-color: var(--action-hover-bg);
+}
+
+.submit-confirm-cancel {
+  color: var(--text-secondary);
+  border: 1px dashed var(--card-divider);
+  background-color: transparent;
+}
+
+.submit-confirm-cancel:hover {
+  background-color: var(--action-hover-bg);
+}
+
+.submit-confirm-ok {
+  color: var(--button-primary-text);
+  background-color: var(--button-primary-bg);
+}
+
+.submit-confirm-ok:hover {
+  filter: brightness(1.06);
 }
 
 @keyframes spin {

@@ -1,6 +1,6 @@
 <template>
   <div class="club-page min-h-full pb-4">
-    <section class="mt-3 rounded-2xl border border-white/8 bg-[#25282e] p-3">
+    <section class="mt-3 rounded-2xl theme-card p-3">
       <div class="grid grid-cols-2 gap-2">
         <button
           v-for="tab in MAIN_TABS"
@@ -9,8 +9,8 @@
           :class="[
             'h-9 rounded-xl border text-xs font-medium transition-colors',
             activeMainTab === tab.key
-              ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-              : 'border-white/8 bg-white/5 text-gray-300',
+              ? 'theme-accent-border theme-accent-bg theme-accent'
+              : 'theme-card-soft theme-text-secondary',
           ]"
           @click="activeMainTab = tab.key"
         >
@@ -26,8 +26,8 @@
           :class="[
             'h-8 rounded-xl border text-xs font-medium transition-colors',
             activeActivityTab === tab.key
-              ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-              : 'border-white/8 bg-white/5 text-gray-300',
+              ? 'theme-accent-border theme-accent-bg theme-accent'
+              : 'theme-card-soft theme-text-secondary',
           ]"
           @click="activeActivityTab = tab.key"
         >
@@ -43,8 +43,8 @@
           :class="[
             'h-8 rounded-xl border text-xs font-medium transition-colors',
             activeHistoryTab === tab.key
-              ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-              : 'border-white/8 bg-white/5 text-gray-300',
+              ? 'theme-accent-border theme-accent-bg theme-accent'
+              : 'theme-card-soft theme-text-secondary',
           ]"
           @click="activeHistoryTab = tab.key"
         >
@@ -60,7 +60,7 @@
         >
           <button
             type="button"
-            class="w-full h-9 px-3 rounded-xl border border-white/8 bg-white/5 text-xs text-gray-100 inline-flex items-center justify-between"
+            class="w-full h-9 px-3 rounded-xl theme-card-soft text-xs theme-text-primary inline-flex items-center justify-between"
             @click="showDateDropdown = !showDateDropdown"
           >
             <span class="truncate">{{ selectedDateLabel }}</span>
@@ -73,17 +73,17 @@
           <transition name="fade-slide">
             <div
               v-if="showDateDropdown"
-              class="absolute left-0 right-0 top-11 z-30 rounded-xl border border-white/8 bg-stone-900/95 backdrop-blur max-h-44 overflow-y-auto"
+              class="absolute left-0 right-0 top-11 z-30 rounded-xl theme-card-strong max-h-44 overflow-y-auto"
             >
               <button
                 v-for="day in dateOptions"
                 :key="day.value"
                 type="button"
                 :class="[
-                  'w-full h-9 px-3 text-left text-xs border-b border-white/5 last:border-b-0 transition-colors',
+                  'w-full h-9 px-3 text-left text-xs border-b theme-card-divider last:border-b-0 transition-colors',
                   selectedQueryDate === day.value
-                    ? 'text-cyan-200 bg-cyan-400/10'
-                    : 'text-gray-200 hover:bg-white/5',
+                    ? 'theme-accent theme-accent-bg'
+                    : 'theme-text-primary club-dropdown-option-idle',
                 ]"
                 @click="selectQueryDate(day.value)"
               >
@@ -95,7 +95,7 @@
 
         <button
           type="button"
-          class="h-9 px-3 rounded-xl border border-white/8 bg-white/5 text-gray-200 text-xs font-medium flex items-center gap-1.5"
+          class="h-9 px-3 rounded-xl theme-card-soft theme-text-primary text-xs font-medium flex items-center gap-1.5"
           @click="showFilters = !showFilters"
         >
           <i class="ri-equalizer-line text-sm"></i>
@@ -113,8 +113,8 @@
               :class="[
                 'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors',
                 selectedStatus === option.value
-                  ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-                  : 'border-white/8 bg-white/5 text-gray-300',
+                  ? 'theme-accent-border theme-accent-bg theme-accent'
+                  : 'theme-card-soft theme-text-secondary',
               ]"
               @click="selectedStatus = option.value"
             >
@@ -133,8 +133,8 @@
               :class="[
                 'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors',
                 selectedItemId === item.value
-                  ? 'border-cyan-400/50 bg-cyan-400/15 text-cyan-200'
-                  : 'border-white/8 bg-white/5 text-gray-300',
+                  ? 'theme-accent-border theme-accent-bg theme-accent'
+                  : 'theme-card-soft theme-text-secondary',
               ]"
               @click="selectedItemId = item.value"
             >
@@ -146,37 +146,37 @@
     </section>
 
     <section v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
-      <div class="rounded-xl border border-white/8 bg-white/5 p-3">
-        <div class="text-[11px] text-gray-400">累计报名</div>
-        <div class="mt-1 text-xl font-semibold text-white">{{ summary.joinNum }}</div>
+      <div class="rounded-xl theme-card-soft p-3">
+        <div class="text-[11px] theme-text-secondary">累计报名</div>
+        <div class="mt-1 text-xl font-semibold theme-text-primary">{{ summary.joinNum }}</div>
       </div>
-      <div class="rounded-xl border border-white/8 bg-white/5 p-3">
-        <div class="text-[11px] text-gray-400">有效签到</div>
-        <div class="mt-1 text-xl font-semibold text-emerald-300">{{ summary.validNum }}</div>
+      <div class="rounded-xl theme-card-soft p-3">
+        <div class="text-[11px] theme-text-secondary">有效签到</div>
+        <div class="mt-1 text-xl font-semibold theme-success">{{ summary.validNum }}</div>
       </div>
     </section>
 
     <section v-if="activeMainTab === 'activities'" class="mt-3">
-      <article v-if="signTaskCard" class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3">
+      <article v-if="signTaskCard" class="rounded-2xl theme-accent-border theme-accent-bg p-3">
         <div class="flex items-start gap-3">
           <div class="min-w-0 flex-1">
             <div class="flex items-start justify-between gap-3">
               <div class="min-w-0 flex-1">
-                <h3 class="text-sm font-semibold text-cyan-50 truncate">
+                <h3 class="text-sm font-semibold theme-accent truncate">
                   {{ signTaskCard.title }}
-                  <span v-if="signTaskCard.location" class="font-normal text-cyan-100/70"
+                  <span v-if="signTaskCard.location" class="font-normal theme-accent opacity-70"
                     >· {{ signTaskCard.location }}</span
                   >
                 </h3>
-                <p class="mt-1 text-xs text-cyan-100/80 truncate">{{ signTaskCard.subTitle }}</p>
+                <p class="mt-1 text-xs theme-accent opacity-80 truncate">{{ signTaskCard.subTitle }}</p>
               </div>
               <div class="flex items-center gap-2">
                 <span
                   :class="[
                     'h-6 px-2 rounded-full text-[11px] inline-flex items-center border',
                     clubAutoConfigEnabled
-                      ? 'bg-emerald-500/15 text-emerald-200 border-emerald-400/30'
-                      : 'bg-white/5 text-gray-400 border-white/10',
+                      ? 'theme-success-bg theme-success-border theme-success'
+                      : 'badge-neutral',
                   ]"
                 >
                   {{ clubAutoConfigEnabled ? '已启用定时任务' : '未启用定时任务' }}
@@ -185,11 +185,11 @@
               </div>
             </div>
 
-            <div class="mt-3 grid grid-cols-2 gap-2 text-xs text-cyan-50/90">
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs theme-accent opacity-90">
               <div
                 v-for="meta in signTaskCard.metaList"
                 :key="meta.key"
-                :class="['meta-pill meta-pill-cyan', meta.spanClass]"
+                :class="['meta-pill', meta.spanClass]"
               >
                 <i :class="meta.icon"></i>
                 <span class="truncate">{{ meta.label }}</span>
@@ -200,19 +200,18 @@
               v-if="signTaskButtons.length > 0"
               class="mt-3 flex items-center justify-between gap-2"
             >
-              <div class="flex items-center gap-2">
-                <button
-                  type="button"
-                  :disabled="clubAutoConfigToggling"
-                  :class="[
-                    'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
-                    clubAutoConfigEnabled
-                      ? 'bg-rose-500/20 text-rose-200 border border-rose-400/30 hover:bg-rose-500/30'
-                      : 'bg-emerald-500/20 text-emerald-200 border border-emerald-400/30 hover:bg-emerald-500/30',
-                    clubAutoConfigToggling && 'opacity-70 cursor-not-allowed',
-                  ]"
-                  @click="toggleClubAutoConfig"
-                >
+              <button
+                type="button"
+                :disabled="clubAutoConfigToggling"
+                :class="[
+                  'h-8 px-3 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 transition-colors',
+                  clubAutoConfigEnabled
+                    ? 'theme-danger-bg theme-danger-border theme-danger hover:theme-danger-bg'
+                    : 'theme-success-bg theme-success-border theme-success hover:theme-success-bg',
+                  clubAutoConfigToggling && 'opacity-70 cursor-not-allowed',
+                ]"
+                @click="toggleClubAutoConfig"
+              >
                 <i
                   :class="[
                     clubAutoConfigToggling
@@ -270,7 +269,7 @@
 
       <div
         v-else
-        class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-4 text-xs text-cyan-100/80"
+        class="rounded-2xl theme-accent-border theme-accent-bg p-4 text-xs theme-accent opacity-80"
       >
         当前没有可执行签到/签退任务
       </div>
@@ -278,27 +277,27 @@
 
     <section
       v-if="activeMainTab === 'activities' && clubRushTasks.length > 0"
-      class="mt-3 rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3"
+      class="mt-3 rounded-2xl theme-warning-border theme-warning-bg p-3"
     >
       <div class="flex items-center justify-between gap-2">
-        <h3 class="text-xs font-semibold text-amber-100">已安排抢选任务</h3>
-        <span class="text-[11px] text-amber-100/70">{{ clubRushTasks.length }} 条</span>
+        <h3 class="text-xs font-semibold theme-warning">已安排抢选任务</h3>
+        <span class="text-[11px] theme-warning opacity-70">{{ clubRushTasks.length }} 条</span>
       </div>
 
       <div class="mt-2 space-y-2">
         <div
           v-for="task in clubRushTasks"
           :key="`rush-${task.id}`"
-          class="rounded-xl border border-amber-300/20 bg-black/10 px-3 py-2"
+          class="rounded-xl theme-warning-border theme-card-soft px-3 py-2"
         >
           <div class="flex items-center justify-between gap-2">
-            <span class="text-xs text-amber-50">活动ID {{ task.activityId }}</span>
+            <span class="text-xs theme-warning">活动ID {{ task.activityId }}</span>
             <div class="flex items-center gap-2">
               <button
                 v-if="task.canCancel"
                 type="button"
                 :disabled="isClubActionPending(task.cancelPendingKey)"
-                class="h-6 px-2 rounded-md text-[11px] inline-flex items-center gap-1 bg-rose-500/80 text-white hover:bg-rose-500 disabled:opacity-70 disabled:cursor-not-allowed"
+                class="h-6 px-2 rounded-md text-[11px] inline-flex items-center gap-1 theme-danger-bg theme-danger text-white hover:theme-danger-bg disabled:opacity-70 disabled:cursor-not-allowed"
                 @click="cancelRushTask(task)"
               >
                 <i
@@ -310,15 +309,15 @@
               <span :class="task.statusClass">{{ task.statusText }}</span>
             </div>
           </div>
-          <div class="mt-1 text-[11px] text-amber-100/80">执行时间：{{ task.executeAt }}</div>
-          <div v-if="task.lastResult" class="mt-1 text-[11px] text-amber-100/70">
+          <div class="mt-1 text-[11px] theme-warning opacity-80">执行时间：{{ task.executeAt }}</div>
+          <div v-if="task.lastResult" class="mt-1 text-[11px] theme-warning opacity-70">
             结果：{{ task.lastResult }}
           </div>
         </div>
       </div>
     </section>
 
-    <section class="mt-3 flex items-center justify-between text-xs text-gray-400">
+    <section class="mt-3 flex items-center justify-between text-xs theme-text-secondary">
       <span>{{ currentListTitle }}</span>
       <span>共 {{ filteredList.length }} 条</span>
     </section>
@@ -328,59 +327,55 @@
         <div
           v-for="idx in 4"
           :key="`skeleton-${idx}`"
-          class="rounded-2xl border border-white/8 bg-white/5 p-3 animate-pulse"
+          class="rounded-2xl theme-card-soft p-3 animate-pulse"
         >
-          <div class="h-4 w-2/3 bg-white/10 rounded"></div>
-          <div class="mt-3 h-3 w-full bg-white/10 rounded"></div>
-          <div class="mt-2 h-3 w-4/5 bg-white/10 rounded"></div>
+          <div class="h-4 w-2/3 club-skeleton-line rounded"></div>
+          <div class="mt-3 h-3 w-full club-skeleton-line rounded"></div>
+          <div class="mt-2 h-3 w-4/5 club-skeleton-line rounded"></div>
         </div>
       </template>
 
       <div
         v-else-if="cards.length === 0"
-        class="rounded-2xl border border-white/8 bg-white/5 p-6 text-center text-sm text-gray-400"
+        class="rounded-2xl theme-card p-6 text-center text-sm theme-text-secondary"
       >
         {{ emptyMessage }}
       </div>
 
-      <article
-        v-for="card in cards"
-        :key="card.key"
-        class="rounded-2xl border border-white/8 bg-white/5 p-3"
-      >
+      <article v-for="card in cards" :key="card.key" class="rounded-2xl theme-card p-3">
         <template v-if="card.isHistoryRecord">
           <div class="flex items-start justify-between gap-3">
-            <h3 class="min-w-0 flex-1 text-sm font-semibold text-white truncate">
+            <h3 class="min-w-0 flex-1 text-sm font-semibold theme-text-primary truncate">
               {{ card.title }}
             </h3>
             <span :class="card.badgeClass">{{ card.badgeText }}</span>
           </div>
           <div class="mt-1 flex items-center justify-between gap-2">
-            <span class="min-w-0 flex-1 text-xs text-gray-400 truncate">{{
+            <span class="min-w-0 flex-1 text-xs theme-text-secondary truncate">{{
               card.subTitle || '--'
             }}</span>
-            <span class="shrink-0 text-xs text-gray-300">{{ card.historyDateTimeText }}</span>
+            <span class="shrink-0 text-xs theme-text-tertiary">{{ card.historyDateTimeText }}</span>
           </div>
         </template>
 
         <template v-else>
           <div class="flex items-start justify-between gap-3">
-            <h3 class="min-w-0 flex-1 text-sm font-semibold text-white truncate">
+            <h3 class="min-w-0 flex-1 text-sm font-semibold theme-text-primary truncate">
               {{ card.title }}
             </h3>
             <span :class="card.badgeClass">{{ card.badgeText }}</span>
           </div>
 
           <div class="mt-1 flex items-center justify-between gap-2">
-            <span class="min-w-0 flex-1 text-xs text-gray-400 truncate">
+            <span class="min-w-0 flex-1 text-xs theme-text-secondary truncate">
               {{ card.subTitle }}{{ card.metaTertiaryText ? ` · ${card.metaTertiaryText}` : '' }}
             </span>
-            <span class="shrink-0 text-xs text-gray-300 text-right">{{
+            <span class="shrink-0 text-xs theme-text-tertiary text-right">{{
               card.metaSecondaryText
             }}</span>
           </div>
 
-          <div class="mt-3 flex items-center justify-between gap-2 text-xs text-gray-300">
+          <div class="mt-3 flex items-center justify-between gap-2 text-xs theme-text-tertiary">
             <div class="meta-pill">
               <i class="ri-time-line"></i>
               <span class="truncate">{{ card.timeText }}</span>
@@ -424,7 +419,7 @@
             </div>
           </div>
 
-          <p v-if="card.showIntro" class="mt-3 text-xs text-gray-400 leading-5 intro-text">
+          <p v-if="card.showIntro" class="mt-3 text-xs theme-text-secondary leading-5 intro-text">
             {{ card.introText }}
           </p>
         </template>
@@ -441,7 +436,7 @@
       >
         <button
           type="button"
-          class="w-full h-9 rounded-xl border border-white/8 bg-white/5 text-xs text-gray-200 inline-flex items-center justify-center gap-1.5"
+          class="w-full h-9 rounded-xl theme-card-soft text-xs theme-text-primary inline-flex items-center justify-center gap-1.5"
           :disabled="historyLoadingMore"
           @click="loadMoreHistoryRecords"
         >
@@ -721,13 +716,13 @@ const signTaskPhase = computed(() => resolveSignTaskPhase(signTask.value));
 const signTaskPanelStatus = computed(() => {
   switch (signTaskPhase.value) {
     case 'joined':
-      return createBadge('已报名', 'bg-amber-500/20 text-amber-200');
+      return createBadge('已报名', 'theme-warning-bg theme-warning-border theme-warning');
     case 'signedIn':
-      return createBadge('已签到', 'bg-emerald-500/20 text-emerald-200');
+      return createBadge('已签到', 'theme-success-bg theme-success-border theme-success');
     case 'completed':
-      return createBadge('已完成', 'bg-sky-500/20 text-sky-200');
+      return createBadge('已完成', 'theme-accent-bg theme-accent-border theme-accent');
     default:
-      return createBadge('未签到', 'bg-white/10 text-gray-300');
+      return createBadge('未签到', 'badge-neutral');
   }
 });
 
@@ -805,7 +800,7 @@ const signTaskPrimaryAction = computed(() => {
       label: '已完成',
       pendingLabel: '已完成',
       disabled: true,
-      buttonClass: 'bg-white/10 text-gray-300',
+      buttonClass: 'badge-neutral',
     };
   }
 
@@ -816,7 +811,7 @@ const signTaskPrimaryAction = computed(() => {
       label: '签退',
       pendingLabel: '签退中',
       disabled: false,
-      buttonClass: 'bg-amber-500 text-white hover:bg-amber-400',
+      buttonClass: 'theme-warning-bg theme-warning text-white hover:theme-warning-bg',
     };
   }
 
@@ -826,7 +821,7 @@ const signTaskPrimaryAction = computed(() => {
     label: '签到',
     pendingLabel: '签到中',
     disabled: false,
-    buttonClass: 'bg-emerald-500 text-white hover:bg-emerald-400',
+    buttonClass: 'theme-success-bg theme-success text-white hover:theme-success-bg',
   };
 });
 
@@ -840,7 +835,7 @@ const signTaskCancelAction = computed(() => {
     label: '取消报名',
     pendingLabel: '取消中',
     disabled: false,
-    buttonClass: 'bg-rose-500 text-white hover:bg-rose-400',
+    buttonClass: 'theme-danger-bg theme-danger text-white hover:theme-danger-bg',
   };
 });
 
@@ -1048,45 +1043,45 @@ function createBadge(text, className) {
 function resolveBadge(item) {
   if (activeMainTab.value === 'history' && activeHistoryTab.value === 'semester') {
     return String(item.signStatus) === '1'
-      ? createBadge('已完成', 'bg-emerald-500/20 text-emerald-200')
-      : createBadge('未完成', 'bg-white/10 text-gray-300');
+      ? createBadge('已完成', 'theme-success-bg theme-success-border theme-success')
+      : createBadge('未完成', 'badge-neutral');
   }
 
   if (activeMainTab.value === 'history') {
     const signStatus = String(item.signStatus);
-    if (signStatus === '1') return createBadge('已完成', 'bg-emerald-500/20 text-emerald-200');
-    if (signStatus === '3') return createBadge('未签退', 'bg-amber-500/20 text-amber-200');
-    return createBadge('未签到', 'bg-white/10 text-gray-300');
+    if (signStatus === '1') return createBadge('已完成', 'theme-success-bg theme-success-border theme-success');
+    if (signStatus === '3') return createBadge('未签退', 'theme-warning-bg theme-warning-border theme-warning');
+    return createBadge('未签到', 'badge-neutral');
   }
 
   if (activeMainTab.value === 'activities' && activeActivityTab.value === 'myTask') {
     switch (String(item.activityStatus)) {
       case '1':
-        return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
+        return createBadge('可报名', 'theme-accent-bg theme-accent-border theme-accent');
       case '2':
         return createBadge('进行中', 'bg-blue-500/20 text-blue-200');
       case '3':
-        return createBadge('已结束', 'bg-white/10 text-gray-300');
+        return createBadge('已结束', 'badge-neutral');
       default:
-        return createBadge('待开放', 'bg-white/10 text-gray-300');
+        return createBadge('待开放', 'badge-neutral');
     }
   }
 
   switch (resolveEffectiveOptionStatus(item)) {
     case '1':
-      return createBadge('已报名', 'bg-amber-500/20 text-amber-200');
+      return createBadge('已报名', 'theme-warning-bg theme-warning-border theme-warning');
     case '2':
       return createBadge('进行中', 'bg-blue-500/20 text-blue-200');
     case '6':
-      return createBadge('可报名', 'bg-cyan-500/20 text-cyan-200');
+      return createBadge('可报名', 'theme-accent-bg theme-accent-border theme-accent');
     case '7':
-      return createBadge('人数已满', 'bg-rose-500/20 text-rose-200');
+      return createBadge('人数已满', 'theme-danger-bg theme-danger-border theme-danger');
     case '3':
-      return createBadge('已报名其他活动', 'bg-white/10 text-gray-300');
+      return createBadge('已报名其他活动', 'badge-neutral');
     case '4':
-      return createBadge('已完成', 'bg-emerald-500/20 text-emerald-200');
+      return createBadge('已完成', 'theme-success-bg theme-success-border theme-success');
     default:
-      return createBadge('待开放', 'bg-white/10 text-gray-300');
+      return createBadge('待开放', 'badge-neutral');
   }
 }
 
@@ -1099,7 +1094,7 @@ function resolveClubAction(item) {
       label: '报名',
       pendingLabel: '报名中',
       disabled: false,
-      buttonClass: 'bg-cyan-500 hover:bg-cyan-400',
+      buttonClass: 'theme-accent-bg theme-accent',
     };
   }
 
@@ -1109,7 +1104,7 @@ function resolveClubAction(item) {
       label: '取消报名',
       pendingLabel: '取消中',
       disabled: false,
-      buttonClass: 'bg-rose-500 hover:bg-rose-400',
+      buttonClass: 'theme-danger-bg theme-danger text-white hover:theme-danger-bg',
     };
   }
 
@@ -1129,7 +1124,7 @@ function resolveClubAction(item) {
       label: '已满员',
       pendingLabel: '已满员',
       disabled: true,
-      buttonClass: 'bg-white/10 text-gray-300',
+      buttonClass: 'theme-danger-bg theme-danger-border theme-danger',
     };
   }
 
@@ -1139,7 +1134,7 @@ function resolveClubAction(item) {
       label: '无法报名',
       pendingLabel: '无法报名',
       disabled: true,
-      buttonClass: 'bg-white/10 text-gray-300',
+      buttonClass: 'badge-neutral',
     };
   }
 
@@ -1149,7 +1144,7 @@ function resolveClubAction(item) {
       label: '已完成',
       pendingLabel: '已完成',
       disabled: true,
-      buttonClass: 'bg-white/10 text-gray-300',
+      buttonClass: 'badge-neutral',
     };
   }
 
@@ -1158,7 +1153,7 @@ function resolveClubAction(item) {
     label: '暂不可操作',
     pendingLabel: '暂不可操作',
     disabled: true,
-    buttonClass: 'bg-white/10 text-gray-300',
+    buttonClass: 'badge-neutral',
   };
 }
 
@@ -1845,7 +1840,7 @@ function resolveRushAction(item) {
     label: '抢报',
     pendingLabel: '抢报中',
     disabled: false,
-    buttonClass: 'bg-amber-500 hover:bg-amber-400',
+    buttonClass: 'theme-warning-bg theme-warning text-white hover:theme-warning-bg',
   };
 }
 
@@ -1927,15 +1922,15 @@ function resolveRushTaskStatusText(status) {
 function resolveRushTaskStatusClass(status) {
   switch (status) {
     case 'pending':
-      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-cyan-500/20 text-cyan-200';
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full theme-accent-bg theme-accent';
     case 'done':
-      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-200';
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full theme-success-bg theme-success';
     case 'failed':
-      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-rose-500/20 text-rose-200';
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full theme-danger-bg theme-danger';
     case 'cancelled':
-      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-white/10 text-gray-300';
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full badge-neutral';
     default:
-      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full bg-white/10 text-gray-300';
+      return 'text-[11px] px-2 h-5 inline-flex items-center rounded-full badge-neutral';
   }
 }
 
@@ -2064,17 +2059,30 @@ async function copyUrl() {
 .meta-pill {
   height: 28px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--card-soft-bg);
+  border: 1px solid var(--card-border);
   padding: 0 8px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.meta-pill-cyan {
-  background: rgba(34, 211, 238, 0.1);
-  border-color: rgba(125, 211, 252, 0.18);
+.meta-pill.theme-success-bg {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-color);
+}
+
+.meta-pill.theme-warning-bg {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-color);
+}
+
+.meta-pill.theme-danger-bg {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-color);
 }
 
 .intro-text {
@@ -2082,5 +2090,19 @@ async function copyUrl() {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.club-dropdown-option-idle:hover {
+  background-color: var(--action-hover-bg);
+}
+
+.badge-neutral {
+  background-color: var(--card-soft-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
+}
+
+.club-skeleton-line {
+  background-color: var(--card-soft-bg);
 }
 </style>
