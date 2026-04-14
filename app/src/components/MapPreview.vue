@@ -491,12 +491,24 @@ onBeforeUnmount(() => {
 .map-preview-shell {
   background: var(--map-surface);
   box-shadow: var(--map-shadow);
+  position: relative;
+  z-index: 0;
 }
 
 :deep(.leaflet-container) {
   width: 100%;
   height: 100%;
   background: var(--map-surface);
+}
+
+:deep(.leaflet-pane),
+:deep(.leaflet-map-pane),
+:deep(.leaflet-map-pane canvas) {
+  z-index: 1 !important;
+}
+
+:deep(.leaflet-control-container) {
+  z-index: 2 !important;
 }
 
 :deep(.leaflet-tile-pane) {
