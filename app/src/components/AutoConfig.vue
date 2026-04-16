@@ -87,7 +87,7 @@
 
           <div :class="ui.fieldItem">
             <label class="text-[10px] font-black theme-text-tertiary uppercase tracking-widest ml-1"
-              >每日运行时间（10分钟误差）</label
+              >每日运行时间</label
             >
             <div class="flex items-center gap-2">
               <div class="flex-1 flex items-center theme-card-soft rounded-xl p-1">

@@ -301,19 +301,21 @@ export function normalizeRoundedRunTime(runTimeMinutes, distanceMeters, opts = {
   const minMinutes = toPositiveNumber(opts?.minMinutes);
   const maxMinutes = toPositiveNumber(opts?.maxMinutes);
 
-  let rounded = Math.round(toFiniteNumber(runTimeMinutes, 0));
+  let rounded = toFiniteNumber(runTimeMinutes, 0);
   if (rounded < 1) rounded = 1;
 
   const { minRounded, maxRounded } = deriveRoundedRunTimeBounds(distanceMeters, minMinutes, maxMinutes);
-  if (rounded < minRounded) rounded = minRounded;
-  if (maxRounded > 0 && rounded > maxRounded) rounded = maxRounded;
+  const roundedMinutes = Math.floor(rounded);
+  let adjusted = roundedMinutes < minRounded ? minRounded : roundedMinutes;
+  if (maxRounded > 0 && adjusted > maxRounded) adjusted = maxRounded;
 
-  rounded = avoidRoundedTenMinute(rounded, minRounded, maxRounded, randomFn);
-  if (rounded < minRounded) rounded = minRounded;
-  if (maxRounded > 0 && rounded > maxRounded) rounded = maxRounded;
-  if (rounded < 1) rounded = 1;
+  adjusted = avoidRoundedTenMinute(adjusted, minRounded, maxRounded, randomFn);
+  if (adjusted < minRounded) adjusted = minRounded;
+  if (maxRounded > 0 && adjusted > maxRounded) adjusted = maxRounded;
+  if (adjusted < 1) adjusted = 1;
 
-  return rounded;
+  const seconds = (rounded - Math.floor(rounded)) * 60;
+  return Number((adjusted + seconds / 60).toFixed(1));
 }
 
 export function calculatePaceMinutesPerKm(distanceMeters, durationMinutes) {

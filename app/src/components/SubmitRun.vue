@@ -95,11 +95,11 @@
             <div class="form-group mb-4">
               <label class="block text-sm theme-text-secondary mt-2 mb-2 font-medium">
                 <div class="flex justify-between items-center">
-                  <span>跑步里程</span>
+                  <span>跑步数据</span>
                   <span class="text-xs theme-text-tertiary">配速 {{ paceDisplay }}</span>
                 </div>
               </label>
-              <div class="input-container flex items-center">
+              <div class="input-container flex items-center gap-2">
                 <div class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3">
                   <input
                     v-model.number="form.distance"
@@ -111,9 +111,21 @@
                   />
                   <span class="unit text-sm theme-text-tertiary pl-2">米</span>
                 </div>
+                <div
+                  class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3 duration-readonly"
+                >
+                  <input
+                    :value="durationDisplay"
+                    type="text"
+                    readonly
+                    placeholder="时长"
+                    class="flex-1 py-2 text-sm theme-text-secondary outline-none pr-2 bg-transparent cursor-not-allowed"
+                  />
+                  <span class="unit text-sm theme-text-tertiary pl-2">时长</span>
+                </div>
                 <button
                   type="button"
-                  class="ml-3 px-3 py-2 theme-card-soft text-sm theme-text-secondary cursor-pointer disabled:opacity-50 rounded-md"
+                  class="px-3 py-2 theme-card-soft text-sm theme-text-secondary cursor-pointer disabled:opacity-50 rounded-md"
                   @click="onRandomFill"
                   :disabled="submitting || randomizing"
                   aria-label="随机里程"
@@ -282,6 +294,15 @@ const paceDisplay = computed(() => {
   }
 
   return formatPaceMinutesPerKm(distance, predictedRunTime.value);
+});
+
+const durationDisplay = computed(() => {
+  if (!Number.isFinite(predictedRunTime.value) || predictedRunTime.value <= 0) {
+    return '';
+  }
+  const minutes = Math.floor(predictedRunTime.value);
+  const seconds = Math.round((predictedRunTime.value - minutes) * 60);
+  return `${minutes}'${String(seconds).padStart(2, '0')}''`;
 });
 
 const buildLocalRandomRun = () => {
@@ -657,5 +678,15 @@ loadMaps().then(async () => {
   to {
     transform: rotate(360deg);
   }
+}
+
+.duration-readonly {
+  opacity: 0.55;
+  background-color: var(--card-soft-bg);
+}
+
+.duration-readonly input[readonly] {
+  cursor: not-allowed;
+  user-select: none;
 }
 </style>
