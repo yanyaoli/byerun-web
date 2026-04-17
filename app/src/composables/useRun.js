@@ -7,6 +7,7 @@ import {
   normalizeRandomRunPayload,
   normalizeRoundedRunTime,
   resolveRunBoundsFromStandard,
+  calculatePaceMinutesPerKm,
 } from '@/utils/run';
 
 export function useRunRecords({ pageSize = 15, onMessage } = {}) {
@@ -21,13 +22,16 @@ export function useRunRecords({ pageSize = 15, onMessage } = {}) {
   }
 
   function formatPaceDetail(time, distance) {
-    if (!distance || !time) return "0'00''";
-    const pace = time / (distance / 1000);
-    const min = Math.floor(pace);
-    const sec = Math.round((pace - min) * 60)
-      .toString()
-      .padStart(2, '0');
-    return `${min}'${sec}''`;
+    const d = Number(distance);
+    const t = Number(time);
+    if (!d || !t || d <= 0 || t <= 0 || !Number.isFinite(d) || !Number.isFinite(t)) return "0'00''";
+    const pace = calculatePaceMinutesPerKm(d, t);
+    if (pace <= 0) return "0'00''";
+    const minutes = Math.floor(pace);
+    const seconds = Math.round((pace - minutes) * 60);
+    const normalizedMinutes = minutes + Math.floor(seconds / 60);
+    const normalizedSeconds = seconds % 60;
+    return `${normalizedMinutes}'${String(normalizedSeconds).padStart(2, '0')}''`;
   }
 
   const fetchRecords = async () => {

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
     <!-- 完成情况卡片 -->
     <div class="theme-card rounded-2xl p-5 mb-5 w-full box-border">
@@ -112,16 +112,17 @@
                   <span class="unit text-sm theme-text-tertiary pl-2">米</span>
                 </div>
                 <div
-                  class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3 duration-readonly"
+                  class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3"
                 >
                   <input
-                    :value="durationDisplay"
-                    type="text"
-                    readonly
-                    placeholder="时长"
-                    class="flex-1 py-2 text-sm theme-text-secondary outline-none pr-2 bg-transparent cursor-not-allowed"
+                    v-model.number="form.duration"
+                    type="number"
+                    placeholder="分"
+                    class="flex-1 py-2 text-sm theme-text-secondary outline-none pr-2"
+                    @focus="userTyping = true"
+                    @blur="onDurationBlur"
                   />
-                  <span class="unit text-sm theme-text-tertiary pl-2">时长</span>
+                  <span class="unit text-sm theme-text-tertiary pl-2">分</span>
                 </div>
                 <button
                   type="button"
@@ -242,6 +243,7 @@ watch(
 const form = ref({
   distance: submitRunDistance.value,
   route: submitRunRoute.value,
+  duration: 0,
 });
 const mapRenderUnlocked = ref(false);
 const submitting = ref(false);
@@ -279,30 +281,51 @@ const calculatePredictedRunTime = (distance) => {
   });
 };
 
+const userTyping = ref(false);
+
 watch(
   () => Number(form.value.distance),
   (distance) => {
-    predictedRunTime.value = calculatePredictedRunTime(distance);
+    if (!userTyping.value) {
+      const time = calculatePredictedRunTime(distance);
+      predictedRunTime.value = time;
+      form.value.duration = Math.floor(time);
+    }
   },
   { immediate: true },
 );
 
+watch(
+  () => form.value.duration,
+  (duration) => {
+    if (!userTyping.value) return;
+    if (duration > 0) {
+      predictedRunTime.value = 0;
+    }
+  },
+);
+
+const userDuration = computed(() => {
+  const d = Number(form.value.duration);
+  return Number.isInteger(d) && d > 0 ? d : 0;
+});
+
 const paceDisplay = computed(() => {
   const distance = Number(form.value.distance);
-  if (!Number.isInteger(distance) || distance <= 0 || !Number.isFinite(predictedRunTime.value)) {
+  const time = userDuration.value || Math.floor(predictedRunTime.value);
+  if (!Number.isInteger(distance) || distance <= 0 || !time) {
     return "0'00''/km";
   }
 
-  return formatPaceMinutesPerKm(distance, predictedRunTime.value);
+  return formatPaceMinutesPerKm(distance, time);
 });
 
 const durationDisplay = computed(() => {
-  if (!Number.isFinite(predictedRunTime.value) || predictedRunTime.value <= 0) {
+  const minutes = Math.floor(predictedRunTime.value);
+  if (!minutes || minutes <= 0) {
     return '';
   }
-  const minutes = Math.floor(predictedRunTime.value);
-  const seconds = Math.round((predictedRunTime.value - minutes) * 60);
-  return `${minutes}'${String(seconds).padStart(2, '0')}''`;
+  return String(minutes);
 });
 
 const buildLocalRandomRun = () => {
@@ -357,15 +380,26 @@ const applyRandomRun = (randomRun) => {
   form.value.distance = randomRun.run_distance;
 };
 
+function onDurationBlur() {
+  userTyping.value = false;
+  if (!form.value.duration || form.value.duration <= 0) {
+    const time = calculatePredictedRunTime(form.value.distance);
+    predictedRunTime.value = time;
+    form.value.duration = Math.floor(time);
+  }
+}
+
 async function onRandomFill() {
   if (submitting.value || randomizing.value) return;
 
   randomizing.value = true;
+  userTyping.value = false;
   try {
     const randomRun = buildLocalRandomRun();
     applyRandomRun(randomRun);
     predictedRunTime.value =
       randomRun.run_time || calculatePredictedRunTime(Number(form.value.distance));
+    form.value.duration = Math.floor(predictedRunTime.value);
   } finally {
     randomizing.value = false;
     awaitingSubmitConfirm.value = false;
@@ -484,10 +518,12 @@ function selectRoute(route) {
 const handleSubmit = async () => {
   submitting.value = true;
   try {
+    const runTime = userDuration.value || Math.floor(predictedRunTime.value);
+
     const res = await submitRunApi({
       distance: form.value.distance,
       route: form.value.route,
-      runTime: predictedRunTime.value,
+      runTime,
     });
     if (!res.ok) {
       let msg = res.data?.msg || res.error?.message || '提交失败，请重试';
