@@ -100,33 +100,33 @@
                 </div>
               </label>
               <div class="input-container flex items-center gap-2">
-                <div class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3">
+                <div class="input-wrapper flex-1 min-w-0 flex items-center theme-card-soft rounded-md px-3">
                   <input
                     v-model.number="form.distance"
                     type="number"
                     step="1"
                     placeholder="输入里程"
                     required
-                    class="flex-1 py-2 text-sm theme-text-secondary outline-none pr-2"
+                    class="flex-1 min-w-0 bg-transparent py-2 text-sm theme-text-secondary outline-none pr-2"
                   />
-                  <span class="unit text-sm theme-text-tertiary pl-2">米</span>
+                  <span class="unit shrink-0 text-sm theme-text-tertiary pl-2">米</span>
                 </div>
                 <div
-                  class="input-wrapper flex-1 flex items-center theme-card-soft rounded-md px-3"
+                  class="input-wrapper flex-1 min-w-0 flex items-center theme-card-soft rounded-md px-3"
                 >
                   <input
                     v-model.number="form.duration"
                     type="number"
                     placeholder="分"
-                    class="flex-1 py-2 text-sm theme-text-secondary outline-none pr-2"
+                    class="flex-1 min-w-0 bg-transparent py-2 text-sm theme-text-secondary outline-none pr-2"
                     @focus="userTyping = true"
                     @blur="onDurationBlur"
                   />
-                  <span class="unit text-sm theme-text-tertiary pl-2">分</span>
+                  <span class="unit shrink-0 text-sm theme-text-tertiary pl-2">分</span>
                 </div>
                 <button
                   type="button"
-                  class="px-3 py-2 theme-card-soft text-sm theme-text-secondary cursor-pointer disabled:opacity-50 rounded-md"
+                  class="shrink-0 px-3 py-2 theme-card-soft text-sm theme-text-secondary cursor-pointer disabled:opacity-50 rounded-md"
                   @click="onRandomFill"
                   :disabled="submitting || randomizing"
                   aria-label="随机里程"
