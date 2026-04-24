@@ -654,6 +654,7 @@ function selectRoute(route) {
   if (!Object.prototype.hasOwnProperty.call(routeOptions.value, route)) {
     return;
   }
+  manualTrack.value = null;
   selectMapRoute(route);
   form.value.route = route;
   submitRunRoute.value = route;

@@ -1,6 +1,6 @@
 ﻿<template>
   <nav
-    class="fixed left-0 right-0 bottom-4 z-[999] transition-all duration-300"
+    class="fixed left-0 right-0 bottom-1 z-[999] transition-all duration-300"
     :style="{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }"
   >
     <div

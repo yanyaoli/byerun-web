@@ -1,5 +1,5 @@
 <template>
-  <div class="map-drawer">
+  <div ref="drawerContainer" class="map-drawer">
     <!-- 搜索栏 -->
     <div class="search-box">
       <div class="search-input-wrapper">
@@ -94,7 +94,7 @@
     </div>
 
     <!-- 地图容器 -->
-    <div class="map-wrapper">
+    <div class="map-wrapper" :class="{ 'drawing-mode': currentTool === 'draw' }">
       <div ref="mapContainer" class="map-container"></div>
       <div class="map-stats">
         <div class="stat-item">
@@ -169,6 +169,9 @@ import { ref, computed, inject, onMounted, onUnmounted } from 'vue';
 import L from 'leaflet';
 import { saveCustomMap, validateMapData } from '@/utils/map';
 
+const GAODE_TILE_URL =
+  'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style={style}&x={x}&y={y}&z={z}';
+
 const props = defineProps({
   initialTrack: {
     type: Array,
@@ -188,11 +191,13 @@ const emit = defineEmits(['track-changed', 'track-saved']);
 const showMessage = inject('showMessage', null);
 
 // 状态
+const drawerContainer = ref(null);
 const mapContainer = ref(null);
 let map = null;
 let polyline = null;
 let markersGroup = null;
 let userLocationMarker = null;
+let clickSuppressUntil = 0;
 
 const currentTool = ref('pan');
 const points = ref([]);
@@ -244,6 +249,79 @@ function getDistanceBetween(p1, p2) {
   return R * c;
 }
 
+function outOfChina(lng, lat) {
+  return lng < 72.004 || lng > 137.8347 || lat < 0.8293 || lat > 55.8271;
+}
+
+function transformLat(lng, lat) {
+  let ret =
+    -100.0 +
+    2.0 * lng +
+    3.0 * lat +
+    0.2 * lat * lat +
+    0.1 * lng * lat +
+    0.2 * Math.sqrt(Math.abs(lng));
+  ret +=
+    ((20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0) /
+    3.0;
+  ret +=
+    ((20.0 * Math.sin(lat * Math.PI) + 40.0 * Math.sin((lat / 3.0) * Math.PI)) * 2.0) / 3.0;
+  ret +=
+    ((160.0 * Math.sin((lat / 12.0) * Math.PI) + 320.0 * Math.sin((lat * Math.PI) / 30.0)) * 2.0) /
+    3.0;
+  return ret;
+}
+
+function transformLng(lng, lat) {
+  let ret =
+    300.0 +
+    lng +
+    2.0 * lat +
+    0.1 * lng * lng +
+    0.1 * lng * lat +
+    0.1 * Math.sqrt(Math.abs(lng));
+  ret +=
+    ((20.0 * Math.sin(6.0 * lng * Math.PI) + 20.0 * Math.sin(2.0 * lng * Math.PI)) * 2.0) /
+    3.0;
+  ret +=
+    ((20.0 * Math.sin(lng * Math.PI) + 40.0 * Math.sin((lng / 3.0) * Math.PI)) * 2.0) / 3.0;
+  ret +=
+    ((150.0 * Math.sin((lng / 12.0) * Math.PI) + 300.0 * Math.sin((lng / 30.0) * Math.PI)) * 2.0) /
+    3.0;
+  return ret;
+}
+
+function wgs84ToGcj02(lng, lat) {
+  if (outOfChina(lng, lat)) return [lng, lat];
+  const a = 6378245.0;
+  const ee = 0.00669342162296594323;
+  let dLat = transformLat(lng - 105.0, lat - 35.0);
+  let dLng = transformLng(lng - 105.0, lat - 35.0);
+  const radLat = (lat / 180.0) * Math.PI;
+  let magic = Math.sin(radLat);
+  magic = 1 - ee * magic * magic;
+  const sqrtMagic = Math.sqrt(magic);
+  dLat = (dLat * 180.0) / (((a * (1 - ee)) / (magic * sqrtMagic)) * Math.PI);
+  dLng = (dLng * 180.0) / ((a / sqrtMagic) * Math.cos(radLat) * Math.PI);
+  return [lng + dLng, lat + dLat];
+}
+
+function gcj02ToWgs84(lng, lat) {
+  if (outOfChina(lng, lat)) return [lng, lat];
+  const [mgLng, mgLat] = wgs84ToGcj02(lng, lat);
+  return [lng * 2 - mgLng, lat * 2 - mgLat];
+}
+
+function pointToDisplayLatLng(point) {
+  const [gcjLng, gcjLat] = wgs84ToGcj02(point[1], point[0]);
+  return [gcjLat, gcjLng];
+}
+
+function mapLatLngToStoredPoint(latlng) {
+  const [wgsLng, wgsLat] = gcj02ToWgs84(latlng.lng, latlng.lat);
+  return [wgsLat, wgsLng];
+}
+
 function setTool(tool) {
   currentTool.value = tool;
   if (tool === 'pan' && map) {
@@ -254,7 +332,7 @@ function setTool(tool) {
 }
 
 function addPoint(latlng) {
-  const point = [latlng.lat, latlng.lng];
+  const point = mapLatLngToStoredPoint(latlng);
   // 检查最小距离，避免重复点
   if (points.value.length > 0) {
     const lastPoint = points.value[points.value.length - 1];
@@ -287,7 +365,7 @@ function updatePolyline() {
   // 更新标记
   markersGroup.clearLayers();
   points.value.forEach((point) => {
-    const marker = L.circleMarker([point[0], point[1]], {
+    const marker = L.circleMarker(pointToDisplayLatLng(point), {
       radius: 4,
       fillColor: '#3b82f6',
       color: '#fff',
@@ -302,7 +380,7 @@ function updatePolyline() {
     map.removeLayer(polyline);
   }
   if (points.value.length >= 2) {
-    polyline = L.polyline(points.value, {
+    polyline = L.polyline(points.value.map(pointToDisplayLatLng), {
       color: '#3b82f6',
       weight: 4,
       opacity: 0.8,
@@ -316,11 +394,13 @@ function focusToTrack(trackPoints) {
   if (!map || !Array.isArray(trackPoints) || trackPoints.length === 0) return;
 
   if (trackPoints.length === 1) {
-    map.setView(trackPoints[0], Math.max(map.getZoom(), 17), { animate: false });
+    map.setView(pointToDisplayLatLng(trackPoints[0]), Math.max(map.getZoom(), 17), {
+      animate: false,
+    });
     return;
   }
 
-  const bounds = L.latLngBounds(trackPoints);
+  const bounds = L.latLngBounds(trackPoints.map(pointToDisplayLatLng));
   if (bounds.isValid()) {
     map.fitBounds(bounds, {
       padding: [24, 24],
@@ -331,6 +411,7 @@ function focusToTrack(trackPoints) {
 }
 
 function onMapClick(e) {
+  if (Date.now() < clickSuppressUntil) return;
   if (currentTool.value === 'draw') {
     addPoint(e.latlng);
   }
@@ -363,6 +444,81 @@ function onMapMouseMove(e) {
 
 function onMapMouseUp() {
   isDrawing.value = false;
+}
+
+function onMapTouchStart(event) {
+  if (currentTool.value !== 'draw' || !map) return;
+  if (event.touches.length !== 1) {
+    isDrawing.value = false;
+    return;
+  }
+
+  event.preventDefault();
+  clickSuppressUntil = Date.now() + 400;
+
+  const touch = event.touches[0];
+  const latlng = map.mouseEventToLatLng(touch);
+  isDrawing.value = true;
+  drawThrottleTime.value = 0;
+  lastDrawPoint.value = null;
+  addPoint(latlng);
+}
+
+function onMapTouchMove(event) {
+  if (!isDrawing.value || currentTool.value !== 'draw' || !map) return;
+  if (event.touches.length !== 1) {
+    isDrawing.value = false;
+    return;
+  }
+
+  event.preventDefault();
+
+  const now = Date.now();
+  if (now - drawThrottleTime.value < 16) return;
+  drawThrottleTime.value = now;
+
+  const touch = event.touches[0];
+  const latlng = map.mouseEventToLatLng(touch);
+
+  if (lastDrawPoint.value) {
+    const distance = getDistanceBetween(lastDrawPoint.value, [latlng.lat, latlng.lng]);
+    if (distance < 3) return;
+  }
+
+  lastDrawPoint.value = [latlng.lat, latlng.lng];
+  addPoint(latlng);
+}
+
+function onMapTouchEnd() {
+  isDrawing.value = false;
+}
+
+function updateViewportHeight() {
+  if (!drawerContainer.value) return;
+  const vh = window.innerHeight * 0.01;
+  drawerContainer.value.style.setProperty('--drawer-vh', `${vh}px`);
+
+  if (map) {
+    requestAnimationFrame(() => {
+      map.invalidateSize(false);
+    });
+  }
+}
+
+function bindTouchEvents() {
+  if (!mapContainer.value) return;
+  mapContainer.value.addEventListener('touchstart', onMapTouchStart, { passive: false });
+  mapContainer.value.addEventListener('touchmove', onMapTouchMove, { passive: false });
+  mapContainer.value.addEventListener('touchend', onMapTouchEnd, { passive: true });
+  mapContainer.value.addEventListener('touchcancel', onMapTouchEnd, { passive: true });
+}
+
+function unbindTouchEvents() {
+  if (!mapContainer.value) return;
+  mapContainer.value.removeEventListener('touchstart', onMapTouchStart);
+  mapContainer.value.removeEventListener('touchmove', onMapTouchMove);
+  mapContainer.value.removeEventListener('touchend', onMapTouchEnd);
+  mapContainer.value.removeEventListener('touchcancel', onMapTouchEnd);
 }
 
 // 搜索功能
@@ -531,8 +687,9 @@ function locateUser() {
     (position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
+      const [gcjLng, gcjLat] = wgs84ToGcj02(lng, lat);
 
-      map.setView([lat, lng], Math.max(map.getZoom(), 17), {
+      map.setView([gcjLat, gcjLng], Math.max(map.getZoom(), 17), {
         animate: true,
       });
 
@@ -540,7 +697,7 @@ function locateUser() {
         map.removeLayer(userLocationMarker);
       }
 
-      userLocationMarker = L.circleMarker([lat, lng], {
+      userLocationMarker = L.circleMarker([gcjLat, gcjLng], {
         radius: 7,
         fillColor: '#22d3ee',
         color: '#ffffff',
@@ -581,9 +738,14 @@ function initMap() {
     attributionControl: false,
   });
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '',
+  L.tileLayer(GAODE_TILE_URL, {
+    subdomains: '1234',
+    style: 8,
+    minZoom: 3,
     maxZoom: 19,
+    keepBuffer: 2,
+    updateWhenIdle: true,
+    updateWhenZooming: false,
   }).addTo(map);
 
   markersGroup = L.layerGroup().addTo(map);
@@ -594,6 +756,7 @@ function initMap() {
   map.on('mousemove', onMapMouseMove);
   map.on('mouseup', onMapMouseUp);
   map.on('mouseout', onMapMouseUp);
+  bindTouchEvents();
 
   // 加载初始轨迹
   if (props.initialTrack && props.initialTrack.length > 0) {
@@ -610,10 +773,24 @@ function initMap() {
 }
 
 onMounted(() => {
+  updateViewportHeight();
+  window.addEventListener('resize', updateViewportHeight);
+  window.addEventListener('orientationchange', updateViewportHeight);
+  window.addEventListener('pageshow', updateViewportHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', updateViewportHeight);
+  }
   initMap();
 });
 
 onUnmounted(() => {
+  unbindTouchEvents();
+  window.removeEventListener('resize', updateViewportHeight);
+  window.removeEventListener('orientationchange', updateViewportHeight);
+  window.removeEventListener('pageshow', updateViewportHeight);
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', updateViewportHeight);
+  }
   if (map) {
     map.remove();
     map = null;
@@ -634,6 +811,21 @@ onUnmounted(() => {
   color: #f1f5f9;
   border-radius: 12px;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .map-drawer {
+    height: calc(var(--drawer-vh, 1vh) * 100);
+    min-height: -webkit-fill-available;
+  }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 768px) {
+    .map-drawer {
+      height: 100dvh;
+    }
+  }
 }
 
 .search-box {
@@ -783,6 +975,12 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.map-wrapper.drawing-mode {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 .map-container {
   width: 100%;
   height: 100%;
@@ -791,10 +989,6 @@ onUnmounted(() => {
 :deep(.leaflet-container) {
   background: #020617;
   font-family: inherit;
-}
-
-:deep(.leaflet-tile) {
-  filter: invert(0.92) hue-rotate(180deg) saturate(0.8);
 }
 
 :deep(.leaflet-control-attribution) {

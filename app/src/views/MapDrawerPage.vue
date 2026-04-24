@@ -126,9 +126,9 @@ function getManualTrack() {
   return manualTrack;
 }
 
-function persistResultAndBack() {
+function persistResultAndBack(customRoute = '') {
   const manualTrack = getManualTrack();
-  const selectedCustomRoute = editCustomMapId.value ? `custom_${editCustomMapId.value}` : '';
+  const selectedCustomRoute = String(customRoute || '').trim();
   sessionStorage.setItem(
     '_map_drawer_result',
     JSON.stringify({
@@ -156,9 +156,10 @@ function saveToLocalAndBack() {
   if (mapDrawerTrack.value.length < 2) return;
   const mapName = saveMapName.value || `手绘路线-${Date.now()}`;
   const data = mapDrawerTrack.value.map((p) => `${p[1]},${p[0]}`);
-  saveCustomMap(editCustomMapId.value, mapName, data);
+  const savedMapId = saveCustomMap(editCustomMapId.value, mapName, data);
+  const selectedCustomRoute = savedMapId ? `custom_${savedMapId}` : '';
   showToast(editCustomMapId.value ? '已更新本地地图' : '已保存到本地地图', 'success');
-  persistResultAndBack();
+  persistResultAndBack(selectedCustomRoute);
 }
 
 function exportAndBack() {
