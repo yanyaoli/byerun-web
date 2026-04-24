@@ -357,10 +357,12 @@
             </button>
           </div>
 
-          <transition>
+          <!-- 表情面板（传送到 body，固定定位） -->
+          <Teleport to="body">
             <div
               v-if="showEmojiPicker"
-              class="fixed left-0 right-0 z-[999] w-full bottom-full mb-2 p-4 theme-card-strong rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 overflow-visible"
+              class="fixed left-1/2 -translate-x-1/2 z-[999] p-4 theme-card-strong rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 pointer-events-auto max-w-[600px] w-[calc(100vw-32px)] border"
+              :style="{ bottom: `${emojiPanelBottomOffset}px` }"
             >
               <div class="flex items-center justify-between mb-4 px-1">
                 <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
@@ -436,7 +438,7 @@
                 </div>
               </div>
             </div>
-          </transition>
+          </Teleport>
 
           <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
@@ -832,6 +834,7 @@ const lastRange = ref(null);
 // 表情贴纸
 const chatBootstrapFinished = ref(false);
 const emojiActiveTab = ref('emoji');
+const emojiPanelBottomOffset = ref(0); // 动态计算的面板底部位置
 const {
   stickerGroups,
   stickerLoading,
@@ -1211,7 +1214,32 @@ watch([showEmojiPicker, replyingTo], () => {
   nextTick(() => {
     scheduleFloatingLayoutMeasure();
     scrollToBottom(false);
+
+    // 回复框状态变化时，也要更新面板位置
+    if (showEmojiPicker.value) {
+      const composerHeight = composerShellRef.value?.offsetHeight || 140;
+      emojiPanelBottomOffset.value = composerBottomOffset.value + composerHeight;
+    }
   });
+});
+
+// 表情面板打开时，确保位置准确
+watch(showEmojiPicker, (isOpen) => {
+  if (isOpen) {
+    nextTick(() => {
+      // 获取输入框的实际高度，计算面板的底部位置
+      const composerHeight = composerShellRef.value?.offsetHeight || 140;
+      emojiPanelBottomOffset.value = composerBottomOffset.value + composerHeight;
+    });
+  }
+});
+
+// 输入框距离底部变化时，也更新面板位置
+watch(composerBottomOffset, (newOffset) => {
+  if (showEmojiPicker.value) {
+    const composerHeight = composerShellRef.value?.offsetHeight || 140;
+    emojiPanelBottomOffset.value = newOffset + composerHeight;
+  }
 });
 
 watch(
