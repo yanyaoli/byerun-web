@@ -284,8 +284,9 @@
       <div
         ref="composerShellRef"
         :class="[
-          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 border rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 overflow-visible backdrop-blur-2xl',
+          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 border rounded-2xl transition-all duration-300 overflow-visible backdrop-blur-2xl',
           'theme-card-strong',
+          'liquid-glass-shell liquid-glass-chat-shell',
         ]"
         :style="{ bottom: `${composerBottomOffset}px` }"
       >
@@ -323,9 +324,9 @@
           <div class="mb-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
               <button
-                @click="showEmojiPicker = !showEmojiPicker"
+                @click.stop="showEmojiPicker = !showEmojiPicker"
                 title="Emoji"
-                class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full chat-toolbar-action cursor-pointer transition-colors"
+                class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full chat-toolbar-action cursor-pointer transition-colors active:scale-90"
               >
                 <i class="ri-emotion-happy-fill text-lg"></i>
               </button>
@@ -439,13 +440,14 @@
 
           <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
-              class="flex-1 min-w-0 h-10 flex items-center gap-1 rounded-2xl px-2 transition-all shadow-inner chat-composer-input"
+              class="flex-1 min-w-0 h-10 flex items-center gap-1 rounded-2xl px-2 transition-all shadow-inner chat-composer-input liquid-glass-chat-input"
             >
               <div
                 ref="messageInput"
                 contenteditable="true"
                 :placeholder="hasToken() ? '说点什么吧' : '请先登录'"
                 @input="handleInput"
+                @paste="handlePaste"
                 @keydown.enter.exact.prevent="send"
                 @blur="handleComposerBlur"
                 @keyup="saveRange"
@@ -1114,62 +1116,90 @@ function handleImageSelected(ev) {
   if (!files || !files.length) return;
 
   Array.from(files).forEach((f) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result;
-      const imgHtml = `<img src="${base64}" data-pending-upload="true" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle shadow-sm transition-transform hover:scale-105 cursor-pointer" />`;
-
-      if (messageInput.value) {
-        messageInput.value.focus();
-
-        let range = lastRange.value;
-        if (!range) {
-          // 兜底：尝试获取当前选区，如果仍在 input 内
-          const sel = window.getSelection();
-          if (sel.rangeCount > 0 && messageInput.value.contains(sel.anchorNode)) {
-            range = sel.getRangeAt(0);
-          }
-        }
-
-        if (range) {
-          range.deleteContents();
-          // 创建 fragment 插入
-          const el = document.createElement('div');
-          el.innerHTML = imgHtml;
-          const frag = document.createDocumentFragment();
-          let node, lastNode;
-          while ((node = el.firstChild)) {
-            lastNode = frag.appendChild(node);
-          }
-          range.insertNode(frag);
-          range.collapse(false);
-          // 更新选区到插入内容之后
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-          lastRange.value = range; // 更新保存的 range
-        } else {
-          // 追加到末尾
-          messageInput.value.insertAdjacentHTML('beforeend', imgHtml);
-          // 移动光标到末尾
-          const range = document.createRange();
-          range.selectNodeContents(messageInput.value);
-          range.collapse(false);
-          const sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-          lastRange.value = range;
-        }
-
-        // 手动触发 input handler 更新 text
-        handleInput({ target: messageInput.value });
-      }
-    };
-    reader.readAsDataURL(f);
+    insertPendingUploadImage(f);
   });
 
   // 清空选择，允许重复选同一张图
   ev.target.value = '';
+}
+
+function insertPendingUploadImage(file) {
+  if (!file || !messageInput.value) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = reader.result;
+    if (!base64 || typeof base64 !== 'string') return;
+    const imgHtml = `<img src="${base64}" data-pending-upload="true" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle shadow-sm transition-transform hover:scale-105 cursor-pointer" />`;
+
+    messageInput.value.focus();
+
+    let range = lastRange.value;
+    if (!range) {
+      // 兜底：尝试获取当前选区，如果仍在 input 内
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0 && messageInput.value.contains(sel.anchorNode)) {
+        range = sel.getRangeAt(0);
+      }
+    }
+
+    if (range) {
+      range.deleteContents();
+      // 创建 fragment 插入
+      const el = document.createElement('div');
+      el.innerHTML = imgHtml;
+      const frag = document.createDocumentFragment();
+      let node, lastNode;
+      while ((node = el.firstChild)) {
+        lastNode = frag.appendChild(node);
+      }
+      range.insertNode(frag);
+      range.collapse(false);
+      // 更新选区到插入内容之后
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      lastRange.value = range; // 更新保存的 range
+    } else {
+      // 追加到末尾
+      messageInput.value.insertAdjacentHTML('beforeend', imgHtml);
+      // 移动光标到末尾
+      const range = document.createRange();
+      range.selectNodeContents(messageInput.value);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      lastRange.value = range;
+    }
+
+    // 手动触发 input handler 更新 text
+    handleInput({ target: messageInput.value });
+  };
+
+  reader.onerror = () => {
+    showToast('图片读取失败', 'error');
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function handlePaste(ev) {
+  const clipboardItems = Array.from(ev.clipboardData?.items || []);
+  if (!clipboardItems.length) return;
+
+  const imageFiles = clipboardItems
+    .filter((item) => item.kind === 'file' && item.type.startsWith('image/'))
+    .map((item) => item.getAsFile())
+    .filter(Boolean);
+
+  if (!imageFiles.length) return;
+
+  ev.preventDefault();
+
+  imageFiles.forEach((file) => {
+    insertPendingUploadImage(file);
+  });
 }
 
 // 配合 nextTick 滚动
@@ -2166,13 +2196,19 @@ onUnmounted(() => {
 }
 
 .chat-composer-input {
-  background-color: var(--card-soft-bg);
+  background-color: var(--liquid-chat-input-bg);
   color: var(--text-secondary);
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--liquid-chat-input-border);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-chat-input-highlight),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: saturate(1.25) blur(14px);
+  -webkit-backdrop-filter: saturate(1.25) blur(14px);
 }
 
 .chat-composer-input:focus-within {
-  background-color: var(--card-bg);
+  background-color: var(--liquid-chat-input-focus-bg);
+  border-color: var(--liquid-chat-input-focus-border);
 }
 
 .chat-toolbar-action {

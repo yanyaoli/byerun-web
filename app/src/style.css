@@ -56,6 +56,18 @@
   /* BottomTabBar */
   --tab-action-bg: rgba(15, 23, 42, 0.1);
   --tab-action-border: rgba(100, 116, 139, 0.45);
+  /* Liquid glass (header/tabbar) */
+  --liquid-shell-bg: rgba(255, 255, 255, 0.42);
+  --liquid-shell-border: rgba(255, 255, 255, 0.64);
+  --liquid-shell-inner-stroke: rgba(255, 255, 255, 0.82);
+  --liquid-shell-highlight: rgba(255, 255, 255, 0.72);
+  --liquid-shell-shadow: rgba(15, 23, 42, 0.16);
+  --liquid-shell-specular: rgba(255, 255, 255, 0.9);
+  --liquid-chat-input-bg: rgba(255, 255, 255, 0.34);
+  --liquid-chat-input-border: rgba(255, 255, 255, 0.58);
+  --liquid-chat-input-highlight: rgba(255, 255, 255, 0.75);
+  --liquid-chat-input-focus-bg: rgba(255, 255, 255, 0.44);
+  --liquid-chat-input-focus-border: rgba(255, 255, 255, 0.72);
 }
 
 .dark {
@@ -107,6 +119,17 @@
   --chat-reply-quote-me-text: #dbeafe;
   --chat-preview-bubble-bg: var(--card-soft-bg);
   --chat-preview-bubble-border: var(--card-divider);
+  --liquid-shell-bg: rgba(28, 28, 30, 0.38);
+  --liquid-shell-border: rgba(22, 21, 21, 0.28);
+  --liquid-shell-inner-stroke: rgba(255, 255, 255, 0.16);
+  --liquid-shell-highlight: rgba(255, 255, 255, 0.22);
+  --liquid-shell-shadow: rgba(0, 0, 0, 0.5);
+  --liquid-shell-specular: rgba(255, 255, 255, 0.38);
+  --liquid-chat-input-bg: rgba(33, 33, 35, 0.42);
+  --liquid-chat-input-border: rgba(255, 255, 255, 0.26);
+  --liquid-chat-input-highlight: rgba(255, 255, 255, 0.2);
+  --liquid-chat-input-focus-bg: rgba(40, 40, 42, 0.52);
+  --liquid-chat-input-focus-border: rgba(255, 255, 255, 0.34);
 }
 
 @layer base {
@@ -320,4 +343,76 @@ body::-webkit-scrollbar {
 
 .theme-danger-border {
   border-color: var(--danger-border);
+}
+
+.liquid-glass-shell {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--liquid-shell-bg);
+  backdrop-filter: saturate(1.45) blur(24px);
+  -webkit-backdrop-filter: saturate(1.45) blur(24px);
+}
+
+.liquid-glass-shell::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.78;
+}
+
+.liquid-glass-shell::after {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 0;
+  height: 1px;
+  pointer-events: none;
+  z-index: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--liquid-shell-specular) 50%,
+    transparent 100%
+  );
+  opacity: 0.8;
+}
+
+.liquid-glass-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+.liquid-glass-header {
+  backdrop-filter: saturate(1.5) blur(22px);
+  -webkit-backdrop-filter: saturate(1.5) blur(22px);
+}
+
+.liquid-glass-tabbar {
+  backdrop-filter: saturate(1.35) blur(26px);
+  -webkit-backdrop-filter: saturate(1.35) blur(26px);
+}
+
+.liquid-glass-chat-shell {
+  backdrop-filter: saturate(1.4) blur(28px);
+  -webkit-backdrop-filter: saturate(1.4) blur(28px);
+}
+
+.liquid-glass-chat-input {
+  background-color: var(--liquid-chat-input-bg);
+  border: 1px solid var(--liquid-chat-input-border);
+  box-shadow:
+    inset 0 1px 0 var(--liquid-chat-input-highlight),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: saturate(1.25) blur(14px);
+  -webkit-backdrop-filter: saturate(1.25) blur(14px);
+}
+
+.liquid-glass-chat-input:focus-within {
+  background-color: var(--liquid-chat-input-focus-bg);
+  border-color: var(--liquid-chat-input-focus-border);
 }

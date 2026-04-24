@@ -333,4 +333,12 @@ const handleSubmit = () => {
   background-color: var(--button-primary-bg);
   border-color: var(--button-primary-bg);
 }
+
+:deep(.liquid-glass-header) {
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 </style>

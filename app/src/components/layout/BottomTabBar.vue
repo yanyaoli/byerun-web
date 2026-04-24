@@ -5,8 +5,9 @@
   >
     <div
       :class="[
-        'flex items-center h-full backdrop-blur-2xl border rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.1)] relative max-w-[600px] mx-auto w-[calc(100%_-_24px)] px-5 py-3 gap-2',
+        'flex items-center h-full backdrop-blur-2xl border rounded-full relative max-w-[600px] mx-auto w-[calc(100%_-_24px)] px-5 py-3 gap-2',
         'theme-card-strong',
+        'liquid-glass-shell liquid-glass-tabbar',
       ]"
     >
       <button

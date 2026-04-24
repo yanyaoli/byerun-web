@@ -75,7 +75,7 @@
           <transition name="fade-slide">
             <div
               v-if="showDateDropdown"
-              class="absolute left-0 right-0 top-11 z-50 rounded-xl theme-card-strong max-h-44 overflow-y-auto"
+              class="absolute left-0 right-0 z-50 rounded-xl theme-card-strong max-h-80 overflow-y-auto"
             >
               <button
                 v-for="day in dateOptions"
@@ -1965,7 +1965,7 @@ function handleClubAutoConfigSaved() {
 <style scoped>
 .fade-slide-enter-active,
 .fade-slide-leave-active {
-  transition: all 180ms ease;
+  transition: all var(--theme-transition-fast) var(--theme-transition-easing);
 }
 
 .fade-slide-enter-from,
