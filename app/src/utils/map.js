@@ -1,10 +1,16 @@
 const mapModules = import.meta.glob('../assets/maps/*.json', { eager: true });
 
+const CUSTOM_MAPS_KEY = 'byerun_custom_maps';
+
 let mapDataCollection = { default: [] };
 let availableMapIds = [];
 let mapNameCollection = {};
 let hasLoadedMapFiles = false;
 let mapFilesLoadingPromise = null;
+let customMapsLoaded = false;
+let customMapDataCollection = {};
+let customMapIds = [];
+let customMapNames = {};
 
 export async function loadMapFiles(forceReload = false) {
   if (hasLoadedMapFiles && !forceReload) {
@@ -56,8 +62,165 @@ export async function loadMapFiles(forceReload = false) {
   return mapFilesLoadingPromise;
 }
 
+function persistCustomMapsToStorage() {
+  localStorage.setItem(CUSTOM_MAPS_KEY, JSON.stringify(customMapDataCollection));
+}
+
+export function loadCustomMaps(forceReload = false) {
+  if (customMapsLoaded && !forceReload) {
+    return [...customMapIds];
+  }
+
+  customMapDataCollection = {};
+  customMapIds = [];
+  customMapNames = {};
+
+  try {
+    const stored = localStorage.getItem(CUSTOM_MAPS_KEY);
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data && typeof data === 'object') {
+        customMapDataCollection = { ...data };
+        customMapIds = Object.keys(data);
+        customMapNames = {};
+        customMapIds.forEach((id) => {
+          customMapNames[id] = data[id]?.name || id;
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load custom maps:', e);
+  }
+
+  customMapsLoaded = true;
+  return [...customMapIds];
+}
+
+export function saveCustomMap(mapId, mapName, mapData) {
+  loadCustomMaps();
+
+  const id = String(mapId || '').trim() || `custom_${Date.now()}`;
+  const existing = customMapDataCollection[id] || {};
+  const name = String(mapName || '').trim() || String(existing.name || '').trim() || id;
+
+  customMapDataCollection[id] = {
+    name,
+    data: mapData,
+    createdAt: Number(existing.createdAt) || Date.now(),
+    updatedAt: Date.now(),
+  };
+  customMapNames[id] = name;
+
+  if (!customMapIds.includes(id)) {
+    customMapIds.unshift(id);
+  }
+
+  persistCustomMapsToStorage();
+
+  return id;
+}
+
+export function renameCustomMap(mapId, mapName) {
+  loadCustomMaps();
+
+  const id = String(mapId || '').trim();
+  const name = String(mapName || '').trim();
+  if (!id || !name || !customMapDataCollection[id]) return false;
+
+  customMapDataCollection[id] = {
+    ...customMapDataCollection[id],
+    name,
+    updatedAt: Date.now(),
+  };
+  customMapNames[id] = name;
+  persistCustomMapsToStorage();
+  return true;
+}
+
+export function deleteCustomMap(mapId) {
+  loadCustomMaps();
+
+  const id = String(mapId || '').trim();
+  if (!id || !customMapDataCollection[id]) return false;
+
+  delete customMapDataCollection[id];
+  customMapIds = customMapIds.filter((i) => i !== id);
+  delete customMapNames[id];
+
+  persistCustomMapsToStorage();
+
+  return true;
+}
+
+export function getCustomMapData(mapId) {
+  loadCustomMaps();
+  const id = String(mapId || '').trim();
+  return customMapDataCollection[id]?.data || [];
+}
+
+export function isCustomMap(mapId) {
+  loadCustomMaps();
+  return customMapIds.includes(mapId);
+}
+
+export function getCustomMapNames() {
+  loadCustomMaps();
+  return { ...customMapNames };
+}
+
+export function validateMapData(data) {
+  if (!data) return { valid: false, error: '数据为空' };
+  
+  let parsed = data;
+  if (typeof data === 'string') {
+    try {
+      parsed = JSON.parse(data);
+    } catch {
+      return { valid: false, error: 'JSON格式解析失败' };
+    }
+  }
+  
+  if (!Array.isArray(parsed)) {
+    return { valid: false, error: '数据必须是数组' };
+  }
+  
+  if (parsed.length < 2) {
+    return { valid: false, error: '至少需要2个坐标点' };
+  }
+  
+  const validPoints = [];
+  for (const item of parsed) {
+    let point = item;
+    if (typeof item === 'string') {
+      point = item.split(',');
+    }
+    if (!Array.isArray(point) || point.length < 2) continue;
+    
+    const lng = Number(point[0]);
+    const lat = Number(point[1]);
+    if (Number.isNaN(lng) || Number.isNaN(lat)) continue;
+    if (lng < -180 || lng > 180 || lat < -90 || lat > 90) continue;
+    
+    validPoints.push([lng, lat]);
+  }
+  
+  if (validPoints.length < 2) {
+    return { valid: false, error: '至少需要2个有效坐标点' };
+  }
+  
+  return { valid: true, points: validPoints };
+}
+
 export function getMapData(mapChoice = 'default') {
   const mapId = String(mapChoice || 'default').trim() || 'default';
+  
+  if (isCustomMap(mapId)) {
+    const customData = getCustomMapData(mapId);
+    if (customData && customData.length > 0) {
+      return customData;
+    }
+  }
+  
   return mapDataCollection[mapId] || mapDataCollection.default || [];
 }
 
@@ -65,7 +228,15 @@ export function genTrackPoints(distance, mapChoice = 'default', durationMinutes)
   const targetDistance = Number(distance);
   if (!Number.isFinite(targetDistance) || targetDistance <= 0) return '[]';
 
-  const coords = getMapData(mapChoice)
+  let mapData = [];
+  if (String(mapChoice).startsWith('custom_')) {
+    const customId = mapChoice.replace('custom_', '');
+    mapData = getCustomMapData(customId);
+  } else {
+    mapData = getMapData(mapChoice);
+  }
+
+  const coords = mapData
     .map((point) => point.split(',').map(Number))
     .filter((pair) => pair.length === 2 && pair.every((num) => !Number.isNaN(num)));
   if (coords.length < 2) return '[]';
@@ -224,5 +395,16 @@ export function genTrackPoints(distance, mapChoice = 'default', durationMinutes)
 }
 
 export function getMapNames() {
-  return { ...mapNameCollection };
+  loadCustomMaps();
+  const names = { ...mapNameCollection };
+  customMapIds.forEach((id) => {
+    names[`custom_${id}`] = customMapNames[id];
+  });
+  return names;
+}
+
+export function getAllMapIds() {
+  loadCustomMaps();
+  const customIds = customMapIds.map((id) => `custom_${id}`);
+  return [...customIds, ...availableMapIds];
 }

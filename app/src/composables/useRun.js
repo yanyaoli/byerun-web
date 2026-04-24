@@ -1,7 +1,15 @@
 import { ref, reactive, watch } from 'vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
-import { genTrackPoints, getMapNames, loadMapFiles } from '@/utils/map';
+import {
+  genTrackPoints,
+  getMapNames,
+  getAllMapIds,
+  loadMapFiles,
+  loadCustomMaps,
+  isCustomMap,
+  getCustomMapData,
+} from '@/utils/map';
 import {
   computeDurationFromDistance,
   normalizeRandomRunPayload,
@@ -223,11 +231,13 @@ export function useRouteGenerator(distanceRef, routeRef) {
 
   async function load() {
     try {
-      const mapIds = await loadMapFiles();
+      await loadMapFiles();
+      loadCustomMaps(true);
+      const allMapIds = getAllMapIds();
       mapDisplayNames.value = getMapNames();
 
       const options = {};
-      mapIds.forEach((id) => {
+      allMapIds.forEach((id) => {
         options[id] = mapDisplayNames.value[id];
       });
       routeOptions.value = options;
