@@ -859,10 +859,15 @@ loadMaps().then(async () => {
 .route-option-name {
   display: inline-flex;
   align-items: center;
+  flex: 1;
+  gap: 6px;
   min-width: 0;
+  white-space: nowrap;
 }
 
 .route-option-name span:last-child {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -872,6 +877,7 @@ loadMaps().then(async () => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
   opacity: 0.8;
 }
 
@@ -901,11 +907,13 @@ loadMaps().then(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   margin-right: 6px;
   padding: 1px 6px;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
   color: #075985;
   background: #bae6fd;
 }
