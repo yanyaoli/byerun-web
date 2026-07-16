@@ -1,0 +1,32 @@
+# 依赖与打包目录
+/node_modules
+/dist
+/build
+/out
+.next
+.nuxt
+
+# 缓存与日志
+.cache
+.eslintcache
+*.log
+
+# 静态资源
+/public
+/static
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.ico
+
+# 配置文件
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 其他
+.DS_Store
+LICENSE
+README.md

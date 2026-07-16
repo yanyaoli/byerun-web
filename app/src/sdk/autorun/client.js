@@ -1,0 +1,155 @@
+export class ApiBusinessError extends Error {
+  constructor(envelope) {
+    super(envelope?.message || `API business error: ${envelope?.code}`);
+    this.name = 'ApiBusinessError';
+    this.envelope = envelope;
+  }
+}
+
+export class AutorunClient {
+  /**
+   * @param {{ baseURL: string, headers?: Record<string, string>, fetchImpl?: typeof fetch }} options
+   */
+  constructor(options) {
+    this.baseURL = options.baseURL.replace(/\/+$/, '');
+    this.headers = options.headers || {};
+    const rawFetch = options.fetchImpl || globalThis.fetch;
+    this.fetchImpl = (...args) => rawFetch.call(globalThis, ...args);
+  }
+
+  ping(requestId) {
+    return this.request('/ping', { method: 'GET' }, requestId);
+  }
+
+  getMaps(requestId) {
+    return this.request('/api/maps', { method: 'GET' }, requestId);
+  }
+
+  login(body, requestId) {
+    return this.request('/api/login', { method: 'POST', body: JSON.stringify(body) }, requestId);
+  }
+
+  register(token, body, requestId) {
+    return this.request(
+      '/api/register',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
+      requestId,
+    );
+  }
+
+  getConfig(token, requestId) {
+    return this.request(
+      '/api/config',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
+  getStatus(token, requestId) {
+    return this.request(
+      '/api/status',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
+  setClubAutoConfig(token, body, requestId) {
+    return this.request(
+      '/api/club/config',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
+      requestId,
+    );
+  }
+
+  getClubAutoStatus(token, requestId) {
+    return this.request(
+      '/api/club/status',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
+  triggerClubAuto(token, requestId) {
+    return this.request(
+      '/api/club/trigger',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
+  rushClub(token, body, requestId) {
+    return this.request(
+      '/api/club/rush',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
+      requestId,
+    );
+  }
+
+  getClubRushStatus(token, requestId) {
+    return this.request(
+      '/api/club/rush/status',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      requestId,
+    );
+  }
+
+  cancelClubRush(token, body, requestId) {
+    return this.request(
+      '/api/club/rush/cancel',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
+      requestId,
+    );
+  }
+
+  getNotification(requestId) {
+    return this.request('/api/notification', { method: 'GET' }, requestId);
+  }
+
+  getRandom(token, query = {}, requestId) {
+    const params = new URLSearchParams();
+    const mapId = String(query?.map_id ?? '').trim();
+    const mapIdCompat = String(query?.mapid ?? '').trim();
+    if (mapId) params.set('map_id', mapId);
+    if (!mapId && mapIdCompat) params.set('mapid', mapIdCompat);
+
+    const suffix = params.toString();
+    const path = suffix ? `/api/random?${suffix}` : '/api/random';
+
+    return this.request(path, { method: 'GET', headers: this.authHeaders(token) }, requestId);
+  }
+
+  authHeaders(token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  async request(path, init, requestId) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...this.headers,
+      ...(init.headers || {}),
+    };
+    if (requestId) {
+      headers['X-Request-Id'] = requestId;
+    }
+
+    const resp = await this.fetchImpl(`${this.baseURL}${path}`, {
+      ...init,
+      headers,
+    });
+
+    let envelope;
+    try {
+      envelope = await resp.json();
+    } catch {
+      throw new Error(`HTTP error: ${resp.status}`);
+    }
+    if (!resp.ok || !envelope.success) {
+      if (envelope && envelope.message) {
+        throw new ApiBusinessError(envelope);
+      }
+      throw new Error(`HTTP error: ${resp.status}`);
+    }
+    return envelope;
+  }
+
+}

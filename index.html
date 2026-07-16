@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Byerun</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            font-family:
+                -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .wave {
+            display: inline-block;
+            font-size: 4rem;
+            animation: wave-animation 2.5s infinite;
+            transform-origin: 70% 70%;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-size: 5rem;
+            margin: 0;
+            font-weight: 900;
+            letter-spacing: -2px;
+            color: #1a1a1a;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        @keyframes wave-animation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            10% {
+                transform: rotate(14deg);
+            }
+
+            20% {
+                transform: rotate(-8deg);
+            }
+
+            30% {
+                transform: rotate(14deg);
+            }
+
+            40% {
+                transform: rotate(-4deg);
+            }
+
+            50% {
+                transform: rotate(10deg);
+            }
+
+            60% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="wave">👋</div>
+        <h1>Bye.</h1>
+        <p>See you later.</p>
+    </div>
+</body>
+
+</html>
