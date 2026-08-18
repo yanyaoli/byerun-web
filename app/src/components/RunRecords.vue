@@ -14,7 +14,7 @@
             <div v-else>
               <div class="pb-4">
                 <div class="theme-card rounded-xl overflow-hidden transition-shadow p-0 flex flex-col">
-                  <div class="flex justify-between items-center px-4 py-3 border-b border-[var(--card-divider)]">
+                  <div class="flex justify-between items-center px-4 py-3 bg-[var(--bg-primary)] border-b border-[var(--card-divider)] ">
                     <div class="flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full inline-block shrink-0" :class="item.statusDotClass"></span>
                       <span class="theme-text-primary text-xs font-semibold">{{ item.dateTime }}</span>

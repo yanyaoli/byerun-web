@@ -42,13 +42,23 @@
               ></i>
               <input
                 v-model="password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 placeholder="请设置新密码"
                 autocomplete="new-password"
                 required
                 @blur="handleInputBlur"
-                class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
+                class="block w-full p-2 pl-9 pr-10 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
               />
+              <button
+                type="button"
+                @mousedown.prevent
+                @click="showPassword = !showPassword"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 theme-input-icon cursor-pointer focus:outline-none"
+                :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                :title="showPassword ? '隐藏密码' : '显示密码'"
+              >
+                <i :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="text-base"></i>
+              </button>
             </div>
           </div>
           <div v-if="mode === 'reset'" class="mb-4">
@@ -88,13 +98,23 @@
               ></i>
               <input
                 v-model="password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 placeholder="请输入密码"
                 autocomplete="current-password"
                 required
                 @blur="handleInputBlur"
-                class="block w-full p-2 pl-9 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
+                class="block w-full p-2 pl-9 pr-10 text-sm border border-dashed rounded-lg bg-transparent focus:outline-none placeholder:text-sm theme-input"
               />
+              <button
+                type="button"
+                @mousedown.prevent
+                @click="showPassword = !showPassword"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 theme-input-icon cursor-pointer focus:outline-none"
+                :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                :title="showPassword ? '隐藏密码' : '显示密码'"
+              >
+                <i :class="showPassword ? 'ri-eye-off-line' : 'ri-eye-line'" class="text-base"></i>
+              </button>
             </div>
           </div>
           <div class="flex items-center justify-between mt-6 mb-8">
@@ -157,6 +177,7 @@ const appHeaderRef = ref(null);
 const mode = ref('login');
 const phone = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const code = ref('');
 const rememberMe = ref(!!rememberLogin.value);
 const loading = ref(false);

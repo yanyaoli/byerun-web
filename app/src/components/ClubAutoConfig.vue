@@ -4,7 +4,7 @@
     class="fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/85"
     @click.self="close"
   >
-    <div class="relative w-full max-w-[340px] rounded-3xl theme-card p-5 shadow-2xl">
+    <div class="relative w-full max-w-[340px] rounded-2xl theme-card p-5 shadow-2xl">
       <div class="flex items-start justify-between gap-3">
         <div>
           <h3 class="text-sm font-semibold theme-text-primary">俱乐部定时任务</h3>

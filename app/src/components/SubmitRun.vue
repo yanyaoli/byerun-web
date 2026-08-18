@@ -1,45 +1,49 @@
 ﻿<template>
   <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
-    <!-- 完成情况卡片 -->
+    <!-- 整体卡片 -->
     <div class="rounded-xl w-full box-border mb-5" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
-      <div class="flex justify-between items-center mb-4 title-bar-bg" style="margin: -20px -20px 16px -20px; padding: 14px 20px; border-radius: 12px 12px 0 0; border-bottom: 1px solid var(--card-divider)">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold theme-text-primary">完成情况</span>
-        </div>
-        <div class="text-xs theme-text-tertiary flex items-center gap-1.5">
-          <i class="ri-hourglass-line"></i>
-          <span>{{ stats.semesterEndDateText }}</span>
-        </div>
-      </div>
-      <div class="flex gap-3">
-        <div
-          v-for="card in summaryCards"
-          :key="card.label"
-           class="summary-card relative overflow-hidden rounded-lg flex-1 min-w-0"
-          style="padding: 14px 12px"
-          :class="[card.cardClass]"
-        >
-          <i
-            :class="[card.icon, 'summary-card-bg-icon']"
-            aria-hidden="true"
-          ></i>
-          <div
-            class="relative z-[1] flex flex-col gap-0.5 items-center h-full cursor-pointer"
-            @click="toggleSummaryCard(card.label)"
-          >
-            <span class="summary-card-label font-medium truncate">{{ card.label }}</span>
-            <span
-              :class="['summary-card-value text-lg font-bold tabular-nums leading-none mt-auto', card.valueClass]"
-            >{{ summaryCardView[card.label] ? card.detail : card.value }}</span>
+      <!-- 板块一：完成情况 -->
+      <section class="rounded-xl p-4" style="background: var(--section-soft-bg)">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold theme-text-primary">完成情况</span>
+          </div>
+          <div class="text-xs theme-text-tertiary flex items-center gap-1.5">
+            <i class="ri-hourglass-line"></i>
+            <span>{{ stats.semesterEndDateText }}</span>
           </div>
         </div>
-      </div>
-    </div>
+        <div class="flex gap-3">
+          <div
+            v-for="card in summaryCards"
+            :key="card.label"
+            class="summary-card relative overflow-hidden rounded-lg flex-1 min-w-0"
+            style="padding: 14px 12px"
+            :class="[card.cardClass]"
+          >
+            <i
+              :class="[card.icon, 'summary-card-bg-icon']"
+              aria-hidden="true"
+            ></i>
+            <div
+              class="relative z-[1] flex flex-col gap-0.5 items-center h-full cursor-pointer"
+              @click="toggleSummaryCard(card.label)"
+            >
+              <span class="summary-card-label font-medium truncate">{{ card.label }}</span>
+              <span
+                :class="['summary-card-value text-lg font-bold tabular-nums leading-none mt-auto', card.valueClass]"
+              >{{ summaryCardView[card.label] ? card.detail : card.value }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <!-- 提交表单 -->
-    <form @submit.prevent="onFormSubmit" class="flex-1 flex flex-col min-h-0 overflow-visible">
-      <div class="rounded-xl w-full box-border mb-5 form-card-container" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
-        <div class="flex items-center justify-between title-bar-bg" style="margin: -20px -20px 16px -20px; padding: 14px 20px; border-radius: 12px 12px 0 0; border-bottom: 1px solid var(--card-divider)">
+      <!-- 分割线 -->
+      <div class="my-5" style="border-top: 1px solid var(--card-divider)"></div>
+
+      <!-- 板块二：提交记录 -->
+      <form @submit.prevent="onFormSubmit" class="rounded-xl p-4" style="background: var(--section-soft-bg)">
+        <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold theme-text-primary">提交记录</span>
           </div>
@@ -201,37 +205,40 @@
                 </button>
               </div>
             </transition>
-          </div>
-<div>
-          <Drawer v-model="showAutoConfig" title="定时任务">
-            <AutoConfig inline @saved="onAutoConfigSaved" />
-          </Drawer>
-      </div>
-    </form>
+      </form>
 
-    <!-- 路线预览 -->
-    <div v-show="activeTab === 'submit'" class="rounded-xl w-full box-border mb-5" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
-      <div class="flex justify-between items-center title-bar-bg" style="margin: -20px -20px 16px -20px; padding: 14px 20px; border-radius: 12px 12px 0 0; border-bottom: 1px solid var(--card-divider)">
-        <div class="flex items-center gap-2">
-          <span class="text-sm font-semibold theme-text-primary">路线预览</span>
+      <Drawer v-model="showAutoConfig" title="定时任务">
+        <AutoConfig inline @saved="onAutoConfigSaved" />
+      </Drawer>
+
+      <!-- 分割线 -->
+      <div v-show="activeTab === 'submit'" class="my-5" style="border-top: 1px solid var(--card-divider)"></div>
+
+      <!-- 板块三：路线预览 -->
+      <div v-show="activeTab === 'submit'" class="rounded-xl p-4" style="background: var(--section-soft-bg)">
+
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold theme-text-primary">路线预览</span>
+          </div>
+          <button
+            type="button"
+            class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--action-hover-bg)] active:scale-95"
+            @click="openMapDrawer"
+            title="自定义路线"
+          >
+            <i class="ri-draw-line text-sm"></i>
+          </button>
         </div>
-        <button
-          type="button"
-          class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--action-hover-bg)] active:scale-95"
-          @click="openMapDrawer"
-          title="自定义路线"
-        >
-          <i class="ri-draw-line text-sm"></i>
-        </button>
-      </div>
-      <div class="rounded-xl overflow-hidden">
-        <MapPreview
-          v-if="mapRenderUnlocked"
-          :track="displayTrack"
-          :ready="mapReady"
-          :map-style="isDark ? 'dark' : 'light'"
-          class="w-full transition-all duration-300"
-        />
+        <div class="rounded-xl overflow-hidden">
+          <MapPreview
+            v-if="mapRenderUnlocked"
+            :track="displayTrack"
+            :ready="mapReady"
+            :map-style="isDark ? 'dark' : 'light'"
+            class="w-full transition-all duration-300"
+          />
+        </div>
       </div>
     </div>
 
@@ -552,35 +559,35 @@ const stats = computed(() => {
 
   return {
     semesterEndDateText,
-      summaryCards: [
-        {
-          label: '俱乐部活动',
-          value: clubCompletionRateText,
-          detail: `${completedActivities}/${totalActivities}`,
-          icon: 'ri-basketball-fill',
-          valueClass: 'summary-value-club',
-          iconWrapperClass: 'summary-icon-club',
-          cardClass: 'summary-card-club',
-        },
-        {
-          label: '跑步次数',
-          value: `${runCompletionRate}%`,
-          detail: `${completedRuns}/${totalRequiredRuns}`,
-          icon: 'ri-numbers-fill',
-          valueClass: 'summary-value-count',
-          iconWrapperClass: 'summary-icon-count',
-          cardClass: 'summary-card-count',
-        },
-        {
-          label: '跑步里程',
-          value: distancePercentageText,
-          detail: `${totalDistanceKm}/${targetDistanceKmDisplay}`,
-          icon: 'ri-footprint-fill',
-          valueClass: 'summary-value-distance',
-          iconWrapperClass: 'summary-icon-distance',
-          cardClass: 'summary-card-distance',
-        },
-      ],
+    summaryCards: [
+      {
+        label: '俱乐部活动',
+        value: clubCompletionRateText,
+        detail: `${completedActivities}/${totalActivities}`,
+        icon: 'ri-basketball-fill',
+        valueClass: 'summary-value-club',
+        iconWrapperClass: 'summary-icon-club',
+        cardClass: 'summary-card-club',
+      },
+      {
+        label: '跑步次数',
+        value: `${runCompletionRate}%`,
+        detail: `${completedRuns}/${totalRequiredRuns}`,
+        icon: 'ri-numbers-fill',
+        valueClass: 'summary-value-count',
+        iconWrapperClass: 'summary-icon-count',
+        cardClass: 'summary-card-count',
+      },
+      {
+        label: '跑步里程',
+        value: distancePercentageText,
+        detail: `${totalDistanceKm}/${targetDistanceKmDisplay}`,
+        icon: 'ri-footprint-fill',
+        valueClass: 'summary-value-distance',
+        iconWrapperClass: 'summary-icon-distance',
+        cardClass: 'summary-card-distance',
+      },
+    ],
   };
 });
 
@@ -839,21 +846,6 @@ loadMaps().then(async () => {
 </script>
 
 <style scoped>
-/* 表单卡片容器 - 确保浮于路线预览之上 */
-.form-card-container {
-  position: relative;
-  z-index: 10;
-}
-
-/* 确保表单卡片容器允许内容溢出 */
-:deep(.form-card-container) {
-  overflow: visible;
-}
-
-.title-bar-bg {
-  background: var(--card-soft-bg);
-}
-
 .loader {
   display: inline-block;
   width: 18px;
@@ -949,11 +941,6 @@ loadMaps().then(async () => {
   font-size: 13px;
   line-height: 1.3;
   color: var(--text-primary);
-}
-
-.summary-card-detail {
-  font-family: 'SF Mono', 'Cascadia Code', monospace;
-  color: var(--text-tertiary);
 }
 
 .summary-card-value {

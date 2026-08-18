@@ -8,7 +8,7 @@
       >
         <div class="absolute inset-0 bg-black/20 backdrop-blur-sm drawer-overlay"></div>
         <div
-          class="relative rounded-t-3xl shadow-2xl flex flex-col drawer-panel"
+          class="relative rounded-t-2xl shadow-2xl flex flex-col drawer-panel w-full max-w-[600px] mx-auto"
           :style="{ maxHeight: maxHeight }"
           style="background: var(--card-bg-strong); border-top: 1px solid var(--card-border)"
           @click.stop

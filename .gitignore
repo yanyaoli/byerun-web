@@ -29,3 +29,4 @@ dist-ssr
 .history/
 
 __pycache__/
+.workbuddy/

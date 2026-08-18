@@ -1,6 +1,6 @@
 ﻿<template>
   <nav
-    class="fixed left-0 right-0 bottom-0 z-[999] transition-all duration-300"
+    class="fixed left-0 right-0 bottom-0 z-[999] w-full max-w-[600px] mx-auto transition-all duration-300"
     :style="{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }"
   >
     <div class="flex items-center h-full w-full px-4 py-2 gap-1 bg-[var(--card-bg-strong)]/70 backdrop-blur-xl border-t border-[var(--card-border)]">
