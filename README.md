@@ -1,3 +1,5 @@
+
+
 <p align="center">
   <a href="https://byerun.pages.dev" target="_blank" rel="noopener noreferrer">
     <img width="160" height="160" src="./app/public/favicon.ico" alt="Byerun">
@@ -46,6 +48,12 @@ npm run dev
 
 ```bash
 npm run build
+```
+
+本地预览:
+
+```bash
+npm run preview
 ```
 
 ## 声明
