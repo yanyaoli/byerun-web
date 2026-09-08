@@ -6,27 +6,23 @@
         class="fixed inset-0 z-[9999] flex flex-col justify-end"
         @click="close"
       >
-        <div class="absolute inset-0 bg-black/20 backdrop-blur-sm drawer-overlay"></div>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-md drawer-overlay"></div>
         <div
-          class="relative rounded-t-2xl shadow-2xl flex flex-col drawer-panel w-full max-w-[600px] mx-auto"
-          :style="{ maxHeight: maxHeight }"
-          style="background: var(--card-bg-strong); border-top: 1px solid var(--card-border)"
+          class="relative flex flex-col drawer-panel w-full h-full max-w-[600px] mx-auto rounded-none shadow-2xl"
+          style="background: var(--card-bg-strong); border-top: 1px solid var(--card-border);"
           @click.stop
         >
-          <div class="flex justify-center pt-2 pb-0 shrink-0">
-            <div class="w-8 h-1 rounded-full" style="background: var(--card-divider)"></div>
-          </div>
-          <div class="flex items-center justify-between px-5 py-3 shrink-0">
-            <span class="text-base font-bold theme-text-primary">{{ title }}</span>
+          <div class="flex items-center justify-between px-5 py-4 shrink-0 border-b border-[var(--card-border)]" style="background: var(--bg-soft, rgba(255,255,255,0.02));">
+            <span class="text-lg font-bold theme-text-primary">{{ title }}</span>
             <button
               type="button"
-              class="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-[var(--action-hover-bg)]"
+              class="w-9 h-9 rounded-full flex items-center justify-center transition-colors bg-[var(--action-hover-bg)] hover:opacity-80"
               @click="close"
             >
-              <i class="ri-close-line text-lg theme-text-tertiary"></i>
+              <i class="ri-close-line text-xl theme-text-tertiary"></i>
             </button>
           </div>
-          <div class="flex-1 overflow-y-auto pb-4">
+          <div class="flex-1 overflow-y-auto pb-6 flex flex-col">
             <slot />
           </div>
         </div>
@@ -39,7 +35,7 @@
 defineProps({
   modelValue: { type: Boolean, default: false },
   title: { type: String, default: '' },
-  maxHeight: { type: String, default: '75vh' },
+  maxHeight: { type: String, default: '100vh' },
 });
 
 const emit = defineEmits(['update:modelValue']);

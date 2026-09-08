@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="h-full min-h-0 flex flex-col overflow-hidden">
     <AppHeader v-show="activeKey !== 'chat'" ref="appHeaderRef" :scrolled="headerCompact" />
 
