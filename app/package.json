@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tsparticles/vue3": "^4.4.0",
     "axios": "^1.13.6",
     "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",
@@ -16,6 +17,7 @@
     "pinia-plugin-persistedstate": "^4.7.1",
     "socket.io-client": "^4.8.1",
     "socket.io-parser": "^4.2.6",
+    "tsparticles": "^4.4.0",
     "vue": "^3.5.30",
     "vue-router": "^5.0.4"
   },

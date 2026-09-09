@@ -3,8 +3,16 @@ import { scheduledTaskConfig } from '@/sdk/autorun';
 import { AutorunClient } from '@/sdk/autorun/client';
 import { getDismissedNotifications, addDismissedNotification } from '@/sdk/autorun/index';
 
-const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
-const client = API_BASE ? new AutorunClient({ baseURL: API_BASE }) : null;
+let client = null;
+
+const getClient = () => {
+  const apiBase = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
+  if (!apiBase) return null;
+  if (!client || client.baseURL !== apiBase) {
+    client = new AutorunClient({ baseURL: apiBase });
+  }
+  return client;
+};
 
 const notifications = ref([]);
 const currentNotification = ref(null);
@@ -12,9 +20,10 @@ const notificationVisible = ref(false);
 const loaded = ref(false);
 
 const fetchNotification = async () => {
-  if (!client) return;
+  const currentClient = getClient();
+  if (!currentClient) return;
   try {
-    const envelope = await client.getNotification();
+    const envelope = await currentClient.getNotification();
     let list = envelope?.data?.notifications;
     if (!Array.isArray(list)) {
       const single = envelope?.data?.notification;

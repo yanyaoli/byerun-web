@@ -1,12 +1,26 @@
 import { clearAuthSessionStorage, getSessionToken } from './session';
 import { AppApiClient } from './client';
 
-const vBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+export const API_BASE_URL_OVERRIDE_KEY = 'byerun.api_base_url_override';
+
+const getStoredApiBaseUrl = () => {
+  if (typeof window === 'undefined') return '';
+  try {
+    return String(window.localStorage.getItem(API_BASE_URL_OVERRIDE_KEY) || '').trim();
+  } catch {
+    return '';
+  }
+};
+
+const getDefaultApiBaseUrl = () => import.meta.env.VITE_API_BASE_URL || '';
+const normalizeApiBaseUrl = (value) => String(value || '').trim().replace(/\/+$/, '');
+const resolveApiBaseUrl = () =>
+  normalizeApiBaseUrl(getStoredApiBaseUrl() || getDefaultApiBaseUrl()) || '/devproxy';
 
 export const appConfig = {
   appVersion: '1.8.5',
   api: {
-    baseUrl: vBaseUrl || '/devproxy',
+    baseUrl: resolveApiBaseUrl(),
   },
   auth: {
     appKey: import.meta.env.VITE_APP_KEY || '389885588s0648fa',
@@ -35,5 +49,28 @@ export const api = new AppApiClient({
   tokenProvider: getSessionToken,
   onAuthFailure: handleAuthFailure,
 });
+
+export const getApiBaseUrlOverride = getStoredApiBaseUrl;
+export const getApiBaseUrlDefault = () =>
+  normalizeApiBaseUrl(getDefaultApiBaseUrl()) || '/devproxy';
+
+export const setApiBaseUrlOverride = (value) => {
+  const override = normalizeApiBaseUrl(value);
+
+  try {
+    if (typeof window !== 'undefined') {
+      if (override) {
+        window.localStorage.setItem(API_BASE_URL_OVERRIDE_KEY, override);
+      } else {
+        window.localStorage.removeItem(API_BASE_URL_OVERRIDE_KEY);
+      }
+    }
+  } catch {}
+
+  const baseUrl = override || getApiBaseUrlDefault();
+  appConfig.api.baseUrl = baseUrl;
+  api.http.defaults.baseURL = baseUrl;
+  return baseUrl;
+};
 
 export { AppApiClient };

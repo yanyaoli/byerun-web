@@ -52,17 +52,6 @@
                     />
                   </div>
                   <div class="flex items-center gap-2">
-                    <a
-                      v-if="props.showGithub"
-                      :href="githubUrl"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center justify-center h-5 w-5 transition-colors rounded-md header-action-btn"
-                      aria-label="GitHub"
-                      title="GitHub"
-                    >
-                      <i class="ri-github-line text-[15px]"></i>
-                    </a>
                   <button
                     type="button"
                     class="inline-flex items-center justify-center h-5 w-5 transition-colors rounded-md header-action-btn"
@@ -105,17 +94,6 @@
                 </div>
 
                 <div class="flex items-center shrink-0 gap-2 pointer-events-auto">
-                  <a
-                    v-if="props.showGithub"
-                    :href="githubUrl"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center justify-center h-5 w-5 transition-colors rounded-md header-action-btn"
-                    aria-label="GitHub"
-                    title="GitHub"
-                  >
-                    <i class="ri-github-fill text-[15px]"></i>
-                  </a>
                   <button
                     type="button"
                     class="inline-flex items-center justify-center h-5 w-5 transition-colors rounded-md header-action-btn"
@@ -187,13 +165,10 @@
 <script setup>
 import { ref, computed, getCurrentInstance, watch, onUnmounted } from 'vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
-import { urls } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
 import { useNotification } from '@/composables/useNotification';
-
-const githubUrl = urls.github || 'https://github.com/yanyaoli/byerun-web';
 
 const props = defineProps({
   scrolled: { type: Boolean, default: false },
@@ -429,7 +404,7 @@ defineExpose({
 }
 
 .header-action-btn {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
 }
 
 .header-action-btn:hover {

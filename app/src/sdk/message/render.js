@@ -1,25 +1,25 @@
 import { messageSdkConfig } from './config';
 
-const API_BASE = messageSdkConfig.apiBaseUrl;
 const EMOJI_REGEX = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
 const STICKER_PATTERN = /(&lt;|<)img\s+[^>]*?src=("|&quot;)([^"&]+)("|&quot;)[^>]*?atk-emoticon=("|&quot;)([^"&]+)("|&quot;)[^>]*?(&gt;|>)/g;
 
 const avatarUrlCache = new Map();
+const getApiBase = () => messageSdkConfig.apiBaseUrl;
 
 export function normalizeAvatarUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
   if (url.startsWith('/api/avatar/')) {
-    return API_BASE + url;
+    return getApiBase() + url;
   }
-  return API_BASE + (url.startsWith('/') ? '' : '/') + url;
+  return getApiBase() + (url.startsWith('/') ? '' : '/') + url;
 }
 
 export function getCachedAvatarUrl(userId) {
   if (!userId) return null;
   const cached = avatarUrlCache.get(userId);
   if (cached) return cached;
-  const url = `${API_BASE}/api/avatar/${encodeURIComponent(String(userId))}`;
+  const url = `${getApiBase()}/api/avatar/${encodeURIComponent(String(userId))}`;
   avatarUrlCache.set(userId, url);
   return url;
 }
@@ -73,7 +73,7 @@ function renderSticker(value, stickerGroups) {
 }
 
 function renderImage(value) {
-  return `<img src="${API_BASE}/api/image/${encodeURIComponent(String(value))}" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle border border-zinc-200 shadow-sm transition-transform hover:scale-105 cursor-pointer my-0.5" loading="lazy" data-viewer-image="true" alt="image" />`;
+  return `<img src="${getApiBase()}/api/image/${encodeURIComponent(String(value))}" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle border border-zinc-200 shadow-sm transition-transform hover:scale-105 cursor-pointer my-0.5" loading="lazy" data-viewer-image="true" alt="image" />`;
 }
 
 function renderText(value) {

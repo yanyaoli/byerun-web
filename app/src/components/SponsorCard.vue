@@ -1,7 +1,7 @@
 <template>
-  <div class="space-y-4">
-    <!-- 赞助卡片 -->
-    <section class="rounded-xl" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
+  <div>
+    <section class="rounded-lg" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
+    <div>
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <i class="ri-star-smile-line text-sm"></i>
@@ -10,12 +10,12 @@
         <div class="flex items-center gap-2">
           <button v-if="wechatGroupQrcode" type="button"
             @click="openQrPreview({ url: wechatGroupQrcode, label: '微信群' })"
-            class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm theme-text-tertiary transition-colors"
+            class="inline-flex w-6 cursor-pointer items-center justify-center rounded-lg text-sm theme-text-tertiary transition-colors"
             aria-label="微信群二维码" title="微信群二维码">
             <i class="ri-wechat-fill text-base"></i>
           </button>
           <a v-if="qqGroupUrl" :href="qqGroupUrl" target="_blank" rel="noopener noreferrer"
-            class="inline-flex w-6 cursor-pointer items-center justify-center rounded-full text-sm theme-text-tertiary transition-colors"
+            class="inline-flex w-6 cursor-pointer items-center justify-center rounded-lg text-sm theme-text-tertiary transition-colors"
             aria-label="QQ 群" title="QQ 群">
             <i class="ri-qq-line text-base"></i>
           </a>
@@ -47,7 +47,7 @@
           </div>
         </div>
         <a :href="sponsor?.alipay_url" target="_blank" rel="noopener noreferrer"
-          class="flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all active:scale-[0.98]"
+          class="flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-all active:scale-[0.98]"
           style="
             background: rgba(22, 119, 255, 0.06);
             color: #1677ff;
@@ -58,17 +58,16 @@
           <i class="ri-external-link-line text-xs opacity-60"></i>
         </a>
       </div>
-    </section>
+    </div>
 
-    <!-- 续费状态卡片 -->
-    <section class="rounded-xl" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
+    <div class="mt-5 pt-5" style="border-top: 1px solid var(--card-border)">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <i class="ri-time-line text-sm"></i>
           <span class="text-sm font-semibold theme-text-primary">网站续费状态</span>
         </div>
       </div>
-      <div class="rounded-xl px-4 py-3" style="background: rgba(37, 99, 235, 0.04)">
+      <div class="rounded-lg px-4 py-3" style="background: rgba(37, 99, 235, 0.04)">
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2 min-w-0 flex-1">
             <div class="min-w-0">
@@ -89,10 +88,9 @@
           </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- 赞助伙伴卡片 -->
-    <section class="rounded-xl" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
+    <div class="mt-5 pt-5" style="border-top: 1px solid var(--card-border)">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <i class="ri-medal-line text-sm"></i>
@@ -115,18 +113,18 @@
             }}</span>
         </div>
       </div>
+    </div>
     </section>
-  </div>
 
-  <Drawer v-model="previewVisible" :title="previewQrLabel === '微信群' ? '微信群二维码' : '投喂码'">
+    <Drawer v-model="previewVisible" :title="previewQrLabel === '微信群' ? '微信群二维码' : '投喂码'">
     <div class="px-5 pb-4 flex flex-col items-center">
-      <div v-if="previewQrUrl" class="rounded-xl overflow-hidden" style="padding: 8px; width: 200px">
+      <div v-if="previewQrUrl" class="rounded-lg overflow-hidden" style="padding: 8px; width: 200px">
         <img :src="previewQrUrl" alt="二维码" referrerpolicy="no-referrer" class="w-full" style="display: block"
           @error="onQrError" />
       </div>
       <p v-if="qrLoadFailed" class="text-xs text-center theme-text-tertiary mt-2">二维码加载失败</p>
       <a v-if="appScheme" :href="appScheme" target="_blank"
-        class="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]"
+        class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.98]"
         :style="{
           background:
             previewQrLabel === '支付宝' ? 'rgba(22, 119, 255, 0.06)' : 'rgba(7, 193, 96, 0.06)',
@@ -140,7 +138,8 @@
         <span>打开{{ previewQrLabel === '微信群' ? '微信' : previewQrLabel }}</span>
       </a>
     </div>
-  </Drawer>
+    </Drawer>
+  </div>
 </template>
 
 <script setup>

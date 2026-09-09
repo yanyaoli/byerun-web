@@ -1,4 +1,5 @@
 import { createApp } from 'vue';
+import './styles/global.css';
 import './style.css';
 import 'leaflet/dist/leaflet.css';
 import './assets/remixicon/remixicon.css';

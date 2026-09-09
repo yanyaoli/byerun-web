@@ -1,6 +1,6 @@
 ﻿<template>
   <div class="w-full max-w-3xl mx-auto py-2 px-1 space-y-3">
-    <section class="theme-card rounded-2xl px-5 py-4">
+    <section class="theme-card rounded-lg px-5 py-4">
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div
@@ -25,12 +25,14 @@
 
     <MessageCenter :messages="messages" />
 
-    <SponsorCard
-      v-if="sponsorCardVisible"
+    <SettingsCenter />
+
+    <ProjectInfo
       :sponsor="sponsor"
       :domain="domain"
       :community="community"
     />
+
   </div>
 </template>
 
@@ -40,8 +42,9 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { pingMeta } from '@/sdk/autorun';
 import { api } from '@/sdk/app';
-import SponsorCard from '@/components/SponsorCard.vue';
 import MessageCenter from '@/components/ui/MessageCenter.vue';
+import SettingsCenter from '@/components/settings/SettingsCenter.vue';
+import ProjectInfo from '@/components/ProjectInfo.vue';
 
 const { userInfo, clearAllData } = useDataStore();
 const { clearChatData } = useChatStore();
@@ -53,7 +56,6 @@ const registerCode = computed(() => userInfo.value?.registerCode ?? '');
 const sponsor = computed(() => pingMeta.value?.sponsor);
 const domain = computed(() => pingMeta.value?.domain);
 const community = computed(() => pingMeta.value?.community ?? null);
-const sponsorCardVisible = computed(() => Boolean(sponsor.value && domain.value));
 
 async function loadMessages() {
   try {

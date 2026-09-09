@@ -207,7 +207,7 @@
             </transition>
       </form>
 
-      <Drawer v-model="showAutoConfig" title="定时任务">
+      <Drawer v-model="showAutoConfig" title="校园跑定时任务">
         <AutoConfig inline @saved="onAutoConfigSaved" />
       </Drawer>
 

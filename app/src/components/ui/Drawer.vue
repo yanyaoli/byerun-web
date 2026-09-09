@@ -16,7 +16,7 @@
             <span class="text-lg font-bold theme-text-primary">{{ title }}</span>
             <button
               type="button"
-              class="w-9 h-9 rounded-full flex items-center justify-center transition-colors bg-[var(--action-hover-bg)] hover:opacity-80"
+              class="w-8 h-8 rosunded-xs flex items-center justify-center transition-colors bg-[var(--action-hover-bg)] hover:opacity-80"
               @click="close"
             >
               <i class="ri-close-line text-xl theme-text-tertiary"></i>
