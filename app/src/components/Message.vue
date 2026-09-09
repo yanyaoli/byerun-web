@@ -9,7 +9,7 @@
   >
     <div
       v-if="visible"
-      class="fixed top-6 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none px-4"
+      class="fixed top-6 left-1/2 -translate-x-1/2 z-[10000] pointer-events-none px-4"
     >
       <div
         :class="[
