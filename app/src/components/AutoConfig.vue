@@ -77,29 +77,45 @@
 
         <div class="rounded-xl theme-card-soft p-3">
           <div class="flex items-center justify-between gap-2 mb-2.5">
-            <span class="text-[11px] font-semibold theme-text-tertiary tracking-wide">今日排队与进度</span>
+            <span class="text-[11px] font-semibold theme-text-tertiary tracking-wide">今日任务状态</span>
             <span class="text-[10px] theme-text-tertiary">{{ lastRunLabel }}</span>
           </div>
-          <div class="grid grid-cols-3 gap-1.5">
-            <div class="queue-tile">
-              <div class="text-[10px] theme-text-tertiary">排队位次</div>
-              <div class="queue-val" style="color: #38bdf8">{{ queuePosText }}</div>
-            </div>
-            <div class="queue-tile">
-              <div class="text-[10px] theme-text-tertiary">前面等待</div>
-              <div class="queue-val">{{ queueAheadText }}</div>
-            </div>
-            <div class="queue-tile">
-              <div class="text-[10px] theme-text-tertiary">预计时间</div>
-              <div class="queue-val queue-val-time">{{ queueTimeText }}</div>
-            </div>
-          </div>
 
-          <p v-if="enabled && runtime.todayExecuted && !runtime.todaySuccess && runtime.todayResult" class="mt-2.5 flex items-start gap-1.5 text-[11px] theme-danger">
-            <i class="ri-error-warning-line mt-0.5"></i>
-            <span class="min-w-0">{{ runtime.todayResult }}</span>
-          </p>
-          <p v-if="!enabled" class="mt-2.5 text-[11px] theme-text-tertiary">
+          <template v-if="enabled">
+            <!-- 已完成 / 执行失败 -->
+            <div v-if="runtime.todayExecuted" class="flex items-start gap-2">
+              <i
+                :class="runtime.todaySuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"
+                class="text-lg mt-0.5"
+                :style="{ color: runtime.todaySuccess ? 'var(--success-color, #22c55e)' : 'var(--danger-color, #ef4444)' }"
+              ></i>
+              <div class="min-w-0">
+                <p class="text-xs font-semibold theme-text-primary">
+                  今日已于 <span class="font-mono">{{ executedTimeText }}</span>
+                  {{ runtime.todaySuccess ? '执行成功' : '执行失败' }}
+                </p>
+                <p
+                  v-if="!runtime.todaySuccess && runtime.todayResult"
+                  class="mt-0.5 text-[11px] theme-danger break-words"
+                >
+                  {{ runtime.todayResult }}
+                </p>
+              </div>
+            </div>
+
+            <!-- 已预约（执行窗口 = preferred_time ~ +5min 抖动区间） -->
+            <div v-else class="flex items-start gap-2">
+              <i class="ri-time-line text-lg mt-0.5" style="color: #38bdf8"></i>
+              <div class="min-w-0">
+                <p class="text-xs font-semibold theme-text-primary">已预约</p>
+                <p class="mt-0.5 text-[11px] theme-text-secondary leading-relaxed">
+                  今日预计执行时间：<span class="font-mono">{{ windowText }}</span>
+                </p>
+              </div>
+            </div>
+          </template>
+
+          <p v-else class="text-[11px] theme-text-tertiary">
             未启用时不会自动提交跑步，可随时保存修改。
           </p>
         </div>
@@ -146,10 +162,7 @@ const runtime = reactive({
   todayExecuted: false,
   todaySuccess: false,
   todayResult: '',
-  queuePosition: 0,
-  queueAhead: 0,
-  totalPending: 0,
-  estimatedNextRun: '',
+  estimatedWindow: '',
   lastRunAt: '',
 });
 
@@ -174,7 +187,7 @@ const badgeText = computed(() => {
   if (runtime.todayExecuted) {
     return runtime.todaySuccess ? '今日已完成' : '执行失败';
   }
-  return '排队中';
+  return '已预约';
 });
 
 const lastRunLabel = computed(() => {
@@ -184,31 +197,18 @@ const lastRunLabel = computed(() => {
   return runtime.lastRunAt;
 });
 
-const queuePosText = computed(() => {
-  if (!enabled.value) return '--';
-  if (runtime.todayExecuted) return '已完成';
-  if (Number(runtime.queuePosition) > 0) return `第${runtime.queuePosition}位`;
-  return '排队中';
+const executedTimeText = computed(() => {
+  if (!runtime.todayExecuted) return '';
+  const parts = String(runtime.lastRunAt || '').split(' ');
+  if (parts.length === 2 && parts[1]) return parts[1].substring(0, 5);
+  return '今日';
 });
 
-const queueAheadText = computed(() => {
-  if (!enabled.value) return '--';
-  if (runtime.todayExecuted) return '0 人';
-  if (typeof runtime.queueAhead === 'number' && runtime.queueAhead >= 0) {
-    return `${runtime.queueAhead} 人`;
-  }
-  return '--';
-});
-
-const queueTimeText = computed(() => {
-  if (!enabled.value) return '--';
-  if (runtime.todayExecuted) return `次日 ${prefTime.value || '07:00'}`;
-  const est = String(runtime.estimatedNextRun || '');
-  if (est && est.indexOf('0001') === -1) {
-    const parts = est.split(' ');
-    return parts.length > 1 ? parts[1].substring(0, 5) : est;
-  }
-  return '--';
+// 已预约展示：优先用后端 estimated_window（如 "07:30 ~ 07:35 之间"），无则回退到用户偏好时刻
+const windowText = computed(() => {
+  const window = String(runtime.estimatedWindow || '').trim();
+  if (window) return `${window} 之间`;
+  return `${prefTime.value || '07:00'} 之间`;
 });
 
 const ui = computed(() =>
@@ -237,10 +237,7 @@ const applyStatus = (data = {}) => {
   runtime.todayExecuted = !!data.today_executed;
   runtime.todaySuccess = !!data.today_success;
   runtime.todayResult = String(data.today_result || '');
-  runtime.queuePosition = Number(data.queue_position || 0);
-  runtime.queueAhead = typeof data.queue_ahead === 'number' ? data.queue_ahead : -1;
-  runtime.totalPending = Number(data.total_pending || 0);
-  runtime.estimatedNextRun = String(data.estimated_next_run || '');
+  runtime.estimatedWindow = String(data.estimated_window || '');
   runtime.lastRunAt = String(data.last_run_at || '');
 };
 
@@ -398,30 +395,6 @@ input.control[type='time'] {
 
 .switch-on i {
   transform: translateX(18px);
-}
-
-.queue-tile {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 8px 6px;
-  text-align: center;
-  min-width: 0;
-}
-
-.queue-val {
-  font-size: 13px;
-  font-weight: 700;
-  margin-top: 2px;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.queue-val-time {
-  font-size: 12px;
-  line-height: 1.3;
 }
 
 .save-btn {
