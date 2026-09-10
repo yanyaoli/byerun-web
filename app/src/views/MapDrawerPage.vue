@@ -61,13 +61,13 @@
 </template>
 
 <script setup>
-import { ref, inject, defineAsyncComponent } from 'vue';
+import { ref, defineAsyncComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import { saveCustomMap } from '@/utils/map';
+import { showMessage } from '@/composables/useMessage';
 
 const MapDrawer = defineAsyncComponent(() => import('@/components/MapDrawer.vue'));
 const router = useRouter();
-const showMessage = inject('showMessage', null);
 
 const mapDrawerTrack = ref([]);
 const initialTrack = ref([]);
@@ -100,11 +100,7 @@ if (router.currentRoute.value.query.editCustomMapName) {
   saveMapName.value = String(router.currentRoute.value.query.editCustomMapName || '').trim();
 }
 
-function showToast(message, type = 'info') {
-  if (typeof showMessage === 'function') {
-    showMessage(message, type);
-  }
-}
+const showToast = showMessage;
 
 function goBack() {
   router.back();

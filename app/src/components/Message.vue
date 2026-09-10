@@ -34,6 +34,16 @@
         <span :class="['text-sm font-medium leading-relaxed flex-1', styles[messageType].text]">
           {{ content }}
         </span>
+
+        <!-- Close Button -->
+        <button
+          type="button"
+          @click="close"
+          class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer border-none bg-transparent"
+          title="关闭"
+        >
+          <i class="ri-close-line text-base"></i>
+        </button>
       </div>
     </div>
   </transition>
@@ -79,18 +89,31 @@ const styles = {
 
 let timer = null;
 
+const close = () => {
+  visible.value = false;
+  if (timer) {
+    clearTimeout(timer);
+    timer = null;
+  }
+};
+
 const show = (message, type = 'info') => {
   content.value = message;
   messageType.value = type;
   visible.value = true;
 
   if (timer) clearTimeout(timer);
-  timer = setTimeout(() => {
-    visible.value = false;
-  }, props.duration);
+  timer = null;
+
+  // error 级别的消息不自动隐藏，需要用户手动关闭
+  if (type !== 'error') {
+    timer = setTimeout(() => {
+      visible.value = false;
+    }, props.duration);
+  }
 };
 
-defineExpose({ show });
+defineExpose({ show, close });
 </script>
 
 <style scoped>

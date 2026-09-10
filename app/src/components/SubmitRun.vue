@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
     <!-- 整体卡片 -->
     <div class="rounded-xl w-full box-border mb-5" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
@@ -276,8 +276,9 @@ const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
 const TurnstileWidget = defineAsyncComponent(() => import('./TurnstileWidget.vue'));
 const ConfirmDialog = defineAsyncComponent(() => import('./ui/ConfirmDialog.vue'));
 
+import { showMessage } from '@/composables/useMessage';
+
 const router = useRouter();
-const showMessage = inject('showMessage');
 
 const { userInfo, runStandard, runInfo, activityInfo, submitRunDistance, submitRunRoute } =
   useDataStore();

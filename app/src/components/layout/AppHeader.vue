@@ -8,9 +8,8 @@
         :class="[
           'flex items-center h-9 max-w-[360px] w-[calc(100%_-_24px)] px-4 rounded-full border pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-2xl bg-[var(--card-bg-strong)]/80 border-[var(--card-border)]',
           props.scrolled ? 'shadow-lg' : '',
-          messageVisible ? messageStyles[messageType].shell : '',
-          props.transparent && !messageVisible ? 'app-header--transparent' : '',
-          props.notifyOnly && !messageVisible
+          props.transparent ? 'app-header--transparent' : '',
+          props.notifyOnly
             ? 'opacity-0 scale-95 pointer-events-none !border-transparent !shadow-none !bg-transparent'
             : '',
         ]"
@@ -24,19 +23,8 @@
           leave-from-class="opacity-100 scale-100"
           leave-to-class="opacity-0 scale-95"
         >
-              <div
-                v-if="messageVisible"
-                key="message"
-                class="relative z-[1] flex items-center w-full gap-2"
-              >
-                <i :class="['text-[13px] shrink-0', messageStyles[messageType].icon]"></i>
-                <span :class="['text-[12px] leading-5 truncate', messageStyles[messageType].text]">
-                  {{ messageContent }}
-                </span>
-              </div>
-
           <div
-            v-else-if="!props.notifyOnly"
+            v-if="!props.notifyOnly"
             key="default"
             class="relative z-[1] flex items-center w-full h-full"
           >
@@ -190,32 +178,6 @@ const { currentNotification, notificationVisible, dismissNotification } = useNot
 const welcomePhase = ref('logo');
 const hasPlayedWelcome = ref(false);
 const timers = [];
-const messageVisible = ref(false);
-const messageContent = ref('');
-const messageType = ref('info');
-
-const messageStyles = {
-  success: {
-    shell: '!bg-emerald-600 !border-emerald-500',
-    icon: 'ri-checkbox-circle-fill text-black dark:text-white',
-    text: 'text-black dark:text-white',
-  },
-  error: {
-    shell: '!bg-rose-600 !border-rose-500',
-    icon: 'ri-error-warning-fill text-black dark:text-white',
-    text: 'text-black dark:text-white',
-  },
-  info: {
-    shell: '!bg-blue-600 !border-blue-500',
-    icon: 'ri-information-fill text-black dark:text-white',
-    text: 'text-black dark:text-white',
-  },
-  warning: {
-    shell: '!bg-amber-600 !border-amber-500',
-    icon: 'ri-alert-fill text-black dark:text-white',
-    text: 'text-black dark:text-white',
-  },
-};
 
 const notificationTypeStyles = {
   info: {
@@ -308,30 +270,13 @@ const handleLogout = async () => {
   }
 };
 
-const show = (message, type = 'info') => {
-  const normalizedType = messageStyles[type] ? type : 'info';
-  const normalizedMessage = typeof message === 'string' ? message : String(message ?? '');
-  if (!normalizedMessage) return;
-
-  messageType.value = normalizedType;
-  messageContent.value = normalizedMessage;
-  messageVisible.value = true;
-
-  if (messageTimer) clearTimeout(messageTimer);
-  messageTimer = setTimeout(() => {
-    messageVisible.value = false;
-  }, 3000);
-};
-
 const getHeaderElement = () => headerRef.value;
 
 onUnmounted(() => {
   clearSequenceTimers();
-  if (messageTimer) clearTimeout(messageTimer);
 });
 
 defineExpose({
-  show,
   getHeaderElement,
 });
 </script>

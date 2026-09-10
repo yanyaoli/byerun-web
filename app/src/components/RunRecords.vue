@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="relative w-full box-border">
     <div class="relative flex flex-col">
       <div v-if="records.length > 0" class="w-full" ref="scrollableListRef">
@@ -69,12 +69,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, inject, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useRunRecords } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
+import { showMessage } from '@/composables/useMessage';
 
-// 注入全局消息方法
-const showMessage = inject('showMessage');
 const { loading: profileLoading } = useDataStore();
 
 // 使用 composable 管理记录逻辑

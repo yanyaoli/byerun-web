@@ -1,6 +1,6 @@
 <template>
   <div class="h-full min-h-0 flex flex-col overflow-hidden">
-    <AppHeader v-show="activeKey !== 'chat'" ref="appHeaderRef" :scrolled="headerCompact" />
+    <AppHeader v-show="activeKey !== 'chat'" :scrolled="headerCompact" />
 
     <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative">
       <main
@@ -56,6 +56,7 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
 import { useNotification } from '@/composables/useNotification';
+import { showMessage } from '@/composables/useMessage';
 import { preloadAutorunPingMeta } from '@/sdk/autorun';
 import { checkHasUnreadMessages } from '@/sdk/message';
 import { getViewportMetrics } from '@/utils/viewport';
@@ -65,9 +66,7 @@ const { chatUnread, setChatUnread, markChatSeen } = useChatStore();
 const { fetchNotification } = useNotification();
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
-const rootShowMessage = inject('showMessage', null);
 
-const appHeaderRef = ref(null);
 const bottomBarRef = ref(null);
 const mainScrollRef = ref(null);
 const HEADER_RESERVED_SPACE = 56;
@@ -118,17 +117,6 @@ function scheduleMeasureHeights() {
   });
 }
 
-function showMessage(message, type = 'info') {
-  if (activeKey.value !== 'chat' && appHeaderRef.value?.show) {
-    appHeaderRef.value.show(message, type);
-    return;
-  }
-
-  if (typeof rootShowMessage === 'function') {
-    rootShowMessage(message, type);
-  }
-}
-
 async function refreshUserData(options = { background: true }) {
   if (!userInfo.value) return true;
 
@@ -164,7 +152,6 @@ async function handleRunSubmitted() {
 }
 
 provide('goBack', () => setActiveKey('submit'));
-provide('showMessage', showMessage);
 
 watch(
   activeKey,

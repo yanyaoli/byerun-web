@@ -766,9 +766,9 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useStickerCache } from '@/composables/useStickerCache';
 import { useThemeStore } from '@/composables/useTheme';
+import { showMessage } from '@/composables/useMessage';
 
 // ==================== 依赖注入 ====================
-const showMessage = inject('showMessage');
 const setLayoutHidden = inject('setLayoutHidden', () => {});
 const goBack = inject('goBack', null);
 const { token, userInfo } = useDataStore();
@@ -1014,14 +1014,7 @@ const isMe = (m) => {
   return false;
 };
 
-const showToast = (msg, type = 'info') => {
-  if (appHeaderRef.value?.show) {
-    appHeaderRef.value.show(msg, type);
-    return;
-  }
-
-  if (showMessage) showMessage(msg, type);
-};
+const showToast = showMessage;
 
 // ==================== 导航处理 ====================
 const router = useRouter();

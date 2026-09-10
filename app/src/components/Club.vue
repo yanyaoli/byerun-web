@@ -467,8 +467,9 @@
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig } from '@/sdk/app';
-import { AutorunClient, scheduledTaskConfig } from '@/sdk/autorun';
+import { getAutorunClient } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
+import { showMessage } from '@/composables/useMessage';
 import TurnstileWidget from './TurnstileWidget.vue';
 import Drawer from './ui/Drawer.vue';
 
@@ -519,10 +520,7 @@ const WEEKDAY_TEXT = {
   7: '日',
 };
 
-const showMessage = inject('showMessage', () => {});
 const { userInfo, token, loading: userLoading, fetchUserData } = useDataStore();
-const autorunApiBase = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
-const autorunClient = autorunApiBase ? new AutorunClient({ baseURL: autorunApiBase }) : null;
 
 const activeMainTab = ref('activities');
 const activeActivityTab = ref('list');
@@ -1213,7 +1211,8 @@ async function handleRushCardAction(card) {
   const activityId = Number(card.activityId);
   if (!Number.isFinite(activityId) || activityId <= 0) return;
 
-  if (!autorunClient) {
+  const client = getAutorunClient();
+  if (!client) {
     showMessage('未配置抢报服务地址', 'error');
     return;
   }
@@ -1228,7 +1227,7 @@ async function handleRushCardAction(card) {
   setClubActionPending(pendingKey, true);
   try {
     const activityDateText = normalizeDateOnlyText(card.item?.yymmdd || currentQueryDate.value);
-    const envelope = await autorunClient.rushClub(token.value, {
+    const envelope = await client.rushClub(token.value, {
       activity_id: activityId,
       activity_date: activityDateText || undefined,
       yymmdd: activityDateText || undefined,
@@ -1843,13 +1842,14 @@ function normalizeDateOnlyText(raw) {
 }
 
 async function loadClubRushStatus() {
-  if (!autorunClient || !token.value || activeMainTab.value !== 'activities') {
+  const client = getAutorunClient();
+  if (!client || !token.value || activeMainTab.value !== 'activities') {
     clubRushTasks.value = [];
     return;
   }
 
   try {
-    const envelope = await autorunClient.getClubRushStatus(token.value);
+    const envelope = await client.getClubRushStatus(token.value);
     const tasks = Array.isArray(envelope?.data?.tasks) ? envelope.data.tasks : [];
     clubRushTasks.value = tasks
       .map((item) => {
@@ -1904,7 +1904,8 @@ function resolveRushTaskStatusClass(status) {
 
 async function cancelRushTask(task) {
   if (!task || !task.canCancel) return;
-  if (!autorunClient || !token.value) {
+  const client = getAutorunClient();
+  if (!client || !token.value) {
     showMessage('未配置抢报服务地址', 'error');
     return;
   }
@@ -1912,7 +1913,7 @@ async function cancelRushTask(task) {
   const pendingKey = task.cancelPendingKey;
   setClubActionPending(pendingKey, true);
   try {
-    const envelope = await autorunClient.cancelClubRush(token.value, {
+    const envelope = await client.cancelClubRush(token.value, {
       activity_id: task.activityId,
     });
     const message = String(envelope?.data?.result?.message || '已取消待执行抢报任务').trim();
@@ -1927,7 +1928,8 @@ async function cancelRushTask(task) {
 }
 
 async function loadClubAutoConfigStatus() {
-  if (!autorunClient || !token.value) {
+  const client = getAutorunClient();
+  if (!client || !token.value) {
     clubAutoConfigEnabled.value = false;
     clubAutoSignInStatus.value = '';
     clubAutoSignOutStatus.value = '';
@@ -1939,7 +1941,7 @@ async function loadClubAutoConfigStatus() {
   }
 
   try {
-    const envelope = await autorunClient.getClubAutoStatus(token.value);
+    const envelope = await client.getClubAutoStatus(token.value);
     const data = envelope?.data || {};
     const isEnabled = Number(data.enabled) === 1 || data.enabled === true;
     clubAutoConfigEnabled.value = isEnabled;
@@ -1962,12 +1964,13 @@ async function loadClubAutoConfigStatus() {
 }
 
 async function toggleClubAutoConfig() {
-  if (!autorunClient || clubAutoConfigToggling.value || !token.value) return;
+  const client = getAutorunClient();
+  if (!client || clubAutoConfigToggling.value || !token.value) return;
 
   clubAutoConfigToggling.value = true;
   try {
     const nextEnabled = !clubAutoConfigEnabled.value;
-    await autorunClient.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
+    await client.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
     await loadClubAutoConfigStatus();
     showMessage(nextEnabled ? '定时任务已开启' : '定时任务已关闭', 'success');
   } catch (error) {

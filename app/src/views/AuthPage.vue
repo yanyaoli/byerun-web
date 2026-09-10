@@ -3,7 +3,6 @@
     class="auth-page h-full min-h-0 w-full flex flex-col items-center relative px-4 theme-text-primary"
   >
     <AppHeader
-      ref="appHeaderRef"
       :show-github="false"
       :icons-only="true"
       :transparent="true"
@@ -15,7 +14,7 @@
         <div class="mb-4 text-center">
           <h1 class="text-3xl font-black theme-text-primary mb-4 tracking-tight">Byerun Web</h1>
           <p class="theme-text-secondary mb-8 text-xm max-w-xs mx-auto leading-relaxed">
-            免费且开源的校园生存工具
+            免费开源的校园生存工具
           </p>
         </div>
         <form @submit.prevent="handleSubmit" @focusout="handleInputBlur">
@@ -167,12 +166,11 @@ import AppHeader from '@/components/layout/AppHeader.vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { useNotification } from '@/composables/useNotification';
+import { showMessage } from '@/composables/useMessage';
 
-const rootShowMessage = inject('showMessage', null);
 const { userInfo, rememberLogin, savedPhone, savedPassword } = useDataStore();
 const { fetchNotification } = useNotification();
 const router = useRouter();
-const appHeaderRef = ref(null);
 
 const mode = ref('login');
 const phone = ref('');
@@ -231,17 +229,6 @@ function resetTurnstile() {
 }
 let keyboardWasVisible = false;
 let keyboardMeasureTimer = 0;
-
-function showMessage(message, type = 'info') {
-  if (appHeaderRef.value?.show) {
-    appHeaderRef.value.show(message, type);
-    return;
-  }
-
-  if (typeof rootShowMessage === 'function') {
-    rootShowMessage(message, type);
-  }
-}
 
 function restoreViewportPosition() {
   window.scrollTo({ top: 0, left: 0, behavior: 'auto' });

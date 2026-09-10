@@ -165,9 +165,10 @@
 </template>
 
 <script setup>
-import { ref, computed, inject, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import L from 'leaflet';
 import { saveCustomMap, validateMapData } from '@/utils/map';
+import { showMessage } from '@/composables/useMessage';
 
 const GAODE_TILE_URL =
   'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style={style}&x={x}&y={y}&z={z}';
@@ -188,7 +189,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['track-changed', 'track-saved']);
-const showMessage = inject('showMessage', null);
 
 // 状态
 const drawerContainer = ref(null);

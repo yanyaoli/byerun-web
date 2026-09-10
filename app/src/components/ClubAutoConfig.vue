@@ -123,9 +123,10 @@
 </template>
 
 <script setup>
-import { computed, inject, reactive, ref, watch } from 'vue';
-import { AutorunClient, scheduledTaskConfig } from '@/sdk/autorun';
+import { computed, reactive, ref, watch } from 'vue';
+import { getAutorunClient } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
+import { showMessage } from '@/composables/useMessage';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -133,11 +134,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:visible', 'update:enabled', 'saved']);
 
-const showMessage = inject('showMessage', (message) => alert(message));
 const { token } = useDataStore();
-
-const apiBase = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
-const autorunClient = apiBase ? new AutorunClient({ baseURL: apiBase }) : null;
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -242,12 +239,13 @@ function applyTask(data = {}) {
 }
 
 async function loadStatus() {
-  if (!autorunClient || loading.value) return;
+  const client = getAutorunClient();
+  if (!client || loading.value) return;
   if (!token.value) return;
 
   loading.value = true;
   try {
-    const statusEnvelope = await autorunClient.getClubAutoStatus(token.value);
+    const statusEnvelope = await client.getClubAutoStatus(token.value);
     const data = statusEnvelope?.data || {};
     applyStatus(data);
     applyTask(data);
@@ -259,13 +257,14 @@ async function loadStatus() {
 }
 
 async function toggleEnabled() {
-  if (!autorunClient || submitting.value) return;
+  const client = getAutorunClient();
+  if (!client || submitting.value) return;
   if (!token.value) return;
 
   submitting.value = true;
   try {
     const nextEnabled = !enabled.value;
-    await autorunClient.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
+    await client.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
     await loadStatus();
     showMessage(nextEnabled ? '俱乐部定时任务已开启' : '俱乐部定时任务已关闭', 'success');
     emit('saved');
@@ -277,12 +276,13 @@ async function toggleEnabled() {
 }
 
 async function triggerNow() {
-  if (!autorunClient || triggering.value) return;
+  const client = getAutorunClient();
+  if (!client || triggering.value) return;
   if (!token.value) return;
 
   triggering.value = true;
   try {
-    const envelope = await autorunClient.triggerClubAuto(token.value);
+    const envelope = await client.triggerClubAuto(token.value);
     const message = envelope?.data?.result?.message || '执行完成';
     showMessage(message, 'success');
     await loadStatus();

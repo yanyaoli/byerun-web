@@ -99,8 +99,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Drawer from '@/components/ui/Drawer.vue';
+import { showMessage } from '@/composables/useMessage';
 import { getApiBaseUrlDefault, getApiBaseUrlOverride, setApiBaseUrlOverride } from '@/sdk/app';
 import {
   getAutorunApiBaseUrlDefault,
@@ -124,6 +125,22 @@ const chatApiBaseUrlOverride = ref(storedChatApiBaseUrl || getChatApiBaseUrlDefa
 const chatApiBaseUrlIsCustom = ref(Boolean(storedChatApiBaseUrl));
 const settingsVisible = ref(false);
 
+watch(settingsVisible, (visible) => {
+  if (visible) {
+    const mainStored = getApiBaseUrlOverride();
+    apiBaseUrlOverride.value = mainStored || getApiBaseUrlDefault();
+    apiBaseUrlIsCustom.value = Boolean(mainStored);
+
+    const autoStored = getAutorunApiBaseUrlOverride();
+    autorunApiBaseUrlOverride.value = autoStored || getAutorunApiBaseUrlDefault();
+    autorunApiBaseUrlIsCustom.value = Boolean(autoStored);
+
+    const chatStored = getChatApiBaseUrlOverride();
+    chatApiBaseUrlOverride.value = chatStored || getChatApiBaseUrlDefault();
+    chatApiBaseUrlIsCustom.value = Boolean(chatStored);
+  }
+});
+
 const saveApiBaseUrls = () => {
   apiBaseUrlOverride.value = apiBaseUrlOverride.value.trim() || getApiBaseUrlDefault();
   apiBaseUrlIsCustom.value = apiBaseUrlOverride.value !== getApiBaseUrlDefault();
@@ -140,6 +157,8 @@ const saveApiBaseUrls = () => {
   chatApiBaseUrlOverride.value = chatApiBaseUrlOverride.value.trim() || getChatApiBaseUrlDefault();
   chatApiBaseUrlIsCustom.value = chatApiBaseUrlOverride.value !== getChatApiBaseUrlDefault();
   setChatApiBaseUrlOverride(chatApiBaseUrlIsCustom.value ? chatApiBaseUrlOverride.value : '');
+
+  showMessage('保存成功', 'success');
 };
 
 const resetApiBaseUrl = () => {

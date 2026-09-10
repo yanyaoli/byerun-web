@@ -19,12 +19,9 @@
 <script setup>
 import { ref, provide, onMounted, onUnmounted } from 'vue';
 import Message from './components/Message.vue';
+import { showMessage, setMessageHandler } from '@/composables/useMessage';
 
 const messageRef = ref(null);
-
-const showMessage = (message, type = 'info') => {
-  messageRef.value?.show(message, type);
-};
 
 provide('showMessage', showMessage);
 
@@ -34,6 +31,11 @@ const setViewportHeightVar = () => {
 };
 
 onMounted(() => {
+  if (messageRef.value) {
+    setMessageHandler((message, type) => {
+      messageRef.value?.show(message, type);
+    });
+  }
   setViewportHeightVar();
   window.addEventListener('resize', setViewportHeightVar);
   window.addEventListener('orientationchange', setViewportHeightVar);
