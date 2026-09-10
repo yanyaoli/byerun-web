@@ -18,7 +18,7 @@
 
 <script setup>
 import { ref, provide, onMounted, onUnmounted } from 'vue';
-import Message from './components/Message.vue';
+import Message from './components/ui/Message.vue';
 import { showMessage, setMessageHandler } from '@/composables/useMessage';
 
 const messageRef = ref(null);

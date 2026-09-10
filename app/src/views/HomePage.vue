@@ -69,7 +69,7 @@ const isDark = computed(() => themeStore.isDark);
 
 const bottomBarRef = ref(null);
 const mainScrollRef = ref(null);
-const HEADER_RESERVED_SPACE = 56;
+const HEADER_RESERVED_SPACE = 50;
 const DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT = 96;
 const BOTTOM_BAR_CLEARANCE_GAP = 12;
 const headerHeight = ref(HEADER_RESERVED_SPACE);

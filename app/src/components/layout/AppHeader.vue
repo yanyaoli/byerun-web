@@ -2,11 +2,11 @@
   <div>
     <header
       ref="headerRef"
-      class="fixed top-3 left-0 right-0 z-999 flex justify-center pointer-events-none transition-all duration-300"
+      class="fixed top-1 left-0 right-0 z-999 flex justify-center pointer-events-none transition-all duration-300"
     >
       <div
         :class="[
-          'flex items-center h-9 max-w-[360px] w-[calc(100%_-_24px)] px-4 rounded-full border pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-2xl bg-[var(--card-bg-strong)]/80 border-[var(--card-border)]',
+          'flex items-center h-9 max-w-[360px] w-[calc(100%_-_24px)] px-4 rounded-full border pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-xs bg-[var(--card-bg-strong)]/80 border-[var(--card-border)]',
           props.scrolled ? 'shadow-lg' : '',
           props.transparent ? 'app-header--transparent' : '',
           props.notifyOnly

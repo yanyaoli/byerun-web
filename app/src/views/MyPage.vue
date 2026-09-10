@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="w-full max-w-3xl mx-auto py-2 px-1 space-y-3">
     <section class="theme-card rounded-lg px-5 py-4">
       <div class="flex items-center justify-between gap-3">
@@ -16,7 +16,7 @@
         <button
           type="button"
           @click="handleLogout"
-          class="shrink-0 text-sm cursor-pointer inline-flex items-center gap-2 theme-danger-bg theme-danger-border theme-danger px-5 py-2 rounded-full font-semibold border-none transition-colors duration-200"
+          class="shrink-0 text-sm cursor-pointer inline-flex items-center gap-2 theme-danger-bg theme-danger-border theme-danger px-5 py-2 rounded-full font-semibold border-none transition-colors duration-300"
         >
           <span>登出</span>
         </button>
@@ -42,7 +42,7 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { pingMeta } from '@/sdk/autorun';
 import { api } from '@/sdk/app';
-import MessageCenter from '@/components/ui/MessageCenter.vue';
+import MessageCenter from '@/components/MessageCenter.vue';
 import SettingsCenter from '@/components/settings/SettingsCenter.vue';
 import ProjectInfo from '@/components/ProjectInfo.vue';
 

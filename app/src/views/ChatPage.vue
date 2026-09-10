@@ -640,7 +640,7 @@
         @click.self="showPrivacyInfo = false"
       >
         <div
-          class="theme-card w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+          class="theme-card w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300"
         >
           <div class="p-6">
             <div class="flex items-center gap-2 mb-4 theme-text-primary">

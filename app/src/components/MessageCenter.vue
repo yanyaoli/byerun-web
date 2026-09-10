@@ -53,7 +53,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { api } from '@/sdk/app';
-import Drawer from './Drawer.vue';
+import Drawer from '@/components/ui/Drawer.vue';
 
 const props = defineProps({
   messages: { type: Array, default: () => [] },

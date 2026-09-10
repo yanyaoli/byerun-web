@@ -16,7 +16,7 @@
           'flex items-center gap-3 px-4 py-1 rounded-full pointer-events-auto',
           'shadow-lg backdrop-blur-md border',
           'min-w-[280px] max-w-md w-auto',
-          'transition-all duration-500',
+          'transition-all duration-300',
           styles[messageType].container,
         ]"
       >
