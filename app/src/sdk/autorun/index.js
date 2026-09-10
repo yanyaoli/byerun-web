@@ -25,6 +25,15 @@ export const scheduledTaskConfig = {
 const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
 let autorunClient = API_BASE ? new AutorunClient({ baseURL: API_BASE }) : null;
 
+export const getAutorunClient = () => {
+  const baseUrl = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/+$/, '');
+  if (!baseUrl) return null;
+  if (!autorunClient || autorunClient.baseURL !== baseUrl) {
+    autorunClient = new AutorunClient({ baseURL: baseUrl });
+  }
+  return autorunClient;
+};
+
 export const getAutorunApiBaseUrlOverride = getStoredAutorunApiBaseUrl;
 
 export const setAutorunApiBaseUrlOverride = (value) => {
@@ -38,8 +47,11 @@ export const setAutorunApiBaseUrlOverride = (value) => {
 
   const baseUrl = override || getAutorunApiBaseUrlDefault();
   scheduledTaskConfig.apiBaseUrl = baseUrl;
-  if (!autorunClient && baseUrl) autorunClient = new AutorunClient({ baseURL: baseUrl });
-  if (autorunClient) autorunClient.baseURL = baseUrl;
+  if (!autorunClient && baseUrl) {
+    autorunClient = new AutorunClient({ baseURL: baseUrl });
+  } else if (autorunClient) {
+    autorunClient.baseURL = baseUrl;
+  }
   return baseUrl;
 };
 
@@ -96,13 +108,14 @@ export const preloadAutorunPingMeta = async () => {
   if (pingRequestPromise) return pingRequestPromise;
 
   pingRequestPromise = (async () => {
-    if (!autorunClient) {
+    const client = getAutorunClient();
+    if (!client) {
       pingReady.value = true;
       return pingMeta.value;
     }
 
     try {
-      const envelope = await autorunClient.ping();
+      const envelope = await client.ping();
       pingMeta.value = envelope?.data || null;
       setCachedPingMeta(pingMeta.value);
     } catch (error) {

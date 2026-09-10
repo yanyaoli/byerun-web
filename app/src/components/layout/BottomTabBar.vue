@@ -9,7 +9,7 @@
         :key="item.key"
         type="button"
         :class="[
-          'relative flex flex-col items-center justify-center cursor-pointer rounded-full transition-all duration-300 outline-none flex-1 h-12',
+          'relative flex flex-col items-center justify-center cursor-pointer rounded-lg transition-all duration-300 outline-none flex-1 h-12',
           active === item.key ? 'bottom-tab-active' : 'bottom-tab-inactive',
         ]"
         @click="handleClick(item)"

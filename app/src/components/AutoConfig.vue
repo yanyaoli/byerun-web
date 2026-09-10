@@ -63,14 +63,13 @@
         </div>
 
         <div>
-          <div class="field-label">期望运行时间 (06:00-23:00)</div>
+          <div class="field-label">任务定时</div>
           <input v-model="prefTime" type="time" class="control" />
         </div>
 
         <button type="button" class="flex w-full items-center justify-between gap-3 text-left" @click="toggleEnabled">
           <span class="min-w-0">
             <span class="block text-sm font-medium theme-text-primary">启用每日定时任务</span>
-            <span class="block mt-0.5 text-xs theme-text-tertiary">每天在期望时间自动提交校园跑</span>
           </span>
           <span class="switch" :class="enabled ? 'switch-on' : ''"><i></i></span>
         </button>
@@ -134,9 +133,10 @@
 </template>
 
 <script setup>
-import { computed, inject, reactive, ref, watch } from 'vue';
-import { AutorunClient, scheduledTaskConfig } from '@/sdk/autorun';
+import { computed, reactive, ref, watch } from 'vue';
+import { getAutorunClient } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
+import { showMessage } from '@/composables/useMessage';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -144,11 +144,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['update:visible', 'saved']);
 
-const showMessage = inject('showMessage', (message) => alert(message));
 const { token } = useDataStore();
-
-const apiBase = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
-const autorunClient = apiBase ? new AutorunClient({ baseURL: apiBase }) : null;
 
 const busy = ref(false);
 const screen = ref('loading');
@@ -244,7 +240,8 @@ const applyStatus = (data = {}) => {
 const load = async (silent = false) => {
   if (busy.value) return;
 
-  if (!autorunClient) {
+  const client = getAutorunClient();
+  if (!client) {
     if (!silent) {
       screen.value = 'error';
       loadError.value = '自动任务服务未配置';
@@ -263,8 +260,8 @@ const load = async (silent = false) => {
   busy.value = true;
   try {
     const [mapsEnvelope, statusEnvelope] = await Promise.all([
-      autorunClient.getMaps(),
-      autorunClient.getStatus(token.value),
+      client.getMaps(),
+      client.getStatus(token.value),
     ]);
     maps.value = Array.isArray(mapsEnvelope?.data?.maps) ? mapsEnvelope.data.maps : [];
     applyStatus(statusEnvelope?.data || {});
@@ -291,7 +288,8 @@ const refresh = () => {
 };
 
 const save = async () => {
-  if (!autorunClient || saving.value) return;
+  const client = getAutorunClient();
+  if (!client || saving.value) return;
   if (!token.value) return;
 
   const willEnable = enabled.value;
@@ -302,12 +300,13 @@ const save = async () => {
 
   saving.value = true;
   try {
-    await autorunClient.register(token.value, {
+    await client.register(token.value, {
       map_id: mapId.value,
       preferred_time: prefTime.value || '07:00',
       enabled: willEnable ? 1 : 0,
     });
     await refresh();
+    showMessage('保存成功', 'success');
     emit('saved');
   } catch (error) {
     showMessage(error?.message || '保存定时任务配置失败', 'error');
