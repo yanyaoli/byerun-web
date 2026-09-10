@@ -270,11 +270,10 @@ import {
   randomIntNonThousand,
   resolveRunBoundsFromStandard,
 } from '@/utils/run';
-
-const MapPreview = defineAsyncComponent(() => import('./MapPreview.vue'));
-const AutoConfig = defineAsyncComponent(() => import('./AutoConfig.vue'));
-const TurnstileWidget = defineAsyncComponent(() => import('./TurnstileWidget.vue'));
-const ConfirmDialog = defineAsyncComponent(() => import('./ui/ConfirmDialog.vue'));
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import TurnstileWidget from '@/components/TurnstileWidget.vue';
+import MapPreview from '@/components/MapPreview.vue';
+import AutoConfig from '@/components/AutoConfig.vue';
 
 import { showMessage } from '@/composables/useMessage';
 

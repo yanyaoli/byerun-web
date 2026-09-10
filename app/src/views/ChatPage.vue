@@ -122,13 +122,6 @@
                     />
                     <i v-else class="ri-user-3-fill theme-text-secondary text-[10px] z-10"></i>
                   </div>
-                  <div
-                    v-if="m.user?.is_alumni"
-                    class="absolute -bottom-0.5 right-0 translate-x-1/4 translate-y-1/4 w-3.5 h-3.5 chat-alumni-badge rounded-full flex items-center justify-center z-20 shadow-sm overflow-hidden"
-                    title="认证校友"
-                  >
-                    <i class="ri-graduation-cap-fill text-white text-[7px]"></i>
-                  </div>
                 </div>
 
                 <div
@@ -160,19 +153,26 @@
 
                     <div
                       :class="[
-                        'relative px-3 py-1.5 theme-text-primary rounded-xl rounded-br-[0.25rem] shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
-                        isMe(m) ? 'chat-bubble-me' : 'chat-bubble-peer',
+                        'relative px-3 py-1.5 theme-text-primary rounded-xl shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
+                        isMe(m)
+                          ? 'chat-bubble-me rounded-br-[0.25rem]'
+                          : 'chat-bubble-peer rounded-bl-[0.25rem]',
                       ]"
                     >
                       <div
                         v-if="!isMe(m)"
-                        class="text-[11px] theme-text-secondary mb-0.5 font-bold"
+                        class="text-[11px] theme-text-secondary mb-0.5 font-bold flex items-center gap-1"
                       >
-                        {{
+                        <span>{{
                           m.user?.nickname ||
                           m.nickname ||
                           '用户' + String(m.user?.user_id).slice(-5)
-                        }}
+                        }}</span>
+                        <i
+                          v-if="m.user?.is_alumni || m.is_alumni"
+                          class="ri-graduation-cap-fill text-blue-500 text-[10px]"
+                          title="认证校友"
+                        ></i>
                       </div>
 
                       <div
@@ -183,13 +183,18 @@
                         ]"
                         @click="scrollToOriginalMessage(m.reply)"
                       >
-                        <div class="text-[10px] font-bold mb-0.5 opacity-60">
-                          {{
+                        <div class="text-[10px] font-bold mb-0.5 opacity-60 flex items-center gap-1">
+                          <span>{{
                             m.reply.user?.nickname ||
                             (m.reply.user?.user_id
                               ? '用户' + String(m.reply.user.user_id).slice(-5)
                               : '用户')
-                          }}
+                          }}</span>
+                          <i
+                            v-if="m.reply.user?.is_alumni"
+                            class="ri-graduation-cap-fill text-blue-400 text-[10px]"
+                            title="认证校友"
+                          ></i>
                         </div>
                         <div
                           class="truncate opacity-80"
@@ -555,7 +560,7 @@
         @click.self="showProfileViewer = false"
       >
         <div
-          class="theme-card w-full max-w-[300px] rounded-[1.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
+          class="theme-card w-full max-w-[300px] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 relative"
         >
           <!-- 关闭按钮 -->
           <button
@@ -591,14 +596,19 @@
                 ></h3>
                 <h3
                   v-else
-                  class="text-base font-bold theme-text-primary truncate mb-0.5 whitespace-nowrap"
+                  class="text-base font-bold theme-text-primary truncate mb-0.5 whitespace-nowrap flex items-center gap-1.5"
                 >
-                  {{
+                  <span>{{
                     viewedProfile?.nickname ||
                     (viewedProfile?.user_id
                       ? '用户' + String(viewedProfile.user_id).slice(-5)
                       : '用户')
-                  }}
+                  }}</span>
+                  <i
+                    v-if="viewedProfile?.is_alumni"
+                    class="ri-graduation-cap-fill text-blue-500 text-sm flex-shrink-0"
+                    title="认证校友"
+                  ></i>
                 </h3>
 
                 <p
