@@ -1,5 +1,6 @@
-const MIGRATION_VERSION = 1;
+const MIGRATION_VERSION = 2;
 const MIGRATION_VERSION_KEY = 'byerun.migration_version';
+const APP_STATE_STORAGE_KEY = 'byerun.app_state';
 
 const LEGACY_KEYS = {
   'unirun.app_state': 'byerun.app_state',
@@ -53,6 +54,26 @@ function mergeDismissedIDs(target, source) {
   target.push(...set);
 }
 
+function removeSavedPassword() {
+  try {
+    const raw = localStorage.getItem(APP_STATE_STORAGE_KEY);
+    if (!raw) return;
+
+    const state = JSON.parse(raw);
+    if (!state || typeof state !== 'object' || Array.isArray(state)) {
+      removeKey(APP_STATE_STORAGE_KEY);
+      return;
+    }
+    if (!Object.prototype.hasOwnProperty.call(state, 'savedPassword')) return;
+
+    delete state.savedPassword;
+    localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // 无法解析的应用状态无法安全地保留，清除它以避免遗留明文密码。
+    removeKey(APP_STATE_STORAGE_KEY);
+  }
+}
+
 export function runStorageMigration() {
   if (typeof window === 'undefined') return;
   if (typeof localStorage === 'undefined') return;
@@ -90,6 +111,11 @@ export function runStorageMigration() {
 
     writeJSON('byerun.autorun_state', stateToWrite);
     removeKey(LEGACY_DISMISSED_KEY);
+  }
+
+  if (currentVersion < 2) {
+    // Step 3: 清理旧版本持久化的明文密码。
+    removeSavedPassword();
   }
 
   setMigrationVersion(MIGRATION_VERSION);

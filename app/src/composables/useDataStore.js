@@ -20,7 +20,6 @@ const useAppStateStore = defineStore(
 
     const rememberLogin = ref(false);
     const savedPhone = ref('');
-    const savedPassword = ref('');
 
     const token = computed(() => userInfo.value?.oauthToken?.token || null);
     const userId = computed(() => userInfo.value?.userId || null);
@@ -127,7 +126,6 @@ const useAppStateStore = defineStore(
       activeTab,
       rememberLogin,
       savedPhone,
-      savedPassword,
       token,
       userId,
       studentId,
@@ -150,7 +148,6 @@ const useAppStateStore = defineStore(
         'activeTab',
         'rememberLogin',
         'savedPhone',
-        'savedPassword',
       ],
     },
   },
