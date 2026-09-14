@@ -10,7 +10,7 @@ const getStoredChatApiBaseUrl = () => {
 };
 
 export const getChatApiBaseUrlDefault = () =>
-  String(import.meta.env.VITE_CHAT_SERVER_BASE_URL || '').trim().replace(/\/+$/, '');
+  String(import.meta.env?.VITE_CHAT_SERVER_BASE_URL || '').trim().replace(/\/+$/, '');
 
 export const messageSdkConfig = {
   apiBaseUrl: getStoredChatApiBaseUrl() || getChatApiBaseUrlDefault(),
