@@ -34,3 +34,4 @@ debug/
 coverage/
 
 standalone-map-draw/
+.workbuddy-ai/

@@ -2,8 +2,6 @@ import { ref } from 'vue';
 import stickerConfig from '@/assets/data/stickers.json';
 
 const STICKER_VERSION = 'v1_20260331';
-const LEGACY_STICKER_STORAGE_KEY = 'chat_stickers_cache';
-const LEGACY_STICKER_HASH_KEYS = ['chat_stickers_hash', 'chat_sticker_version'];
 
 function normalizeStickerCache(raw) {
   if (!raw || typeof raw !== 'object') return null;
@@ -16,43 +14,6 @@ function normalizeStickerCache(raw) {
     updatedAt: Number(raw.updatedAt || 0),
     groups,
   };
-}
-
-function readLegacyStickerCache() {
-  try {
-    const raw = localStorage.getItem(LEGACY_STICKER_STORAGE_KEY);
-    if (!raw) return null;
-
-    const groups = JSON.parse(raw);
-    if (!groups || typeof groups !== 'object' || Object.keys(groups).length === 0) {
-      return null;
-    }
-
-    const hash =
-      LEGACY_STICKER_HASH_KEYS.map((key) => String(localStorage.getItem(key) || '').trim()).find(
-        Boolean,
-      ) || '';
-
-    return {
-      version: STICKER_VERSION,
-      hash,
-      updatedAt: Date.now(),
-      groups,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function clearLegacyStickerCache() {
-  try {
-    localStorage.removeItem(LEGACY_STICKER_STORAGE_KEY);
-    LEGACY_STICKER_HASH_KEYS.forEach((key) => {
-      localStorage.removeItem(key);
-    });
-  } catch (e) {
-    console.warn('Failed to clear legacy sticker cache', e);
-  }
 }
 
 async function computeConfigHash() {
@@ -151,14 +112,7 @@ export function useStickerCache(options = {}) {
       return stored;
     }
 
-    const legacy = readLegacyStickerCache();
-    if (!legacy) return null;
-
-    stickerGroups.value = legacy.groups;
-    stickerLoaded.value = true;
-    persistCache(legacy);
-    clearLegacyStickerCache();
-    return legacy;
+    return null;
   }
 
   async function loadStickers(loadOptions = {}) {
@@ -204,7 +158,6 @@ export function useStickerCache(options = {}) {
         stickerGroups.value = groups;
         stickerLoaded.value = true;
         persistCache(payload);
-        clearLegacyStickerCache();
       } catch (e) {
         console.error('Failed to load stickers', e);
         if (!cached?.groups) {
