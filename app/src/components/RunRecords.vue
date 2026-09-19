@@ -69,12 +69,12 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue';
+import { computed, onActivated, onDeactivated, onMounted, ref, watch } from 'vue';
 import { useRunRecords } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
 
-const { loading: profileLoading } = useDataStore();
+const { loading: profileLoading, token } = useDataStore();
 
 // 使用 composable 管理记录逻辑
 const {
@@ -124,15 +124,25 @@ const timelineItems = computed(() => {
 });
 
 // 生命周期
+const recordsMounted = ref(false);
+
 onMounted(() => {
-  // 首次加载
-  fetchRecords();
+  recordsMounted.value = true;
+  if (token.value) fetchRecords();
 });
 
-// 当全局加载状态结束后刷新记录
+onActivated(() => {
+  recordsMounted.value = true;
+});
+
+onDeactivated(() => {
+  recordsMounted.value = false;
+});
+
 watch(
   () => profileLoading.value,
   (v, oldV) => {
+    if (!recordsMounted.value) return;
     if (oldV === true && v === false) {
       fetchRecords();
     }

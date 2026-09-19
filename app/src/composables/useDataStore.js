@@ -39,7 +39,7 @@ const useAppStateStore = defineStore(
       return fallback;
     };
 
-    const fetchUserData = async (options = {}) => {
+    const doFetchUserData = async (options = {}) => {
       const { background = false } = options;
       const useLoadingState = !(background && !!userInfo.value);
       if (useLoadingState) {
@@ -98,6 +98,15 @@ const useAppStateStore = defineStore(
           loading.value = false;
         }
       }
+    };
+
+    let fetchUserDataPromise = null;
+    const fetchUserData = (options = {}) => {
+      if (fetchUserDataPromise) return fetchUserDataPromise;
+      fetchUserDataPromise = doFetchUserData(options).finally(() => {
+        fetchUserDataPromise = null;
+      });
+      return fetchUserDataPromise;
     };
 
     const clearAllData = () => {

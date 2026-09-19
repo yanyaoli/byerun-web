@@ -1,8 +1,6 @@
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
 
-const REQUEST_TRACK_KEY = '__isPrimaryApiRequest';
-
 function getDeviceInfo() {
   if (typeof navigator === 'undefined') {
     return {
@@ -120,8 +118,6 @@ export class AppApiClient {
     appSecret,
     tokenProvider = () => '',
     onAuthFailure = () => {},
-    onRequestStart = () => {},
-    onRequestEnd = () => {},
     deviceResolver = getDeviceInfo,
   }) {
     this.appVersion = appVersion;
@@ -129,9 +125,8 @@ export class AppApiClient {
     this.appSecret = appSecret;
     this.tokenProvider = tokenProvider;
     this.onAuthFailure = onAuthFailure;
-    this.onRequestStart = onRequestStart;
-    this.onRequestEnd = onRequestEnd;
     this.deviceResolver = deviceResolver;
+    this.pendingGets = new Map();
 
     this.http = axios.create({
       baseURL,
@@ -154,8 +149,6 @@ export class AppApiClient {
           body: config.data ?? null,
         });
         config.headers.sign = sign;
-        config[REQUEST_TRACK_KEY] = true;
-        this.onRequestStart();
         return config;
       },
       (error) => Promise.reject(error),
@@ -163,8 +156,6 @@ export class AppApiClient {
 
     this.http.interceptors.response.use(
       (response) => {
-        this.finishTrackedRequest(response?.config);
-
         const data = response.data;
         if (data && (data.code === 10001 || data.code === 30005 || data.msg === 'not_login')) {
           this.onAuthFailure();
@@ -172,8 +163,6 @@ export class AppApiClient {
         return response;
       },
       (error) => {
-        this.finishTrackedRequest(error?.config || error?.response?.config);
-
         if (error.response && [401, 403].includes(error.response.status)) {
           this.onAuthFailure();
         }
@@ -183,9 +172,19 @@ export class AppApiClient {
     );
   }
 
-  finishTrackedRequest(config) {
-    if (!config || config[REQUEST_TRACK_KEY] !== true) return;
-    this.onRequestEnd();
+  getCacheKey(url, params) {
+    return `GET ${url} ${params ? JSON.stringify(params) : ''}`;
+  }
+
+  dedupeGet(url, config) {
+    const key = this.getCacheKey(url, config?.params);
+    const existing = this.pendingGets.get(key);
+    if (existing) return existing;
+
+    const promise = this.http.get(url, config);
+    this.pendingGets.set(key, promise);
+    promise.finally(() => this.pendingGets.delete(key)).catch(() => {});
+    return promise;
   }
 
   login(userPhone, password, turnstileToken) {
@@ -222,11 +221,11 @@ export class AppApiClient {
   }
 
   getToken() {
-    return this.http.get('/auth/query/token');
+    return this.dedupeGet('/auth/query/token');
   }
 
   getRunRecords(pageNum = 1, pageSize = 15) {
-    return this.http.get('/unirun/query/student/all/run/record', {
+    return this.dedupeGet('/unirun/query/student/all/run/record', {
       params: { pageNum, pageSize },
     });
   }
@@ -255,25 +254,25 @@ export class AppApiClient {
   }
 
   getJoinNum(schoolId, studentId) {
-    return this.http.get('/clubactivity/getJoinNum', {
+    return this.dedupeGet('/clubactivity/getJoinNum', {
       params: { schoolId, studentId },
     });
   }
 
   getRunStandard(schoolId) {
-    return this.http.get('/unirun/query/runStandard', {
+    return this.dedupeGet('/unirun/query/runStandard', {
       params: { schoolId },
     });
   }
 
   getRunInfo(userId, yearSemester) {
-    return this.http.get('/unirun/query/runInfo', {
+    return this.dedupeGet('/unirun/query/runInfo', {
       params: { userId, yearSemester },
     });
   }
 
   queryClubInfo({ queryTime, schoolId, studentId, pageNo = 1, pageSize = 15 } = {}) {
-    return this.http.get('/clubactivity/queryActivityList', {
+    return this.dedupeGet('/clubactivity/queryActivityList', {
       params: {
         pageNo,
         pageSize,
@@ -285,7 +284,7 @@ export class AppApiClient {
   }
 
   queryMyPendingClub(studentId, pageNo = 1, pageSize = 15) {
-    return this.http.get('/clubactivity/queryMyActivityList', {
+    return this.dedupeGet('/clubactivity/queryMyActivityList', {
       params: {
         pageNo,
         pageSize,
@@ -295,11 +294,11 @@ export class AppApiClient {
   }
 
   queryMyClubTask() {
-    return this.http.get('/clubactivity/queryMySemesterClubActivity');
+    return this.dedupeGet('/clubactivity/queryMySemesterClubActivity');
   }
 
   queryMyClubRecord(studentId, pageNo = 1, pageSize = 15) {
-    return this.http.get('/clubactivity/getStudentClubRecord', {
+    return this.dedupeGet('/clubactivity/getStudentClubRecord', {
       params: {
         pageNo,
         pageSize,
@@ -327,7 +326,7 @@ export class AppApiClient {
   }
 
   countValidSignUp(studentId) {
-    return this.http.get('/clubactivity/countValidSignUp', {
+    return this.dedupeGet('/clubactivity/countValidSignUp', {
       params: { studentId },
     });
   }
@@ -338,35 +337,35 @@ export class AppApiClient {
       params.type = type;
     }
 
-    return this.http.get('/clubactivity/getMyClubItemList', {
+    return this.dedupeGet('/clubactivity/getMyClubItemList', {
       params,
     });
   }
 
   queryClubSignStatus(studentId) {
-    return this.http.get('/clubactivity/getSignInTf', {
+    return this.dedupeGet('/clubactivity/getSignInTf', {
       params: { studentId },
     });
   }
 
   getStudentMessageList(pageNum = 1, pageSize = 15) {
-    return this.http.get('/push/getStudentMessageList', {
+    return this.dedupeGet('/push/getStudentMessageList', {
       params: { pageNum, pageSize },
     });
   }
 
   getStudentRemindList(pageNum = 1, pageSize = 15) {
-    return this.http.get('/push/getStudentRemindList', {
+    return this.dedupeGet('/push/getStudentRemindList', {
       params: { pageNum, pageSize },
     });
   }
 
   getStudentAllMessageCount() {
-    return this.http.get('/push/getStudentAllMessageCount');
+    return this.dedupeGet('/push/getStudentAllMessageCount');
   }
 
   getStudentWindowsMessageList() {
-    return this.http.get('/push/getStudentWindowsMessageList');
+    return this.dedupeGet('/push/getStudentWindowsMessageList');
   }
 
   readMessage(pushId) {
