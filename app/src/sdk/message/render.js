@@ -6,6 +6,24 @@ const STICKER_PATTERN = /(&lt;|<)img\s+[^>]*?src=("|&quot;)([^"&]+)("|&quot;)[^>
 const avatarUrlCache = new Map();
 const getApiBase = () => messageSdkConfig.apiBaseUrl;
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeImgSrc(src) {
+  const s = String(src ?? '').trim();
+  if (/^(https?:)?\/\//i.test(s)) return s;
+  if (s.startsWith('/') && !s.startsWith('//')) return s;
+  if (/^data:image\//i.test(s)) return s;
+  if (/^blob:/i.test(s)) return s;
+  return '#';
+}
+
 export function normalizeAvatarUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
@@ -43,7 +61,7 @@ function replaceEmojiWithImage(match) {
 }
 
 function normalizeStickerTag(match, l, q1, src, q2, q3, atk) {
-  return `<img src="${src}" atk-emoticon="${atk}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+  return `<img src="${escapeHtml(safeImgSrc(src))}" atk-emoticon="${escapeHtml(atk)}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
 }
 
 function findStickerByKey(stickerGroups, key) {
@@ -59,17 +77,21 @@ function findStickerByKey(stickerGroups, key) {
   return null;
 }
 
+function renderStickerImg(src, atk) {
+  return `<img src="${escapeHtml(safeImgSrc(src))}" atk-emoticon="${escapeHtml(atk)}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+}
+
 function renderSticker(value, stickerGroups) {
   if (!stickerGroups || typeof stickerGroups !== 'object' || Object.keys(stickerGroups).length === 0) {
-    return `<img src="${value}" atk-emoticon="${value}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+    return renderStickerImg(value, value);
   }
 
   const item = findStickerByKey(stickerGroups, value);
   if (item) {
-    return `<img src="${item.val}" atk-emoticon="${item.key}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+    return renderStickerImg(item.val, item.key);
   }
 
-  return `<img src="${value}" atk-emoticon="${value}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+  return renderStickerImg(value, value);
 }
 
 function renderImage(value) {
@@ -88,7 +110,9 @@ function renderContentPart(part, stickerGroups) {
 
   if (type === 'image') return renderImage(value);
   if (type === 'sticker') return renderSticker(value, stickerGroups);
-  return renderText(value);
+  // text 已由后端转义，仅做表情/贴纸重建，不再二次转义；未知类型未经处理，转义为纯文本。
+  if (type === 'text') return renderText(value);
+  return escapeHtml(value);
 }
 
 export function renderContent(content, type = 'text', stickerGroups = {}) {
@@ -102,12 +126,13 @@ export function renderContent(content, type = 'text', stickerGroups = {}) {
   if (type === 'sticker') {
     const item = findStickerByKey(stickerGroups, value);
     if (item) {
-      return `<img src="${item.val}" atk-emoticon="${item.key}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
+      return renderStickerImg(item.val, item.key);
     }
     return value.replace(STICKER_PATTERN, normalizeStickerTag);
   }
-
-  return renderText(value);
+  if (type === 'text') return renderText(value);
+  // 非 text 类型未经后端转义，按纯文本转义输出。
+  return escapeHtml(value);
 }
 
 export function formatTime(timestamp) {

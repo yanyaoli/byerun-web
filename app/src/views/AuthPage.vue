@@ -168,7 +168,7 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useNotification } from '@/composables/useNotification';
 import { showMessage } from '@/composables/useMessage';
 
-const { userInfo, rememberLogin, savedPhone, savedPassword } = useDataStore();
+const { userInfo, rememberLogin, savedPhone } = useDataStore();
 const { fetchNotification } = useNotification();
 const router = useRouter();
 
@@ -284,7 +284,6 @@ function handleInputBlur() {
 onMounted(async () => {
   if (rememberMe.value) {
     phone.value = savedPhone.value || '';
-    password.value = savedPassword.value || '';
   }
   fetchNotification();
   syncViewportBaseHeight();
@@ -316,7 +315,6 @@ watch(rememberMe, (val) => {
 
   if (!val) {
     savedPhone.value = '';
-    savedPassword.value = '';
   }
 });
 
@@ -348,10 +346,8 @@ const handleLogin = async () => {
     if (data.code === 10000) {
       if (rememberMe.value) {
         savedPhone.value = phone.value;
-        savedPassword.value = password.value;
       } else {
         savedPhone.value = '';
-        savedPassword.value = '';
       }
       userInfo.value = data.response;
       resetTurnstile();
