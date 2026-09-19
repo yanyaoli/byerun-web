@@ -18,9 +18,12 @@
 
 <script setup>
 import { ref, provide, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import Message from './components/ui/Message.vue';
 import { showMessage, setMessageHandler } from '@/composables/useMessage';
+import { startNotificationWatcher } from '@/composables/useNotification';
 
+const router = useRouter();
 const messageRef = ref(null);
 
 provide('showMessage', showMessage);
@@ -30,18 +33,22 @@ const setViewportHeightVar = () => {
   document.documentElement.style.setProperty('--app-vh', `${Math.max(0, Math.round(height))}px`);
 };
 
+let stopNotificationWatcher = null;
+
 onMounted(() => {
   if (messageRef.value) {
-    setMessageHandler((message, type) => {
-      messageRef.value?.show(message, type);
+    setMessageHandler((message, type, options) => {
+      messageRef.value?.show(message, type, options);
     });
   }
+  stopNotificationWatcher = startNotificationWatcher(router);
   setViewportHeightVar();
   window.addEventListener('resize', setViewportHeightVar);
   window.addEventListener('orientationchange', setViewportHeightVar);
 });
 
 onUnmounted(() => {
+  stopNotificationWatcher?.();
   window.removeEventListener('resize', setViewportHeightVar);
   window.removeEventListener('orientationchange', setViewportHeightVar);
 });

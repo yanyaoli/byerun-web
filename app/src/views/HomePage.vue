@@ -55,7 +55,6 @@ import MyPage from '@/views/MyPage.vue';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
-import { useNotification } from '@/composables/useNotification';
 import { showMessage } from '@/composables/useMessage';
 import { preloadAutorunPingMeta } from '@/sdk/autorun';
 import { checkHasUnreadMessages } from '@/sdk/message';
@@ -63,7 +62,6 @@ import { getViewportMetrics } from '@/utils/viewport';
 
 const { fetchUserData, activeTab, userInfo, token } = useDataStore();
 const { chatUnread, setChatUnread, markChatSeen } = useChatStore();
-const { fetchNotification } = useNotification();
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
 
@@ -140,10 +138,7 @@ async function syncUnreadReminder() {
 
 async function initializePage() {
   await refreshUserData({ background: false });
-  await Promise.all([
-    preloadAutorunPingMeta(),
-    fetchNotification(),
-  ]);
+  await preloadAutorunPingMeta();
   await syncUnreadReminder();
 }
 

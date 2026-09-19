@@ -13,7 +13,7 @@
     >
       <div
         :class="[
-          'flex items-center h-9 max-w-[360px] w-[calc(100%_-_24px)] px-3 gap-2 rounded-full border shadow-lg pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-2xl',
+          'flex items-center min-h-9 py-1.5 max-w-[360px] w-[calc(100%_-_24px)] px-3 gap-2 rounded-full border shadow-lg pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-2xl',
           styles[messageType].container,
         ]"
       >
@@ -21,7 +21,7 @@
         <i :class="['text-[14px] shrink-0', styles[messageType].icon]"></i>
 
         <!-- Content -->
-        <span :class="['flex-1 text-[13px] leading-5 truncate font-medium', styles[messageType].text]">
+        <span :class="['flex-1 min-w-0 text-[13px] leading-5 font-medium whitespace-normal break-words text-left', styles[messageType].text]">
           {{ content }}
         </span>
 
@@ -79,29 +79,58 @@ const styles = {
 };
 
 let timer = null;
+let current = null;
+// 常驻消息（duration<=0，如服务端通知）：覆盖它的临时 toast 结束后自动恢复
+let pinned = null;
 
-const close = () => {
-  visible.value = false;
+const clearTimer = () => {
   if (timer) {
     clearTimeout(timer);
     timer = null;
   }
 };
 
-const show = (message, type = 'info') => {
-  content.value = message;
-  messageType.value = type;
+const render = (item) => {
+  current = item;
+  content.value = item.content;
+  messageType.value = item.type;
   visible.value = true;
-
-  if (timer) clearTimeout(timer);
-  timer = null;
-
-  // error 级别的消息不自动隐藏，需要用户手动关闭
-  if (type !== 'error') {
-    timer = setTimeout(() => {
-      visible.value = false;
-    }, props.duration);
+  clearTimer();
+  if (item.duration > 0) {
+    timer = setTimeout(autoHide, item.duration);
   }
+};
+
+const autoHide = () => {
+  clearTimer();
+  if (pinned && current !== pinned) {
+    render(pinned);
+    return;
+  }
+  visible.value = false;
+  current = null;
+};
+
+const close = () => {
+  clearTimer();
+  const item = current;
+  if (item === pinned) pinned = null;
+  visible.value = false;
+  current = null;
+  item?.onClose?.();
+};
+
+const show = (message, type = 'info', options = {}) => {
+  // error 级别默认不自动隐藏，需用户手动关闭
+  const duration = options.duration ?? (type === 'error' ? 0 : props.duration);
+  const item = {
+    content: message,
+    type,
+    duration: duration > 0 ? duration : 0,
+    onClose: options.onClose,
+  };
+  if (item.duration === 0) pinned = item;
+  render(item);
 };
 
 defineExpose({ show, close });

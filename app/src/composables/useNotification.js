@@ -1,7 +1,7 @@
-import { ref, computed } from 'vue';
 import { scheduledTaskConfig } from '@/sdk/autorun';
 import { AutorunClient } from '@/sdk/autorun/client';
-import { getDismissedNotifications, addDismissedNotification } from '@/sdk/autorun/index';
+import { getDismissedAt, markNotificationDismissed } from '@/sdk/autorun/index';
+import { showMessage } from '@/composables/useMessage';
 
 let client = null;
 
@@ -14,11 +14,6 @@ const getClient = () => {
   return client;
 };
 
-const notifications = ref([]);
-const currentNotification = ref(null);
-const notificationVisible = ref(false);
-const loaded = ref(false);
-
 const fetchNotification = async () => {
   const currentClient = getClient();
   if (!currentClient) return;
@@ -29,40 +24,39 @@ const fetchNotification = async () => {
       const single = envelope?.data?.notification;
       list = single ? [single] : [];
     }
-    if (list.length === 0) {
-      notifications.value = [];
-      currentNotification.value = null;
-      notificationVisible.value = false;
-      loaded.value = true;
-      return;
-    }
+    if (list.length === 0) return;
 
-    notifications.value = list;
-    const dismissed = getDismissedNotifications();
-    const latest = list.find((n) => n.id && !dismissed.includes(n.id)) || null;
-    currentNotification.value = latest;
-    notificationVisible.value = !!latest;
+    const dismissedAt = getDismissedAt();
+    const latest = list.find((n) => {
+      const ts = Date.parse(n?.createdAt);
+      return Number.isFinite(ts) && ts > dismissedAt;
+    });
+    if (!latest) return;
+
+    const createdAt = latest.createdAt;
+    showMessage(latest.content, latest.type || 'info', {
+      duration: 0,
+      onClose: () => markNotificationDismissed(createdAt),
+    });
   } catch (error) {
     console.error('Failed to fetch notification:', error);
-  } finally {
-    loaded.value = true;
   }
 };
 
-const dismissNotification = () => {
-  if (!currentNotification.value?.id) return;
-  addDismissedNotification(currentNotification.value.id);
-  notificationVisible.value = false;
-  currentNotification.value = null;
+/**
+ * 启动服务端通知监听：立即拉取一次，并在每次路由切换后重新拉取，
+ * 通过全局 Message 展示（常驻，关闭时持久化 dismiss 状态）。
+ * @param {import('vue-router').Router} router
+ * @returns {() => void} 停止监听
+ */
+export const startNotificationWatcher = (router) => {
+  fetchNotification();
+  const stopAfterEach = router.afterEach(() => {
+    fetchNotification();
+  });
+  return () => stopAfterEach();
 };
 
 export const useNotification = () => {
-  return {
-    notifications,
-    currentNotification,
-    notificationVisible,
-    notificationLoaded: computed(() => loaded.value),
-    fetchNotification,
-    dismissNotification,
-  };
+  return { fetchNotification };
 };

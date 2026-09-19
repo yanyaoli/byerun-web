@@ -165,11 +165,9 @@ import { useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
-import { useNotification } from '@/composables/useNotification';
 import { showMessage } from '@/composables/useMessage';
 
 const { userInfo, rememberLogin, savedPhone } = useDataStore();
-const { fetchNotification } = useNotification();
 const router = useRouter();
 
 const mode = ref('login');
@@ -285,7 +283,6 @@ onMounted(async () => {
   if (rememberMe.value) {
     phone.value = savedPhone.value || '';
   }
-  fetchNotification();
   syncViewportBaseHeight();
   measureKeyboardInset();
   window.addEventListener('resize', scheduleKeyboardMeasure);

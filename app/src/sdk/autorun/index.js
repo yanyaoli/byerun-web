@@ -164,15 +164,18 @@ const setAutorunState = (patch) => {
   } catch {}
 };
 
-export const getDismissedNotifications = () => {
+export const getDismissedAt = () => {
   const state = getAutorunState();
-  return Array.isArray(state?.dismissedNotifications) ? state.dismissedNotifications : [];
+  const value = Number(state?.dismissedAt);
+  return Number.isFinite(value) && value > 0 ? value : 0;
 };
 
-export const addDismissedNotification = (id) => {
-  const current = getDismissedNotifications();
-  if (current.includes(id)) return;
-  setAutorunState({ dismissedNotifications: [...current, id] });
+export const markNotificationDismissed = (createdAt) => {
+  const ts = Date.parse(createdAt);
+  if (!Number.isFinite(ts)) return;
+  // 游标只前进不回退：记录已关闭通知里最新的一条 createdAt
+  if (ts <= getDismissedAt()) return;
+  setAutorunState({ dismissedAt: ts });
 };
 
 export { ApiBusinessError, AutorunClient };
