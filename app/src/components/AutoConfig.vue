@@ -76,47 +76,162 @@
 
         <div class="rounded-xl theme-card-soft p-3">
           <div class="flex items-center justify-between gap-2 mb-2.5">
-            <span class="text-[11px] font-semibold theme-text-tertiary tracking-wide">今日任务状态</span>
-            <span class="text-[10px] theme-text-tertiary">{{ lastRunLabel }}</span>
+            <span class="text-[11px] font-semibold theme-text-tertiary tracking-wide">执行记录与状态</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] theme-text-tertiary">{{ lastRunLabel }}</span>
+              <button
+                type="button"
+                class="text-[10px] text-sky-500 hover:text-sky-400 inline-flex items-center gap-0.5 transition-colors"
+                @click="toggleHistory"
+              >
+                <span>{{ showHistory ? '收起历史' : '查看历史' }}</span>
+                <i :class="showHistory ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"></i>
+              </button>
+            </div>
           </div>
 
-          <template v-if="enabled">
-            <!-- 已完成 / 执行失败 -->
-            <div v-if="runtime.todayExecuted" class="flex items-start gap-2">
+          <!-- 情况 1：今日已完成 / 执行失败（无论当前定时任务是否启用，只要今天执行过均展示） -->
+          <div v-if="runtime.todayExecuted" class="space-y-2">
+            <div class="flex items-start gap-2">
               <i
                 :class="runtime.todaySuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"
-                class="text-lg mt-0.5"
+                class="text-lg mt-0.5 shrink-0"
                 :style="{ color: runtime.todaySuccess ? 'var(--success-color, #22c55e)' : 'var(--danger-color, #ef4444)' }"
               ></i>
-              <div class="min-w-0">
+              <div class="min-w-0 flex-1">
                 <p class="text-xs font-semibold theme-text-primary">
                   今日已于 <span class="font-mono">{{ executedTimeText }}</span>
                   {{ runtime.todaySuccess ? '执行成功' : '执行失败' }}
                 </p>
-                <p
-                  v-if="!runtime.todaySuccess && runtime.todayResult"
-                  class="mt-0.5 text-[11px] theme-danger break-words"
-                >
-                  {{ runtime.todayResult }}
+                <p v-if="!enabled" class="mt-0.5 text-[10px] text-amber-500/90">
+                  当前定时任务已停用，明日将不再自动提交
                 </p>
               </div>
             </div>
 
-            <!-- 已预约（执行窗口 = preferred_time ~ +5min 抖动区间） -->
-            <div v-else class="flex items-start gap-2">
-              <i class="ri-time-line text-lg mt-0.5" style="color: #38bdf8"></i>
-              <div class="min-w-0">
+            <!-- 执行结果详情/报错信息展示与一键复制 -->
+            <div
+              v-if="runtime.msg"
+              class="rounded-lg p-2.5 bg-black/10 dark:bg-white/5 border border-white/10 text-xs flex items-start justify-between gap-2"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] theme-text-tertiary mb-0.5">执行结果</div>
+                <div
+                  class="font-mono text-[11px] break-all select-all leading-relaxed"
+                  :class="runtime.todaySuccess ? 'theme-success' : 'theme-danger'"
+                >
+                  {{ runtime.msg }}
+                </div>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                title="复制结果信息"
+                @click="copyResultText(runtime.msg)"
+              >
+                <i class="ri-file-copy-line text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 情况 2：今日尚未执行，已启用定时任务（已预约） -->
+          <div v-else-if="enabled" class="space-y-2">
+            <div class="flex items-start gap-2">
+              <i class="ri-time-line text-lg mt-0.5 shrink-0" style="color: #38bdf8"></i>
+              <div class="min-w-0 flex-1">
                 <p class="text-xs font-semibold theme-text-primary">已预约</p>
                 <p class="mt-0.5 text-[11px] theme-text-secondary leading-relaxed">
                   今日预计执行时间：<span class="font-mono">{{ windowText }}</span>
                 </p>
               </div>
             </div>
-          </template>
 
-          <p v-else class="text-[11px] theme-text-tertiary">
-            未启用时不会自动提交跑步，可随时保存修改。
-          </p>
+            <!-- 调度状态或提示 -->
+            <div
+              v-if="runtime.msg && !runtime.msg.includes('之间执行')"
+              class="rounded-lg p-2.5 bg-black/10 dark:bg-white/5 border border-white/10 text-xs flex items-start justify-between gap-2"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] theme-text-tertiary mb-0.5">调度信息：</div>
+                <div class="font-mono text-[11px] break-all select-all leading-relaxed theme-text-secondary">
+                  {{ runtime.msg }}
+                </div>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                title="复制调度信息"
+                @click="copyResultText(runtime.msg)"
+              >
+                <i class="ri-file-copy-line text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 情况 3：今日尚未执行，未启用定时任务 -->
+          <div v-else class="space-y-1.5">
+            <p class="text-[11px] theme-text-tertiary">
+              未启用时不会自动提交跑步，可随时保存修改。
+            </p>
+            <div
+              v-if="runtime.msg && runtime.msg !== '未启用定时任务' && runtime.msg !== '定时任务已停用'"
+              class="rounded-lg p-2 bg-black/5 dark:bg-white/5 text-[11px] font-mono theme-text-tertiary break-all select-all flex items-start justify-between gap-2"
+            >
+              <span>上次结果：{{ runtime.msg }}</span>
+              <button
+                type="button"
+                class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+                title="复制"
+                @click="copyResultText(runtime.msg)"
+              >
+                <i class="ri-file-copy-line text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 历史流水列表（展开时显示） -->
+          <div v-if="showHistory" class="mt-2.5 pt-2 border-t border-white/10 space-y-1.5">
+            <div v-if="loadingHistory" class="text-center py-2 text-[11px] theme-text-tertiary">
+              <i class="ri-loader-4-line animate-spin"></i> 加载记录中...
+            </div>
+            <div v-else-if="historyRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
+              暂无历史执行记录
+            </div>
+            <div
+              v-for="rec in historyRecords"
+              :key="`run-rec-${rec.id}-${rec.created_at}`"
+              class="flex items-start justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5 text-[11px]"
+            >
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 text-[10px] mb-0.5">
+                  <span
+                    class="w-1.5 h-1.5 rounded-full shrink-0"
+                    :class="rec.success ? 'bg-emerald-500' : 'bg-rose-500'"
+                  ></span>
+                  <span class="font-medium px-1 rounded bg-black/10 dark:bg-white/10 text-[9px]">
+                    {{ rec.success ? '成功' : '失败' }}
+                  </span>
+                  <span v-if="rec.map_id" class="theme-text-secondary truncate max-w-[120px]">
+                    地图: {{ rec.map_id }}
+                  </span>
+                  <span class="theme-text-tertiary font-mono ml-auto shrink-0">
+                    {{ rec.created_at }}
+                  </span>
+                </div>
+                <div class="font-mono text-[10px] theme-text-secondary break-all select-all">
+                  {{ rec.message }}
+                </div>
+              </div>
+              <button
+                type="button"
+                class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+                title="复制"
+                @click="copyResultText(rec.message)"
+              >
+                <i class="ri-file-copy-line text-xs"></i>
+              </button>
+            </div>
+          </div>
         </div>
 
         <button
@@ -158,6 +273,7 @@ const runtime = reactive({
   todayExecuted: false,
   todaySuccess: false,
   todayResult: '',
+  msg: '',
   estimatedWindow: '',
   lastRunAt: '',
 });
@@ -169,21 +285,21 @@ const mapNameText = computed(() => {
 });
 
 const badgeClass = computed(() => {
-  if (!enabled.value) return 'theme-warning-border theme-warning-bg theme-warning';
   if (runtime.todayExecuted) {
     return runtime.todaySuccess
       ? 'theme-success-border theme-success-bg theme-success'
       : 'theme-danger-border theme-danger-bg theme-danger';
   }
-  return 'theme-warning-border theme-warning-bg theme-warning';
+  return enabled.value
+    ? 'theme-warning-border theme-warning-bg theme-warning'
+    : 'theme-warning-border theme-warning-bg theme-warning';
 });
 
 const badgeText = computed(() => {
-  if (!enabled.value) return '未启用';
   if (runtime.todayExecuted) {
     return runtime.todaySuccess ? '今日已完成' : '执行失败';
   }
-  return '已预约';
+  return enabled.value ? '已预约' : '未启用';
 });
 
 const lastRunLabel = computed(() => {
@@ -232,9 +348,32 @@ const applyStatus = (data = {}) => {
 
   runtime.todayExecuted = !!data.today_executed;
   runtime.todaySuccess = !!data.today_success;
-  runtime.todayResult = String(data.today_result || '');
+  runtime.todayResult = String(data.today_result || data.msg || '');
+  runtime.msg = String(data.msg || data.today_result || data.last_result || '');
   runtime.estimatedWindow = String(data.estimated_window || '');
   runtime.lastRunAt = String(data.last_run_at || '');
+};
+
+const copyResultText = async (text) => {
+  if (!text) return;
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      showMessage('结果已复制到剪贴板', 'success');
+      return;
+    }
+  } catch (e) {
+    // fallback
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  showMessage('结果已复制到剪贴板', 'success');
 };
 
 const load = async (silent = false) => {
@@ -279,6 +418,32 @@ const load = async (silent = false) => {
   }
 };
 
+const historyRecords = ref([]);
+const showHistory = ref(false);
+const loadingHistory = ref(false);
+
+const loadHistory = async () => {
+  const client = getAutorunClient();
+  if (!client || !token.value || loadingHistory.value) return;
+
+  loadingHistory.value = true;
+  try {
+    const res = await client.getRunHistory(token.value, { limit: 15 });
+    historyRecords.value = Array.isArray(res?.data?.records) ? res.data.records : [];
+  } catch (error) {
+    console.error('getRunHistory failed:', error);
+  } finally {
+    loadingHistory.value = false;
+  }
+};
+
+const toggleHistory = () => {
+  showHistory.value = !showHistory.value;
+  if (showHistory.value && historyRecords.value.length === 0) {
+    loadHistory();
+  }
+};
+
 const retry = () => {
   load(false);
 };
@@ -300,14 +465,18 @@ const save = async () => {
 
   saving.value = true;
   try {
-    await client.register(token.value, {
+    // 单次请求合并完成：保存配置并立即返回最新 status，减少网络往返与多次DB连接
+    const statusEnvelope = await client.getStatus(token.value, {
       map_id: mapId.value,
       preferred_time: prefTime.value || '07:00',
       enabled: willEnable ? 1 : 0,
     });
-    await refresh();
+    applyStatus(statusEnvelope?.data || {});
     showMessage('保存成功', 'success');
     emit('saved');
+    if (showHistory.value) {
+      loadHistory();
+    }
   } catch (error) {
     showMessage(error?.message || '保存定时任务配置失败', 'error');
   } finally {

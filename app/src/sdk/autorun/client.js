@@ -30,11 +30,7 @@ export class AutorunClient {
   }
 
   register(token, body, requestId) {
-    return this.request(
-      '/api/register',
-      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
-      requestId,
-    );
+    return this.getStatus(token, body, requestId);
   }
 
   getConfig(token, requestId) {
@@ -45,34 +41,38 @@ export class AutorunClient {
     );
   }
 
-  getStatus(token, requestId) {
+  getStatus(token, body = {}, requestId) {
     return this.request(
       '/api/status',
-      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body || {}) },
+      requestId,
+    );
+  }
+
+  getRunHistory(token, body = {}, requestId) {
+    return this.request(
+      '/api/history',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body || {}) },
       requestId,
     );
   }
 
   setClubAutoConfig(token, body, requestId) {
-    return this.request(
-      '/api/club/config',
-      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body) },
-      requestId,
-    );
+    return this.getClubAutoStatus(token, body, requestId);
   }
 
-  getClubAutoStatus(token, requestId) {
+  getClubAutoStatus(token, body = {}, requestId) {
     return this.request(
       '/api/club/status',
-      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body || {}) },
       requestId,
     );
   }
 
-  triggerClubAuto(token, requestId) {
+  getClubAutoHistory(token, body = {}, requestId) {
     return this.request(
-      '/api/club/trigger',
-      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify({}) },
+      '/api/club/history',
+      { method: 'POST', headers: this.authHeaders(token), body: JSON.stringify(body || {}) },
       requestId,
     );
   }

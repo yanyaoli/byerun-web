@@ -1,256 +1,300 @@
 <template>
-  <div
-    v-if="visible"
-    class="fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/85"
-    @click.self="close"
-  >
-    <div class="relative w-full max-w-[340px] rounded-2xl theme-card p-5 shadow-2xl">
-      <div class="flex items-start justify-between gap-3">
-        <div>
-          <h3 class="text-sm font-semibold theme-text-primary">俱乐部定时任务</h3>
-          <p class="mt-1 text-xs theme-text-secondary truncate">
-            {{ task.activityName || '暂无活动' }}
-          </p>
-        </div>
+  <section class="theme-card rounded-xl p-3.5">
+    <!-- 头部：标题、状态指示与 Switch 开关 -->
+    <div class="flex items-center justify-between gap-3">
+      <div class="min-w-0 flex items-center gap-2">
+        <h3 class="text-sm font-semibold theme-text-primary leading-tight">俱乐部定时任务</h3>
         <span
-          class="h-7 px-3 rounded-full border text-xs inline-flex items-center"
+          class="h-5 px-2 rounded-full text-[10px] font-medium inline-flex items-center border"
           :class="
             enabled
               ? 'theme-success-border theme-success-bg theme-success'
-              : 'theme-warning-border theme-warning-bg theme-warning'
+              : 'badge-neutral'
           "
         >
           {{ enabled ? '已启用' : '未启用' }}
         </span>
-      </div>
-
-      <div v-if="loading" class="mt-4 space-y-3">
-        <div class="h-4 w-1/2 rounded-xl theme-card-soft animate-pulse"></div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
-          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
-          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
-          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
-          <div class="h-7 rounded-xl theme-card-soft animate-pulse"></div>
-          <div class="h-7 col-span-2 rounded-xl theme-card-soft animate-pulse"></div>
-          <div class="h-7 col-span-2 rounded-xl theme-card-soft animate-pulse"></div>
-        </div>
-      </div>
-
-      <div v-else class="mt-4 grid grid-cols-2 gap-2 text-xs theme-text-secondary">
-        <div class="meta-pill col-span-2">
-          <i class="ri-time-line"></i>
-          <span class="truncate">活动时间：{{ taskTimeText }}</span>
-        </div>
-        <div class="meta-pill">
-          <i class="ri-login-circle-line"></i>
-          <span class="truncate">签到：{{ signInStateText }}</span>
-        </div>
-        <div class="meta-pill">
-          <i class="ri-logout-circle-r-line"></i>
-          <span class="truncate">签退：{{ signOutStateText }}</span>
-        </div>
-        <div v-if="signInWindowText" class="meta-pill col-span-2">
-          <i class="ri-time-line"></i>
-          <span class="truncate">预计签到：{{ signInWindowText }}</span>
-        </div>
-        <div v-else class="meta-pill col-span-2">
-          <i class="ri-login-circle-line"></i>
-          <span class="truncate">签到时间：{{ formatDisplayDateTime(task.signInTimeText) }}</span>
-        </div>
-        <div v-if="signOutWindowText" class="meta-pill col-span-2">
-          <i class="ri-time-line"></i>
-          <span class="truncate">预计签退：{{ signOutWindowText }}</span>
-        </div>
-        <div v-else class="meta-pill col-span-2">
-          <i class="ri-logout-circle-r-line"></i>
-          <span class="truncate"
-            >签退时间：{{ formatDisplayDateTime(task.signBackLimitTimeText) }}</span
-          >
-        </div>
-        <div class="meta-pill col-span-2">
-          <i class="ri-checkbox-circle-line"></i>
-          <span class="truncate">任务执行：{{ executedSignInText }}</span>
-        </div>
-        <div class="meta-pill col-span-2">
-          <i class="ri-checkbox-circle-line"></i>
-          <span class="truncate">任务执行：{{ executedSignOutText }}</span>
-        </div>
-      </div>
-
-      <div class="mt-4 flex items-center justify-between gap-2">
         <button
           type="button"
-          :class="[
-            'h-8 px-3 rounded-lg text-xs font-medium theme-accent-bg theme-accent text-white hover:theme-accent-bg transition-colors',
-            (loading || submitting || triggering) && 'opacity-70 cursor-not-allowed',
-          ]"
-          :disabled="loading || submitting || triggering"
-          @click="triggerNow"
+          class="w-5 h-5 rounded flex items-center justify-center theme-text-tertiary hover:theme-text-primary transition-colors disabled:opacity-50"
+          :disabled="loading || submitting"
+          title="刷新定时任务状态"
+          @click="loadStatus"
         >
-          {{ triggering ? '测试中...' : '测试签到' }}
-        </button>
-        <button
-          type="button"
-          class="h-8 px-3 rounded-lg text-xs font-medium"
-          :class="
-            enabled
-              ? 'theme-danger-bg theme-danger text-white hover:theme-danger-bg'
-              : 'theme-success-bg theme-success text-white hover:theme-success-bg'
-          "
-          :disabled="loading || submitting || triggering"
-          @click="toggleEnabled"
-        >
-          {{ submitting ? (enabled ? '停用中...' : '启用中...') : enabled ? '停用' : '启用' }}
+          <i class="ri-refresh-line text-xs" :class="{ 'animate-spin': loading }"></i>
         </button>
       </div>
 
+      <!-- Switch 开关 -->
       <button
         type="button"
-        class="absolute top-3 right-3 w-8 h-8 rounded-full club-auto-close disabled:opacity-60 disabled:cursor-not-allowed"
-        :disabled="submitting || triggering"
-        @click="close"
+        class="switch"
+        :class="{ 'switch-on': enabled, 'opacity-60 cursor-not-allowed': submitting }"
+        :disabled="submitting || loading"
+        :title="enabled ? '点击停用定时任务' : '点击启用定时任务'"
+        @click="toggleEnabled"
       >
-        <i class="ri-close-line"></i>
+        <i :class="{ 'animate-spin': submitting }"></i>
       </button>
     </div>
-  </div>
+
+    <!-- 状态信息：当前活动与签到签退状态 -->
+    <div class="mt-2.5 grid grid-cols-2 gap-2 text-xs theme-text-secondary">
+      <div v-if="task.hasTask || task.activityName" class="meta-pill col-span-2">
+        <i class="ri-calendar-line"></i>
+        <span class="truncate">当前活动：{{ task.activityName }}（{{ taskTimeText }}）</span>
+      </div>
+      <div v-else class="meta-pill col-span-2">
+        <i class="ri-time-line"></i>
+        <span class="truncate">今日活动监控中（暂无进行中活动）</span>
+      </div>
+
+      <div class="meta-pill">
+        <i
+          :class="
+            task.signInStatus === 1 || hasText(task.signInTimeText)
+              ? 'ri-checkbox-circle-line theme-success'
+              : 'ri-login-circle-line'
+          "
+        ></i>
+        <span class="truncate">签到：{{ signInStateText }}</span>
+      </div>
+      <div class="meta-pill">
+        <i
+          :class="
+            task.signBackStatus === 1 || hasText(task.signBackLimitTimeText)
+              ? 'ri-checkbox-circle-line theme-success'
+              : 'ri-logout-circle-r-line'
+          "
+        ></i>
+        <span class="truncate">签退：{{ signOutStateText }}</span>
+      </div>
+    </div>
+
+    <!-- 定时任务执行记录（默认显示最新一条，支持展开完整历史） -->
+    <div class="mt-2.5 p-2.5 rounded-lg bg-black/10 dark:bg-white/5 border border-white/10 text-xs">
+      <div class="flex items-center justify-between text-[10px] theme-text-tertiary mb-1.5">
+        <span class="flex items-center gap-1 font-medium">
+          <i class="ri-history-line"></i>
+          执行记录
+        </span>
+        <div class="flex items-center gap-2">
+          <span v-if="status.last_attempt_at" class="font-mono opacity-80">
+            {{ formatDisplayDateTime(status.last_attempt_at) }}
+          </span>
+          <button
+            type="button"
+            class="text-[10px] text-sky-500 hover:text-sky-400 inline-flex items-center gap-0.5 transition-colors"
+            @click="toggleHistory"
+          >
+            <span>{{ showHistory ? '收起历史' : '查看历史' }}</span>
+            <i :class="showHistory ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- 最新一次执行反馈展示与一键复制 -->
+      <div class="flex items-start justify-between gap-2">
+        <div
+          class="font-mono text-[11px] break-all select-all leading-relaxed flex-1"
+          :class="resultStatusClass"
+        >
+          {{ displayResultText }}
+        </div>
+        <button
+          type="button"
+          class="shrink-0 p-1 -mt-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+          title="复制结果反馈给开发者"
+          @click="copyResult(displayResultText)"
+        >
+          <i class="ri-file-copy-line text-xs"></i>
+        </button>
+      </div>
+
+      <!-- 历史流水列表（展开时显示） -->
+      <div v-if="showHistory" class="mt-2.5 pt-2 border-t border-white/10 space-y-1.5">
+        <div v-if="loadingHistory" class="text-center py-2 text-[11px] theme-text-tertiary">
+          <i class="ri-loader-4-line animate-spin"></i> 加载记录中...
+        </div>
+        <div v-else-if="historyRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
+          暂无历史执行记录
+        </div>
+        <div
+          v-for="rec in historyRecords"
+          :key="`club-rec-${rec.id}-${rec.created_at}`"
+          class="flex items-start justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5 text-[11px]"
+        >
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 text-[10px] mb-0.5">
+              <span
+                class="w-1.5 h-1.5 rounded-full shrink-0"
+                :class="rec.success ? 'bg-emerald-500' : 'bg-rose-500'"
+              ></span>
+              <span class="font-medium px-1 rounded bg-black/10 dark:bg-white/10 text-[9px]">
+                {{ rec.action_text || '任务' }}
+              </span>
+              <span v-if="rec.activity_name" class="theme-text-secondary truncate max-w-[120px]">
+                {{ rec.activity_name }}
+              </span>
+              <span class="theme-text-tertiary font-mono ml-auto shrink-0">
+                {{ formatDisplayDateTime(rec.created_at) }}
+              </span>
+            </div>
+            <div class="font-mono text-[10px] theme-text-secondary break-all select-all">
+              {{ rec.message }}
+            </div>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+            title="复制"
+            @click="copyResult(rec.message)"
+          >
+            <i class="ri-file-copy-line text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { getAutorunClient } from '@/sdk/autorun';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
 
 const props = defineProps({
-  visible: { type: Boolean, default: false },
-  enabled: { type: Boolean, default: false },
+  modelValue: { type: Boolean, default: undefined },
 });
-const emit = defineEmits(['update:visible', 'update:enabled', 'saved']);
+
+const emit = defineEmits(['update:modelValue', 'change', 'updated']);
 
 const { token } = useDataStore();
 
 const loading = ref(false);
 const submitting = ref(false);
-const triggering = ref(false);
+
 const status = reactive({
   enabled: 0,
-  sign_in_lead_minutes: 10,
-  sign_out_delay_minutes: 10,
-  should_sign_in: false,
-  should_sign_out: false,
-  sign_in_done: false,
-  sign_out_done: false,
   last_attempt_at: '',
-  last_result: '',
-  last_action: '',
-  last_success_at: '',
+  msg: '',
 });
 
 const task = reactive({
   hasTask: false,
-  activityId: 0,
   activityName: '',
   startTime: '',
   endTime: '',
   signInStatus: 0,
   signBackStatus: 0,
-  signInTimeText: '',
-  signBackLimitTimeText: '',
-  signInWindowAt: '',
-  signOutWindowAt: '',
 });
 
 const enabled = computed(() => Number(status.enabled) === 1 || status.enabled === true);
-const signInStateText = computed(() =>
-  task.signInStatus === 1 || hasText(task.signInTimeText) ? '已签到' : '未签到',
-);
-const signOutStateText = computed(() =>
-  task.signBackStatus === 1 || hasText(task.signBackLimitTimeText) ? '已签退' : '未签退',
-);
+
+const signInStateText = computed(() => (task.signInStatus === 1 ? '已签到' : '未签到'));
+
+const signOutStateText = computed(() => (task.signBackStatus === 1 ? '已签退' : '未签退'));
+
 const taskTimeText = computed(() => {
   const start = formatDisplayDateTime(task.startTime);
   const end = formatDisplayDateTime(task.endTime);
-  return `${start} - ${end}`;
+  if (!start && !end) return '--';
+  return `${start || '--'} - ${end || '--'}`;
 });
 
-const executedSignInText = computed(() => {
-  if (status.last_action === 'sign_in' && hasText(status.last_success_at)) {
-    return `已执行签到（${formatDisplayDateTime(status.last_success_at)}）`;
+const displayResultText = computed(() => {
+  if (status.msg) return status.msg;
+  if (task.hasTask) {
+    if (task.signInStatus === 1 && task.signBackStatus === 1) {
+      return '今日签到与签退均已完成';
+    }
+    if (task.signInStatus === 1) {
+      return enabled.value ? '签到已完成，等待签退' : '签到已完成（定时任务已停用，需手动签退）';
+    }
+    return enabled.value ? '等待自动签到' : '定时任务已停用（需手动签到）';
   }
-  return '未执行签到';
+  return enabled.value ? '已启用，等待下一次调度' : '定时任务已停用';
 });
 
-const executedSignOutText = computed(() => {
-  if (status.last_action === 'sign_out' && hasText(status.last_success_at)) {
-    return `已执行签退（${formatDisplayDateTime(status.last_success_at)}）`;
-  }
-  return '未执行签退';
+const isSuccessResult = computed(() => {
+  const m = (displayResultText.value || '').toLowerCase();
+  return m.includes('success') || m.includes('成功') || m.includes('完成');
 });
 
-const signInWindowText = computed(() => {
-  if (task.signInStatus === 1 || hasText(task.signInTimeText)) {
-    return '';
-  }
-  return formatDisplayDateTime(task.signInWindowAt);
+const isWarningResult = computed(() => {
+  const m = (displayResultText.value || '').toLowerCase();
+  return (
+    m.includes('fail') ||
+    m.includes('失败') ||
+    m.includes('error') ||
+    m.includes('错误') ||
+    m.includes('429') ||
+    m.includes('超时') ||
+    m.includes('20012')
+  );
 });
 
-const signOutWindowText = computed(() => {
-  if (task.signBackStatus === 1 || hasText(task.signBackLimitTimeText)) {
-    return '';
-  }
-  return formatDisplayDateTime(task.signOutWindowAt);
+const resultStatusClass = computed(() => {
+  if (isSuccessResult.value) return 'text-emerald-500 font-semibold';
+  if (isWarningResult.value) return 'text-amber-500 font-medium';
+  return 'theme-text-secondary';
 });
 
-function applyStatus(data = {}) {
+function applyData(data = {}) {
   const nextEnabled = Number(data.enabled) === 1 || data.enabled === true;
   status.enabled = data.enabled ?? 0;
-  status.sign_in_lead_minutes = data.sign_in_lead_minutes ?? 10;
-  status.sign_out_delay_minutes = data.sign_out_delay_minutes ?? 10;
-  status.should_sign_in = !!data.should_sign_in;
-  status.should_sign_out = !!data.should_sign_out;
-  status.sign_in_done = !!data.sign_in_done;
-  status.sign_out_done = !!data.sign_out_done;
   status.last_attempt_at = String(data.last_attempt_at || '');
-  status.last_result = String(data.last_result || '');
-  status.last_action = String(data.last_action || '');
-  status.last_success_at = String(data.last_success_at || '');
-  emit('update:enabled', nextEnabled);
-}
+  status.msg = String(data.msg || '');
 
-function applyTask(data = {}) {
   task.hasTask = data.has_task === true;
-  task.activityId = Number(data.activity_id || 0);
   task.activityName = String(data.activity_name || '');
   task.startTime = String(data.start_time || '');
   task.endTime = String(data.end_time || '');
   task.signInStatus = Number(data.sign_in_status || 0);
   task.signBackStatus = Number(data.sign_back_status || 0);
-  task.signInTimeText = String(data.sign_in_time_text || '');
-  task.signBackLimitTimeText = String(data.sign_back_limit_time_text || '');
-  task.signInWindowAt = String(data.sign_in_window_at || '');
-  task.signOutWindowAt = String(data.sign_out_window_at || '');
+
+  emit('update:modelValue', nextEnabled);
+  emit('updated', { status, task });
+}
+
+const historyRecords = ref([]);
+const showHistory = ref(false);
+const loadingHistory = ref(false);
+
+async function loadHistory() {
+  const client = getAutorunClient();
+  if (!client || !token.value || loadingHistory.value) return;
+
+  loadingHistory.value = true;
+  try {
+    const res = await client.getClubAutoHistory(token.value, { limit: 15 });
+    historyRecords.value = Array.isArray(res?.data?.records) ? res.data.records : [];
+  } catch (error) {
+    console.error('getClubAutoHistory failed:', error);
+  } finally {
+    loadingHistory.value = false;
+  }
+}
+
+function toggleHistory() {
+  showHistory.value = !showHistory.value;
+  if (showHistory.value && historyRecords.value.length === 0) {
+    loadHistory();
+  }
 }
 
 async function loadStatus() {
   const client = getAutorunClient();
-  if (!client || loading.value) return;
-  if (!token.value) return;
+  if (!client || !token.value || loading.value) return;
 
   loading.value = true;
   try {
     const statusEnvelope = await client.getClubAutoStatus(token.value);
     const data = statusEnvelope?.data || {};
-    applyStatus(data);
-    applyTask(data);
+    applyData(data);
   } catch (error) {
-    showMessage(error?.message || '加载俱乐部定时任务状态失败', 'error');
+    console.error('getClubAutoStatus failed:', error);
   } finally {
     loading.value = false;
   }
@@ -258,70 +302,75 @@ async function loadStatus() {
 
 async function toggleEnabled() {
   const client = getAutorunClient();
-  if (!client || submitting.value) return;
-  if (!token.value) return;
+  if (!client || submitting.value || !token.value) return;
 
   submitting.value = true;
   try {
     const nextEnabled = !enabled.value;
-    await client.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
-    await loadStatus();
+    // 单次请求合并完成：保存配置并立即返回最新 status，消除二次往返
+    const statusEnvelope = await client.getClubAutoStatus(token.value, { enabled: nextEnabled ? 1 : 0 });
+    const data = statusEnvelope?.data || {};
+    applyData(data);
     showMessage(nextEnabled ? '俱乐部定时任务已开启' : '俱乐部定时任务已关闭', 'success');
-    emit('saved');
+    emit('change', nextEnabled);
+    if (showHistory.value) {
+      loadHistory();
+    }
   } catch (error) {
-    showMessage(error?.message || '保存俱乐部定时任务配置失败', 'error');
+    showMessage(error?.message || '设置定时任务失败', 'error');
   } finally {
     submitting.value = false;
   }
 }
 
-async function triggerNow() {
-  const client = getAutorunClient();
-  if (!client || triggering.value) return;
-  if (!token.value) return;
-
-  triggering.value = true;
+async function copyResult(text) {
+  if (!text) return;
   try {
-    const envelope = await client.triggerClubAuto(token.value);
-    const message = envelope?.data?.result?.message || '执行完成';
-    showMessage(message, 'success');
-    await loadStatus();
-    emit('saved');
-  } catch (error) {
-    showMessage(error?.message || '执行俱乐部定时任务失败', 'error');
-  } finally {
-    triggering.value = false;
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      showMessage('结果已复制到剪贴板', 'success');
+      return;
+    }
+  } catch (e) {
+    // fallback
   }
-}
-
-function close() {
-  emit('update:visible', false);
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  showMessage('结果已复制到剪贴板', 'success');
 }
 
 function formatDisplayDateTime(value) {
   const text = String(value || '').trim();
-  return text || '--';
+  return text || '';
 }
 
 function hasText(value) {
   return String(value || '').trim() !== '';
 }
 
-watch(
-  () => props.visible,
-  (next) => {
-    if (next) loadStatus();
-  },
-  { immediate: true },
-);
+onMounted(() => {
+  if (token.value) {
+    loadStatus();
+  }
+});
 
-watch(
-  () => props.enabled,
-  (next) => {
-    status.enabled = next ? 1 : 0;
-  },
-  { immediate: true },
-);
+watch(token, (newToken) => {
+  if (newToken) {
+    loadStatus();
+  }
+});
+
+defineExpose({
+  refresh: loadStatus,
+  loadStatus,
+  enabled,
+});
 </script>
 
 <style scoped>
@@ -336,12 +385,39 @@ watch(
   gap: 6px;
 }
 
-.club-auto-close {
-  color: var(--text-tertiary);
+.badge-neutral {
+  background-color: var(--card-soft-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--card-border);
 }
 
-.club-auto-close:hover {
-  color: var(--text-primary);
-  background-color: var(--action-hover-bg);
+.switch {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--bg-tertiary);
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.switch-on {
+  background: var(--success-color, #22c55e);
+}
+
+.switch-on i {
+  transform: translateX(18px);
 }
 </style>

@@ -80,16 +80,16 @@
             <div
               v-for="day in dateOptions"
               :key="day.value"
-              class="flex items-center justify-between px-5 py-3 cursor-pointer transition-all border-b border-[var(--card-divider)] last:border-b-0 relative overflow-hidden"
+              class="min-h-[58px] flex items-center justify-between px-5 py-4 cursor-pointer transition-all border-b border-[var(--card-divider)] last:border-b-0 relative overflow-hidden"
               :class="selectedQueryDate === day.value ? 'option-selected' : 'hover:bg-[var(--action-hover-bg)]'"
               @click="selectQueryDate(day.value)"
             >
               <i v-if="selectedQueryDate === day.value" class="ri-check-line option-selected-icon" aria-hidden="true"></i>
-              <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="flex items-center gap-3.5 min-w-0 flex-1">
                 <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="selectedQueryDate === day.value ? 'option-dot-selected' : 'option-dot'"></span>
                 <span class="text-base truncate" :class="selectedQueryDate === day.value ? 'theme-text-primary font-semibold' : 'theme-text-secondary'">{{ day.label }}</span>
               </div>
-              <span class="text-sm" :class="selectedQueryDate === day.value ? 'theme-text-primary font-medium' : 'theme-text-tertiary'">{{ day.value }}</span>
+              <span class="text-sm font-mono" :class="selectedQueryDate === day.value ? 'theme-text-primary font-medium' : 'theme-text-tertiary'">{{ day.value }}</span>
             </div>
           </Drawer>
         </div>
@@ -168,113 +168,15 @@
       </div>
     </section>
 
-    <section v-if="activeMainTab === 'activities'" class="mt-3">
-      <article v-if="signTaskCard" class="theme-card rounded-xl p-4">
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0 flex-1">
-            <h3 class="text-sm font-semibold theme-text-primary truncate">
-              {{ signTaskCard.title }}
-              <span v-if="signTaskCard.location" class="font-normal theme-text-tertiary"
-                >· {{ signTaskCard.location }}</span
-              >
-            </h3>
-            <p class="mt-0.5 text-xs theme-text-secondary truncate">
-              {{ signTaskCard.subTitle }}
-            </p>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <span
-              :class="[
-                'h-6 px-2 rounded-full text-[11px] inline-flex items-center border',
-                clubAutoConfigEnabled
-                  ? 'theme-success-bg theme-success-border theme-success'
-                  : 'badge-neutral',
-              ]"
-            >
-              {{ clubAutoConfigEnabled ? '已启用定时任务' : '未启用定时任务' }}
-            </span>
-            <span :class="signTaskCard.badgeClass">{{ signTaskCard.badgeText }}</span>
-          </div>
-        </div>
 
-        <div class="mt-3 grid grid-cols-2 gap-2 text-xs theme-text-tertiary">
-          <div v-for="meta in signTaskCard.metaList" :key="meta.key" class="flex items-center gap-1.5 truncate">
-            <i :class="meta.icon" class="shrink-0"></i>
-            <span class="truncate">{{ meta.label }}</span>
-          </div>
-        </div>
 
-        <div
-          v-if="signTaskButtons.length > 0"
-          class="mt-3 flex items-center justify-between gap-2"
-        >
-          <button
-            type="button"
-            :disabled="clubAutoConfigToggling"
-            :class="[
-              'h-7 px-2.5 rounded-lg text-[11px] font-medium inline-flex items-center gap-1 transition-colors',
-              clubAutoConfigEnabled
-                ? 'theme-danger-bg theme-danger text-white'
-                : 'theme-success-bg theme-success text-white',
-              clubAutoConfigToggling && 'opacity-70 cursor-not-allowed',
-            ]"
-            @click="toggleClubAutoConfig"
-          >
-            <i
-              :class="[
-                clubAutoConfigToggling
-                  ? 'ri-loader-4-line animate-spin'
-                  : clubAutoConfigEnabled
-                    ? 'ri-indeterminate-circle-line'
-                    : 'ri-checkbox-circle-line',
-              ]"
-            ></i>
-            <span>{{
-              clubAutoConfigToggling
-                ? clubAutoConfigEnabled
-                  ? '停用中...'
-                  : '启用中...'
-                : clubAutoConfigEnabled
-                  ? '停用定时任务'
-                  : '启用定时任务'
-            }}</span>
-          </button>
-
-          <div class="flex flex-wrap justify-end gap-2">
-            <button
-              v-for="action in signTaskButtons"
-              :key="action.key"
-              type="button"
-              :disabled="isSignTaskActionDisabled(action)"
-              :class="[
-                'h-7 px-2.5 rounded-lg text-[11px] font-medium inline-flex items-center gap-1 transition-colors text-white',
-                action.buttonClass,
-                isSignTaskActionDisabled(action) && 'opacity-70 cursor-not-allowed',
-              ]"
-              @click="handleSignTaskAction(action.type)"
-            >
-              <i
-                v-if="isSignTaskActionPending(action)"
-                class="ri-loader-4-line animate-spin"
-              ></i>
-              <span>{{
-                isSignTaskActionPending(action) ? action.pendingLabel : action.label
-              }}</span>
-            </button>
-          </div>
-        </div>
-      </article>
-
-      <div
-        v-else
-        class="theme-card rounded-xl p-4 text-xs text-center theme-text-tertiary flex flex-col items-center gap-2"
-      >
-        <div class="w-10 h-10 rounded-full bg-[var(--card-soft-bg)] flex items-center justify-center">
-          <i class="ri-flag-off-line text-base"></i>
-        </div>
-        <span>当前没有可执行签到/签退任务</span>
-      </div>
-    </section>
+    <!-- 俱乐部定时任务模块组件（非侵入式引入：状态信息、开关控制、结果查询默认显示） -->
+    <ClubAutoConfig
+      v-if="activeMainTab === 'activities'"
+      ref="clubAutoConfigRef"
+      class="mt-3"
+      @updated="handleClubAutoConfigUpdated"
+    />
 
     <section
       v-if="activeMainTab === 'activities' && clubRushTasks.length > 0"
@@ -414,8 +316,26 @@
                 }}</span>
               </button>
 
+              <template v-if="card.signButtons && card.signButtons.length > 0">
+                <button
+                  v-for="btn in card.signButtons"
+                  :key="btn.key"
+                  type="button"
+                  :disabled="btn.disabled || isSignTaskActionPending(btn)"
+                  :class="[
+                    'h-7 px-2.5 rounded-lg text-[11px] font-medium text-white transition-colors inline-flex items-center gap-1',
+                    btn.buttonClass,
+                    (btn.disabled || isSignTaskActionPending(btn)) && 'opacity-70 cursor-not-allowed',
+                  ]"
+                  @click="handleSignTaskAction(btn.type)"
+                >
+                  <i v-if="isSignTaskActionPending(btn)" class="ri-loader-4-line animate-spin"></i>
+                  <span>{{ isSignTaskActionPending(btn) ? btn.pendingLabel : btn.label }}</span>
+                </button>
+              </template>
+
               <button
-                v-if="card.action"
+                v-else-if="card.action"
                 type="button"
                 :disabled="card.action.disabled || isCardActionPending(card)"
                 :class="[
@@ -472,6 +392,7 @@ import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
 import TurnstileWidget from './TurnstileWidget.vue';
 import Drawer from './ui/Drawer.vue';
+import ClubAutoConfig from './ClubAutoConfig.vue';
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表', icon: 'ri-calendar-check-line' },
@@ -547,16 +468,7 @@ const historyLoadingMore = ref(false);
 
 const signTask = ref(null);
 const signPendingType = ref('');
-const clubAutoConfigEnabled = ref(false);
-const clubAutoConfigToggling = ref(false);
-const clubAutoSignInStatus = ref('');
-const clubAutoSignOutStatus = ref('');
-const clubAutoSignInLeadMinutes = ref(10);
-const clubAutoSignOutDelayMinutes = ref(10);
-const clubAutoSignInWindowAt = ref('');
-const clubAutoSignOutWindowAt = ref('');
-const clubAutoLastAction = ref('');
-const clubAutoLastSuccessAt = ref('');
+const clubAutoConfigRef = ref(null);
 const clubRushTasks = ref([]);
 
 const loading = ref(false);
@@ -620,62 +532,6 @@ const filteredList = computed(() => {
   return list;
 });
 
-const cards = computed(() =>
-  filteredList.value.map((item, index) => {
-    const activityId = resolveActivityId(item);
-    const key = String(activityId || item.configurationId || item.yymmdd || 'club') + '-' + index;
-    const badge = resolveBadge(item);
-    const isHistoryRecord =
-      activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
-
-    return {
-      key,
-      item,
-      isHistoryRecord,
-      activityId,
-      action:
-        activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
-          ? resolveClubAction(item)
-          : null,
-      rushAction:
-        activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
-          ? resolveRushAction(item)
-          : null,
-      title: item.activityName || '活动 #' + (activityId || index + 1),
-      subTitle: item.teacherName ? item.teacherName : '',
-      badgeText: badge.text,
-      badgeClass: badge.className,
-      timeText: formatTimeRange(item),
-      metaSecondaryIcon: isHistoryRecord ? 'ri-calendar-line' : 'ri-team-line',
-      metaSecondaryText: isHistoryRecord ? formatHistoryWeekDate(item) : formatCapacity(item),
-      metaTertiaryIcon: isHistoryRecord ? '' : 'ri-map-pin-line',
-      metaTertiaryText: isHistoryRecord ? '' : item.addressDetail || item.address || '地点待定',
-      historyDateTimeText: isHistoryRecord
-        ? `${item.yymmdd || '--'} ${(item.startTime || '--:--') + ' - ' + (item.endTime || '--:--')}`
-        : '',
-      showIntro: false,
-      introText: '',
-    };
-  }),
-);
-
-const currentListTitle = computed(() => {
-  if (activeMainTab.value === 'activities') {
-    if (activeActivityTab.value === 'myTask') return '我的任务';
-    return `活动列表（${currentQueryDate.value}）`;
-  }
-  if (activeHistoryTab.value === 'semester') return '学期记录（queryMySemesterClubActivity）';
-  return '历史记录';
-});
-
-const emptyMessage = computed(() => {
-  if (activeMainTab.value === 'activities') {
-    return activeActivityTab.value === 'myTask' ? '暂无我的任务数据' : '暂无活动列表数据';
-  }
-  if (activeHistoryTab.value === 'semester') return '暂无学期记录';
-  return '暂无历史记录';
-});
-
 const signTaskPhase = computed(() => resolveSignTaskPhase(signTask.value));
 const signTaskPanelStatus = computed(() => {
   switch (signTaskPhase.value) {
@@ -688,69 +544,6 @@ const signTaskPanelStatus = computed(() => {
     default:
       return createBadge('未签到', 'badge-neutral');
   }
-});
-
-const signTaskCard = computed(() => {
-  const task = signTask.value;
-  if (!task) return null;
-
-  const source = mergeActivityData(task, findLinkedActivityById(task.activityId));
-  const metaList = [
-    {
-      key: 'sign-in',
-      icon: 'ri-login-circle-line',
-      label: `签到时间：${source.signInTime || '--'}`,
-    },
-    {
-      key: 'sign-out',
-      icon: 'ri-logout-circle-r-line',
-      label: `签退时间：${source.signBackTime || source.signBackLimitTime || '--'}`,
-    },
-  ];
-
-  if (clubAutoConfigEnabled.value) {
-    if (clubAutoSignInStatus.value === '未签到' && clubAutoSignInWindowAt.value) {
-      metaList.push({
-        key: 'auto-in-window',
-        icon: 'ri-time-line',
-        label: `预计签到：${clubAutoSignInWindowAt.value}`,
-      });
-    }
-    if (clubAutoSignOutStatus.value === '未签退' && clubAutoSignOutWindowAt.value) {
-      metaList.push({
-        key: 'auto-out-window',
-        icon: 'ri-time-line',
-        label: `预计签退：${clubAutoSignOutWindowAt.value}`,
-      });
-    }
-    metaList.push({
-      key: 'auto-status',
-      icon: 'ri-checkbox-circle-line',
-      label: `签到状态：${clubAutoSignInStatus.value} · 签退状态：${clubAutoSignOutStatus.value}`,
-    });
-    const lastActionText =
-      clubAutoLastAction.value === 'sign_in'
-        ? '签到'
-        : clubAutoLastAction.value === 'sign_out'
-          ? '签退'
-          : '无';
-    const lastSuccessText = clubAutoLastSuccessAt.value ? `（${clubAutoLastSuccessAt.value}）` : '';
-    metaList.push({
-      key: 'auto-exec',
-      icon: 'ri-history-line',
-      label: `执行状态：已执行${lastActionText}${lastSuccessText}`,
-    });
-  }
-
-  return {
-    title: source.activityName || '未命名活动',
-    subTitle: formatTimeRange(source),
-    badgeText: signTaskPanelStatus.value.text,
-    badgeClass: signTaskPanelStatus.value.className,
-    location: source.addressDetail || source.address || '',
-    autoEnabled: clubAutoConfigEnabled.value,
-    metaList,
-  };
 });
 
 const signTaskPrimaryAction = computed(() => {
@@ -807,6 +600,71 @@ const signTaskButtons = computed(() =>
   [signTaskCancelAction.value, signTaskPrimaryAction.value].filter(Boolean),
 );
 
+const cards = computed(() =>
+  filteredList.value.map((item, index) => {
+    const activityId = resolveActivityId(item);
+    const key = String(activityId || item.configurationId || item.yymmdd || 'club') + '-' + index;
+    const isHistoryRecord =
+      activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
+
+    const isCurrentSignTask =
+      activeMainTab.value === 'activities' &&
+      Number.isFinite(activityId) &&
+      activityId > 0 &&
+      Number(signTask.value?.activityId) === activityId;
+
+    const badge = isCurrentSignTask ? signTaskPanelStatus.value : resolveBadge(item);
+
+    return {
+      key,
+      item,
+      isHistoryRecord,
+      activityId,
+      isCurrentSignTask,
+      signButtons: isCurrentSignTask ? signTaskButtons.value : null,
+      action:
+        activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
+          ? resolveClubAction(item)
+          : null,
+      rushAction:
+        activeMainTab.value === 'activities' && Number.isFinite(activityId) && activityId > 0
+          ? resolveRushAction(item)
+          : null,
+      title: item.activityName || '活动 #' + (activityId || index + 1),
+      subTitle: item.teacherName ? item.teacherName : '',
+      badgeText: badge.text,
+      badgeClass: badge.className,
+      timeText: formatTimeRange(item),
+      metaSecondaryIcon: isHistoryRecord ? 'ri-calendar-line' : 'ri-team-line',
+      metaSecondaryText: isHistoryRecord ? formatHistoryWeekDate(item) : formatCapacity(item),
+      metaTertiaryIcon: isHistoryRecord ? '' : 'ri-map-pin-line',
+      metaTertiaryText: isHistoryRecord ? '' : item.addressDetail || item.address || '地点待定',
+      historyDateTimeText: isHistoryRecord
+        ? `${item.yymmdd || '--'} ${(item.startTime || '--:--') + ' - ' + (item.endTime || '--:--')}`
+        : '',
+      showIntro: false,
+      introText: '',
+    };
+  }),
+);
+
+const currentListTitle = computed(() => {
+  if (activeMainTab.value === 'activities') {
+    if (activeActivityTab.value === 'myTask') return '我的任务';
+    return `活动列表（${currentQueryDate.value}）`;
+  }
+  if (activeHistoryTab.value === 'semester') return '学期记录（queryMySemesterClubActivity）';
+  return '历史记录';
+});
+
+const emptyMessage = computed(() => {
+  if (activeMainTab.value === 'activities') {
+    return activeActivityTab.value === 'myTask' ? '暂无我的任务数据' : '暂无活动列表数据';
+  }
+  if (activeHistoryTab.value === 'semester') return '暂无学期记录';
+  return '暂无历史记录';
+});
+
 watch(activeMainTab, async () => {
   selectedStatus.value = 'all';
   showFilters.value = false;
@@ -861,7 +719,6 @@ onMounted(async () => {
     loadCurrentList(),
     loadSignTask(),
     loadClubRushStatus(),
-    loadClubAutoConfigStatus(),
   ]);
 });
 
@@ -1746,6 +1603,7 @@ async function handleSignTask(signType) {
 
     showMessage(resolveResponseMessage(data, `${actionText}成功`), 'success');
     await Promise.all([loadSignTask(), loadCurrentList()]);
+    clubAutoConfigRef.value?.refresh();
   } catch (error) {
     console.error('handleSignTask failed:', error);
     showMessage('签到/签退操作异常', 'error');
@@ -1779,7 +1637,7 @@ async function handleClubAction(item, type) {
 
     const data = response?.data;
     if (!isApiSuccess(data)) {
-      showMessage(data?.msg || data?.message || '娱乐部操作失败', 'error');
+      showMessage(data?.msg || data?.message || '俱乐部操作失败', 'error');
       return;
     }
 
@@ -1793,7 +1651,7 @@ async function handleClubAction(item, type) {
     await Promise.all(refreshTasks);
   } catch (error) {
     console.error('handleClubAction failed:', error);
-    showMessage('娱乐部操作异常', 'error');
+    showMessage('俱乐部操作异常', 'error');
   } finally {
     setClubActionPending(actionKey, false);
   }
@@ -1927,62 +1785,8 @@ async function cancelRushTask(task) {
   }
 }
 
-async function loadClubAutoConfigStatus() {
-  const client = getAutorunClient();
-  if (!client || !token.value) {
-    clubAutoConfigEnabled.value = false;
-    clubAutoSignInStatus.value = '';
-    clubAutoSignOutStatus.value = '';
-    clubAutoSignInWindowAt.value = '';
-    clubAutoSignOutWindowAt.value = '';
-    clubAutoLastAction.value = '';
-    clubAutoLastSuccessAt.value = '';
-    return;
-  }
-
-  try {
-    const envelope = await client.getClubAutoStatus(token.value);
-    const data = envelope?.data || {};
-    const isEnabled = Number(data.enabled) === 1 || data.enabled === true;
-    clubAutoConfigEnabled.value = isEnabled;
-    clubAutoSignInStatus.value = data.sign_in_status === 1 ? '已签到' : '未签到';
-    clubAutoSignOutStatus.value = data.sign_back_status === 1 ? '已签退' : '未签退';
-    clubAutoSignInWindowAt.value = String(data.sign_in_window_at || '');
-    clubAutoSignOutWindowAt.value = String(data.sign_out_window_at || '');
-    clubAutoLastAction.value = String(data.last_action || '');
-    clubAutoLastSuccessAt.value = String(data.last_success_at || '');
-  } catch (error) {
-    console.error('loadClubAutoConfigStatus failed:', error);
-    clubAutoConfigEnabled.value = false;
-    clubAutoSignInStatus.value = '';
-    clubAutoSignOutStatus.value = '';
-    clubAutoSignInWindowAt.value = '';
-    clubAutoSignOutWindowAt.value = '';
-    clubAutoLastAction.value = '';
-    clubAutoLastSuccessAt.value = '';
-  }
-}
-
-async function toggleClubAutoConfig() {
-  const client = getAutorunClient();
-  if (!client || clubAutoConfigToggling.value || !token.value) return;
-
-  clubAutoConfigToggling.value = true;
-  try {
-    const nextEnabled = !clubAutoConfigEnabled.value;
-    await client.setClubAutoConfig(token.value, { enabled: nextEnabled ? 1 : 0 });
-    await loadClubAutoConfigStatus();
-    showMessage(nextEnabled ? '定时任务已开启' : '定时任务已关闭', 'success');
-  } catch (error) {
-    console.error('toggleClubAutoConfig failed:', error);
-    showMessage(error?.message || '操作失败', 'error');
-  } finally {
-    clubAutoConfigToggling.value = false;
-  }
-}
-
-function handleClubAutoConfigSaved() {
-  loadClubAutoConfigStatus();
+function handleClubAutoConfigUpdated() {
+  loadSignTask();
 }
 </script>
 
