@@ -43,6 +43,7 @@
           paddingTop: `${messageListPaddingTop}px`,
           paddingBottom: `${messageBottomInset}px`,
         }"
+        @click="handleMessagesContainerClick"
       >
         <!-- 消息列表 -->
         <template v-if="messages.length > 0 || !loadingMessages">
@@ -198,16 +199,14 @@
                         </div>
                         <div
                           class="truncate opacity-80"
-                          v-html="
-                            renderContent(m.reply.content, m.reply.type || 'text', stickerGroups)
-                          "
+                          v-html="renderContent(m.reply.content, m.reply.type || 'text')"
                         ></div>
                       </div>
 
                       <div
                         class="whitespace-pre-wrap break-words leading-relaxed text-[13.5px] overflow-hidden message-content-mixed"
                         @click="handleMessageContentClick($event)"
-                        v-html="renderContent(m.content, undefined, stickerGroups)"
+                        v-html="renderContent(m.content)"
                       ></div>
 
                       <div class="text-[9px] mt-0.5 theme-text-tertiary text-right">
@@ -240,7 +239,7 @@
                   <div
                     v-if="text"
                     class="whitespace-pre-wrap break-words leading-relaxed text-[13.5px]"
-                    v-html="renderContent(text, undefined, stickerGroups)"
+                    v-html="renderContent(text)"
                   ></div>
                   <div v-if="!text" class="text-[13.5px] theme-text-secondary italic">预览消息</div>
                   <div class="text-[9px] mt-0.5 theme-text-tertiary text-right">
@@ -285,12 +284,86 @@
       <div
         ref="composerShellRef"
         :class="[
-          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 border rounded-2xl transition-all duration-300 overflow-visible backdrop-blur-2xl',
+          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 border rounded-2xl transition-all duration-300 overflow-hidden backdrop-blur-2xl',
           'theme-card-strong',
           'liquid-glass-shell liquid-glass-chat-shell',
+          showEmojiPicker ? 'shadow-[0_16px_48px_rgba(0,0,0,0.2)]' : '',
         ]"
         :style="{ bottom: `${composerBottomOffset}px` }"
       >
+        <!-- QQ 表情展开面板（高度贴合顶部，如同输入区域向上展开） -->
+        <Transition name="emoji-drawer">
+          <div
+            v-if="showEmojiPicker"
+            class="flex flex-col min-h-0 w-full mb-2.5 border-b border-[var(--border-subtle,rgba(128,128,128,0.18))] pb-2.5"
+          >
+            <!-- 头部操作栏 -->
+            <div class="flex items-center justify-between mb-2 px-1 gap-2 flex-shrink-0">
+              <div class="flex items-center gap-2">
+                <i class="ri-emotion-line text-lg text-blue-500"></i>
+                <span class="text-xs font-bold theme-text-primary tracking-wide">QQ 表情</span>
+                <span class="text-[10px] theme-text-tertiary">({{ filteredQQEmojis.length }})</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <input
+                    v-model="emojiSearchQuery"
+                    type="text"
+                    placeholder="搜索表情..."
+                    class="text-xs px-3 py-1 pr-6 rounded-full theme-card-soft outline-none border border-transparent focus:border-blue-500 w-32 sm:w-40 transition-all text-left"
+                  />
+                  <button
+                    v-if="emojiSearchQuery"
+                    type="button"
+                    @click="emojiSearchQuery = ''"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 text-xs theme-text-tertiary hover:theme-text-primary border-none bg-transparent cursor-pointer p-0"
+                  >
+                    <i class="ri-close-circle-fill"></i>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  @click="showEmojiPicker = false"
+                  title="收起表情"
+                  class="w-7 h-7 flex-shrink-0 flex items-center justify-center chat-nav-action rounded-full border-none cursor-pointer"
+                >
+                  <i class="ri-close-fill text-base"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- 表情网格滚动区（高度自适应延伸至顶部空间） -->
+            <div
+              class="overflow-y-auto pr-1 scrollbar-hide flex-1"
+              style="max-height: clamp(240px, calc(100dvh - 250px), 520px);"
+            >
+              <div v-if="filteredQQEmojis.length > 0" class="grid grid-cols-7 sm:grid-cols-8 gap-2 pb-1">
+                <button
+                  v-for="item in filteredQQEmojis"
+                  :key="item.id"
+                  type="button"
+                  @click="addQQEmoji(item)"
+                  :title="item.describe"
+                  class="aspect-square grid place-items-center rounded-xl transition-all active:scale-90 group chat-emoji-btn p-1 hover:bg-[var(--card-soft)] border-none bg-transparent cursor-pointer"
+                >
+                  <img
+                    :src="item.src"
+                    :alt="item.describe"
+                    loading="lazy"
+                    class="w-7 h-7 object-contain group-hover:scale-125 transition-transform"
+                  />
+                </button>
+              </div>
+              <div
+                v-else
+                class="flex flex-col items-center justify-center py-10 theme-text-secondary text-xs"
+              >
+                <span>未找到匹配的表情</span>
+              </div>
+            </div>
+          </div>
+        </Transition>
+
         <!-- 回复预览 -->
         <div
           v-if="replyingTo?.content"
@@ -310,7 +383,7 @@
             </div>
             <div
               class="text-xs theme-text-tertiary truncate opacity-80"
-              v-html="renderContent(replyingTo.content, replyingTo.type || 'text', stickerGroups)"
+              v-html="renderContent(replyingTo.content, replyingTo.type || 'text')"
             ></div>
           </div>
           <button
@@ -320,14 +393,16 @@
             <i class="ri-close-fill text-lg"></i>
           </button>
         </div>
+
         <div class="relative">
-          <!-- 表情按钮 -->
+          <!-- 表情按钮等工具栏 -->
           <div class="mb-3 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
               <button
                 @click.stop="showEmojiPicker = !showEmojiPicker"
                 title="Emoji"
                 class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full chat-toolbar-action cursor-pointer transition-colors active:scale-90"
+                :class="showEmojiPicker ? '!text-blue-500 !bg-blue-500/15' : ''"
               >
                 <i class="ri-emotion-happy-fill text-lg"></i>
               </button>
@@ -357,89 +432,6 @@
               </span>
             </button>
           </div>
-
-          <!-- 表情面板（传送到 body，固定定位） -->
-          <Teleport to="body">
-            <div
-              v-if="showEmojiPicker"
-              class="fixed left-1/2 -translate-x-1/2 z-[999] p-4 theme-card-strong rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 pointer-events-auto max-w-[600px] w-[calc(100vw-32px)] border"
-              :style="{ bottom: `${emojiPanelBottomOffset}px` }"
-            >
-              <div class="flex items-center justify-between mb-4 px-1">
-                <div class="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
-                  <button
-                    v-for="(tab, id) in { emoji: { name: 'Twemoji' }, ...stickerGroups }"
-                    :key="id"
-                    @click="emojiActiveTab = id"
-                    :class="[
-                      'text-[10px] font-bold uppercase tracking-widest transition-colors whitespace-nowrap px-1 pb-1',
-                      emojiActiveTab === id
-                        ? 'theme-text-primary border-b-1 border-[var(--card-divider)]'
-                        : 'theme-text-secondary',
-                    ]"
-                  >
-                    {{ tab.name }}
-                  </button>
-                </div>
-                <button
-                  @click="showEmojiPicker = false"
-                  class="w-8 h-8 flex-shrink-0 flex items-center justify-center chat-nav-action"
-                >
-                  <i class="ri-close-fill"></i>
-                </button>
-              </div>
-              <div class="max-h-60 overflow-y-auto pr-1 scrollbar-hide">
-                <div v-if="emojiActiveTab === 'emoji'" class="space-y-6">
-                  <div v-for="(group, name) in emojiGroups" :key="name">
-                    <div
-                      class="text-[9px] font-bold uppercase tracking-widest theme-text-secondary mb-3 ml-1"
-                    >
-                      {{ name }}
-                    </div>
-                    <div class="grid grid-cols-7 sm:grid-cols-8 gap-2">
-                      <button
-                        v-for="emoji in group"
-                        :key="emoji.code"
-                        @click="addEmoji(emoji.char)"
-                        class="aspect-square grid place-items-center rounded-xl transition-all active:scale-95 group chat-emoji-btn"
-                      >
-                        <img
-                          :src="getEmojiUrl(emoji.code)"
-                          class="w-7 h-7 group-hover:scale-110 transition-transform"
-                        />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-else-if="stickerGroups[emojiActiveTab]"
-                  class="grid grid-cols-5 sm:grid-cols-6 gap-3 pb-2"
-                >
-                  <button
-                    v-for="item in stickerGroups[emojiActiveTab].items"
-                    :key="item.key"
-                    @click="addSticker(emojiActiveTab, item)"
-                    class="aspect-square grid place-items-center rounded-xl transition-all active:scale-95 group p-1 chat-emoji-btn"
-                  >
-                    <img
-                      :src="item.val"
-                      loading="lazy"
-                      class="w-full h-full object-contain group-hover:scale-110 transition-transform"
-                    />
-                  </button>
-                </div>
-                <div
-                  v-else
-                  class="flex flex-col items-center justify-center py-10 theme-text-secondary"
-                >
-                  <i v-if="stickerLoading" class="ri-loader-4-line animate-spin text-2xl mb-2"></i>
-                  <span class="text-[10px] font-bold uppercase tracking-widest">
-                    {{ stickerLoading ? '贴纸加载中...' : '贴纸准备中' }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </Teleport>
 
           <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
@@ -767,14 +759,14 @@ import {
   normalizeAvatarUrl,
   getCachedAvatarUrl,
   renderContent,
+  visibleQQEmojiList,
+  loadRemoteQQEmojis,
 } from '@/sdk/message';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import Drawer from '@/components/ui/Drawer.vue';
-import emojiGroups from '@/assets/data/emojis.json';
 import { getViewportMetrics, restoreViewportPosition } from '@/utils/viewport';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
-import { useStickerCache } from '@/composables/useStickerCache';
 import { useThemeStore } from '@/composables/useTheme';
 import { showMessage } from '@/composables/useMessage';
 
@@ -789,8 +781,6 @@ const {
   getCachedChatUserId,
   markChatSeen,
   clearChatData,
-  setChatStickerCache,
-  getChatStickerCache,
 } = useChatStore();
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
@@ -832,28 +822,22 @@ const replyingTo = ref(null);
 const messageInput = ref(null);
 const lastRange = ref(null);
 
-// 表情贴纸
-const chatBootstrapFinished = ref(false);
-const emojiActiveTab = ref('emoji');
-const emojiPanelBottomOffset = ref(0); // 动态计算的面板底部位置
-const {
-  stickerGroups,
-  stickerLoading,
-  hydrateStickerCache,
-  ensureStickerTabReady,
-  loadStickers,
-  triggerSilentStickerRefresh,
-} = useStickerCache({
-  getChatStickerCache,
-  setChatStickerCache,
+// QQ 表情
+const emojiSearchQuery = ref('');
+const filteredQQEmojis = computed(() => {
+  const list = visibleQQEmojiList.value || [];
+  const q = emojiSearchQuery.value.trim().toLowerCase();
+  if (!q) return list;
+  return list.filter(
+    (item) => item.describe.toLowerCase().includes(q) || item.cleanName.toLowerCase().includes(q),
+  );
 });
 
-console.log(
-  '[ChatPage] useStickerCache initialized, getChatStickerCache:',
-  typeof getChatStickerCache,
-  'setChatStickerCache:',
-  typeof setChatStickerCache,
-);
+function handleMessagesContainerClick() {
+  if (showEmojiPicker.value) {
+    showEmojiPicker.value = false;
+  }
+}
 
 // 设置相关
 const settingsNickname = ref('');
@@ -929,10 +913,20 @@ function measureFloatingLayout() {
     messageListPaddingTop.value = topPadding;
   }
 
-  const anchorTop = Math.min(
-    inputRowRect?.top ?? Number.POSITIVE_INFINITY,
-    composerRect?.top ?? Number.POSITIVE_INFINITY,
-  );
+  // 当表情抽屉展开时，不将抽屉展开高度算入聊天列表底边距，避免把聊天消息整体挤到上面
+  let anchorTop;
+  if (showEmojiPicker.value) {
+    const baseOffset = replyingTo.value?.content ? 88 : 44;
+    anchorTop = inputRowRect?.top
+      ? inputRowRect.top - baseOffset
+      : (composerRect?.top ?? Number.POSITIVE_INFINITY);
+  } else {
+    anchorTop = Math.min(
+      inputRowRect?.top ?? Number.POSITIVE_INFINITY,
+      composerRect?.top ?? Number.POSITIVE_INFINITY,
+    );
+  }
+
   if (Number.isFinite(anchorTop)) {
     const viewportBottom = Math.min(messageRect?.bottom ?? Number.POSITIVE_INFINITY, visibleBottom);
     const overlayHeight = Math.max(0, Math.ceil(viewportBottom - anchorTop));
@@ -943,8 +937,8 @@ function measureFloatingLayout() {
     const overlayChanged = Math.abs(nextBottomInset - messageBottomInset.value) > 0.5;
     messageBottomInset.value = nextBottomInset;
 
-    // Keep the latest message above the whole composer shell (not only the input line).
-    if (overlayChanged && wasNearBottom) {
+    // 当普通输入框高度变化且用户本来在底部时才自动跟滚；表情展开不强行滚动
+    if (overlayChanged && wasNearBottom && !showEmojiPicker.value) {
       requestAnimationFrame(() => {
         scrollToBottom(false);
       });
@@ -1204,35 +1198,17 @@ watch(showPreviewBubble, (val) => {
   if (val) nextTick(() => scrollToBottom(false));
 });
 
-watch([showEmojiPicker, replyingTo], () => {
+watch(replyingTo, () => {
   nextTick(() => {
     scheduleFloatingLayoutMeasure();
     scrollToBottom(false);
-
-    // 回复框状态变化时，也要更新面板位置
-    if (showEmojiPicker.value) {
-      const composerHeight = composerShellRef.value?.offsetHeight || 140;
-      emojiPanelBottomOffset.value = composerBottomOffset.value + composerHeight;
-    }
   });
 });
 
-// 表情面板打开时，确保位置准确
+// 表情面板状态变化时，拉取最新表情清单
 watch(showEmojiPicker, (isOpen) => {
   if (isOpen) {
-    nextTick(() => {
-      // 获取输入框的实际高度，计算面板的底部位置
-      const composerHeight = composerShellRef.value?.offsetHeight || 140;
-      emojiPanelBottomOffset.value = composerBottomOffset.value + composerHeight;
-    });
-  }
-});
-
-// 输入框距离底部变化时，也更新面板位置
-watch(composerBottomOffset, (newOffset) => {
-  if (showEmojiPicker.value) {
-    const composerHeight = composerShellRef.value?.offsetHeight || 140;
-    emojiPanelBottomOffset.value = newOffset + composerHeight;
+    loadRemoteQQEmojis();
   }
 });
 
@@ -1353,7 +1329,6 @@ async function fetchMessages(isSilent = false) {
     hasNext.value = data.hasNext ?? msgs.length === size;
     currentPage.value = 1;
     markChatSeen(getLatestMessageSeenAt(msgs));
-    triggerSilentStickerRefresh();
 
     loadingMessages.value = false;
     await nextTick();
@@ -1681,25 +1656,9 @@ function showMenu(m, targetEl) {
   if (navigator.vibrate) navigator.vibrate(40);
 }
 
-function addEmoji(char) {
-  if (!messageInput.value) return;
-  messageInput.value.focus();
-
-  if (lastRange.value) {
-    const sel = window.getSelection();
-    sel.removeAllRanges();
-    sel.addRange(lastRange.value);
-  }
-
-  document.execCommand('insertText', false, char);
-  saveRange();
-  handleInput({ target: messageInput.value });
-}
-
-function addSticker(groupId, sticker) {
-  if (!messageInput.value) return;
-  // 为输入框内的表情增加特定 class 以便控制尺寸
-  const tag = `<img src="${sticker.val}" atk-emoticon="${sticker.key}" class="atk-emoticon input-sticker" style="height: 1.5em; vertical-align: middle;">`;
+function addQQEmoji(item) {
+  if (!item || !messageInput.value) return;
+  const tag = `<img src="${item.src}" atk-emoticon="${item.describe}" alt="${item.describe}" class="atk-emoticon input-sticker" style="height: 1.5em; vertical-align: middle;">`;
 
   messageInput.value.focus();
 
@@ -1713,21 +1672,6 @@ function addSticker(groupId, sticker) {
   saveRange();
   handleInput({ target: messageInput.value });
 }
-
-watch([showEmojiPicker, chatBootstrapFinished], ([isOpen, isReady]) => {
-  if (!isOpen || !isReady) return;
-
-  // cache
-  hydrateStickerCache();
-
-  // lazy loading
-  ensureStickerTabReady(emojiActiveTab.value);
-});
-
-watch(emojiActiveTab, (tab) => {
-  if (!showEmojiPicker.value || !chatBootstrapFinished.value) return;
-  ensureStickerTabReady(tab);
-});
 function formatLastSeen(s) {
   if (!s) return '离线';
   const date = new Date(s);
@@ -2064,9 +2008,6 @@ onMounted(async () => {
     bindMessageScrollLock();
   });
 
-  // 首屏先读取本地贴纸缓存，确保下次进入可直接渲染
-  hydrateStickerCache();
-
   window.addEventListener('resize', scheduleFloatingLayoutMeasure);
   window.addEventListener('orientationchange', scheduleFloatingLayoutMeasure);
   window.visualViewport?.addEventListener('resize', scheduleFloatingLayoutMeasure);
@@ -2097,8 +2038,6 @@ onMounted(async () => {
       loadingMessages.value = false;
     });
   }
-
-  chatBootstrapFinished.value = true;
 
   if (typeof ResizeObserver !== 'undefined') {
     floatingLayoutObserver = new ResizeObserver(() => {
@@ -2373,5 +2312,33 @@ onUnmounted(() => {
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* QQ 表情向上抽屉展开动画 */
+.emoji-drawer-enter-active {
+  transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.emoji-drawer-leave-active {
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.emoji-drawer-enter-from,
+.emoji-drawer-leave-to {
+  max-height: 0 !important;
+  opacity: 0;
+  transform: translateY(12px);
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom-width: 0 !important;
+}
+
+.emoji-drawer-enter-to,
+.emoji-drawer-leave-from {
+  max-height: 600px;
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

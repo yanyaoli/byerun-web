@@ -10,7 +10,11 @@
       ></div>
     </div>
     <div class="app-content h-full w-full max-w-[600px] mx-auto overflow-hidden">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <keep-alive include="RootPage">
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
     <Message ref="messageRef" />
   </div>

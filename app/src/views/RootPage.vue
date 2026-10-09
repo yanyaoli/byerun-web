@@ -4,6 +4,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'RootPage',
+});
 import { computed } from 'vue';
 import AuthPage from '@/views/AuthPage.vue';
 import HomePage from '@/views/HomePage.vue';

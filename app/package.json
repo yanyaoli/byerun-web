@@ -10,21 +10,21 @@
   },
   "dependencies": {
     "@tsparticles/vue3": "^4.4.0",
-    "axios": "^1.13.6",
+    "axios": "^1.20.0",
     "crypto-js": "^4.2.0",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
-    "socket.io-client": "^4.8.1",
-    "socket.io-parser": "^4.2.6",
+    "socket.io-client": "^4.8.4",
+    "socket.io-parser": "^4.2.7",
     "tsparticles": "^4.4.0",
-    "vue": "^3.5.30",
-    "vue-router": "^5.0.4"
+    "vue": "^3.5.43",
+    "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.2",
-    "@vitejs/plugin-vue": "^6.0.5",
-    "tailwindcss": "^4.2.2",
-    "vite": "^8.0.5"
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.9",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.3"
   }
 }

@@ -1,4 +1,9 @@
 import { messageSdkConfig } from './config';
+import {
+  findQQEmoji,
+  renderQQEmojiImg,
+  replaceQQEmojiInText,
+} from './qqEmoji';
 
 const EMOJI_REGEX = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
 const STICKER_PATTERN = /(&lt;|<)img\s+[^>]*?src=("|&quot;)([^"&]+)("|&quot;)[^>]*?atk-emoticon=("|&quot;)([^"&]+)("|&quot;)[^>]*?(&gt;|>)/g;
@@ -61,6 +66,10 @@ function replaceEmojiWithImage(match) {
 }
 
 function normalizeStickerTag(match, l, q1, src, q2, q3, atk) {
+  const qq = findQQEmoji(atk) || findQQEmoji(src);
+  if (qq) {
+    return renderQQEmojiImg(qq);
+  }
   return `<img src="${escapeHtml(safeImgSrc(src))}" atk-emoticon="${escapeHtml(atk)}" class="atk-emoticon" loading="lazy" alt="sticker" />`;
 }
 
@@ -82,16 +91,27 @@ function renderStickerImg(src, atk) {
 }
 
 function renderSticker(value, stickerGroups) {
-  if (!stickerGroups || typeof stickerGroups !== 'object' || Object.keys(stickerGroups).length === 0) {
+  // 1. 优先匹配 QQ 表情（支持描述如 /惊讶、[惊讶] 或 ID 如 0）
+  const qq = findQQEmoji(value);
+  if (qq) {
+    return renderQQEmojiImg(qq);
+  }
+
+  // 2. 尝试从传入的贴纸组查找
+  if (stickerGroups && typeof stickerGroups === 'object' && Object.keys(stickerGroups).length > 0) {
+    const item = findStickerByKey(stickerGroups, value);
+    if (item) {
+      return renderStickerImg(item.val, item.key);
+    }
+  }
+
+  // 3. 若为合法图片 URL，直接渲染
+  if (/^(https?:)?\/\//i.test(value) || (typeof value === 'string' && (value.startsWith('/') || value.startsWith('data:')))) {
     return renderStickerImg(value, value);
   }
 
-  const item = findStickerByKey(stickerGroups, value);
-  if (item) {
-    return renderStickerImg(item.val, item.key);
-  }
-
-  return renderStickerImg(value, value);
+  // 4. 历史遗留废弃贴纸 ID 友好兜底为文本 [表情]，避免出现图片裂开破损图标
+  return `<span class="inline-block text-xs px-1 py-0.5 rounded theme-card-soft theme-text-tertiary align-middle">[表情]</span>`;
 }
 
 function renderImage(value) {
@@ -99,9 +119,14 @@ function renderImage(value) {
 }
 
 function renderText(value) {
-  return String(value)
-    .replace(EMOJI_REGEX, replaceEmojiWithImage)
-    .replace(STICKER_PATTERN, normalizeStickerTag);
+  let str = String(value);
+  // 1. 替换 QQ 表情短码（如 /惊讶, [惊讶]）
+  str = replaceQQEmojiInText(str);
+  // 2. 兼容历史 unicode emoji 字符 (😀) 渲染
+  str = str.replace(EMOJI_REGEX, replaceEmojiWithImage);
+  // 3. 规范化已有贴纸标签
+  str = str.replace(STICKER_PATTERN, normalizeStickerTag);
+  return str;
 }
 
 function renderContentPart(part, stickerGroups) {
@@ -124,11 +149,7 @@ export function renderContent(content, type = 'text', stickerGroups = {}) {
 
   const value = String(content);
   if (type === 'sticker') {
-    const item = findStickerByKey(stickerGroups, value);
-    if (item) {
-      return renderStickerImg(item.val, item.key);
-    }
-    return value.replace(STICKER_PATTERN, normalizeStickerTag);
+    return renderSticker(value, stickerGroups);
   }
   if (type === 'text') return renderText(value);
   // 非 text 类型未经后端转义，按纯文本转义输出。

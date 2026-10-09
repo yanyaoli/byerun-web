@@ -2,24 +2,21 @@ import { ref } from 'vue';
 import { ApiBusinessError, AutorunClient } from './client';
 
 const AUTORUN_STATE_STORAGE_KEY = 'byerun.autorun_state';
-export const AUTORUN_API_BASE_URL_OVERRIDE_KEY = 'byerun.autorun_api_base_url_override';
 
-const getStoredAutorunApiBaseUrl = () => {
-  if (typeof window === 'undefined') return '';
+// 清理历史可能残留的自定义接口缓存
+if (typeof window !== 'undefined') {
   try {
-    return String(window.localStorage.getItem(AUTORUN_API_BASE_URL_OVERRIDE_KEY) || '').trim();
-  } catch {
-    return '';
-  }
-};
+    window.localStorage.removeItem('byerun.autorun_api_base_url_override');
+  } catch {}
+}
 
 export const getAutorunApiBaseUrlDefault = () =>
-  (import.meta.env.VITE_AUTORUN_SERVER_BASE || (import.meta.env.DEV ? '/autorunserver' : ''))
+  (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_AUTORUN_SERVER_BASE || (import.meta.env.DEV ? '/autorunserver' : ''))
     .trim()
     .replace(/\/+$/, '');
 
 export const scheduledTaskConfig = {
-  apiBaseUrl: getStoredAutorunApiBaseUrl() || getAutorunApiBaseUrlDefault(),
+  apiBaseUrl: getAutorunApiBaseUrlDefault(),
 };
 
 const API_BASE = (scheduledTaskConfig.apiBaseUrl || '').replace(/\/$/, '');
@@ -32,27 +29,6 @@ export const getAutorunClient = () => {
     autorunClient = new AutorunClient({ baseURL: baseUrl });
   }
   return autorunClient;
-};
-
-export const getAutorunApiBaseUrlOverride = getStoredAutorunApiBaseUrl;
-
-export const setAutorunApiBaseUrlOverride = (value) => {
-  const override = String(value || '').trim().replace(/\/+$/, '');
-  try {
-    if (typeof window !== 'undefined') {
-      if (override) window.localStorage.setItem(AUTORUN_API_BASE_URL_OVERRIDE_KEY, override);
-      else window.localStorage.removeItem(AUTORUN_API_BASE_URL_OVERRIDE_KEY);
-    }
-  } catch {}
-
-  const baseUrl = override || getAutorunApiBaseUrlDefault();
-  scheduledTaskConfig.apiBaseUrl = baseUrl;
-  if (!autorunClient && baseUrl) {
-    autorunClient = new AutorunClient({ baseURL: baseUrl });
-  } else if (autorunClient) {
-    autorunClient.baseURL = baseUrl;
-  }
-  return baseUrl;
 };
 
 const getCachedPingMeta = () => {

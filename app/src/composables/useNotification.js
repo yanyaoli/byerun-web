@@ -14,7 +14,16 @@ const getClient = () => {
   return client;
 };
 
-const fetchNotification = async () => {
+let lastFetchTime = 0;
+const NOTIFICATION_FETCH_COOLDOWN = 60000; // 60秒内不重复请求通知接口
+
+const fetchNotification = async (force = false) => {
+  const now = Date.now();
+  if (!force && now - lastFetchTime < NOTIFICATION_FETCH_COOLDOWN) {
+    return;
+  }
+  lastFetchTime = now;
+
   const currentClient = getClient();
   if (!currentClient) return;
   try {
@@ -51,7 +60,8 @@ const fetchNotification = async () => {
  */
 export const startNotificationWatcher = (router) => {
   fetchNotification();
-  const stopAfterEach = router.afterEach(() => {
+  const stopAfterEach = router.afterEach((to) => {
+    if (to.name === 'map-drawer') return;
     fetchNotification();
   });
   return () => stopAfterEach();

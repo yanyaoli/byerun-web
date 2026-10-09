@@ -253,13 +253,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, inject, defineAsyncComponent, onMounted } from 'vue';
+import { ref, reactive, computed, watch, inject, defineAsyncComponent, onMounted, onActivated } from 'vue';
 import { useRouter } from 'vue-router';
 import { submitRun as submitRunApi, useRouteGenerator } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
 import { useThemeStore } from '@/composables/useTheme';
 import { waitForAutorunPingReady } from '@/sdk/autorun';
-import { deleteCustomMap, getCustomMapData, renameCustomMap } from '@/utils/map';
+import { deleteCustomMap, getCustomMapData, renameCustomMap, loadCustomMaps } from '@/utils/map';
 import Drawer from '@/components/ui/Drawer.vue';
 import RunRecords from '@/components/RunRecords.vue';
 import {
@@ -818,6 +818,19 @@ const unlockMapRender = async () => {
 onMounted(() => {
   checkMapDrawerResult();
   unlockMapRender();
+});
+
+onActivated(async () => {
+  checkMapDrawerResult();
+  loadCustomMaps(true);
+  await loadMaps();
+  if (
+    pendingDrawerRoute.value &&
+    Object.prototype.hasOwnProperty.call(routeOptions.value, pendingDrawerRoute.value)
+  ) {
+    selectRoute(pendingDrawerRoute.value);
+    pendingDrawerRoute.value = '';
+  }
 });
 
 loadMaps().then(async () => {

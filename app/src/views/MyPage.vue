@@ -25,8 +25,6 @@
 
     <MessageCenter :messages="messages" />
 
-    <SettingsCenter />
-
     <ProjectInfo
       :sponsor="sponsor"
       :domain="domain"
@@ -43,7 +41,6 @@ import { useChatStore } from '@/composables/useChatStore';
 import { pingMeta } from '@/sdk/autorun';
 import { api } from '@/sdk/app';
 import MessageCenter from '@/components/MessageCenter.vue';
-import SettingsCenter from '@/components/settings/SettingsCenter.vue';
 import ProjectInfo from '@/components/ProjectInfo.vue';
 
 const { userInfo, clearAllData } = useDataStore();

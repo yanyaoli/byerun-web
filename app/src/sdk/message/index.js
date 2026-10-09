@@ -25,3 +25,11 @@ export const checkHasUnreadMessages = async (token) => {
 
 export { MessageClient, messageSdkConfig };
 export { formatTime, getEmojiUrl, normalizeAvatarUrl, getCachedAvatarUrl, renderContent } from './render';
+export {
+  visibleQQEmojiList,
+  qqEmojiList,
+  loadRemoteQQEmojis,
+  findQQEmoji,
+  renderQQEmojiImg,
+  replaceQQEmojiInText,
+} from './qqEmoji';

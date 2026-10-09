@@ -1,26 +1,20 @@
 import { clearAuthSessionStorage, getSessionToken } from './session';
 import { AppApiClient } from './client';
 
-export const API_BASE_URL_OVERRIDE_KEY = 'byerun.api_base_url_override';
-
-const getStoredApiBaseUrl = () => {
-  if (typeof window === 'undefined') return '';
+// 清理历史可能残留的自定义接口缓存
+if (typeof window !== 'undefined') {
   try {
-    return String(window.localStorage.getItem(API_BASE_URL_OVERRIDE_KEY) || '').trim();
-  } catch {
-    return '';
-  }
-};
+    window.localStorage.removeItem('byerun.api_base_url_override');
+  } catch {}
+}
 
-const getDefaultApiBaseUrl = () => import.meta.env.VITE_API_BASE_URL || '';
-const normalizeApiBaseUrl = (value) => String(value || '').trim().replace(/\/+$/, '');
-const resolveApiBaseUrl = () =>
-  normalizeApiBaseUrl(getStoredApiBaseUrl() || getDefaultApiBaseUrl()) || '/devproxy';
+const getDefaultApiBaseUrl = () =>
+  String(import.meta.env.VITE_API_BASE_URL || '/devproxy').trim().replace(/\/+$/, '');
 
 export const appConfig = {
   appVersion: '1.8.5',
   api: {
-    baseUrl: resolveApiBaseUrl(),
+    baseUrl: getDefaultApiBaseUrl(),
   },
   auth: {
     appKey: import.meta.env.VITE_APP_KEY || '389885588s0648fa',
@@ -50,27 +44,6 @@ export const api = new AppApiClient({
   onAuthFailure: handleAuthFailure,
 });
 
-export const getApiBaseUrlOverride = getStoredApiBaseUrl;
-export const getApiBaseUrlDefault = () =>
-  normalizeApiBaseUrl(getDefaultApiBaseUrl()) || '/devproxy';
-
-export const setApiBaseUrlOverride = (value) => {
-  const override = normalizeApiBaseUrl(value);
-
-  try {
-    if (typeof window !== 'undefined') {
-      if (override) {
-        window.localStorage.setItem(API_BASE_URL_OVERRIDE_KEY, override);
-      } else {
-        window.localStorage.removeItem(API_BASE_URL_OVERRIDE_KEY);
-      }
-    }
-  } catch {}
-
-  const baseUrl = override || getApiBaseUrlDefault();
-  appConfig.api.baseUrl = baseUrl;
-  api.http.defaults.baseURL = baseUrl;
-  return baseUrl;
-};
+export const getApiBaseUrlDefault = getDefaultApiBaseUrl;
 
 export { AppApiClient };

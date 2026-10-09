@@ -66,7 +66,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/devproxy/, ''),
         },
         '/autorunserver': {
-          target: env.VITE_AUTORUN_SERVER_BASE,
+          target: env.VITE_API_BASE_URL || env.VITE_AUTORUN_SERVER_BASE || 'https://autorunserver.byerun.top',
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/autorunserver/, ''),
