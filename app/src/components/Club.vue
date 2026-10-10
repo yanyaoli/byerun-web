@@ -1655,6 +1655,28 @@ async function handleClubAction(item, type) {
     if (activeMainTab.value === 'history') refreshTasks.push(loadSummary());
 
     await Promise.all(refreshTasks);
+
+    // 取消报名：若已开启定时任务，自动停用任务并清理后端活动快照
+    if (actionType === 2) {
+      if (clubAutoConfigRef.value?.enabled) {
+        try {
+          const client = getAutorunClient();
+          if (client && token.value) {
+            await client.getClubAutoStatus(token.value, { enabled: 0 });
+            showMessage('已取消报名，俱乐部定时任务已自动停止', 'info');
+          }
+        } catch (e) {
+          console.warn('disable club auto task on cancel failed:', e);
+        }
+      }
+      if (clubAutoConfigRef.value?.loadStatus) {
+        await clubAutoConfigRef.value.loadStatus();
+      }
+    } else if (actionType === 1) {
+      if (clubAutoConfigRef.value?.loadStatus) {
+        await clubAutoConfigRef.value.loadStatus();
+      }
+    }
   } catch (error) {
     console.error('handleClubAction failed:', error);
     showMessage('俱乐部操作异常', 'error');

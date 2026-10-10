@@ -243,19 +243,43 @@ const resultStatusClass = computed(() => {
   return 'theme-text-secondary';
 });
 
+function syncFromCurrentTask(curr) {
+  if (curr && (Number(curr.activityId) > 0 || curr.activityName)) {
+    task.hasTask = true;
+    task.activityId = Number(curr.activityId || 0);
+    task.activityName = String(curr.activityName || curr.itemName || '');
+    task.startTime = String(curr.startTime || '');
+    task.endTime = String(curr.endTime || '');
+    task.signInStatus = Number(curr.signInStatus || 0);
+    task.signBackStatus = Number(curr.signBackStatus || 0);
+  } else if (curr === null) {
+    task.hasTask = false;
+    task.activityId = 0;
+    task.activityName = '';
+    task.startTime = '';
+    task.endTime = '';
+    task.signInStatus = 0;
+    task.signBackStatus = 0;
+  }
+}
+
 function applyData(data = {}) {
   const nextEnabled = Number(data.enabled) === 1 || data.enabled === true;
   status.enabled = data.enabled ?? 0;
   status.last_attempt_at = String(data.last_attempt_at || '');
   status.msg = String(data.msg || '');
 
-  task.hasTask = data.has_task === true;
-  task.activityId = Number(data.activity_id || data.activityId || 0);
-  task.activityName = String(data.activity_name || '');
-  task.startTime = String(data.start_time || '');
-  task.endTime = String(data.end_time || '');
-  task.signInStatus = Number(data.sign_in_status || 0);
-  task.signBackStatus = Number(data.sign_back_status || 0);
+  if (props.currentTask && (Number(props.currentTask.activityId) > 0 || props.currentTask.activityName)) {
+    syncFromCurrentTask(props.currentTask);
+  } else {
+    task.hasTask = data.has_task === true;
+    task.activityId = Number(data.activity_id || data.activityId || 0);
+    task.activityName = String(data.activity_name || '');
+    task.startTime = String(data.start_time || '');
+    task.endTime = String(data.end_time || '');
+    task.signInStatus = Number(data.sign_in_status || 0);
+    task.signBackStatus = Number(data.sign_back_status || 0);
+  }
 
   emit('update:modelValue', nextEnabled);
   emit('updated', { status, task });
@@ -377,6 +401,14 @@ function formatDisplayDateTime(value) {
 function hasText(value) {
   return String(value || '').trim() !== '';
 }
+
+watch(
+  () => props.currentTask,
+  (newTask) => {
+    syncFromCurrentTask(newTask);
+  },
+  { immediate: true, deep: true }
+);
 
 onMounted(() => {
   if (token.value) {
