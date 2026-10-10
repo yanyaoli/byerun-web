@@ -45,8 +45,8 @@
         <span class="truncate">当前活动：{{ task.activityName }}（{{ taskTimeText }}）</span>
       </div>
       <div v-else class="meta-pill col-span-2">
-        <i class="ri-time-line"></i>
-        <span class="truncate">今日活动监控中（暂无进行中活动）</span>
+        <i class="ri-information-line"></i>
+        <span class="truncate">未报名活动（需先报名今日活动方可启用定时任务）</span>
       </div>
 
       <div class="meta-pill">
@@ -166,6 +166,7 @@ import { showMessage } from '@/composables/useMessage';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
+  currentTask: { type: Object, default: () => null },
 });
 
 const emit = defineEmits(['update:modelValue', 'change', 'updated']);
@@ -183,6 +184,7 @@ const status = reactive({
 
 const task = reactive({
   hasTask: false,
+  activityId: 0,
   activityName: '',
   startTime: '',
   endTime: '',
@@ -248,6 +250,7 @@ function applyData(data = {}) {
   status.msg = String(data.msg || '');
 
   task.hasTask = data.has_task === true;
+  task.activityId = Number(data.activity_id || data.activityId || 0);
   task.activityName = String(data.activity_name || '');
   task.startTime = String(data.start_time || '');
   task.endTime = String(data.end_time || '');
@@ -304,11 +307,32 @@ async function toggleEnabled() {
   const client = getAutorunClient();
   if (!client || submitting.value || !token.value) return;
 
+  const nextEnabled = !enabled.value;
+  if (nextEnabled) {
+    const act = props.currentTask;
+    const actId = Number(act?.activityId || task.activityId || 0);
+    if (!Number.isFinite(actId) || actId <= 0) {
+      showMessage('请先报名今日俱乐部活动后再开启定时任务', 'warning');
+      return;
+    }
+  }
+
   submitting.value = true;
   try {
-    const nextEnabled = !enabled.value;
-    // 单次请求合并完成：保存配置并立即返回最新 status，消除二次往返
-    const statusEnvelope = await client.getClubAutoStatus(token.value, { enabled: nextEnabled ? 1 : 0 });
+    const payload = {
+      enabled: nextEnabled ? 1 : 0,
+    };
+    if (nextEnabled) {
+      const act = props.currentTask || {};
+      payload.activity_id = Number(act.activityId || task.activityId || 0);
+      payload.activity_name = String(act.activityName || act.itemName || task.activityName || '');
+      payload.start_time = String(act.startTime || task.startTime || '');
+      payload.end_time = String(act.endTime || task.endTime || '');
+      payload.latitude = String(act.latitude || '');
+      payload.longitude = String(act.longitude || '');
+    }
+
+    const statusEnvelope = await client.getClubAutoStatus(token.value, payload);
     const data = statusEnvelope?.data || {};
     applyData(data);
     showMessage(nextEnabled ? '俱乐部定时任务已开启' : '俱乐部定时任务已关闭', 'success');

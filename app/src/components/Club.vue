@@ -174,6 +174,7 @@
     <ClubAutoConfig
       v-if="activeMainTab === 'activities'"
       ref="clubAutoConfigRef"
+      :current-task="signTask"
       class="mt-3"
       @updated="handleClubAutoConfigUpdated"
     />
@@ -1086,6 +1087,11 @@ async function handleRushCardAction(card) {
     const activityDateText = normalizeDateOnlyText(card.item?.yymmdd || currentQueryDate.value);
     const envelope = await client.rushClub(token.value, {
       activity_id: activityId,
+      activity_name: card.item?.activityName || card.item?.itemName || '',
+      start_time: card.item?.startTime || '',
+      end_time: card.item?.endTime || '',
+      latitude: String(card.item?.latitude || ''),
+      longitude: String(card.item?.longitude || ''),
       activity_date: activityDateText || undefined,
       yymmdd: activityDateText || undefined,
     });
