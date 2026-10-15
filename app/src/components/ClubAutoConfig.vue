@@ -46,7 +46,7 @@
       </div>
       <div v-else class="meta-pill col-span-2">
         <i class="ri-information-line"></i>
-        <span class="truncate">未报名活动（需先报名今日活动方可启用定时任务）</span>
+        <span class="truncate">未检测到今日活动（报名活动后将自动签到）</span>
       </div>
 
       <div class="meta-pill">
@@ -332,15 +332,6 @@ async function toggleEnabled() {
   if (!client || submitting.value || !token.value) return;
 
   const nextEnabled = !enabled.value;
-  if (nextEnabled) {
-    const act = props.currentTask;
-    const actId = Number(act?.activityId || task.activityId || 0);
-    if (!Number.isFinite(actId) || actId <= 0) {
-      showMessage('请先报名今日俱乐部活动后再开启定时任务', 'warning');
-      return;
-    }
-  }
-
   submitting.value = true;
   try {
     const payload = {
@@ -348,12 +339,20 @@ async function toggleEnabled() {
     };
     if (nextEnabled) {
       const act = props.currentTask || {};
-      payload.activity_id = Number(act.activityId || task.activityId || 0);
-      payload.activity_name = String(act.activityName || act.itemName || task.activityName || '');
-      payload.start_time = String(act.startTime || task.startTime || '');
-      payload.end_time = String(act.endTime || task.endTime || '');
-      payload.latitude = String(act.latitude || '');
-      payload.longitude = String(act.longitude || '');
+      const actId = Number(act.activityId || task.activityId || 0);
+      if (Number.isFinite(actId) && actId > 0) {
+        payload.activity_id = actId;
+      }
+      const actName = String(act.activityName || act.itemName || task.activityName || '').trim();
+      if (actName) payload.activity_name = actName;
+      const startTime = String(act.startTime || task.startTime || '').trim();
+      if (startTime) payload.start_time = startTime;
+      const endTime = String(act.endTime || task.endTime || '').trim();
+      if (endTime) payload.end_time = endTime;
+      const lat = String(act.latitude || task.latitude || '').trim();
+      if (lat) payload.latitude = lat;
+      const lon = String(act.longitude || task.longitude || '').trim();
+      if (lon) payload.longitude = lon;
     }
 
     const statusEnvelope = await client.getClubAutoStatus(token.value, payload);

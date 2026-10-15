@@ -174,7 +174,7 @@
     <ClubAutoConfig
       v-if="activeMainTab === 'activities'"
       ref="clubAutoConfigRef"
-      :current-task="signTask"
+      :current-task="effectiveSignTask"
       class="mt-3"
       @updated="handleClubAutoConfigUpdated"
     />
@@ -533,6 +533,35 @@ const filteredList = computed(() => {
   return list;
 });
 
+const effectiveSignTask = computed(() => {
+  if (signTask.value && Number(signTask.value.activityId) > 0) {
+    return signTask.value;
+  }
+  const myJoined = myPendingActivities.value.find((item) => resolveActivityId(item) > 0);
+  if (myJoined) {
+    return {
+      activityId: resolveActivityId(myJoined),
+      activityName: myJoined.activityName || myJoined.itemName || '',
+      startTime: myJoined.startTime || '',
+      endTime: myJoined.endTime || '',
+      latitude: myJoined.latitude || '',
+      longitude: myJoined.longitude || '',
+    };
+  }
+  const joinedFromList = pendingActivities.value.find((item) => resolveEffectiveOptionStatus(item) === '1');
+  if (joinedFromList) {
+    return {
+      activityId: resolveActivityId(joinedFromList),
+      activityName: joinedFromList.activityName || joinedFromList.itemName || '',
+      startTime: joinedFromList.startTime || '',
+      endTime: joinedFromList.endTime || '',
+      latitude: joinedFromList.latitude || '',
+      longitude: joinedFromList.longitude || '',
+    };
+  }
+  return null;
+});
+
 const signTaskPhase = computed(() => resolveSignTaskPhase(signTask.value));
 const signTaskPanelStatus = computed(() => {
   switch (signTaskPhase.value) {
@@ -708,11 +737,32 @@ watch(selectedQueryDate, async () => {
   await loadCurrentList();
 });
 
-watch(showFilters, async (next) => {
-  if (!next || activeMainTab.value !== 'activities') return;
-  if (itemOptionsLoaded.value || itemOptionsLoading.value) return;
-  await loadItemOptions();
-});
+let lastSyncedActivityId = null;
+watch(
+  () => effectiveSignTask.value,
+  async (newTask) => {
+    const actId = Number(newTask?.activityId);
+    if (Number.isFinite(actId) && actId > 0 && actId !== lastSyncedActivityId && token.value) {
+      const client = getAutorunClient();
+      if (client) {
+        try {
+          lastSyncedActivityId = actId;
+          await client.getClubAutoStatus(token.value, {
+            activity_id: actId,
+            activity_name: String(newTask.activityName || ''),
+            start_time: String(newTask.startTime || ''),
+            end_time: String(newTask.endTime || ''),
+            latitude: String(newTask.latitude || ''),
+            longitude: String(newTask.longitude || ''),
+          });
+        } catch (e) {
+          console.warn('auto-sync effectiveSignTask to backend failed:', e);
+        }
+      }
+    }
+  },
+  { immediate: true }
+);
 
 onMounted(async () => {
   document.addEventListener('click', handleDocumentClick);
@@ -1673,6 +1723,21 @@ async function handleClubAction(item, type) {
         await clubAutoConfigRef.value.loadStatus();
       }
     } else if (actionType === 1) {
+      try {
+        const client = getAutorunClient();
+        if (client && token.value) {
+          await client.getClubAutoStatus(token.value, {
+            activity_id: activityId,
+            activity_name: String(item.activityName || item.itemName || ''),
+            start_time: String(item.startTime || ''),
+            end_time: String(item.endTime || ''),
+            latitude: String(item.latitude || ''),
+            longitude: String(item.longitude || ''),
+          });
+        }
+      } catch (e) {
+        console.warn('sync club activity to backend failed:', e);
+      }
       if (clubAutoConfigRef.value?.loadStatus) {
         await clubAutoConfigRef.value.loadStatus();
       }
