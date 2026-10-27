@@ -170,11 +170,9 @@
 
 
 
-    <!-- 俱乐部定时任务模块组件（非侵入式引入：状态信息、开关控制、结果查询默认显示） -->
     <ClubAutoConfig
       v-if="activeMainTab === 'activities'"
       ref="clubAutoConfigRef"
-      :current-task="effectiveSignTask"
       class="mt-3"
       @updated="handleClubAutoConfigUpdated"
     />
@@ -533,35 +531,6 @@ const filteredList = computed(() => {
   return list;
 });
 
-const effectiveSignTask = computed(() => {
-  if (signTask.value && Number(signTask.value.activityId) > 0) {
-    return signTask.value;
-  }
-  const myJoined = myPendingActivities.value.find((item) => resolveActivityId(item) > 0);
-  if (myJoined) {
-    return {
-      activityId: resolveActivityId(myJoined),
-      activityName: myJoined.activityName || myJoined.itemName || '',
-      startTime: myJoined.startTime || '',
-      endTime: myJoined.endTime || '',
-      latitude: myJoined.latitude || '',
-      longitude: myJoined.longitude || '',
-    };
-  }
-  const joinedFromList = pendingActivities.value.find((item) => resolveEffectiveOptionStatus(item) === '1');
-  if (joinedFromList) {
-    return {
-      activityId: resolveActivityId(joinedFromList),
-      activityName: joinedFromList.activityName || joinedFromList.itemName || '',
-      startTime: joinedFromList.startTime || '',
-      endTime: joinedFromList.endTime || '',
-      latitude: joinedFromList.latitude || '',
-      longitude: joinedFromList.longitude || '',
-    };
-  }
-  return null;
-});
-
 const signTaskPhase = computed(() => resolveSignTaskPhase(signTask.value));
 const signTaskPanelStatus = computed(() => {
   switch (signTaskPhase.value) {
@@ -736,33 +705,6 @@ watch(selectedQueryDate, async () => {
   if (activeMainTab.value !== 'activities' || activeActivityTab.value !== 'list') return;
   await loadCurrentList();
 });
-
-let lastSyncedActivityId = null;
-watch(
-  () => effectiveSignTask.value,
-  async (newTask) => {
-    const actId = Number(newTask?.activityId);
-    if (Number.isFinite(actId) && actId > 0 && actId !== lastSyncedActivityId && token.value) {
-      const client = getAutorunClient();
-      if (client) {
-        try {
-          lastSyncedActivityId = actId;
-          await client.getClubAutoStatus(token.value, {
-            activity_id: actId,
-            activity_name: String(newTask.activityName || ''),
-            start_time: String(newTask.startTime || ''),
-            end_time: String(newTask.endTime || ''),
-            latitude: String(newTask.latitude || ''),
-            longitude: String(newTask.longitude || ''),
-          });
-        } catch (e) {
-          console.warn('auto-sync effectiveSignTask to backend failed:', e);
-        }
-      }
-    }
-  },
-  { immediate: true }
-);
 
 onMounted(async () => {
   document.addEventListener('click', handleDocumentClick);
@@ -1728,6 +1670,7 @@ async function handleClubAction(item, type) {
         if (client && token.value) {
           await client.getClubAutoStatus(token.value, {
             activity_id: activityId,
+            activity_date: normalizeDateOnlyText(item.yymmdd || item.activityDate || (activeMainTab.value === 'activities' && activeActivityTab.value === 'list' ? currentQueryDate.value : '')),
             activity_name: String(item.activityName || item.itemName || ''),
             start_time: String(item.startTime || ''),
             end_time: String(item.endTime || ''),
@@ -1737,6 +1680,7 @@ async function handleClubAction(item, type) {
         }
       } catch (e) {
         console.warn('sync club activity to backend failed:', e);
+        if (clubAutoConfigRef.value?.enabled) showMessage('报名成功，但定时任务同步失败，请刷新重试', 'warning');
       }
       if (clubAutoConfigRef.value?.loadStatus) {
         await clubAutoConfigRef.value.loadStatus();
@@ -1783,7 +1727,7 @@ function normalizeDateOnlyText(raw) {
   if (!text) return '';
 
   const datePart = text.split(' ')[0].split('T')[0];
-  const match = datePart.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  const match = datePart.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/) || datePart.match(/^(\d{4})(\d{2})(\d{2})$/);
   if (!match) return '';
 
   const year = match[1];

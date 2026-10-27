@@ -46,7 +46,7 @@
       </div>
       <div v-else class="meta-pill col-span-2">
         <i class="ri-information-line"></i>
-        <span class="truncate">未检测到今日活动（报名活动后将自动签到）</span>
+        <span class="truncate">{{ emptyActivityText }}</span>
       </div>
 
       <div class="meta-pill">
@@ -166,7 +166,6 @@ import { showMessage } from '@/composables/useMessage';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
-  currentTask: { type: Object, default: () => null },
 });
 
 const emit = defineEmits(['update:modelValue', 'change', 'updated']);
@@ -175,6 +174,7 @@ const { token } = useDataStore();
 
 const loading = ref(false);
 const submitting = ref(false);
+const statusError = ref(false);
 
 const status = reactive({
   enabled: 0,
@@ -188,15 +188,20 @@ const task = reactive({
   activityName: '',
   startTime: '',
   endTime: '',
-  signInStatus: 0,
-  signBackStatus: 0,
+  signInStatus: null,
+  signBackStatus: null,
 });
 
 const enabled = computed(() => Number(status.enabled) === 1 || status.enabled === true);
 
-const signInStateText = computed(() => (task.signInStatus === 1 ? '已签到' : '未签到'));
+const emptyActivityText = computed(() => {
+  if (statusError.value) return '当前活动获取失败，请稍后重试';
+  return loading.value ? '正在获取当前活动' : '暂无当前活动';
+});
 
-const signOutStateText = computed(() => (task.signBackStatus === 1 ? '已签退' : '未签退'));
+const signInStateText = computed(() => task.signInStatus === null ? '--' : task.signInStatus === 1 ? '已签到' : '未签到');
+
+const signOutStateText = computed(() => task.signBackStatus === null ? '--' : task.signBackStatus === 1 ? '已签退' : '未签退');
 
 const taskTimeText = computed(() => {
   const start = formatDisplayDateTime(task.startTime);
@@ -214,6 +219,7 @@ const displayResultText = computed(() => {
     if (task.signInStatus === 1) {
       return enabled.value ? '签到已完成，等待签退' : '签到已完成（定时任务已停用，需手动签退）';
     }
+    if (task.signInStatus === null) return '等待活动签到状态';
     return enabled.value ? '等待自动签到' : '定时任务已停用（需手动签到）';
   }
   return enabled.value ? '已启用，等待下一次调度' : '定时任务已停用';
@@ -243,24 +249,10 @@ const resultStatusClass = computed(() => {
   return 'theme-text-secondary';
 });
 
-function syncFromCurrentTask(curr) {
-  if (curr && (Number(curr.activityId) > 0 || curr.activityName)) {
-    task.hasTask = true;
-    task.activityId = Number(curr.activityId || 0);
-    task.activityName = String(curr.activityName || curr.itemName || '');
-    task.startTime = String(curr.startTime || '');
-    task.endTime = String(curr.endTime || '');
-    task.signInStatus = Number(curr.signInStatus || 0);
-    task.signBackStatus = Number(curr.signBackStatus || 0);
-  } else if (curr === null) {
-    task.hasTask = false;
-    task.activityId = 0;
-    task.activityName = '';
-    task.startTime = '';
-    task.endTime = '';
-    task.signInStatus = 0;
-    task.signBackStatus = 0;
-  }
+function parseSignStatus(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const status = Number(value);
+  return status === 0 || status === 1 ? status : null;
 }
 
 function applyData(data = {}) {
@@ -269,17 +261,13 @@ function applyData(data = {}) {
   status.last_attempt_at = String(data.last_attempt_at || '');
   status.msg = String(data.msg || '');
 
-  if (props.currentTask && (Number(props.currentTask.activityId) > 0 || props.currentTask.activityName)) {
-    syncFromCurrentTask(props.currentTask);
-  } else {
-    task.hasTask = data.has_task === true;
-    task.activityId = Number(data.activity_id || data.activityId || 0);
-    task.activityName = String(data.activity_name || '');
-    task.startTime = String(data.start_time || '');
-    task.endTime = String(data.end_time || '');
-    task.signInStatus = Number(data.sign_in_status || 0);
-    task.signBackStatus = Number(data.sign_back_status || 0);
-  }
+  task.hasTask = data.has_task === true;
+  task.activityId = task.hasTask ? Number(data.activity_id || data.activityId || 0) : 0;
+  task.activityName = task.hasTask ? String(data.activity_name || '') : '';
+  task.startTime = task.hasTask ? String(data.start_time || '') : '';
+  task.endTime = task.hasTask ? String(data.end_time || '') : '';
+  task.signInStatus = task.hasTask ? parseSignStatus(data.sign_in_status) : null;
+  task.signBackStatus = task.hasTask ? parseSignStatus(data.sign_back_status) : null;
 
   emit('update:modelValue', nextEnabled);
   emit('updated', { status, task });
@@ -317,10 +305,14 @@ async function loadStatus() {
 
   loading.value = true;
   try {
-    const statusEnvelope = await client.getClubAutoStatus(token.value);
+    const currentToken = token.value;
+    const statusEnvelope = await client.getClubAutoStatus(currentToken);
+    if (token.value !== currentToken) return;
     const data = statusEnvelope?.data || {};
     applyData(data);
+    statusError.value = false;
   } catch (error) {
+    statusError.value = true;
     console.error('getClubAutoStatus failed:', error);
   } finally {
     loading.value = false;
@@ -337,24 +329,6 @@ async function toggleEnabled() {
     const payload = {
       enabled: nextEnabled ? 1 : 0,
     };
-    if (nextEnabled) {
-      const act = props.currentTask || {};
-      const actId = Number(act.activityId || task.activityId || 0);
-      if (Number.isFinite(actId) && actId > 0) {
-        payload.activity_id = actId;
-      }
-      const actName = String(act.activityName || act.itemName || task.activityName || '').trim();
-      if (actName) payload.activity_name = actName;
-      const startTime = String(act.startTime || task.startTime || '').trim();
-      if (startTime) payload.start_time = startTime;
-      const endTime = String(act.endTime || task.endTime || '').trim();
-      if (endTime) payload.end_time = endTime;
-      const lat = String(act.latitude || task.latitude || '').trim();
-      if (lat) payload.latitude = lat;
-      const lon = String(act.longitude || task.longitude || '').trim();
-      if (lon) payload.longitude = lon;
-    }
-
     const statusEnvelope = await client.getClubAutoStatus(token.value, payload);
     const data = statusEnvelope?.data || {};
     applyData(data);
@@ -400,14 +374,6 @@ function formatDisplayDateTime(value) {
 function hasText(value) {
   return String(value || '').trim() !== '';
 }
-
-watch(
-  () => props.currentTask,
-  (newTask) => {
-    syncFromCurrentTask(newTask);
-  },
-  { immediate: true, deep: true }
-);
 
 onMounted(() => {
   if (token.value) {
