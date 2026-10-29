@@ -366,8 +366,13 @@ async function toggleEnabled() {
     const statusEnvelope = await client.getClubAutoStatus(token.value, payload);
     const data = statusEnvelope?.data || {};
     applyData(data);
-    showMessage(nextEnabled ? '俱乐部定时任务已开启' : '俱乐部定时任务已关闭', 'success');
-    emit('change', nextEnabled);
+    const actualEnabled = Number(data.enabled) === 1 || data.enabled === true;
+    if (nextEnabled && !actualEnabled) {
+      showMessage(data.msg || '俱乐部定时任务未开启', 'warning');
+    } else {
+      showMessage(actualEnabled ? '俱乐部定时任务已开启' : '俱乐部定时任务已关闭', 'success');
+    }
+    emit('change', actualEnabled);
     if (showHistory.value) {
       loadHistory();
     }
