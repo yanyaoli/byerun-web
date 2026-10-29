@@ -174,7 +174,9 @@
       v-if="activeMainTab === 'activities'"
       ref="clubAutoConfigRef"
       class="mt-3"
+      :action-pending="signPendingType"
       @updated="handleClubAutoConfigUpdated"
+      @action="handleAutoCardAction"
     />
 
     <section
@@ -320,11 +322,11 @@
                   v-for="btn in card.signButtons"
                   :key="btn.key"
                   type="button"
-                  :disabled="btn.disabled || isSignTaskActionPending(btn)"
+                  :disabled="isSignTaskActionDisabled(btn)"
                   :class="[
                     'h-7 px-2.5 rounded-lg text-[11px] font-medium text-white transition-colors inline-flex items-center gap-1',
                     btn.buttonClass,
-                    (btn.disabled || isSignTaskActionPending(btn)) && 'opacity-70 cursor-not-allowed',
+                    isSignTaskActionDisabled(btn) && 'opacity-70 cursor-not-allowed',
                   ]"
                   @click="handleSignTaskAction(btn.type)"
                 >
@@ -1561,6 +1563,36 @@ async function handleSignTaskAction(actionType) {
   await handleSignTask(normalizedActionType);
 }
 
+async function handleAutoCardAction({ type, activityId }) {
+  if (signPendingType.value) return;
+  const id = Number(activityId);
+  if (!Number.isFinite(id) || id <= 0) return;
+
+  signPendingType.value = String(type);
+  try {
+    if (type === 'cancel') {
+      await handleClubAction({ activityId: id }, 2, { clearAutoActivity: true });
+      return;
+    }
+
+    // 手动签到需要上游活动的坐标，且不能操作与卡片不同的活动。
+    await loadSignTask();
+    if (Number(signTask.value?.activityId) !== id) {
+      showMessage('当前活动的签到信息暂不可用，请刷新后重试', 'warning');
+      return;
+    }
+    if ((type === '1' && isSignedStatus(signTask.value.signInStatus)) ||
+        (type === '2' && (!isSignedStatus(signTask.value.signInStatus) || isSignedStatus(signTask.value.signBackStatus)))) {
+      showMessage('活动签到状态已变化，请刷新后重试', 'warning');
+      await clubAutoConfigRef.value?.refresh();
+      return;
+    }
+    await handleSignTask(type);
+  } finally {
+    signPendingType.value = '';
+  }
+}
+
 async function handleSignTask(signType) {
   const task = signTask.value;
   const normalizedSignType = String(signType) === '2' ? '2' : String(signType) === '1' ? '1' : '';
@@ -1610,7 +1642,7 @@ async function handleSignTask(signType) {
   }
 }
 
-async function handleClubAction(item, type) {
+async function handleClubAction(item, type, { clearAutoActivity = false } = {}) {
   const activityId = resolveActivityId(item);
   if (!Number.isFinite(activityId) || activityId <= 0) {
     showMessage('活动标识缺失，无法执行操作', 'error');
@@ -1650,15 +1682,19 @@ async function handleClubAction(item, type) {
 
     // 取消报名：若已开启定时任务，自动停用任务并清理后端活动快照
     if (actionType === 2) {
-      if (clubAutoConfigRef.value?.enabled) {
+      if (clubAutoConfigRef.value?.enabled || clearAutoActivity) {
         try {
           const client = getAutorunClient();
           if (client && token.value) {
-            await client.getClubAutoStatus(token.value, { enabled: 0 });
-            showMessage('已取消报名，俱乐部定时任务已自动停止', 'info');
+            const wasEnabled = clubAutoConfigRef.value?.enabled;
+            const payload = { enabled: 0 };
+            if (clearAutoActivity) payload.clear_activity_id = activityId;
+            await client.getClubAutoStatus(token.value, payload);
+            if (wasEnabled) showMessage('已取消报名，俱乐部定时任务已自动停止', 'info');
           }
         } catch (e) {
           console.warn('disable club auto task on cancel failed:', e);
+          if (clearAutoActivity) showMessage('报名已取消，但定时任务同步失败，请刷新重试', 'warning');
         }
       }
       if (clubAutoConfigRef.value?.loadStatus) {

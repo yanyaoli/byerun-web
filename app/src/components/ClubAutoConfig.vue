@@ -1,5 +1,5 @@
 <template>
-  <section class="theme-card rounded-xl p-3.5">
+  <section class="theme-card rounded-xl p-4">
     <!-- 头部：标题、状态指示与 Switch 开关 -->
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0 flex items-center gap-2">
@@ -17,7 +17,7 @@
         <button
           type="button"
           class="w-5 h-5 rounded flex items-center justify-center theme-text-tertiary hover:theme-text-primary transition-colors disabled:opacity-50"
-          :disabled="loading || submitting"
+          :disabled="loading || submitting || !!actionPending"
           title="刷新定时任务状态"
           @click="loadStatus"
         >
@@ -30,7 +30,10 @@
         type="button"
         class="switch"
         :class="{ 'switch-on': enabled, 'opacity-60 cursor-not-allowed': submitting }"
-        :disabled="submitting || loading"
+        :disabled="submitting || loading || !!actionPending"
+        role="switch"
+        :aria-checked="enabled"
+        aria-label="俱乐部定时任务"
         :title="enabled ? '点击停用定时任务' : '点击启用定时任务'"
         @click="toggleEnabled"
       >
@@ -38,36 +41,58 @@
       </button>
     </div>
 
-    <!-- 状态信息：当前活动与签到签退状态 -->
-    <div class="mt-2.5 grid grid-cols-2 gap-2 text-xs theme-text-secondary">
-      <div v-if="task.hasTask || task.activityName" class="meta-pill col-span-2">
-        <i class="ri-calendar-line"></i>
-        <span class="truncate">当前活动：{{ task.activityName }}（{{ taskTimeText }}）</span>
-      </div>
-      <div v-else class="meta-pill col-span-2">
-        <i class="ri-information-line"></i>
-        <span class="truncate">{{ emptyActivityText }}</span>
-      </div>
+    <!-- 当前活动与操作放在一起，状态始终以文字和颜色共同表达 -->
+    <div class="activity-panel mt-3">
+      <template v-if="task.hasTask">
+        <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+          <div class="min-w-0 flex-1">
+            <div class="text-[11px] theme-text-tertiary">当前活动</div>
+            <div class="mt-1 text-sm font-semibold theme-text-primary break-words">{{ task.activityName || '活动详情待同步' }}</div>
+            <div class="mt-1.5 flex items-start gap-1.5 text-xs theme-text-secondary">
+              <i class="ri-time-line mt-px shrink-0" aria-hidden="true"></i>
+              <span class="break-words">{{ taskTimeText }}</span>
+            </div>
+          </div>
+          <span class="status-badge shrink-0" :class="activityStatusClass">{{ activityStatusText }}</span>
+        </div>
 
-      <div class="meta-pill">
-        <i
-          :class="
-            task.signInStatus === 1 || hasText(task.signInTimeText)
-              ? 'ri-checkbox-circle-line theme-success'
-              : 'ri-login-circle-line'
-          "
-        ></i>
-        <span class="truncate">签到：{{ signInStateText }}</span>
-      </div>
-      <div class="meta-pill">
-        <i
-          :class="
-            task.signBackStatus === 1 || hasText(task.signBackLimitTimeText)
-              ? 'ri-checkbox-circle-line theme-success'
-              : 'ri-logout-circle-r-line'
-          "
-        ></i>
-        <span class="truncate">签退：{{ signOutStateText }}</span>
+        <div class="activity-footer mt-3 pt-3 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-1.5" aria-label="签到签退状态">
+            <span class="status-badge" :class="task.signInStatus === 1 ? 'status-success' : 'badge-neutral'">
+              <i :class="task.signInStatus === 1 ? 'ri-checkbox-circle-fill' : 'ri-login-circle-line'" aria-hidden="true"></i>
+              {{ signInStateText }}
+            </span>
+            <span class="status-badge" :class="task.signBackStatus === 1 ? 'status-success' : 'badge-neutral'">
+              <i :class="task.signBackStatus === 1 ? 'ri-checkbox-circle-fill' : 'ri-logout-circle-r-line'" aria-hidden="true"></i>
+              {{ signOutStateText }}
+            </span>
+          </div>
+          <div v-if="task.activityId > 0" class="flex flex-wrap gap-2">
+            <button
+              v-if="task.signInStatus === 0 && task.signBackStatus !== 1"
+              type="button"
+              class="action-button action-cancel"
+              :disabled="loading || submitting || !!actionPending"
+              @click="emit('action', { type: 'cancel', activityId: task.activityId })"
+            >
+              {{ actionPending === 'cancel' ? '取消中...' : '取消报名' }}
+            </button>
+            <button
+              v-if="task.signInStatus !== null && task.signBackStatus !== 1"
+              type="button"
+              class="action-button action-primary"
+              :disabled="loading || submitting || !!actionPending"
+              @click="emit('action', { type: task.signInStatus === 1 ? '2' : '1', activityId: task.activityId })"
+            >
+              <i :class="task.signInStatus === 1 ? 'ri-logout-circle-r-line' : 'ri-login-circle-line'" aria-hidden="true"></i>
+              {{ actionPending === '1' ? '签到中...' : actionPending === '2' ? '签退中...' : task.signInStatus === 1 ? '签退' : '签到' }}
+            </button>
+          </div>
+        </div>
+      </template>
+      <div v-else class="flex items-center gap-2 py-1 text-xs theme-text-secondary">
+        <i class="ri-calendar-line text-base theme-text-tertiary" aria-hidden="true"></i>
+        <span>{{ emptyActivityText }}</span>
       </div>
     </div>
 
@@ -166,9 +191,10 @@ import { showMessage } from '@/composables/useMessage';
 
 const props = defineProps({
   modelValue: { type: Boolean, default: undefined },
+  actionPending: { type: String, default: '' },
 });
 
-const emit = defineEmits(['update:modelValue', 'change', 'updated']);
+const emit = defineEmits(['update:modelValue', 'change', 'updated', 'action']);
 
 const { token } = useDataStore();
 
@@ -199,9 +225,17 @@ const emptyActivityText = computed(() => {
   return loading.value ? '正在获取当前活动' : '暂无当前活动';
 });
 
-const signInStateText = computed(() => task.signInStatus === null ? '--' : task.signInStatus === 1 ? '已签到' : '未签到');
+const signInStateText = computed(() => task.signInStatus === null ? '签到状态未知' : task.signInStatus === 1 ? '已签到' : '未签到');
 
-const signOutStateText = computed(() => task.signBackStatus === null ? '--' : task.signBackStatus === 1 ? '已签退' : '未签退');
+const signOutStateText = computed(() => task.signBackStatus === null ? '签退状态未知' : task.signBackStatus === 1 ? '已签退' : '未签退');
+
+const activityStatusText = computed(() => {
+  if (task.signBackStatus === 1) return '已完成';
+  if (task.signInStatus === 1) return '待签退';
+  if (task.signInStatus === 0) return '待签到';
+  return '状态未知';
+});
+const activityStatusClass = computed(() => task.signBackStatus === 1 ? 'status-success' : task.signInStatus === null ? 'badge-neutral' : 'status-pending');
 
 const taskTimeText = computed(() => {
   const start = formatDisplayDateTime(task.startTime);
@@ -371,10 +405,6 @@ function formatDisplayDateTime(value) {
   return text || '';
 }
 
-function hasText(value) {
-  return String(value || '').trim() !== '';
-}
-
 onMounted(() => {
   if (token.value) {
     loadStatus();
@@ -395,15 +425,72 @@ defineExpose({
 </script>
 
 <style scoped>
-.meta-pill {
-  height: 28px;
-  border-radius: 10px;
+.activity-panel {
   background: var(--card-soft-bg);
   border: 1px solid var(--card-border);
-  padding: 0 8px;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.activity-footer {
+  border-top: 1px solid var(--card-border);
+}
+
+.status-badge {
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  border-radius: 999px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.status-success {
+  background: var(--success-bg);
+  color: var(--success-color);
+  border-color: var(--success-border);
+}
+
+.status-pending {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+  border-color: var(--warning-border);
+}
+
+.action-button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-button:focus-visible, .switch:focus-visible {
+  outline: 2px solid var(--success-color);
+  outline-offset: 2px;
+}
+
+.action-cancel {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+.action-primary {
+  background: var(--success-bg);
+  color: var(--success-color);
 }
 
 .badge-neutral {
