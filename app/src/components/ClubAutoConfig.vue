@@ -52,6 +52,22 @@
               <i class="ri-time-line mt-px shrink-0" aria-hidden="true"></i>
               <span class="break-words">{{ taskTimeText }}</span>
             </div>
+            <div v-if="task.latitude && task.longitude" class="mt-1 flex items-center gap-1.5 text-xs theme-text-tertiary">
+              <i class="ri-map-pin-2-line shrink-0" aria-hidden="true"></i>
+              <span>坐标已配置 ({{ Number(task.latitude).toFixed(4) }}, {{ Number(task.longitude).toFixed(4) }})</span>
+            </div>
+            <div v-else class="mt-1 flex items-center gap-1.5 text-xs text-amber-500 font-medium">
+              <i class="ri-map-pin-line shrink-0" aria-hidden="true"></i>
+              <span>缺少坐标</span>
+              <button
+                type="button"
+                class="ml-1 text-xs text-blue-500 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                @click="emit('action', { type: 'set_coords', activityId: task.activityId, task })"
+              >
+                <span>点击选坐标</span>
+                <i class="ri-arrow-right-s-line text-xs"></i>
+              </button>
+            </div>
           </div>
           <span class="status-badge shrink-0" :class="activityStatusClass">{{ activityStatusText }}</span>
         </div>
@@ -214,6 +230,8 @@ const task = reactive({
   activityName: '',
   startTime: '',
   endTime: '',
+  latitude: '',
+  longitude: '',
   signInStatus: null,
   signBackStatus: null,
 });
@@ -300,6 +318,8 @@ function applyData(data = {}) {
   task.activityName = task.hasTask ? String(data.activity_name || '') : '';
   task.startTime = task.hasTask ? String(data.start_time || '') : '';
   task.endTime = task.hasTask ? String(data.end_time || '') : '';
+  task.latitude = task.hasTask ? String(data.latitude || '') : '';
+  task.longitude = task.hasTask ? String(data.longitude || '') : '';
   task.signInStatus = task.hasTask ? parseSignStatus(data.sign_in_status) : null;
   task.signBackStatus = task.hasTask ? parseSignStatus(data.sign_back_status) : null;
 
@@ -333,24 +353,42 @@ function toggleHistory() {
   }
 }
 
-async function loadStatus() {
+let inFlightStatusPromise = null;
+
+async function loadStatus(payload = null) {
   const client = getAutorunClient();
-  if (!client || !token.value || loading.value) return;
+  if (!client || !token.value) return null;
+
+  if (!payload && inFlightStatusPromise) {
+    return inFlightStatusPromise;
+  }
 
   loading.value = true;
-  try {
-    const currentToken = token.value;
-    const statusEnvelope = await client.getClubAutoStatus(currentToken);
-    if (token.value !== currentToken) return;
-    const data = statusEnvelope?.data || {};
-    applyData(data);
-    statusError.value = false;
-  } catch (error) {
-    statusError.value = true;
-    console.error('getClubAutoStatus failed:', error);
-  } finally {
-    loading.value = false;
-  }
+  const promise = (async () => {
+    try {
+      const currentToken = token.value;
+      const statusEnvelope = payload
+        ? await client.getClubAutoStatus(currentToken, payload)
+        : await client.getClubAutoStatus(currentToken);
+      if (token.value !== currentToken) return null;
+      const data = statusEnvelope?.data || {};
+      applyData(data);
+      statusError.value = false;
+      return data;
+    } catch (error) {
+      statusError.value = true;
+      console.error('getClubAutoStatus failed:', error);
+      throw error;
+    } finally {
+      loading.value = false;
+      if (inFlightStatusPromise === promise) {
+        inFlightStatusPromise = null;
+      }
+    }
+  })();
+
+  inFlightStatusPromise = promise;
+  return promise;
 }
 
 async function toggleEnabled() {
@@ -425,6 +463,7 @@ watch(token, (newToken) => {
 defineExpose({
   refresh: loadStatus,
   loadStatus,
+  applyData,
   enabled,
 });
 </script>

@@ -382,6 +382,17 @@
         </button>
       </div>
     </section>
+
+    <!-- 坐标选择弹窗（活动缺少坐标时选点提交） -->
+    <ClubCoordinatePickerModal
+      v-model="showCoordinatePicker"
+      :activity="coordinatePickerTarget?.item"
+      :initial-coordinates="coordinatePickerInitialCoords"
+      :submitting="coordinatePickerSubmitting"
+      :action-text="coordinatePickerActionText"
+      @confirm="handleCoordinatePickerConfirm"
+      @cancel="handleCoordinatePickerCancel"
+    />
   </div>
 </template>
 
@@ -394,6 +405,7 @@ import { showMessage } from '@/composables/useMessage';
 import TurnstileWidget from './TurnstileWidget.vue';
 import Drawer from './ui/Drawer.vue';
 import ClubAutoConfig from './ClubAutoConfig.vue';
+import ClubCoordinatePickerModal from './ClubCoordinatePickerModal.vue';
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表', icon: 'ri-calendar-check-line' },
@@ -471,6 +483,127 @@ const signTask = ref(null);
 const signPendingType = ref('');
 const clubAutoConfigRef = ref(null);
 const clubRushTasks = ref([]);
+
+const showCoordinatePicker = ref(false);
+const coordinatePickerTarget = ref(null);
+const coordinatePickerSubmitting = ref(false);
+const coordinatePickerActionText = ref('报名');
+const coordinatePickerInitialCoords = ref(null);
+
+function hasActivityCoordinates(item) {
+  if (!item) return false;
+  const lat = String(item.latitude ?? item.lat ?? '').trim();
+  const lng = String(item.longitude ?? item.lon ?? item.lng ?? '').trim();
+  if (!lat || !lng) return false;
+  const numLat = Number(lat);
+  const numLng = Number(lng);
+  if (!Number.isFinite(numLat) || !Number.isFinite(numLng)) return false;
+  if (Math.abs(numLat) < 0.0001 && Math.abs(numLng) < 0.0001) return false;
+  return true;
+}
+
+function getStoredClubCoordinates(activityId) {
+  if (!activityId) return null;
+  try {
+    const raw = localStorage.getItem(`club_coords_${activityId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.latitude && parsed?.longitude) return parsed;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function saveClubActivityCoordinates(activityId, coords) {
+  if (!activityId || !coords?.latitude || !coords?.longitude) return;
+  try {
+    localStorage.setItem(
+      `club_coords_${activityId}`,
+      JSON.stringify({
+        latitude: String(coords.latitude),
+        longitude: String(coords.longitude),
+        updatedAt: Date.now(),
+      }),
+    );
+  } catch (e) {}
+}
+
+function openCoordinatePicker(item, actionType = 'post_join', card = null) {
+  const activityId = resolveActivityId(item) || resolveActivityId(card?.item);
+  const cached = getStoredClubCoordinates(activityId);
+  coordinatePickerTarget.value = { item, actionType, card };
+  coordinatePickerActionText.value = actionType === 'rush' ? '抢报' : '提交坐标';
+  coordinatePickerInitialCoords.value =
+    cached ||
+    (hasActivityCoordinates(item)
+      ? { latitude: item.latitude || item.lat, longitude: item.longitude || item.lon || item.lng }
+      : null);
+  showCoordinatePicker.value = true;
+}
+
+function handleCoordinatePickerCancel() {
+  showCoordinatePicker.value = false;
+  coordinatePickerTarget.value = null;
+}
+
+async function handleCoordinatePickerConfirm({ latitude, longitude }) {
+  if (!coordinatePickerTarget.value) return;
+  const { item, actionType, card } = coordinatePickerTarget.value;
+  coordinatePickerSubmitting.value = true;
+  try {
+    const activityId = resolveActivityId(item) || resolveActivityId(card?.item);
+    if (!activityId) {
+      showMessage('未找到活动标识，无法提交坐标', 'error');
+      return;
+    }
+    saveClubActivityCoordinates(activityId, { latitude, longitude });
+    if (item) {
+      item.latitude = latitude;
+      item.longitude = longitude;
+    }
+    if (card?.item) {
+      card.item.latitude = latitude;
+      card.item.longitude = longitude;
+    }
+    if (signTask.value && Number(signTask.value.activityId) === activityId) {
+      signTask.value.latitude = latitude;
+      signTask.value.longitude = longitude;
+    }
+
+    if (actionType === 'rush') {
+      await handleRushCardAction(card || { activityId, item, rushAction: resolveRushAction(item) }, { latitude, longitude });
+    } else {
+      const payload = {
+        activity_id: activityId,
+        activity_date: normalizeDateOnlyText(item?.yymmdd || item?.activityDate || currentQueryDate.value),
+        activity_name: String(item?.activityName || item?.itemName || ''),
+        start_time: String(item?.startTime || ''),
+        end_time: String(item?.endTime || ''),
+        latitude,
+        longitude,
+      };
+      if (clubAutoConfigRef.value?.enabled) {
+        payload.enabled = 1;
+      }
+      if (clubAutoConfigRef.value?.loadStatus) {
+        await clubAutoConfigRef.value.loadStatus(payload);
+      } else {
+        const client = getAutorunClient();
+        if (client && token.value) {
+          await client.getClubAutoStatus(token.value, payload);
+        }
+      }
+      showMessage('签到坐标已提交并同步', 'success');
+    }
+    showCoordinatePicker.value = false;
+    coordinatePickerTarget.value = null;
+  } catch (e) {
+    console.error('handleCoordinatePickerConfirm failed:', e);
+    showMessage(e?.message || '提交坐标失败', 'error');
+  } finally {
+    coordinatePickerSubmitting.value = false;
+  }
+}
 
 const loading = ref(false);
 const clubActionPendingMap = ref({});
@@ -604,6 +737,13 @@ const signTaskButtons = computed(() =>
 const cards = computed(() =>
   filteredList.value.map((item, index) => {
     const activityId = resolveActivityId(item);
+    if (activityId > 0 && !hasActivityCoordinates(item)) {
+      const cached = getStoredClubCoordinates(activityId);
+      if (cached) {
+        item.latitude = cached.latitude;
+        item.longitude = cached.longitude;
+      }
+    }
     const key = String(activityId || item.configurationId || item.yymmdd || 'club') + '-' + index;
     const isHistoryRecord =
       activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
@@ -1057,7 +1197,7 @@ async function handleCardAction(card) {
   await handleClubAction(card.item, type);
 }
 
-async function handleRushCardAction(card) {
+async function handleRushCardAction(card, customCoords = null) {
   if (!card || !card.rushAction) return;
 
   const activityId = Number(card.activityId);
@@ -1075,17 +1215,28 @@ async function handleRushCardAction(card) {
     return;
   }
 
+  const cached = getStoredClubCoordinates(activityId);
+  const effectiveLat = String(customCoords?.latitude || card.item?.latitude || cached?.latitude || '');
+  const effectiveLon = String(customCoords?.longitude || card.item?.longitude || cached?.longitude || '');
+
   const pendingKey = getClubRushPendingKey(activityId);
   setClubActionPending(pendingKey, true);
   try {
     const activityDateText = normalizeDateOnlyText(card.item?.yymmdd || currentQueryDate.value);
+    if (effectiveLat && effectiveLon) {
+      saveClubActivityCoordinates(activityId, { latitude: effectiveLat, longitude: effectiveLon });
+      if (card.item) {
+        card.item.latitude = effectiveLat;
+        card.item.longitude = effectiveLon;
+      }
+    }
     const envelope = await client.rushClub(token.value, {
       activity_id: activityId,
       activity_name: card.item?.activityName || card.item?.itemName || '',
       start_time: card.item?.startTime || '',
       end_time: card.item?.endTime || '',
-      latitude: String(card.item?.latitude || ''),
-      longitude: String(card.item?.longitude || ''),
+      latitude: effectiveLat,
+      longitude: effectiveLon,
       activity_date: activityDateText || undefined,
       yymmdd: activityDateText || undefined,
     });
@@ -1093,6 +1244,16 @@ async function handleRushCardAction(card) {
     const message = String(rushResult.message || '').trim() || '抢报请求已提交';
     showMessage(message, rushResult.performed || rushResult.scheduled ? 'success' : 'error');
     await Promise.all([loadCurrentList(), loadSignTask(), loadClubRushStatus()]);
+
+    if (rushResult.performed) {
+      const hasCoords = hasActivityCoordinates(signTask.value) ||
+        hasActivityCoordinates(getStoredClubCoordinates(activityId)) ||
+        hasActivityCoordinates({ latitude: effectiveLat, longitude: effectiveLon });
+      if (!hasCoords) {
+        const targetItem = findLinkedActivityById(activityId) || signTask.value || card.item;
+        openCoordinatePicker(targetItem, 'post_join', card);
+      }
+    }
   } catch (error) {
     console.error('handleRushCardAction failed:', error);
     showMessage(error?.message || '抢报操作异常', 'error');
@@ -1371,11 +1532,21 @@ function normalizeSignTask(payload) {
   const activityId = Number(payload.activityId);
   if (!Number.isFinite(activityId) || activityId <= 0) return null;
 
+  let lat = String(payload.latitude || '').trim();
+  let lng = String(payload.longitude || '').trim();
+  if (!hasActivityCoordinates({ latitude: lat, longitude: lng })) {
+    const cached = getStoredClubCoordinates(activityId);
+    if (cached) {
+      lat = String(cached.latitude);
+      lng = String(cached.longitude);
+    }
+  }
+
   return {
     ...payload,
     activityId,
-    latitude: String(payload.latitude || ''),
-    longitude: String(payload.longitude || ''),
+    latitude: lat,
+    longitude: lng,
     signStatus: payload.signStatus ?? null,
     signInStatus: payload.signInStatus ?? null,
     signBackStatus: payload.signBackStatus ?? null,
@@ -1520,27 +1691,39 @@ function resolveSignTaskPhase(task) {
   return resolveSignTaskOptionStatus(task) === '1' ? 'joined' : 'unsigned';
 }
 
+let signTaskInFlightPromise = null;
+
 async function loadSignTask() {
-  try {
-    const authReady = await ensureAuthReady();
-    if (!authReady) {
+  if (signTaskInFlightPromise) return signTaskInFlightPromise;
+
+  signTaskInFlightPromise = (async () => {
+    try {
+      const authReady = await ensureAuthReady();
+      if (!authReady) {
+        signTask.value = null;
+        return null;
+      }
+
+      const response = await api.queryClubSignStatus(studentId.value);
+      const data = response?.data;
+
+      if (!isApiSuccess(data)) {
+        signTask.value = null;
+        return null;
+      }
+
+      signTask.value = normalizeSignTask(data.response);
+      return signTask.value;
+    } catch (error) {
       signTask.value = null;
-      return;
+      console.error('loadSignTask failed:', error);
+      return null;
+    } finally {
+      signTaskInFlightPromise = null;
     }
+  })();
 
-    const response = await api.queryClubSignStatus(studentId.value);
-    const data = response?.data;
-
-    if (!isApiSuccess(data)) {
-      signTask.value = null;
-      return;
-    }
-
-    signTask.value = normalizeSignTask(data.response);
-  } catch (error) {
-    signTask.value = null;
-    console.error('loadSignTask failed:', error);
-  }
+  return signTaskInFlightPromise;
 }
 
 async function handleSignTaskAction(actionType) {
@@ -1563,10 +1746,16 @@ async function handleSignTaskAction(actionType) {
   await handleSignTask(normalizedActionType);
 }
 
-async function handleAutoCardAction({ type, activityId }) {
+async function handleAutoCardAction({ type, activityId, task }) {
   if (signPendingType.value) return;
   const id = Number(activityId);
   if (!Number.isFinite(id) || id <= 0) return;
+
+  if (type === 'set_coords') {
+    const targetItem = task || findLinkedActivityById(id) || signTask.value || { activityId: id };
+    openCoordinatePicker(targetItem, 'set_coords');
+    return;
+  }
 
   signPendingType.value = String(type);
   try {
@@ -1609,7 +1798,16 @@ async function handleSignTask(signType) {
   }
 
   if (!task.latitude || !task.longitude) {
-    showMessage('签到坐标缺失，暂无法执行操作', 'error');
+    const cached = getStoredClubCoordinates(task.activityId);
+    if (cached) {
+      task.latitude = cached.latitude;
+      task.longitude = cached.longitude;
+    }
+  }
+
+  if (!task.latitude || !task.longitude) {
+    showMessage('签到坐标缺失，请在地图上选点提交坐标', 'warning');
+    openCoordinatePicker(task, 'set_coords');
     return;
   }
 
@@ -1642,7 +1840,7 @@ async function handleSignTask(signType) {
   }
 }
 
-async function handleClubAction(item, type, { clearAutoActivity = false } = {}) {
+async function handleClubAction(item, type, { clearAutoActivity = false, customCoordinates = null } = {}) {
   const activityId = resolveActivityId(item);
   if (!Number.isFinite(activityId) || activityId <= 0) {
     showMessage('活动标识缺失，无法执行操作', 'error');
@@ -1675,51 +1873,118 @@ async function handleClubAction(item, type, { clearAutoActivity = false } = {}) 
     showMessage(resolveResponseMessage(data, fallback), 'success');
 
     const refreshTasks = [loadCurrentList(), loadSignTask()];
-    refreshTasks.push(loadClubRushStatus());
     if (activeMainTab.value === 'history') refreshTasks.push(loadSummary());
 
     await Promise.all(refreshTasks);
 
-    // 取消报名：若已开启定时任务，自动停用任务并清理后端活动快照
+    // 取消报名：若已开启定时任务，自动停用任务并清理后端活动快照（单次请求完成）
     if (actionType === 2) {
-      if (clubAutoConfigRef.value?.enabled || clearAutoActivity) {
+      const wasEnabled = clubAutoConfigRef.value?.enabled;
+      const needSync = wasEnabled || clearAutoActivity;
+      if (needSync) {
+        const payload = {};
+        if (wasEnabled) payload.enabled = 0;
+        if (clearAutoActivity || wasEnabled) payload.clear_activity_id = activityId;
         try {
-          const client = getAutorunClient();
-          if (client && token.value) {
-            const wasEnabled = clubAutoConfigRef.value?.enabled;
-            const payload = { enabled: 0 };
-            if (clearAutoActivity) payload.clear_activity_id = activityId;
-            await client.getClubAutoStatus(token.value, payload);
-            if (wasEnabled) showMessage('已取消报名，俱乐部定时任务已自动停止', 'info');
+          if (clubAutoConfigRef.value?.loadStatus) {
+            await clubAutoConfigRef.value.loadStatus(payload);
+          } else {
+            const client = getAutorunClient();
+            if (client && token.value) {
+              await client.getClubAutoStatus(token.value, payload);
+            }
           }
+          if (wasEnabled) showMessage('已取消报名，俱乐部定时任务已自动停止', 'info');
         } catch (e) {
           console.warn('disable club auto task on cancel failed:', e);
           if (clearAutoActivity) showMessage('报名已取消，但定时任务同步失败，请刷新重试', 'warning');
         }
-      }
-      if (clubAutoConfigRef.value?.loadStatus) {
-        await clubAutoConfigRef.value.loadStatus();
+      } else {
+        if (clubAutoConfigRef.value?.loadStatus) {
+          await clubAutoConfigRef.value.loadStatus();
+        }
       }
     } else if (actionType === 1) {
+      let lat = String(customCoordinates?.latitude || '');
+      let lon = String(customCoordinates?.longitude || '');
+
+      if (!hasActivityCoordinates({ latitude: lat, longitude: lon })) {
+        if (signTask.value && Number(signTask.value.activityId) === activityId && hasActivityCoordinates(signTask.value)) {
+          lat = String(signTask.value.latitude);
+          lon = String(signTask.value.longitude);
+        }
+      }
+
+      if (!hasActivityCoordinates({ latitude: lat, longitude: lon })) {
+        const cached = getStoredClubCoordinates(activityId);
+        if (cached && hasActivityCoordinates(cached)) {
+          lat = String(cached.latitude);
+          lon = String(cached.longitude);
+        }
+      }
+
+      if (!hasActivityCoordinates({ latitude: lat, longitude: lon })) {
+        if (hasActivityCoordinates(item)) {
+          lat = String(item.latitude || item.lat || '');
+          lon = String(item.longitude || item.lon || item.lng || '');
+        }
+      }
+
+      if (lat && lon) {
+        saveClubActivityCoordinates(activityId, { latitude: lat, longitude: lon });
+        if (item) {
+          item.latitude = lat;
+          item.longitude = lon;
+        }
+        if (signTask.value && Number(signTask.value.activityId) === activityId) {
+          signTask.value.latitude = lat;
+          signTask.value.longitude = lon;
+        }
+      }
+
+      const payload = {
+        activity_id: activityId,
+        activity_date: normalizeDateOnlyText(item.yymmdd || item.activityDate || (activeMainTab.value === 'activities' && activeActivityTab.value === 'list' ? currentQueryDate.value : '')),
+        activity_name: String(item.activityName || item.itemName || ''),
+        start_time: String(item.startTime || ''),
+        end_time: String(item.endTime || ''),
+        latitude: lat,
+        longitude: lon,
+      };
+      if (clubAutoConfigRef.value?.enabled) {
+        payload.enabled = 1;
+      }
+
       try {
-        const client = getAutorunClient();
-        if (client && token.value) {
-          await client.getClubAutoStatus(token.value, {
-            activity_id: activityId,
-            activity_date: normalizeDateOnlyText(item.yymmdd || item.activityDate || (activeMainTab.value === 'activities' && activeActivityTab.value === 'list' ? currentQueryDate.value : '')),
-            activity_name: String(item.activityName || item.itemName || ''),
-            start_time: String(item.startTime || ''),
-            end_time: String(item.endTime || ''),
-            latitude: String(item.latitude || ''),
-            longitude: String(item.longitude || ''),
-          });
+        let backendData = null;
+        if (clubAutoConfigRef.value?.loadStatus) {
+          backendData = await clubAutoConfigRef.value.loadStatus(payload);
+        } else {
+          const client = getAutorunClient();
+          if (client && token.value) {
+            const resp = await client.getClubAutoStatus(token.value, payload);
+            backendData = resp?.data || {};
+          }
+        }
+
+        if (!hasActivityCoordinates({ latitude: lat, longitude: lon }) && hasActivityCoordinates(backendData)) {
+          lat = String(backendData.latitude);
+          lon = String(backendData.longitude);
+          saveClubActivityCoordinates(activityId, { latitude: lat, longitude: lon });
+          if (signTask.value && Number(signTask.value.activityId) === activityId) {
+            signTask.value.latitude = lat;
+            signTask.value.longitude = lon;
+          }
         }
       } catch (e) {
         console.warn('sync club activity to backend failed:', e);
         if (clubAutoConfigRef.value?.enabled) showMessage('报名成功，但定时任务同步失败，请刷新重试', 'warning');
       }
-      if (clubAutoConfigRef.value?.loadStatus) {
-        await clubAutoConfigRef.value.loadStatus();
+
+      const hasCoords = hasActivityCoordinates({ latitude: lat, longitude: lon });
+      if (!hasCoords) {
+        const targetItem = findLinkedActivityById(activityId) || signTask.value || item;
+        openCoordinatePicker(targetItem, 'post_join');
       }
     }
   } catch (error) {
@@ -1858,8 +2123,13 @@ async function cancelRushTask(task) {
   }
 }
 
-function handleClubAutoConfigUpdated() {
-  loadSignTask();
+function handleClubAutoConfigUpdated(data) {
+  if (data?.task?.activityId && data?.task?.latitude && data?.task?.longitude) {
+    saveClubActivityCoordinates(data.task.activityId, {
+      latitude: data.task.latitude,
+      longitude: data.task.longitude,
+    });
+  }
 }
 </script>
 
