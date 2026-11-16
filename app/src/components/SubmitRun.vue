@@ -167,23 +167,21 @@
               <div v-if="!awaitingSubmitConfirm">
                 <Button
                   type="submit"
-                  color="primary"
+                  variant="primary"
                   size="lg"
-                  radius="md"
                   full-width
-                  :is-loading="submitting"
+                  :is-pending="submitting"
                   :disabled="submitting || !isDistanceValid"
                 >
+                  <i v-if="submitting" class="ri-loader-4-line animate-spin mr-1.5 shrink-0 text-base"></i>
                   提交记录
                 </Button>
               </div>
               <div v-else key="double-submit" class="flex w-full gap-3">
                 <Button
                   type="button"
-                  variant="flat"
-                  color="default"
+                  variant="secondary"
                   size="lg"
-                  radius="md"
                   class="flex-1"
                   :disabled="submitting || randomizing"
                   @click="cancelSubmitConfirm"
@@ -192,17 +190,15 @@
                 </Button>
                 <Button
                   type="button"
-                  color="primary"
+                  variant="primary"
                   size="lg"
-                  radius="md"
                   class="flex-1"
-                  :is-loading="submitting"
+                  :is-pending="submitting"
                   :disabled="submitting || !isDistanceValid"
                   @click="confirmSubmit"
                 >
-                  <template #startContent v-if="!submitting">
-                    <i class="ri-check-fill mr-1"></i>
-                  </template>
+                  <i v-if="submitting" class="ri-loader-4-line animate-spin mr-1.5 shrink-0 text-base"></i>
+                  <i v-else class="ri-check-fill mr-1"></i>
                   {{ submitting ? '提交中...' : '确认' }}
                 </Button>
               </div>
@@ -268,7 +264,7 @@ import {
   resolveRunBoundsFromStandard,
 } from '@/utils/run';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
-import Button from '@/components/ui/Button.vue';
+import { Button } from 'heroui-vue';
 import MapPreview from '@/components/MapPreview.vue';
 import AutoConfig from '@/components/AutoConfig.vue';
 

@@ -139,13 +139,13 @@
           <div class="flex gap-2">
             <Button
               type="submit"
-              color="primary"
+              variant="primary"
               size="lg"
-              radius="full"
               full-width
-              :is-loading="loading"
+              :is-pending="loading"
               :disabled="loading"
             >
+              <i v-if="loading" class="ri-loader-4-line animate-spin mr-1.5 shrink-0 text-base"></i>
               {{ mode === 'login' ? '立即登录' : '重置密码' }}
             </Button>
           </div>
@@ -162,7 +162,7 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
-import Button from '@/components/ui/Button.vue';
+import { Button } from 'heroui-vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';

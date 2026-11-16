@@ -1,6 +1,6 @@
 <template>
   <div class="club-page min-h-full pb-4">
-    <section class="rounded-xl p-4 relative z-10 overflow-visible bg-transparent border border-[var(--card-border)]">
+    <Card class="rounded-xl p-4 relative z-10 overflow-visible bg-transparent border border-[var(--card-border)] shadow-none">
       <div class="flex items-center gap-2 mb-3 bg-[var(--card-soft-bg)] rounded-lg p-1">
         <button
           v-for="tab in MAIN_TABS"
@@ -147,18 +147,18 @@
           </div>
         </div>
       </transition>
-    </section>
+    </Card>
 
-    <section v-if="activeMainTab === 'history'" class="mt-3 flex gap-2">
-      <div class="flex-1 rounded-xl px-3 py-2.5" style="background: rgba(8, 145, 178, 0.06)">
+    <div v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
+      <Card class="rounded-xl px-3 py-2.5 bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/20 shadow-none">
         <div class="text-[11px] theme-text-secondary">累计报名</div>
-        <div class="mt-0.5 text-lg font-bold" style="color: #0891b2">{{ summary.joinNum }}</div>
-      </div>
-      <div class="flex-1 rounded-xl px-3 py-2.5" style="background: rgba(22, 163, 74, 0.06)">
+        <div class="mt-0.5 text-lg font-bold text-cyan-600 dark:text-cyan-400 font-mono">{{ summary.joinNum }}</div>
+      </Card>
+      <Card class="rounded-xl px-3 py-2.5 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 shadow-none">
         <div class="text-[11px] theme-text-secondary">有效签到</div>
-        <div class="mt-0.5 text-lg font-bold" style="color: #16a34a">{{ summary.validNum }}</div>
-      </div>
-    </section>
+        <div class="mt-0.5 text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">{{ summary.validNum }}</div>
+      </Card>
+    </div>
 
 
 
@@ -171,9 +171,9 @@
       @action="handleAutoCardAction"
     />
 
-    <section
+    <Card
       v-if="activeMainTab === 'activities' && clubRushTasks.length > 0"
-      class="mt-3 rounded-xl p-4 bg-transparent border border-[var(--warning-border)]"
+      class="mt-3 rounded-xl p-4 bg-transparent border border-[var(--warning-border)] shadow-none"
     >
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-xs font-semibold" style="color: var(--warning-color)">已安排抢选任务</h3>
@@ -213,7 +213,7 @@
           </div>
         </div>
       </div>
-    </section>
+    </Card>
 
     <section class="mt-3 flex items-center justify-between text-xs theme-text-secondary px-1">
       <span class="flex items-center gap-1.5">
@@ -231,17 +231,17 @@
         <ClubCardSkeleton :count="4" />
       </template>
 
-      <div
+      <Card
         v-else-if="cards.length === 0"
-        class="rounded-xl p-6 text-center text-sm theme-text-secondary flex flex-col items-center gap-3 bg-transparent border border-[var(--card-border)]"
+        class="rounded-xl p-6 text-center text-sm theme-text-secondary flex flex-col items-center gap-3 bg-transparent border border-[var(--card-border)] shadow-none"
       >
         <div class="w-12 h-12 rounded-full bg-[var(--card-soft-bg)] flex items-center justify-center">
           <i class="ri-inbox-2-line text-xl theme-text-tertiary"></i>
         </div>
         {{ emptyMessage }}
-      </div>
+      </Card>
 
-      <article v-for="card in cards" :key="card.key" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
+      <Card v-for="card in cards" :key="card.key" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)] shadow-none">
         <template v-if="card.isHistoryRecord">
           <div class="flex items-start justify-between gap-2">
             <h3 class="min-w-0 flex-1 text-sm font-semibold theme-text-primary truncate">
@@ -343,7 +343,7 @@
             {{ card.introText }}
           </p>
         </template>
-      </article>
+      </Card>
 
       <div
         v-if="
@@ -385,6 +385,7 @@ import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { api, appConfig, getAutorunClient } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
+import { Card } from 'heroui-vue';
 import Drawer from './ui/Drawer.vue';
 import ClubCardSkeleton from './ui/ClubCardSkeleton.vue';
 import ClubAutoConfig from './ClubAutoConfig.vue';

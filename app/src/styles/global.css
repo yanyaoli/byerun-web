@@ -69,6 +69,7 @@
 
   --card-bg: var(--surface);
   --card-bg-strong: rgba(255, 255, 255, 0.94);
+  --card-bg-solid: #ffffff;
   --card-soft-bg: var(--surface-soft);
   --section-soft-bg: var(--surface-soft);
   --card-border: var(--border);
@@ -209,6 +210,7 @@
 
   --card-bg: var(--surface);
   --card-bg-strong: rgba(24, 24, 27, 0.94);
+  --card-bg-solid: #18181b;
   --card-soft-bg: var(--surface-soft);
   --section-soft-bg: var(--surface-soft);
   --card-border: var(--border);

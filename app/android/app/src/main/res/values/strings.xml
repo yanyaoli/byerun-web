@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Byerun</string>
+    <string name="title_activity_main">Byerun</string>
+    <string name="package_name">com.byerun.web</string>
+    <string name="custom_url_scheme">com.byerun.web</string>
+</resources>

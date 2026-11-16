@@ -52,19 +52,16 @@
 
           <div class="py-2 text-center">
             <Button
-              variant="flat"
-              color="default"
-              radius="md"
+              variant="secondary"
               full-width
-              :is-loading="isLoading"
+              :is-pending="isLoading"
               @click="loadMoreRecords"
             >
-              <template #startContent v-if="!isLoading">
-                <i class="ri-arrow-down-s-line"></i>
-              </template>
+              <i v-if="isLoading" class="ri-loader-4-line animate-spin mr-1.5 shrink-0 text-sm"></i>
+              <i v-else class="ri-arrow-down-s-line mr-1 text-sm"></i>
               {{ isLoading ? '加载中...' : '加载更多' }}
             </Button>
-        </div>
+          </div>
       </div>
 
       <!-- 空状态 -->
@@ -83,7 +80,7 @@ import { computed, onActivated, onDeactivated, onMounted, ref, watch } from 'vue
 import { useRunRecords } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
-import Button from '@/components/ui/Button.vue';
+import { Button } from 'heroui-vue';
 import RecordCardSkeleton from '@/components/ui/RecordCardSkeleton.vue';
 
 const { loading: profileLoading, token } = useDataStore();

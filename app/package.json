@@ -20,7 +20,7 @@
     "@tsparticles/vue3": "^4.4.0",
     "axios": "^1.20.0",
     "crypto-js": "^4.2.0",
-    "heroui-vue": "^0.0.19",
+    "heroui-vue": "npm:@itsjustanks/heroui-vue@^1.0.3",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",

@@ -275,13 +275,13 @@
 
         <Button
           type="button"
-          color="primary"
-          radius="md"
+          variant="primary"
           full-width
           size="sm"
-          :is-loading="saving"
+          :is-pending="saving"
           @click="save"
         >
+          <i v-if="saving" class="ri-loader-4-line animate-spin mr-1.5 shrink-0 text-sm"></i>
           {{ saving ? '保存中...' : '保存配置' }}
         </Button>
       </div>
@@ -295,7 +295,7 @@ import { SkeletonBox } from 'skullet/vue';
 import { getAutorunClient } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
-import Button from '@/components/ui/Button.vue';
+import { Button } from 'heroui-vue';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

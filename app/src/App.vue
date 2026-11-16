@@ -2,12 +2,24 @@
   <div class="app">
     <!-- astro-air 磨砂噪点颗粒背景层 -->
     <div class="app-noise-bg" aria-hidden="true"></div>
-    <Banner
-      :show="isBannerVisible"
-      :type="currentNotice?.type || 'info'"
-      :content="currentNotice?.content"
-      @close="dismissNotice"
-    />
+    <div
+      v-if="isBannerVisible"
+      ref="bannerContainerRef"
+      class="fixed top-[44px] left-0 right-0 z-[999] w-full pointer-events-auto"
+    >
+      <div class="max-w-[600px] mx-auto px-3 pt-1">
+        <Alert
+          :status="alertStatus"
+          class="shadow-md rounded-xl border border-[var(--border)]"
+        >
+          <AlertIndicator />
+          <AlertContent class="flex-1 min-w-0">
+            <AlertDescription class="truncate text-xs font-medium">{{ currentNotice?.content }}</AlertDescription>
+          </AlertContent>
+          <CloseButton @click="dismissNotice" />
+        </Alert>
+      </div>
+    </div>
     <div class="app-content h-full w-full max-w-[600px] mx-auto overflow-hidden">
       <router-view v-slot="{ Component }">
         <keep-alive include="RootPage">
@@ -15,24 +27,54 @@
         </keep-alive>
       </router-view>
     </div>
-    <Toast ref="toastRef" />
+    <Message ref="messageRef" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, provide, onMounted, onUnmounted } from 'vue';
+import { ref, computed, provide, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { Banner, Toast } from '@/components/ui';
+import { Alert, AlertIndicator, AlertContent, AlertDescription, CloseButton } from 'heroui-vue';
+import { Message } from '@/components/ui';
 import { showMessage, setMessageHandler } from '@/composables/useMessage';
 import { currentNotice, dismissNotice, startNotificationWatcher } from '@/composables/useNotification';
 
 const router = useRouter();
 const route = useRoute();
-const toastRef = ref(null);
+const bannerContainerRef = ref(null);
+const messageRef = ref(null);
 
 const isBannerVisible = computed(() => Boolean(currentNotice.value) && route.name !== 'map-drawer');
 
+const alertStatus = computed(() => {
+  const t = currentNotice.value?.type;
+  if (t === 'error' || t === 'danger') return 'danger';
+  if (t === 'warning') return 'warning';
+  if (t === 'success') return 'success';
+  return 'accent';
+});
+
 provide('showMessage', showMessage);
+
+const setBannerHeight = (h) => {
+  if (typeof document !== 'undefined') {
+    document.documentElement.style.setProperty('--notice-banner-height', `${Math.max(0, Math.round(h))}px`);
+  }
+};
+
+const updateBannerHeight = () => {
+  nextTick(() => {
+    if (isBannerVisible.value && bannerContainerRef.value) {
+      setBannerHeight(bannerContainerRef.value.offsetHeight);
+    } else {
+      setBannerHeight(0);
+    }
+  });
+};
+
+watch(isBannerVisible, () => {
+  updateBannerHeight();
+});
 
 const setViewportHeightVar = () => {
   const height = window.innerHeight || document.documentElement?.clientHeight || 0;
@@ -42,11 +84,10 @@ const setViewportHeightVar = () => {
 let stopNotificationWatcher = null;
 
 onMounted(() => {
-  if (toastRef.value) {
-    setMessageHandler((message, type, options) => {
-      toastRef.value?.show(message, type, options);
-    });
-  }
+  setMessageHandler((message, type, options) => {
+    messageRef.value?.show(message, type, options);
+  });
+
   stopNotificationWatcher = startNotificationWatcher(router);
   setViewportHeightVar();
   window.addEventListener('resize', setViewportHeightVar);
@@ -55,6 +96,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   stopNotificationWatcher?.();
+  setBannerHeight(0);
   window.removeEventListener('resize', setViewportHeightVar);
   window.removeEventListener('orientationchange', setViewportHeightVar);
 });

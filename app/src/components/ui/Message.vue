@@ -9,21 +9,21 @@
   >
     <div
       v-if="visible"
-      class="fixed top-1.5 left-0 right-0 z-[10002] flex justify-center pointer-events-none transition-all duration-300"
+      class="fixed top-2 left-0 right-0 z-[10002] flex justify-center pointer-events-none transition-all duration-300"
     >
       <div
         :class="[
-          'flex items-center min-h-9 h-9 max-w-[360px] w-[calc(100%_-_48px)] px-3.5 gap-2 rounded-full border shadow-lg pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-2xl',
+          'flex items-center min-h-10 max-w-[380px] w-[calc(100%_-_32px)] px-3.5 py-2 gap-2.5 rounded-full border shadow-xl pointer-events-auto transition-all duration-300 overflow-hidden',
           themeClasses.container,
         ]"
       >
-        <!-- Indicator Icon -->
-        <i :class="['text-[15px] shrink-0', themeClasses.icon]"></i>
+        <!-- Status Icon -->
+        <i :class="['text-[17px] shrink-0', themeClasses.icon]"></i>
 
         <!-- Message Content -->
         <span
           :class="[
-            'flex-1 min-w-0 text-[12.5px] leading-tight font-medium truncate text-left',
+            'flex-1 min-w-0 text-[13px] leading-tight font-medium text-left select-text',
             themeClasses.text,
           ]"
         >
@@ -38,7 +38,7 @@
           :class="themeClasses.closeBtn"
           title="关闭通知"
         >
-          <i class="ri-close-line text-[14px]"></i>
+          <i class="ri-close-line text-[15px]"></i>
         </button>
       </div>
     </div>
@@ -48,16 +48,16 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
-export type ToastType = 'info' | 'success' | 'warning' | 'error';
+export type MessageType = 'info' | 'success' | 'warning' | 'error';
 
-export interface ToastOptions {
+export interface MessageOptions {
   duration?: number;
   onClose?: () => void;
 }
 
-interface ToastItem {
+interface MessageItem {
   content: string;
-  type: ToastType;
+  type: MessageType;
   duration: number;
   onClose?: () => void;
 }
@@ -73,29 +73,29 @@ const props = withDefaults(
 
 const visible = ref(false);
 const content = ref('');
-const toastType = ref<ToastType>('info');
+const messageType = ref<MessageType>('info');
 
-const themes: Record<ToastType, { container: string; icon: string; text: string; closeBtn: string }> = {
+const themes: Record<MessageType, { container: string; icon: string; text: string; closeBtn: string }> = {
   success: {
-    container: 'bg-emerald-600/95 border-emerald-500/80 text-white shadow-emerald-950/20',
+    container: 'bg-emerald-600 border-emerald-500 text-white shadow-emerald-950/30',
     icon: 'ri-checkbox-circle-fill text-white',
     text: 'text-white',
     closeBtn: 'text-white/80 hover:bg-white/20',
   },
   error: {
-    container: 'bg-rose-600/95 border-rose-500/80 text-white shadow-rose-950/20',
+    container: 'bg-rose-600 border-rose-500 text-white shadow-rose-950/30',
     icon: 'ri-error-warning-fill text-white',
     text: 'text-white',
     closeBtn: 'text-white/80 hover:bg-white/20',
   },
   info: {
-    container: 'bg-blue-600/95 border-blue-500/80 text-white shadow-blue-950/20',
+    container: 'bg-blue-600 border-blue-500 text-white shadow-blue-950/30',
     icon: 'ri-information-fill text-white',
     text: 'text-white',
     closeBtn: 'text-white/80 hover:bg-white/20',
   },
   warning: {
-    container: 'bg-amber-600/95 border-amber-500/80 text-white shadow-amber-950/20',
+    container: 'bg-amber-600 border-amber-500 text-white shadow-amber-950/30',
     icon: 'ri-alert-fill text-white',
     text: 'text-white',
     closeBtn: 'text-white/80 hover:bg-white/20',
@@ -103,12 +103,12 @@ const themes: Record<ToastType, { container: string; icon: string; text: string;
 };
 
 const themeClasses = computed(() => {
-  return themes[toastType.value] || themes.info;
+  return themes[messageType.value] || themes.info;
 });
 
 let timer: ReturnType<typeof setTimeout> | null = null;
-let current: ToastItem | null = null;
-let pinned: ToastItem | null = null;
+let current: MessageItem | null = null;
+let pinned: MessageItem | null = null;
 
 const clearTimer = () => {
   if (timer) {
@@ -127,10 +127,10 @@ const autoHide = () => {
   current = null;
 };
 
-const render = (item: ToastItem) => {
+const render = (item: MessageItem) => {
   current = item;
   content.value = item.content;
-  toastType.value = item.type;
+  messageType.value = item.type;
   visible.value = true;
   clearTimer();
   if (item.duration > 0) {
@@ -147,11 +147,26 @@ const close = () => {
   item?.onClose?.();
 };
 
-const show = (message: string, type: ToastType = 'info', options: ToastOptions = {}) => {
-  // error 级别默认不自动隐藏，需用户手动关闭
+const resolveContent = (val: any): string => {
+  if (typeof val === 'string') return val;
+  if (!val) return '操作完成';
+  if (typeof val.message === 'string') return val.message;
+  if (typeof val.msg === 'string') return val.msg;
+  if (typeof val.resultDesc === 'string') return val.resultDesc;
+  if (typeof val.error === 'string') return val.error;
+  if (typeof val.reason === 'string') return val.reason;
+  try {
+    return JSON.stringify(val);
+  } catch {
+    return String(val);
+  }
+};
+
+const show = (msg: any, type: MessageType = 'info', options: MessageOptions = {}) => {
+  const text = resolveContent(msg);
   const duration = options.duration ?? (type === 'error' ? 0 : props.duration);
-  const item: ToastItem = {
-    content: message,
+  const item: MessageItem = {
+    content: text,
     type,
     duration: duration > 0 ? duration : 0,
     onClose: options.onClose,

@@ -1,5 +1,5 @@
 <template>
-  <section class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
+  <Card class="rounded-xl p-4 bg-transparent border border-[var(--card-border)] shadow-none">
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
         <span class="text-sm font-semibold theme-text-primary">消息中心</span>
@@ -67,11 +67,12 @@
         </a>
       </div>
     </Drawer>
-  </section>
+  </Card>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
+import { Card } from 'heroui-vue';
 import { SkeletonBox } from 'skullet/vue';
 import { api } from '@/sdk/app';
 import Drawer from '@/components/ui/Drawer.vue';

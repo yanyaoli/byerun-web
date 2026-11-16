@@ -1,5 +1,5 @@
 <template>
-  <section class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
+  <Card class="rounded-xl p-4 bg-transparent border border-[var(--card-border)] shadow-none">
     <!-- 头部：标题、状态指示与 Switch 开关 -->
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0 flex items-center gap-2">
@@ -207,11 +207,12 @@
         </div>
       </div>
     </div>
-  </section>
+  </Card>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { Card } from 'heroui-vue';
 import { SkeletonBox } from 'skullet/vue';
 import { getAutorunClient } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';

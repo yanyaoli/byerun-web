@@ -77,40 +77,64 @@
               </button>
 
               <!-- 用户账号图标与下拉菜单（account-circle-fill） -->
-              <Dropdown v-if="hasUserInfo" v-model="dropdownOpen" placement="bottom-end">
-                <template #trigger="{ isOpen }">
-                  <button
-                    type="button"
-                    class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn"
-                    :class="{ 'bg-[var(--action-hover-bg)] text-[var(--text-primary)]': isOpen }"
-                    aria-label="用户菜单"
-                  >
-                    <i class="ri-account-circle-fill text-[19px]"></i>
-                  </button>
-                </template>
-
-                <!-- 姓名与学号 -->
-                <div class="px-2.5 py-2 space-y-1">
-                  <div class="flex items-center gap-1.5 text-xs font-bold theme-text-primary truncate">
-                    <span class="truncate">{{ fullDisplayName }}</span>
-                  </div>
-                  <div v-if="registerCode" class="flex items-center gap-1.5 text-[11px] theme-text-tertiary truncate font-mono">
-                    <span class="truncate">{{ registerCode }}</span>
-                  </div>
-                </div>
-
-                <div class="my-1.5 border-t border-[var(--card-divider)]"></div>
-
-                <!-- 退出登录按钮 -->
+              <div class="relative inline-block" v-if="hasUserInfo">
                 <button
                   type="button"
-                  class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold theme-danger transition-all hover:bg-[var(--danger-soft)] active:scale-95 cursor-pointer"
-                  @click="onLogoutClick"
+                  class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn"
+                  :class="{ 'bg-[var(--action-hover-bg)] text-[var(--text-primary)]': dropdownOpen }"
+                  aria-label="用户菜单"
+                  @click="dropdownOpen = !dropdownOpen"
                 >
-                  <i class="ri-logout-box-r-line text-sm"></i>
-                  <span>退出登录</span>
+                  <i class="ri-account-circle-fill text-[19px]"></i>
                 </button>
-              </Dropdown>
+
+                <!-- 点击外部遮罩层：收起菜单 -->
+                <div
+                  v-if="dropdownOpen"
+                  class="fixed inset-0 z-[1001] bg-transparent cursor-default"
+                  @click="dropdownOpen = false"
+                ></div>
+
+                <!-- 浮动纯色实心下拉面板：彻底不透明 -->
+                <transition
+                  enter-active-class="transition duration-150 ease-out"
+                  enter-from-class="transform scale-95 opacity-0"
+                  enter-to-class="transform scale-100 opacity-100"
+                  leave-active-class="transition duration-100 ease-in"
+                  leave-from-class="transform scale-100 opacity-100"
+                  leave-to-class="transform scale-95 opacity-0"
+                >
+                  <div
+                    v-if="dropdownOpen"
+                    class="absolute right-0 top-full mt-2 w-48 p-2.5 z-[1002] rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl"
+                    style="opacity: 1 !important;"
+                    :style="{ backgroundColor: isDark ? '#18181b' : '#ffffff' }"
+                    @click.stop
+                  >
+                    <!-- 姓名与学号 -->
+                    <div class="px-2 py-1 space-y-1">
+                      <div class="flex items-center gap-1.5 text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
+                        <span class="truncate">{{ fullDisplayName }}</span>
+                      </div>
+                      <div v-if="registerCode" class="flex items-center gap-1.5 text-[11px] text-zinc-500 dark:text-zinc-400 truncate font-mono">
+                        <span class="truncate">{{ registerCode }}</span>
+                      </div>
+                    </div>
+
+                    <div class="my-1.5 border-t border-zinc-100 dark:border-zinc-800"></div>
+
+                    <!-- 退出登录按钮 -->
+                    <button
+                      type="button"
+                      class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold theme-danger transition-all hover:bg-[var(--danger-soft)] active:scale-95 cursor-pointer"
+                      @click="dropdownOpen = false; onLogoutClick();"
+                    >
+                      <i class="ri-logout-box-r-line text-sm"></i>
+                      <span>退出登录</span>
+                    </button>
+                  </div>
+                </transition>
+              </div>
             </div>
           </template>
         </slot>
@@ -124,7 +148,6 @@
 <script setup>
 import { ref, computed, getCurrentInstance, watch, onUnmounted } from 'vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
-import { Dropdown } from '@/components/ui';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';

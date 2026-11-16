@@ -20,16 +20,14 @@
 
           <div class="flex gap-3">
             <Button
-              variant="light"
-              color="default"
+              variant="tertiary"
               class="flex-1"
               @click="cancel"
             >
               取消
             </Button>
             <Button
-              variant="flat"
-              color="danger"
+              variant="danger"
               class="flex-1"
               @click="confirm"
             >
@@ -44,7 +42,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import Button from './Button.vue';
+import { Button } from 'heroui-vue';
 
 const visible = ref(false);
 const title = ref('确认操作');
