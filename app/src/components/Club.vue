@@ -1,6 +1,6 @@
 <template>
   <div class="club-page min-h-full pb-4">
-    <section class="theme-card rounded-xl p-4 relative z-10 overflow-visible">
+    <section class="rounded-xl p-4 relative z-10 overflow-visible bg-transparent border border-[var(--card-border)]">
       <div class="flex items-center gap-2 mb-3 bg-[var(--card-soft-bg)] rounded-lg p-1">
         <button
           v-for="tab in MAIN_TABS"
@@ -149,14 +149,6 @@
       </transition>
     </section>
 
-    <TurnstileWidget
-      v-if="showTurnstile"
-      ref="turnstileRef"
-      @token="onTurnstileToken"
-      @expired="onTurnstileExpired"
-      class="mt-3"
-    />
-
     <section v-if="activeMainTab === 'history'" class="mt-3 flex gap-2">
       <div class="flex-1 rounded-xl px-3 py-2.5" style="background: rgba(8, 145, 178, 0.06)">
         <div class="text-[11px] theme-text-secondary">累计报名</div>
@@ -181,7 +173,7 @@
 
     <section
       v-if="activeMainTab === 'activities' && clubRushTasks.length > 0"
-      class="mt-3 theme-card rounded-xl p-4" style="border-color: var(--warning-border); background: var(--warning-bg)"
+      class="mt-3 rounded-xl p-4 bg-transparent border border-[var(--warning-border)]"
     >
       <div class="flex items-center justify-between gap-2">
         <h3 class="text-xs font-semibold" style="color: var(--warning-color)">已安排抢选任务</h3>
@@ -192,7 +184,7 @@
         <div
           v-for="task in clubRushTasks"
           :key="`rush-${task.id}`"
-          class="rounded-xl px-3 py-2" style="border: 1px solid var(--warning-border); background: var(--card-soft-bg)"
+          class="rounded-xl px-3 py-2 bg-transparent border border-[var(--warning-border)]"
         >
           <div class="flex items-center justify-between gap-2">
             <span class="text-xs" style="color: var(--warning-color)">活动ID {{ task.activityId }}</span>
@@ -236,20 +228,12 @@
 
     <section class="mt-2 space-y-3">
       <template v-if="loading">
-        <div
-          v-for="idx in 4"
-          :key="`skeleton-${idx}`"
-          class="theme-card rounded-xl p-4 animate-pulse"
-        >
-          <div class="h-4 w-2/3 rounded" style="background: var(--card-soft-bg)"></div>
-          <div class="mt-3 h-3 w-full rounded" style="background: var(--card-soft-bg)"></div>
-          <div class="mt-2 h-3 w-4/5 rounded" style="background: var(--card-soft-bg)"></div>
-        </div>
+        <ClubCardSkeleton :count="4" />
       </template>
 
       <div
         v-else-if="cards.length === 0"
-        class="theme-card rounded-xl p-6 text-center text-sm theme-text-secondary flex flex-col items-center gap-3"
+        class="rounded-xl p-6 text-center text-sm theme-text-secondary flex flex-col items-center gap-3 bg-transparent border border-[var(--card-border)]"
       >
         <div class="w-12 h-12 rounded-full bg-[var(--card-soft-bg)] flex items-center justify-center">
           <i class="ri-inbox-2-line text-xl theme-text-tertiary"></i>
@@ -257,7 +241,7 @@
         {{ emptyMessage }}
       </div>
 
-      <article v-for="card in cards" :key="card.key" class="theme-card rounded-xl p-4">
+      <article v-for="card in cards" :key="card.key" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
         <template v-if="card.isHistoryRecord">
           <div class="flex items-start justify-between gap-2">
             <h3 class="min-w-0 flex-1 text-sm font-semibold theme-text-primary truncate">
@@ -398,12 +382,11 @@
 
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
-import { api, appConfig } from '@/sdk/app';
-import { getAutorunClient } from '@/sdk/autorun';
+import { api, appConfig, getAutorunClient } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
-import TurnstileWidget from './TurnstileWidget.vue';
 import Drawer from './ui/Drawer.vue';
+import ClubCardSkeleton from './ui/ClubCardSkeleton.vue';
 import ClubAutoConfig from './ClubAutoConfig.vue';
 import ClubCoordinatePickerModal from './ClubCoordinatePickerModal.vue';
 
@@ -1072,7 +1055,7 @@ function resolveClubAction(item) {
       label: '活动进行中',
       pendingLabel: '活动进行中',
       disabled: false,
-      buttonClass: 'bg-blue-500 hover:bg-blue-400',
+      buttonClass: 'bg-[var(--color-accent,#2563eb)] dark:bg-[var(--color-accent-dark,#f97316)] hover:brightness-110',
     };
   }
 

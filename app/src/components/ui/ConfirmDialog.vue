@@ -10,7 +10,7 @@
     >
       <div
         v-if="visible"
-        class="fixed inset-0 z-[1000] grid place-items-center p-4 sm:p-40 theme-overlay"
+        class="fixed inset-0 z-[10000] grid place-items-center p-4 sm:p-40 theme-overlay"
       >
         <div
           class="theme-card w-full max-w-[300px] max-h-[90vh] overflow-auto rounded-2xl shadow-2xl confirm-dialog-shadow overflow-hidden p-6"
@@ -19,18 +19,22 @@
           <p class="text-sm theme-text-secondary mb-6 leading-relaxed">{{ message }}</p>
 
           <div class="flex gap-3">
-            <button
+            <Button
+              variant="light"
+              color="default"
+              class="flex-1"
               @click="cancel"
-              class="flex-1 py-2.5 text-sm font-bold theme-link active:scale-95 transition-all"
             >
               取消
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="flat"
+              color="danger"
+              class="flex-1"
               @click="confirm"
-              class="flex-1 py-2.5 text-sm font-bold text-rose-500 active:scale-95 transition-all"
             >
               确认
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -40,6 +44,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import Button from './Button.vue';
 
 const visible = ref(false);
 const title = ref('确认操作');

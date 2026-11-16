@@ -1,5 +1,5 @@
 <template>
-  <section class="theme-card rounded-xl p-4">
+  <section class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
     <!-- 头部：标题、状态指示与 Switch 开关 -->
     <div class="flex items-center justify-between gap-3">
       <div class="min-w-0 flex items-center gap-2">
@@ -154,8 +154,19 @@
 
       <!-- 历史流水列表（展开时显示） -->
       <div v-if="showHistory" class="mt-2.5 pt-2 border-t border-white/10 space-y-1.5">
-        <div v-if="loadingHistory" class="text-center py-2 text-[11px] theme-text-tertiary">
-          <i class="ri-loader-4-line animate-spin"></i> 加载记录中...
+        <div v-if="loadingHistory" class="space-y-1.5 py-1">
+          <div
+            v-for="idx in 3"
+            :key="`club-history-skel-${idx}`"
+            class="flex items-center justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5"
+          >
+            <div class="flex items-center gap-1.5 flex-1">
+              <SkeletonBox width="6px" height="6px" radius="9999px" />
+              <SkeletonBox width="28px" height="14px" radius="4px" />
+              <SkeletonBox width="90px" height="12px" radius="4px" />
+            </div>
+            <SkeletonBox width="50px" height="12px" radius="4px" />
+          </div>
         </div>
         <div v-else-if="historyRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
           暂无历史执行记录
@@ -201,7 +212,8 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { getAutorunClient } from '@/sdk/autorun';
+import { SkeletonBox } from 'skullet/vue';
+import { getAutorunClient } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
 

@@ -14,13 +14,15 @@
         >
           <div class="flex items-center justify-between px-5 py-4 shrink-0 border-b border-[var(--card-border)]" style="background: var(--bg-soft, rgba(255,255,255,0.02));">
             <span class="text-lg font-bold theme-text-primary">{{ title }}</span>
-            <button
-              type="button"
-              class="w-8 h-8 rosunded-xs flex items-center justify-center transition-colors bg-[var(--action-hover-bg)] hover:opacity-80"
+            <Button
+              variant="light"
+              color="default"
+              size="sm"
+              class="w-8 h-8 p-0 min-w-8"
               @click="close"
             >
               <i class="ri-close-line text-xl theme-text-tertiary"></i>
-            </button>
+            </Button>
           </div>
           <div class="flex-1 overflow-y-auto pb-6 flex flex-col">
             <slot />
@@ -32,6 +34,7 @@
 </template>
 
 <script setup>
+import Button from './Button.vue';
 defineProps({
   modelValue: { type: Boolean, default: false },
   title: { type: String, default: '' },

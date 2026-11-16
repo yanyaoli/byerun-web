@@ -6,9 +6,9 @@
       <main
         v-show="activeKey !== 'chat'"
         ref="mainScrollRef"
-        class="relative overflow-y-auto w-full box-border px-4"
+        class="relative overflow-y-auto w-full box-border px-4 transition-[padding] duration-300"
         :style="{
-          paddingTop: `${headerHeight}px`,
+          paddingTop: `calc(${headerHeight}px + var(--notice-banner-height, 0px))`,
           paddingBottom: `${bottomBarOverlayHeight + BOTTOM_BAR_CLEARANCE_GAP}px`,
         }"
         @scroll.passive="handleMainScroll"
@@ -56,7 +56,7 @@ import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
 import { showMessage } from '@/composables/useMessage';
-import { preloadAutorunPingMeta } from '@/sdk/autorun';
+import { preloadAutorunPingMeta } from '@/sdk/app';
 import { checkHasUnreadMessages } from '@/sdk/message';
 import { getViewportMetrics } from '@/utils/viewport';
 
@@ -67,7 +67,7 @@ const isDark = computed(() => themeStore.isDark);
 
 const bottomBarRef = ref(null);
 const mainScrollRef = ref(null);
-const HEADER_RESERVED_SPACE = 50;
+const HEADER_RESERVED_SPACE = 54;
 const DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT = 96;
 const BOTTOM_BAR_CLEARANCE_GAP = 12;
 const headerHeight = ref(HEADER_RESERVED_SPACE);

@@ -1,84 +1,119 @@
 <template>
-  <div>
+  <div class="w-full">
     <header
       ref="headerRef"
-      class="fixed top-1 left-0 right-0 z-999 flex justify-center pointer-events-none transition-all duration-300"
+      class="fixed top-0 left-0 right-0 z-[1000] w-full app-header"
+      :class="[
+        props.transparent
+          ? 'app-header--transparent'
+          : props.scrolled
+            ? 'app-header--scrolled'
+            : 'app-header--top',
+      ]"
     >
-      <div
-        :class="[
-          'flex items-center h-9 max-w-[360px] w-[calc(100%_-_24px)] px-4 rounded-full border pointer-events-auto transition-all duration-300 overflow-hidden backdrop-blur-xs bg-[var(--card-bg-strong)]/80 border-[var(--card-border)]',
-          props.scrolled ? 'shadow-lg' : '',
-          props.transparent ? 'app-header--transparent' : '',
-        ]"
-      >
-        <div class="relative z-[1] flex items-center w-full h-full">
-          <slot name="content">
-            <template v-if="props.iconsOnly">
-              <div class="flex items-center justify-between w-full h-full pointer-events-auto">
-                <div class="h-4 w-4 flex items-center justify-center opacity-80">
-                  <img
-                    src="/logo.png"
-                    alt="App Logo"
-                    class="max-h-full max-w-full object-contain"
-                    :class="isDark ? 'header-logo-mono-dark' : 'header-logo-mono-light'"
-                  />
-                </div>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="inline-flex items-center justify-center h-5 w-5 transition-colors rounded-md header-action-btn"
-                    :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-                    @click="themeStore.toggle()"
-                  >
-                    <i v-if="isDark" class="ri-sun-fill text-[14px]"></i>
-                    <i v-else class="ri-moon-clear-fill text-[14px]"></i>
-                  </button>
-                </div>
+      <div class="w-full max-w-[540px] mx-auto h-11 px-7 sm:px-8 flex items-end justify-between pb-2">
+        <slot name="content">
+          <template v-if="props.iconsOnly">
+            <div class="flex items-center justify-between w-full h-7 pointer-events-auto">
+              <div class="h-7 w-7 flex items-center justify-center opacity-85">
+                <img
+                  src="/logo.png"
+                  alt="App Logo"
+                  class="h-5 w-5 object-contain block"
+                  :class="isDark ? 'header-logo-mono-dark' : 'header-logo-mono-light'"
+                />
               </div>
-            </template>
-
-            <template v-else>
-              <div
-                class="flex items-center flex-1 min-w-0 h-5 overflow-hidden gap-2 pointer-events-auto"
-              >
-                <div
-                  class="welcome-sequence"
-                  :class="isDark ? 'welcome-sequence--dark' : 'welcome-sequence--light'"
-                >
-                  <div
-                    class="welcome-sequence-logo h-4 w-4 flex items-center justify-center"
-                    :class="{ 'is-visible': welcomePhase !== 'text' }"
-                  >
-                    <img
-                      src="/logo.png"
-                      alt="App Logo"
-                      class="max-h-full max-w-full object-contain"
-                    />
-                  </div>
-
-                  <span
-                    class="welcome-sequence-text"
-                    :class="{ 'is-visible': welcomePhase === 'text' }"
-                  >
-                    {{ welcomeText }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="flex items-center shrink-0 gap-2 pointer-events-auto">
+              <div class="flex items-center gap-2.5 h-7">
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center h-5 w-5 transition-colors rounded-md header-action-btn"
+                  class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn"
                   :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
                   @click="themeStore.toggle()"
                 >
-                  <i v-if="isDark" class="ri-sun-fill text-[14px]"></i>
-                  <i v-else class="ri-moon-clear-fill text-[14px]"></i>
+                  <i v-if="isDark" class="ri-sun-fill text-[19px]"></i>
+                  <i v-else class="ri-moon-clear-fill text-[19px]"></i>
                 </button>
               </div>
-            </template>
-          </slot>
-        </div>
+            </div>
+          </template>
+
+          <template v-else>
+            <div
+              class="flex items-center flex-1 min-w-0 h-7 overflow-hidden gap-2 pointer-events-auto"
+            >
+              <div
+                class="welcome-sequence h-7"
+                :class="isDark ? 'welcome-sequence--dark' : 'welcome-sequence--light'"
+              >
+                <div
+                  class="welcome-sequence-logo h-7 w-7 flex items-center justify-center"
+                  :class="{ 'is-visible': welcomePhase !== 'text' }"
+                >
+                  <img
+                    src="/logo.png"
+                    alt="App Logo"
+                    class="h-5 w-5 object-contain block"
+                  />
+                </div>
+
+                <span
+                  class="welcome-sequence-text h-7 flex items-center"
+                  :class="{ 'is-visible': welcomePhase === 'text' }"
+                >
+                  {{ welcomeText }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center shrink-0 gap-2.5 h-7 pointer-events-auto">
+              <button
+                type="button"
+                class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn"
+                :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                @click="themeStore.toggle()"
+              >
+                <i v-if="isDark" class="ri-sun-fill text-[19px]"></i>
+                <i v-else class="ri-moon-fill text-[19px]"></i>
+              </button>
+
+              <!-- 用户账号图标与下拉菜单（account-circle-fill） -->
+              <Dropdown v-if="hasUserInfo" v-model="dropdownOpen" placement="bottom-end">
+                <template #trigger="{ isOpen }">
+                  <button
+                    type="button"
+                    class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn"
+                    :class="{ 'bg-[var(--action-hover-bg)] text-[var(--text-primary)]': isOpen }"
+                    aria-label="用户菜单"
+                  >
+                    <i class="ri-account-circle-fill text-[19px]"></i>
+                  </button>
+                </template>
+
+                <!-- 姓名与学号 -->
+                <div class="px-2.5 py-2 space-y-1">
+                  <div class="flex items-center gap-1.5 text-xs font-bold theme-text-primary truncate">
+                    <span class="truncate">{{ fullDisplayName }}</span>
+                  </div>
+                  <div v-if="registerCode" class="flex items-center gap-1.5 text-[11px] theme-text-tertiary truncate font-mono">
+                    <span class="truncate">{{ registerCode }}</span>
+                  </div>
+                </div>
+
+                <div class="my-1.5 border-t border-[var(--card-divider)]"></div>
+
+                <!-- 退出登录按钮 -->
+                <button
+                  type="button"
+                  class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold theme-danger transition-all hover:bg-[var(--danger-soft)] active:scale-95 cursor-pointer"
+                  @click="onLogoutClick"
+                >
+                  <i class="ri-logout-box-r-line text-sm"></i>
+                  <span>退出登录</span>
+                </button>
+              </Dropdown>
+            </div>
+          </template>
+        </slot>
       </div>
     </header>
 
@@ -89,6 +124,7 @@
 <script setup>
 import { ref, computed, getCurrentInstance, watch, onUnmounted } from 'vue';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
+import { Dropdown } from '@/components/ui';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
@@ -112,11 +148,24 @@ const { clearChatData } = useChatStore();
 const welcomePhase = ref('logo');
 const hasPlayedWelcome = ref(false);
 const timers = [];
+const dropdownOpen = ref(false);
 
 const displayName = computed(() => {
   const name = userInfo.value?.studentName;
   if (typeof name === 'string' && name.trim()) return name.trim();
   return '同学';
+});
+
+const fullDisplayName = computed(() => {
+  const name = userInfo.value?.studentName;
+  if (typeof name === 'string' && name.trim()) return name.trim();
+  return '未命名用户';
+});
+
+const registerCode = computed(() => userInfo.value?.registerCode ?? '');
+
+const hasUserInfo = computed(() => {
+  return !!(userInfo.value && (userInfo.value.studentName || userInfo.value.registerCode || userInfo.value.userId));
 });
 
 const welcomeText = computed(() => `Hi，${displayName.value}`);
@@ -181,6 +230,11 @@ const handleLogout = async () => {
   }
 };
 
+const onLogoutClick = async () => {
+  dropdownOpen.value = false;
+  await handleLogout();
+};
+
 const getHeaderElement = () => headerRef.value;
 
 onUnmounted(() => {
@@ -196,7 +250,7 @@ defineExpose({
 .welcome-sequence {
   position: relative;
   width: 100%;
-  height: 24px;
+  height: 28px;
   display: flex;
   align-items: center;
   --welcome-logo-filter-hidden: brightness(0) saturate(100%) invert(22%) sepia(10%) saturate(341%)
@@ -220,8 +274,11 @@ defineExpose({
 .welcome-sequence-text {
   position: absolute;
   left: 0;
-  top: 50%;
-  transform: translateY(-50%) scale(0.86);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  transform: scale(0.86);
   opacity: 0;
   filter: blur(5px);
   transition:
@@ -248,13 +305,13 @@ defineExpose({
 }
 
 .welcome-sequence-logo.is-visible {
-  transform: translateY(-50%) scale(1);
+  transform: scale(1);
   opacity: var(--welcome-logo-opacity-visible);
   filter: var(--welcome-logo-filter-visible);
 }
 
 .welcome-sequence-text.is-visible {
-  transform: translateY(-50%) scale(1);
+  transform: scale(1);
   opacity: 1;
   filter: blur(0);
 }
@@ -276,9 +333,38 @@ defineExpose({
   filter: grayscale(1) brightness(0) invert(1);
 }
 
+.app-header {
+  border: none !important;
+  border-bottom: none !important;
+  transition:
+    background-color var(--theme-transition-duration) var(--theme-transition-easing),
+    box-shadow var(--theme-transition-duration) var(--theme-transition-easing),
+    backdrop-filter var(--theme-transition-duration) var(--theme-transition-easing),
+    -webkit-backdrop-filter var(--theme-transition-duration) var(--theme-transition-easing);
+}
+
+.app-header--top {
+  background-color: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.app-header--scrolled {
+  background-color: var(--header-scrolled-bg) !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: var(--header-scrolled-shadow) !important;
+  backdrop-filter: blur(var(--header-glass-blur, 8px)) saturate(var(--header-glass-saturate, 140%)) !important;
+  -webkit-backdrop-filter: blur(var(--header-glass-blur, 8px)) saturate(var(--header-glass-saturate, 140%)) !important;
+}
+
 .app-header--transparent {
   background-color: transparent !important;
-  border-color: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
   box-shadow: none !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;

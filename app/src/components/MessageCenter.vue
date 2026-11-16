@@ -1,13 +1,33 @@
 <template>
-  <section class="rounded-xl" style="padding: 16px; background: var(--card-bg); border: 1px solid var(--card-border)">
+  <section class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-2">
-        <i class="ri-notification-3-line text-sm"></i>
         <span class="text-sm font-semibold theme-text-primary">消息中心</span>
       </div>
-      <span class="text-xs theme-text-tertiary">共 {{ messages.length }} 条 · {{ unreadCount }} 条未读</span>
+      <SkeletonBox v-if="loading" width="90px" height="14px" radius="4px" />
+      <span v-else class="text-xs theme-text-tertiary">共 {{ messages.length }} 条 · {{ unreadCount }} 条未读</span>
     </div>
-    <div v-if="messages.length === 0" class="text-xs text-center theme-text-tertiary py-6">
+
+    <!-- 加载骨架屏 -->
+    <div v-if="loading" class="space-y-1">
+      <div
+        v-for="idx in 3"
+        :key="`msg-skel-${idx}`"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg border-l-[3px] border-transparent bg-black/5 dark:bg-white/5"
+      >
+        <div class="flex-1 min-w-0 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <SkeletonBox width="36px" height="16px" radius="9999px" />
+            <SkeletonBox :width="idx === 1 ? '140px' : idx === 2 ? '170px' : '110px'" height="13px" radius="4px" />
+          </div>
+          <SkeletonBox :width="idx === 2 ? '65%' : '85%'" height="11px" radius="4px" />
+          <SkeletonBox width="95px" height="10px" radius="4px" />
+        </div>
+        <SkeletonBox width="14px" height="14px" radius="4px" class="shrink-0" />
+      </div>
+    </div>
+
+    <div v-else-if="messages.length === 0" class="text-xs text-center theme-text-tertiary py-6">
       暂无消息
     </div>
     <div v-else class="space-y-1" style="max-height: 195px; overflow-y: auto">
@@ -52,11 +72,13 @@
 
 <script setup>
 import { computed, ref } from 'vue';
+import { SkeletonBox } from 'skullet/vue';
 import { api } from '@/sdk/app';
 import Drawer from '@/components/ui/Drawer.vue';
 
 const props = defineProps({
   messages: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['read']);

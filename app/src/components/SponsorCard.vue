@@ -1,10 +1,9 @@
 <template>
   <div>
-    <section class="rounded-lg" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
+    <section class="rounded-xl p-5 bg-transparent border border-[var(--card-border)]">
     <div>
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <i class="ri-star-smile-line text-sm"></i>
           <span class="text-sm font-semibold theme-text-primary">{{ sponsor?.title }}</span>
         </div>
         <div class="flex items-center gap-2">
@@ -29,8 +28,7 @@
         <div v-if="qrItems.length" class="rounded-xl px-4 py-3 flex items-center gap-3">
           <div class="flex items-center gap-3 flex-1">
             <button v-for="item in qrItems" :key="item.key" type="button" @click="openQrPreview(item)"
-              class="flex-1 flex items-center gap-2 rounded-lg px-3 py-2.5 transition-all active:scale-[0.98]"
-              style="background: var(--card-bg); border: 1px solid var(--card-border)">
+              class="flex-1 flex items-center gap-2 rounded-lg px-3 py-2.5 transition-all active:scale-[0.98] bg-transparent border border-[var(--card-border)]">
               <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0" :style="{
                 background:
                   item.key === 'alipay' ? 'rgba(22, 119, 255, 0.1)' : 'rgba(7, 193, 96, 0.1)',
@@ -63,7 +61,6 @@
     <div class="mt-5 pt-5" style="border-top: 1px solid var(--card-border)">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <i class="ri-time-line text-sm"></i>
           <span class="text-sm font-semibold theme-text-primary">网站续费状态</span>
         </div>
       </div>
@@ -93,7 +90,6 @@
     <div class="mt-5 pt-5" style="border-top: 1px solid var(--card-border)">
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
-          <i class="ri-medal-line text-sm"></i>
           <span class="text-sm font-semibold theme-text-primary">赞助伙伴们</span>
         </div>
         <a v-if="qqGroupUrl" :href="qqGroupUrl" target="_blank" rel="noopener noreferrer"

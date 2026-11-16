@@ -1,188 +1,274 @@
 :root {
-  --blob-1: #a8d5e3;
-  --blob-2: #b5d9b5;
-  --blob-3: #f0dbb0;
-  --blob-4: #e8c4c4;
-  --blob-5: #c8b8d8;
-  --blob-opacity: 0.3;
-  --theme-transition-duration: 280ms;
-  --theme-transition-fast: 180ms;
+  /* 磨砂颗粒底噪透明度 (astro-air 极简纸张/噪点质感) */
+  --noise-opacity: 0.06;
+
+  --theme-transition-duration: 240ms;
+  --theme-transition-fast: 150ms;
   --theme-transition-easing: cubic-bezier(0.22, 1, 0.36, 1);
-  /* === 主题配色 === */
-  --bg-primary: #f5f5f7;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #e9e9ec;
-  --bg-glass: rgba(255, 255, 255, 0.86);
+
+  /* === astro-air 浅色极简底色 === */
+  --canvas: #ffffff;
+  --surface: rgba(255, 255, 255, 0.85);
+  --surface-solid: #ffffff;
+  --surface-soft: #f4f4f5;
+  --surface-secondary: #f4f4f5;
+  --text: #171717;
+  --muted: #6b7280;
+  --border: rgba(0, 0, 0, 0.09);
+  --brand: #2563eb;
+  --brand-soft: #eff6ff;
+  --success: #17c964;
+  --success-soft: #e8faf0;
+  --warning: #f5a524;
+  --warning-soft: #fef4e6;
+  --danger: #f31260;
+  --danger-soft: #fee7ef;
+  --backdrop: rgba(15, 23, 42, 0.45);
+
+  /* === 映射全局业务语义变量 === */
+  --bg-primary: var(--canvas);
+  --bg-secondary: var(--surface);
+  --bg-tertiary: var(--surface-soft);
+  --bg-glass: rgba(255, 255, 255, 0.82);
   --bg-glass-strong: rgba(255, 255, 255, 0.95);
-  --border-subtle: rgba(15, 23, 42, 0.08);
-  --border-medium: rgba(17, 24, 39, 0.32);
+
+  --border-subtle: var(--border);
+  --border-medium: rgba(0, 0, 0, 0.15);
   --border-glass: rgba(0, 0, 0, 0.08);
-  --text-primary: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --text-muted: #b9b9b9;
+
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: #9ca3af;
+  --text-tertiary: #9ca3af;
   --text-inverse: #ffffff;
-  --accent: #0891b2;
-  --accent-hover: #0a7f9e;
-  --accent-dim: rgba(8, 145, 178, 0.15);
-  --success: #059669;
-  --warning: #d97706;
-  --danger: #e11d48;
-  --island-bg: rgba(255, 255, 255, 0.64);
-  --island-text: #1d1d1f;
-  --island-border: rgba(15, 23, 42, 0.12);
-  --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.11);
-  --shadow-glass: 0 12px 36px rgba(15, 23, 42, 0.12);
-  /* === 兼容变量（组件引用，映射到上方配色） === */
-  --text-tertiary: var(--text-muted);
-  --text-contrast: var(--text-inverse);
-  --link-color: var(--text-secondary);
-  --link-hover-color: var(--text-primary);
-  --input-text-color: var(--text-primary);
-  --input-placeholder-color: #9ca3af;
-  --input-border-color: var(--border-medium);
-  --input-focus-border-color: rgba(17, 24, 39, 0.55);
-  --button-primary-bg: var(--text-primary);
-  --button-primary-text: var(--bg-primary);
-  --action-hover-bg: rgba(15, 23, 42, 0.08);
-  --card-bg: var(--bg-glass);
-  --card-bg-strong: var(--bg-glass-strong);
-  --card-soft-bg: rgba(15, 23, 42, 0.04);
-  --section-soft-bg: rgba(15, 23, 42, 0.02);
-  --card-border: var(--border-subtle);
-  --card-divider: rgba(15, 23, 42, 0.12);
-  --border-color: rgba(0, 0, 0, 0.08);
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --accent-color: var(--accent);
-  --accent-bg: var(--accent-dim);
-  --accent-border: rgba(8, 145, 178, 0.5);
+  --text-contrast: #ffffff;
+
+  --color-accent: #2563eb;
+  --color-accent-dark: #f97316;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-soft: rgba(37, 99, 235, 0.1);
+
+  --accent: var(--color-accent);
+  --accent-hover: #1d4ed8;
+  --accent-dim: var(--color-accent-soft);
+  --accent-color: var(--color-accent);
+  --accent-bg: var(--color-accent-soft);
+  --accent-border: rgba(37, 99, 235, 0.35);
+
   --success-color: var(--success);
-  --success-bg: rgba(5, 150, 105, 0.15);
-  --success-border: rgba(5, 150, 105, 0.4);
+  --success-bg: var(--success-soft);
+  --success-border: rgba(23, 201, 100, 0.35);
+
   --warning-color: var(--warning);
-  --warning-bg: rgba(217, 119, 6, 0.15);
-  --warning-border: rgba(217, 119, 6, 0.4);
+  --warning-bg: var(--warning-soft);
+  --warning-border: rgba(245, 165, 36, 0.35);
+
   --danger-color: var(--danger);
-  --danger-bg: rgba(225, 29, 72, 0.15);
-  --danger-border: rgba(225, 29, 72, 0.4);
-  --chat-bubble-peer-bg: rgba(255, 255, 255, 0.9);
-  --chat-bubble-peer-border: rgba(15, 23, 42, 0.12);
-  --chat-bubble-peer-text: #0f172a;
-  --chat-bubble-me-bg: rgba(6, 128, 36, 0.9);
-  --chat-bubble-me-border: rgba(14, 116, 144, 0.28);
-  --chat-bubble-me-text: #f3f3f3;
-  --chat-reply-quote-bg: rgba(148, 163, 184, 0.18);
-  --chat-reply-quote-border: rgba(100, 116, 139, 0.45);
-  --chat-reply-quote-me-bg: rgba(7, 122, 36, 0.9);
-  --chat-reply-quote-me-border: rgba(14, 116, 144, 0.28);
-  --chat-reply-quote-me-text: #f3f3f3;
-  --chat-preview-bubble-bg: rgba(226, 232, 240, 0.82);
-  --chat-preview-bubble-border: rgba(100, 116, 139, 0.45);
-  /* BottomTabBar */
-  --tab-action-bg: rgba(15, 23, 42, 0.1);
-  --tab-action-border: rgba(100, 116, 139, 0.45);
-  /* Liquid glass (header/tabbar) */
-  --liquid-shell-bg: rgba(255, 255, 255, 0.42);
-  --liquid-shell-border: rgba(255, 255, 255, 0.64);
-  --liquid-shell-inner-stroke: rgba(255, 255, 255, 0.82);
-  --liquid-shell-highlight: rgba(255, 255, 255, 0.72);
-  --liquid-shell-shadow: rgba(15, 23, 42, 0.16);
-  --liquid-shell-specular: rgba(255, 255, 255, 0.9);
-  --liquid-chat-input-bg: rgba(255, 255, 255, 0.34);
-  --liquid-chat-input-border: rgba(255, 255, 255, 0.58);
-  --liquid-chat-input-highlight: rgba(255, 255, 255, 0.75);
-  --liquid-chat-input-focus-bg: rgba(255, 255, 255, 0.44);
-  --liquid-chat-input-focus-border: rgba(255, 255, 255, 0.72);
+  --danger-bg: var(--danger-soft);
+  --danger-border: rgba(243, 18, 96, 0.35);
+
+  --card-bg: var(--surface);
+  --card-bg-strong: rgba(255, 255, 255, 0.94);
+  --card-soft-bg: var(--surface-soft);
+  --section-soft-bg: var(--surface-soft);
+  --card-border: var(--border);
+  --card-divider: var(--border);
+
+  --link-color: var(--brand);
+  --link-hover-color: var(--accent-hover);
+  --button-primary-bg: var(--brand);
+  --button-primary-text: #ffffff;
+  --action-hover-bg: var(--surface-soft);
+
+  --input-text-color: var(--text);
+  --input-placeholder-color: #9ca3af;
+  --input-border-color: var(--border);
+  --input-focus-border-color: var(--brand);
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.08);
+
+  /* 顶部导航栏统一微毛玻璃规范 (轻柔微磨砂，自然通透不卡顿) */
+  --header-glass-bg: rgba(255, 255, 255, 0.65);
+  --header-glass-blur: 8px;
+  --header-glass-saturate: 140%;
+  --header-scrolled-bg: var(--header-glass-bg);
+  --header-scrolled-shadow: none;
+
+  /* 底部导航栏规范 (高透磨砂胶囊 + 优雅浅灰滑块) */
+  --bottom-tab-bg: rgba(255, 255, 255, 0.82);
+  --bottom-tab-border: var(--border);
+  --bottom-tab-active-bg: rgba(0, 0, 0, 0.06);
+  --bottom-tab-active-text: var(--brand);
+
+  /* Skullet 骨架屏主题 */
+  --skullet-base: rgba(0, 0, 0, 0.06);
+  --skullet-highlight: rgba(255, 255, 255, 0.7);
+  --skullet-radius: 12px;
+
+  /* 聊天气泡配色 */
+  --chat-bubble-peer-bg: var(--surface-solid);
+  --chat-bubble-peer-border: var(--border);
+  --chat-bubble-peer-text: var(--text);
+  --chat-bubble-me-bg: var(--brand);
+  --chat-bubble-me-border: transparent;
+  --chat-bubble-me-text: #ffffff;
+  --chat-reply-quote-bg: var(--surface-soft);
+  --chat-reply-quote-border: var(--border);
+  --chat-reply-quote-me-bg: rgba(255, 255, 255, 0.2);
+  --chat-reply-quote-me-border: rgba(255, 255, 255, 0.35);
+  --chat-reply-quote-me-text: #ffffff;
+  --chat-preview-bubble-bg: var(--surface-soft);
+  --chat-preview-bubble-border: var(--border);
+
+  /* 悬浮磨砂与胶囊 */
+  --liquid-shell-bg: rgba(255, 255, 255, 0.82);
+  --liquid-shell-border: rgba(0, 0, 0, 0.08);
+  --liquid-shell-inner-stroke: rgba(255, 255, 255, 0.95);
+  --liquid-shell-highlight: rgba(255, 255, 255, 0.9);
+  --liquid-shell-shadow: rgba(15, 23, 42, 0.06);
+  --liquid-shell-specular: rgba(255, 255, 255, 0.95);
+  --liquid-chat-input-bg: rgba(255, 255, 255, 0.88);
+  --liquid-chat-input-border: var(--border);
+  --liquid-chat-input-highlight: rgba(255, 255, 255, 0.9);
+  --liquid-chat-input-focus-bg: #ffffff;
+  --liquid-chat-input-focus-border: var(--brand);
+
+  /* 安全距离 */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
+/* === astro-air 标准深色背景与磨砂颗粒 === */
+:root[data-theme="dark"],
 .dark {
-  --blob-1: #2a5a6a;
-  --blob-2: #2a5a3a;
-  --blob-3: #5a4a32;
-  --blob-4: #5a3242;
-  --blob-5: #3a2a5a;
-  --blob-opacity: 0.35;
-  /* === 主题配色 === */
-  --bg-primary: #050505;
-  --bg-secondary: #1c1c1e;
-  --bg-tertiary: #2c2c2e;
-  --bg-glass: rgba(18, 18, 18, 0.9);
-  --bg-glass-strong: rgba(28, 28, 30, 0.95);
-  --border-subtle: rgba(255, 255, 255, 0.1);
-  --border-medium: rgba(229, 231, 235, 0.35);
+  --noise-opacity: 0.06;
+
+  --canvas: #121212;
+  --surface: rgba(24, 24, 27, 0.85);
+  --surface-solid: #18181b;
+  --surface-soft: #242424;
+  --surface-secondary: #242424;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.6);
+  --border: rgba(255, 255, 255, 0.12);
+  --brand: #006fee;
+  --brand-soft: rgba(0, 111, 238, 0.2);
+  --success: #17c964;
+  --success-soft: #04260f;
+  --warning: #f5a524;
+  --warning-soft: #49382a;
+  --danger: #f31260;
+  --danger-soft: #450a0a;
+  --backdrop: rgba(0, 0, 0, 0.7);
+
+  --bg-primary: var(--canvas);
+  --bg-secondary: var(--surface);
+  --bg-tertiary: var(--surface-soft);
+  --bg-glass: rgba(24, 24, 27, 0.82);
+  --bg-glass-strong: rgba(24, 24, 27, 0.94);
+
+  --border-subtle: var(--border);
+  --border-medium: rgba(255, 255, 255, 0.18);
   --border-glass: rgba(255, 255, 255, 0.1);
-  --text-primary: #f5f5f7;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
-  --text-inverse: #050505;
-  --accent: #22d3ee;
-  --accent-hover: #67e8f9;
-  --accent-dim: rgba(34, 211, 238, 0.15);
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #fb7185;
-  --island-bg: rgba(18, 18, 18, 0.8);
-  --island-text: #f5f5f7;
-  --island-border: rgba(255, 255, 255, 0.12);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.3);
-  /* === 兼容变量 === */
-  --text-tertiary: var(--text-muted);
-  --text-contrast: var(--text-inverse);
-  --link-color: #a1a1aa;
-  --link-hover-color: var(--text-primary);
-  --input-text-color: #e5e7eb;
-  --input-placeholder-color: #6b7280;
-  --input-border-color: var(--border-medium);
-  --input-focus-border-color: rgba(229, 231, 235, 0.65);
-  --button-primary-bg: var(--text-primary);
-  --button-primary-text: var(--bg-primary);
-  --action-hover-bg: rgba(255, 255, 255, 0.12);
-  --card-bg: var(--bg-glass);
-  --card-bg-strong: var(--bg-glass-strong);
-  --card-soft-bg: rgba(255, 255, 255, 0.08);
-  --section-soft-bg: rgba(255, 255, 255, 0.04);
-  --card-border: var(--border-subtle);
-  --card-divider: rgba(255, 255, 255, 0.14);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --glass-bg: rgba(28, 28, 30, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --accent-color: var(--accent);
-  --accent-bg: var(--accent-dim);
-  --accent-border: rgba(125, 211, 252, 0.5);
+
+  --text-primary: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --text-tertiary: rgba(255, 255, 255, 0.45);
+  --text-inverse: #121212;
+  --text-contrast: #121212;
+
+  --color-accent: #f97316;
+  --color-accent-dark: #f97316;
+  --color-accent-hover: #ea580c;
+  --color-accent-soft: rgba(249, 115, 22, 0.15);
+
+  --accent: var(--color-accent);
+  --accent-hover: #ea580c;
+  --accent-dim: var(--color-accent-soft);
+  --accent-color: var(--color-accent);
+  --accent-bg: var(--color-accent-soft);
+  --accent-border: rgba(249, 115, 22, 0.4);
+
   --success-color: var(--success);
-  --success-bg: rgba(52, 211, 153, 0.15);
-  --success-border: rgba(52, 211, 153, 0.4);
+  --success-bg: var(--success-soft);
+  --success-border: rgba(23, 201, 100, 0.4);
+
   --warning-color: var(--warning);
-  --warning-bg: rgba(251, 191, 36, 0.15);
-  --warning-border: rgba(251, 191, 36, 0.4);
+  --warning-bg: var(--warning-soft);
+  --warning-border: rgba(245, 165, 36, 0.4);
+
   --danger-color: var(--danger);
-  --danger-bg: rgba(251, 113, 133, 0.15);
-  --danger-border: rgba(251, 113, 133, 0.4);
-  --chat-bubble-peer-bg: rgba(37, 36, 36, 0.719);
-  --chat-bubble-peer-border: rgba(255, 255, 255, 0.04);
-  --chat-bubble-peer-text: #e2e8f0;
-  --chat-bubble-me-bg: rgba(2, 53, 17, 0.719);
-  --chat-bubble-me-border: rgba(5, 25, 36, 0.4);
-  --chat-bubble-me-text: #dbeafe;
-  --chat-reply-quote-bg: var(--card-soft-bg);
-  --chat-reply-quote-border: var(--card-divider);
-  --chat-reply-quote-me-bg: rgba(2, 53, 17, 0.42);
-  --chat-reply-quote-me-border: rgba(16, 185, 129, 0.45);
-  --chat-reply-quote-me-text: #dbeafe;
-  --chat-preview-bubble-bg: var(--card-soft-bg);
-  --chat-preview-bubble-border: var(--card-divider);
-  --liquid-shell-bg: rgba(28, 28, 30, 0.38);
-  --liquid-shell-border: rgba(22, 21, 21, 0.28);
-  --liquid-shell-inner-stroke: rgba(255, 255, 255, 0.16);
-  --liquid-shell-highlight: rgba(255, 255, 255, 0.22);
-  --liquid-shell-shadow: rgba(0, 0, 0, 0.5);
-  --liquid-shell-specular: rgba(255, 255, 255, 0.38);
-  --liquid-chat-input-bg: rgba(33, 33, 35, 0.42);
-  --liquid-chat-input-border: rgba(255, 255, 255, 0.26);
-  --liquid-chat-input-highlight: rgba(255, 255, 255, 0.2);
-  --liquid-chat-input-focus-bg: rgba(40, 40, 42, 0.52);
-  --liquid-chat-input-focus-border: rgba(255, 255, 255, 0.34);
+  --danger-bg: var(--danger-soft);
+  --danger-border: rgba(243, 18, 96, 0.4);
+
+  --card-bg: var(--surface);
+  --card-bg-strong: rgba(24, 24, 27, 0.94);
+  --card-soft-bg: var(--surface-soft);
+  --section-soft-bg: var(--surface-soft);
+  --card-border: var(--border);
+  --card-divider: var(--border);
+
+  --link-color: var(--brand);
+  --link-hover-color: var(--accent-hover);
+  --button-primary-bg: var(--color-accent);
+  --button-primary-text: #ffffff;
+  --action-hover-bg: var(--surface-soft);
+
+  --input-text-color: var(--text);
+  --input-placeholder-color: rgba(255, 255, 255, 0.45);
+  --input-border-color: var(--border);
+  --input-focus-border-color: var(--brand);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+  /* 顶部导航栏深色微毛玻璃规范 (沉浸深黑轻磨砂，自然通透不泛白) */
+  --header-glass-bg: rgba(18, 18, 18, 0.7);
+  --header-glass-blur: 8px;
+  --header-glass-saturate: 140%;
+  --header-scrolled-bg: var(--header-glass-bg);
+  --header-scrolled-shadow: none;
+
+  /* 底部导航栏规范 (深邃磨砂胶囊 + 沉浸暗灰滑块) */
+  --bottom-tab-bg: rgba(24, 24, 27, 0.85);
+  --bottom-tab-border: rgba(255, 255, 255, 0.1);
+  --bottom-tab-active-bg: rgba(255, 255, 255, 0.1);
+  --bottom-tab-active-text: #60a5fa;
+
+  /* Skullet 暗黑骨架屏 */
+  --skullet-base: rgba(255, 255, 255, 0.08);
+  --skullet-highlight: rgba(255, 255, 255, 0.16);
+
+  --chat-bubble-peer-bg: var(--surface-solid);
+  --chat-bubble-peer-border: var(--border);
+  --chat-bubble-peer-text: var(--text);
+  --chat-bubble-me-bg: var(--brand);
+  --chat-bubble-me-border: transparent;
+  --chat-bubble-me-text: #ffffff;
+  --chat-reply-quote-bg: var(--surface-soft);
+  --chat-reply-quote-border: var(--border);
+  --chat-reply-quote-me-bg: rgba(255, 255, 255, 0.16);
+  --chat-reply-quote-me-border: rgba(255, 255, 255, 0.3);
+  --chat-reply-quote-me-text: #ffffff;
+  --chat-preview-bubble-bg: var(--surface-soft);
+  --chat-preview-bubble-border: var(--border);
+
+  --liquid-shell-bg: rgba(24, 24, 27, 0.85);
+  --liquid-shell-border: rgba(255, 255, 255, 0.12);
+  --liquid-shell-inner-stroke: rgba(255, 255, 255, 0.08);
+  --liquid-shell-highlight: rgba(255, 255, 255, 0.12);
+  --liquid-shell-shadow: rgba(0, 0, 0, 0.55);
+  --liquid-shell-specular: rgba(255, 255, 255, 0.25);
+  --liquid-chat-input-bg: rgba(36, 36, 36, 0.85);
+  --liquid-chat-input-border: var(--border);
+  --liquid-chat-input-highlight: rgba(255, 255, 255, 0.12);
+  --liquid-chat-input-focus-bg: var(--surface-soft);
+  --liquid-chat-input-focus-border: var(--brand);
 }

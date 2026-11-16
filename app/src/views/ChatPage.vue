@@ -3,9 +3,9 @@
     <div
       class="chat-section h-full min-h-0 flex flex-col w-full max-w-full relative overflow-hidden bg-transparent transition-all duration-300"
     >
-      <AppHeader ref="appHeaderRef" :show-github="false">
+      <AppHeader ref="appHeaderRef" :show-github="false" :scrolled="true">
         <template #content>
-          <div class="flex items-center w-full h-full px-2">
+          <div class="flex items-end justify-between w-full h-7">
             <div class="flex items-center gap-2 min-w-0 pointer-events-auto">
               <button
                 @click="onBack"
@@ -40,13 +40,16 @@
         ref="messagesContainer"
         class="flex-1 max-w-full overflow-y-auto overflow-x-hidden overscroll-y-none px-4 space-y-4 relative"
         :style="{
-          paddingTop: `${messageListPaddingTop}px`,
+          paddingTop: `calc(${messageListPaddingTop}px + var(--notice-banner-height, 0px))`,
           paddingBottom: `${messageBottomInset}px`,
         }"
         @click="handleMessagesContainerClick"
       >
+        <!-- 骨架屏状态 (基于 Skullet) -->
+        <ChatSkeleton v-if="loadingMessages && messages.length === 0" />
+
         <!-- 消息列表 -->
-        <template v-if="messages.length > 0 || !loadingMessages">
+        <template v-else-if="messages.length > 0">
           <!-- 无痕分页加载哨兵 -->
           <div
             v-if="hasNext"
@@ -95,7 +98,7 @@
 
               <div
                 :class="[
-                  'flex items-end gap-2 mb-1 w-full transition-transform theme-text-primary',
+                  'flex items-start gap-2 mb-1.5 w-full transition-transform theme-text-primary',
                   isMe(m) ? 'flex-row-reverse' : 'flex-row',
                 ]"
                 :style="{
@@ -107,19 +110,19 @@
               >
                 <div
                   v-if="!isMe(m)"
-                  class="flex-shrink-0 mb-0.5 relative"
+                  class="flex-shrink-0 mt-0.5 relative"
                   @click="openUserProfile(m.user)"
                 >
                   <div
-                    class="w-8 h-8 rounded-full theme-card-soft flex items-center justify-center overflow-hidden shadow-sm cursor-pointer relative"
+                    class="w-8 h-8 !rounded-full bg-[var(--surface-soft)] border border-[var(--border)] flex items-center justify-center overflow-hidden shadow-sm cursor-pointer relative"
                   >
-                    <div class="absolute inset-0 theme-card-soft animate-pulse"></div>
+                    <SkeletonBox width="100%" height="100%" radius="9999px" class="absolute inset-0" />
                     <img
                       v-if="m.user?.avatar_url"
                       :src="normalizeAvatarUrl(m.user.avatar_url)"
                       referrerpolicy="no-referrer"
                       loading="lazy"
-                      class="w-full h-full object-cover rounded-full z-10 avatar-fade-in"
+                      class="w-full h-full object-cover !rounded-full z-10 avatar-fade-in"
                     />
                     <i v-else class="ri-user-3-fill theme-text-secondary text-[10px] z-10"></i>
                   </div>
@@ -131,6 +134,24 @@
                     isMe(m) ? 'items-end' : 'items-start',
                   ]"
                 >
+                  <!-- 气泡外用户昵称 -->
+                  <div
+                    v-if="!isMe(m)"
+                    class="text-[11px] theme-text-secondary mb-1 font-medium flex items-center gap-1 px-1 select-none cursor-pointer"
+                    @click="openUserProfile(m.user)"
+                  >
+                    <span class="hover:underline">{{
+                      m.user?.nickname ||
+                      m.nickname ||
+                      '用户' + String(m.user?.user_id).slice(-5)
+                    }}</span>
+                    <i
+                      v-if="m.user?.is_alumni || m.is_alumni"
+                      class="ri-graduation-cap-fill text-blue-500 text-[10px]"
+                      title="认证校友"
+                    ></i>
+                  </div>
+
                   <div
                     class="flex items-end gap-1 max-w-[92%] relative"
                     :class="isMe(m) ? 'flex-row' : 'flex-row-reverse'"
@@ -156,26 +177,10 @@
                       :class="[
                         'relative px-3 py-1.5 theme-text-primary rounded-xl shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words',
                         isMe(m)
-                          ? 'chat-bubble-me rounded-br-[0.25rem]'
-                          : 'chat-bubble-peer rounded-bl-[0.25rem]',
+                          ? 'chat-bubble-me rounded-tr-[0.25rem]'
+                          : 'chat-bubble-peer rounded-tl-[0.25rem]',
                       ]"
                     >
-                      <div
-                        v-if="!isMe(m)"
-                        class="text-[11px] theme-text-secondary mb-0.5 font-bold flex items-center gap-1"
-                      >
-                        <span>{{
-                          m.user?.nickname ||
-                          m.nickname ||
-                          '用户' + String(m.user?.user_id).slice(-5)
-                        }}</span>
-                        <i
-                          v-if="m.user?.is_alumni || m.is_alumni"
-                          class="ri-graduation-cap-fill text-blue-500 text-[10px]"
-                          title="认证校友"
-                        ></i>
-                      </div>
-
                       <div
                         v-if="m.reply?.content"
                         :class="[
@@ -204,13 +209,19 @@
                       </div>
 
                       <div
-                        class="whitespace-pre-wrap break-words leading-relaxed text-[13.5px] overflow-hidden message-content-mixed"
+                        class="leading-relaxed text-[13.5px] overflow-hidden message-content-mixed break-words"
                         @click="handleMessageContentClick($event)"
-                        v-html="renderContent(m.content)"
-                      ></div>
-
-                      <div class="text-[9px] mt-0.5 theme-text-tertiary text-right">
-                        {{ formatTime(m.created_at) }}
+                      >
+                        <span
+                          class="whitespace-pre-wrap break-words"
+                          v-html="renderContent(m.content)"
+                        ></span>
+                        <span
+                          :class="[
+                            'text-[9px] ml-1.5 inline-block align-bottom select-none whitespace-nowrap leading-none',
+                            isMe(m) ? 'text-white/75' : 'theme-text-tertiary',
+                          ]"
+                        >{{ formatTime(m.created_at) }}</span>
                       </div>
                     </div>
                   </div>
@@ -234,16 +245,18 @@
                   <i class="ri-loader-4-line animate-spin text-[9px]"></i>
                 </button>
                 <div
-                  class="relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words rounded-2xl rounded-br-[0.25rem] opacity-75 chat-bubble-preview"
+                  class="relative px-3 py-1.5 shadow-sm transition-all select-none cursor-default message-bubble-target min-w-0 break-words rounded-2xl rounded-tr-[0.25rem] opacity-75 chat-bubble-preview"
                 >
-                  <div
-                    v-if="text"
-                    class="whitespace-pre-wrap break-words leading-relaxed text-[13.5px]"
-                    v-html="renderContent(text)"
-                  ></div>
-                  <div v-if="!text" class="text-[13.5px] theme-text-secondary italic">预览消息</div>
-                  <div class="text-[9px] mt-0.5 theme-text-tertiary text-right">
-                    {{ isSending ? '发送中...' : '即将发送' }}
+                  <div class="leading-relaxed text-[13.5px] break-words">
+                    <span
+                      v-if="text"
+                      class="whitespace-pre-wrap break-words"
+                      v-html="renderContent(text)"
+                    ></span>
+                    <span v-if="!text" class="text-[13.5px] theme-text-secondary italic">预览消息</span>
+                    <span class="text-[9px] ml-1.5 inline-block align-bottom theme-text-tertiary select-none whitespace-nowrap leading-none opacity-75">
+                      {{ isSending ? '发送中...' : '即将发送' }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -251,32 +264,13 @@
           </div>
         </template>
 
-        <!-- 骨架屏效果 -->
-        <div v-if="loadingMessages && messages.length === 0" class="space-y-6">
-          <div
-            v-for="n in 6"
-            :key="n"
-            :class="[
-              'flex items-end gap-2 animate-pulse',
-              n % 3 === 0 ? 'flex-row-reverse' : 'flex-row',
-            ]"
-          >
-            <!-- 消息头像骨架 -->
-            <div
-              v-if="n % 3 !== 0"
-              class="w-8 h-8 rounded-full flex-shrink-0 chat-skeleton-avatar"
-            ></div>
-            <div :class="['flex flex-col space-y-2', n % 3 === 0 ? 'items-end' : 'items-start']">
-              <div class="w-16 h-2 rounded chat-skeleton-line"></div>
-              <div
-                class="px-3 py-1.5 rounded-2xl min-h-[40px] chat-skeleton-bubble"
-                :style="{ width: Math.random() * 100 + 100 + 'px' }"
-              >
-                <div class="w-full h-2 rounded mb-2 chat-skeleton-line"></div>
-                <div class="w-2/3 h-2 rounded chat-skeleton-line"></div>
-              </div>
-            </div>
-          </div>
+        <!-- 空消息状态 (非加载且无消息时) -->
+        <div
+          v-else-if="!loadingMessages && messages.length === 0"
+          class="flex flex-col items-center justify-center py-24 theme-text-tertiary"
+        >
+          <i class="ri-chat-smile-2-line text-3xl mb-2 opacity-40"></i>
+          <span class="text-xs">暂无聊天消息，快发一条吧</span>
         </div>
       </div>
 
@@ -421,12 +415,12 @@
               class="w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer transition-colors"
             >
               <span
-                class="w-6 h-6 rounded-full theme-card-soft overflow-hidden flex items-center justify-center"
+                class="w-6 h-6 !rounded-full bg-[var(--surface-soft)] border border-[var(--border)] overflow-hidden flex items-center justify-center"
               >
                 <img
                   v-if="user?.avatar_url"
                   :src="normalizeAvatarUrl(user.avatar_url)"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-cover !rounded-full"
                 />
                 <i v-else class="ri-user-3-fill text-[10px]"></i>
               </span>
@@ -483,16 +477,19 @@
         <div class="flex gap-4 px-5 pb-2">
           <div class="flex items-center justify-center w-1/2">
             <div
-              class="w-20 h-20 rounded-full theme-card-soft flex items-center justify-center overflow-hidden shadow-inner relative"
+              class="w-20 h-20 !rounded-full bg-[var(--surface-soft)] border border-[var(--border)] flex items-center justify-center overflow-hidden shadow-inner relative"
             >
-              <div
+              <SkeletonBox
                 v-if="loadingUserSettings"
-                class="absolute inset-0 theme-card-soft animate-pulse z-10"
-              ></div>
+                width="80px"
+                height="80px"
+                radius="9999px"
+                class="absolute inset-0 z-10"
+              />
               <template v-if="user?.avatar_url">
                 <img
                   :src="normalizeAvatarUrl(user.avatar_url)"
-                  class="w-full h-full object-cover"
+                  class="w-full h-full object-cover !rounded-full"
                 />
               </template>
               <i v-else class="ri-user-3-fill theme-text-secondary text-2xl"></i>
@@ -501,10 +498,12 @@
           <div class="w-1/2 space-y-4">
             <div class="space-y-1">
               <label class="text-[9px] font-bold uppercase theme-text-secondary ml-1">昵称</label>
-              <div
+              <SkeletonBox
                 v-if="loadingUserSettings"
-                class="h-9 w-full theme-card-soft animate-pulse rounded-xl"
-              ></div>
+                width="100%"
+                height="36px"
+                radius="12px"
+              />
               <input
                 v-else
                 v-model="settingsNickname"
@@ -513,10 +512,12 @@
             </div>
             <div class="space-y-1">
               <label class="text-[9px] font-bold uppercase theme-text-secondary ml-1">QQ 号</label>
-              <div
+              <SkeletonBox
                 v-if="loadingUserSettings"
-                class="h-9 w-full theme-card-soft animate-pulse rounded-xl"
-              ></div>
+                width="100%"
+                height="36px"
+                radius="12px"
+              />
               <input
                 v-else
                 v-model="settingsQQ"
@@ -567,13 +568,13 @@
               <!-- 头像区域 -->
               <div class="flex-shrink-0 relative">
                 <div
-                  class="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden shadow"
+                  class="w-16 h-16 !rounded-full bg-[var(--surface-soft)] border border-[var(--border)] flex items-center justify-center overflow-hidden shadow"
                 >
                   <template v-if="viewedProfile?.avatar_url">
                     <img
                       :src="normalizeAvatarUrl(viewedProfile.avatar_url)"
                       referrerpolicy="no-referrer"
-                      class="w-full h-full object-cover"
+                      class="w-full h-full object-cover !rounded-full"
                     />
                   </template>
                   <i v-else class="ri-user-3-fill theme-text-secondary text-2xl"></i>
@@ -582,10 +583,12 @@
 
               <!-- 资料信息 -->
               <div class="flex-1 min-w-0">
-                <h3
+                <div
                   v-if="loadingProfile && !viewedProfile?.nickname"
-                  class="h-5 w-24 theme-skeleton-line animate-pulse rounded mb-1"
-                ></h3>
+                  class="mb-1"
+                >
+                  <SkeletonBox width="96px" height="20px" radius="4px" />
+                </div>
                 <h3
                   v-else
                   class="text-base font-bold theme-text-primary truncate mb-0.5 whitespace-nowrap flex items-center gap-1.5"
@@ -603,10 +606,12 @@
                   ></i>
                 </h3>
 
-                <p
+                <div
                   v-if="loadingProfile"
-                  class="h-3 w-32 theme-skeleton-line animate-pulse rounded mb-1.5"
-                ></p>
+                  class="mb-1.5"
+                >
+                  <SkeletonBox width="128px" height="12px" radius="4px" />
+                </div>
                 <p v-else class="text-[10px] theme-text-secondary">
                   {{ formatLastSeen(viewedProfile?.last_seen_at) }}
                 </p>
@@ -723,12 +728,9 @@
             <!-- 加载占位: 保持固定的最大尺寸以减少布局跳动 -->
             <div
               v-if="imageModalLoading"
-              class="w-[70vw] max-w-[900px] h-[60vh] theme-card-soft rounded-md flex items-center justify-center animate-pulse"
+              class="w-[70vw] max-w-[900px] h-[60vh] rounded-md overflow-hidden relative"
             >
-              <div class="flex flex-col items-center gap-3">
-                <i class="ri-loader-4-line animate-spin text-2xl theme-text-secondary"></i>
-                <div class="text-sm theme-text-tertiary">图片加载中...</div>
-              </div>
+              <SkeletonBox width="100%" height="100%" radius="6px" />
             </div>
 
             <img
@@ -764,6 +766,8 @@ import {
 } from '@/sdk/message';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import Drawer from '@/components/ui/Drawer.vue';
+import ChatSkeleton from '@/components/ui/ChatSkeleton.vue';
+import { SkeletonBox } from 'skullet/vue';
 import { getViewportMetrics, restoreViewportPosition } from '@/utils/viewport';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
@@ -2229,13 +2233,6 @@ onUnmounted(() => {
   background-color: var(--chat-preview-bubble-bg);
   border: 1px dashed var(--chat-preview-bubble-border);
   color: var(--text-secondary);
-}
-
-.chat-skeleton-avatar,
-.chat-skeleton-line,
-.chat-skeleton-bubble,
-.theme-skeleton-line {
-  background-color: var(--card-soft-bg);
 }
 
 .chat-emoji-btn:hover {

@@ -1,9 +1,59 @@
 @import 'tailwindcss';
+@import '@heroui/styles';
+@import 'skullet/styles.css';
 @source "./**/*.{vue,js,ts,jsx,tsx}";
+
+/* Tailwind v4 支持多端 data-theme="dark" 与 .dark 自定义暗黑模式变体 */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
+
+/* Tailwind v4 实用类动态绑定 astro-air & HeroUI 规范全局语义化 CSS 变量 */
+@theme inline {
+  --color-page: var(--canvas);
+  --color-page-dark: #121212;
+  --color-ink: var(--text);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-secondary: var(--surface-soft);
+  --color-background: var(--canvas);
+  --color-foreground: var(--text);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-separator: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--color-accent, #2563eb);
+  --color-accent-dark: #f97316;
+  --color-accent-soft: var(--color-accent-soft, rgba(37, 99, 235, 0.1));
+  --color-accent-foreground: #ffffff;
+  --color-backdrop: var(--backdrop);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+}
+
+:root {
+  color-scheme: light;
+  accent-color: var(--brand);
+}
+
+:root[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+  accent-color: var(--brand);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--brand) 28%, transparent);
+}
 
 @layer base {
   * {
-    transform: none;
+    box-sizing: border-box;
   }
 
   button,
@@ -13,7 +63,7 @@
   a,
   img,
   [role='button'] {
-    transition-property: color, background-color, border-color, box-shadow, opacity, filter;
+    transition-property: background-color, border-color, box-shadow, opacity, transform;
     transition-duration: var(--theme-transition-duration);
     transition-timing-function: var(--theme-transition-easing);
   }
@@ -24,16 +74,16 @@ body {
   width: 100%;
   height: 100%;
   max-height: 100%;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
   overscroll-behavior: none;
   scrollbar-width: none;
   -ms-overflow-style: none;
   scrollbar-gutter: stable;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  transition:
-    background-color var(--theme-transition-duration) var(--theme-transition-easing),
-    color var(--theme-transition-duration) var(--theme-transition-easing);
+  background-color: var(--canvas);
+  color: var(--text);
+  transition: background-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 #app {
@@ -41,52 +91,45 @@ body {
   height: 100%;
   max-height: 100%;
   overflow: hidden;
-  background-color: var(--bg-primary);
+  background-color: var(--canvas);
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
+body::-webkit-scrollbar,
 *::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
 }
 
+/* === 统一主题辅助样式类（直接关联 HeroUI 动态变量，文字颜色即时渲染避免切换延迟卡顿） === */
 .theme-text-primary {
-  color: var(--text-primary);
-  transition: color var(--theme-transition-duration) var(--theme-transition-easing);
+  color: var(--text);
 }
 
 .theme-text-secondary {
-  color: var(--text-secondary);
-  transition: color var(--theme-transition-duration) var(--theme-transition-easing);
+  color: var(--muted);
 }
 
 .theme-text-tertiary {
   color: var(--text-tertiary);
-  transition: color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .theme-link {
-  color: var(--link-color);
-  transition: color var(--theme-transition-duration) var(--theme-transition-easing);
+  color: var(--brand);
 }
 
 .theme-link:hover {
-  color: var(--link-hover-color);
+  color: var(--accent-hover);
 }
 
 .theme-input {
-  color: var(--input-text-color);
-  border-color: var(--input-border-color);
+  color: var(--text);
+  border-color: var(--border);
+  background-color: var(--surface);
   transition:
-    color var(--theme-transition-duration) var(--theme-transition-easing),
+    background-color var(--theme-transition-duration) var(--theme-transition-easing),
     border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
@@ -95,79 +138,80 @@ body::-webkit-scrollbar {
 }
 
 .theme-input:focus {
-  border-color: var(--input-focus-border-color);
+  border-color: var(--brand);
+  outline: 2px solid var(--brand-soft);
 }
 
 .theme-input-icon {
-  color: var(--text-tertiary);
-  transition: color var(--theme-transition-duration) var(--theme-transition-easing);
+  color: var(--muted);
 }
 
 .theme-button-primary {
-  background-color: var(--button-primary-bg);
-  color: var(--button-primary-text);
+  background-color: var(--color-accent, #2563eb);
+  color: #ffffff;
   transition:
     background-color var(--theme-transition-duration) var(--theme-transition-easing),
-    color var(--theme-transition-duration) var(--theme-transition-easing),
     transform var(--theme-transition-fast) var(--theme-transition-easing);
 }
 
 .theme-button-primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
 }
 
 .theme-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--card-border);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition:
     background-color var(--theme-transition-duration) var(--theme-transition-easing),
-    border-color var(--theme-transition-duration) var(--theme-transition-easing),
-    color var(--theme-transition-duration) var(--theme-transition-easing);
+    border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .theme-card-strong {
-  background-color: var(--card-bg-strong);
-  border: 1px solid var(--card-border);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   transition:
     background-color var(--theme-transition-duration) var(--theme-transition-easing),
     border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .theme-card-soft {
-  background-color: var(--card-soft-bg);
-  border: 1px solid var(--card-border);
+  background-color: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
   transition:
     background-color var(--theme-transition-duration) var(--theme-transition-easing),
     border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .theme-card-header {
-  background-color: var(--card-soft-bg);
-  border-bottom: 1px solid var(--card-divider);
+  background-color: var(--surface-soft);
+  border-bottom: 1px solid var(--border);
   transition:
     background-color var(--theme-transition-duration) var(--theme-transition-easing),
     border-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .theme-card-divider {
-  border-color: var(--card-divider);
+  border-color: var(--border);
 }
 
 .theme-divider-bg {
-  background-color: var(--card-divider);
+  background-color: var(--border);
   transition: background-color var(--theme-transition-duration) var(--theme-transition-easing);
 }
 
 .theme-accent {
-  color: var(--accent-color);
+  color: var(--brand);
 }
 
 .theme-accent-bg {
-  background-color: var(--accent-bg);
+  background-color: var(--brand-soft);
   border-color: var(--accent-border);
 }
 
@@ -176,11 +220,11 @@ body::-webkit-scrollbar {
 }
 
 .theme-success {
-  color: var(--success-color);
+  color: var(--success);
 }
 
 .theme-success-bg {
-  background-color: var(--success-bg);
+  background-color: var(--success-soft);
   border-color: var(--success-border);
 }
 
@@ -189,11 +233,11 @@ body::-webkit-scrollbar {
 }
 
 .theme-warning {
-  color: var(--warning-color);
+  color: var(--warning);
 }
 
 .theme-warning-bg {
-  background-color: var(--warning-bg);
+  background-color: var(--warning-soft);
   border-color: var(--warning-border);
 }
 
@@ -202,11 +246,11 @@ body::-webkit-scrollbar {
 }
 
 .theme-danger {
-  color: var(--danger-color);
+  color: var(--danger);
 }
 
 .theme-danger-bg {
-  background-color: var(--danger-bg);
+  background-color: var(--danger-soft);
   border-color: var(--danger-border);
 }
 
@@ -214,71 +258,36 @@ body::-webkit-scrollbar {
   border-color: var(--danger-border);
 }
 
+/* === 毛玻璃与导航条 === */
 .liquid-glass-shell {
   position: relative;
   overflow: hidden;
   isolation: isolate;
   background-color: var(--liquid-shell-bg);
-  backdrop-filter: saturate(1.45) blur(24px);
-  -webkit-backdrop-filter: saturate(1.45) blur(24px);
-}
-
-.liquid-glass-shell::before {
-  content: '';
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.78;
-}
-
-.liquid-glass-shell::after {
-  content: '';
-  position: absolute;
-  left: 12%;
-  right: 12%;
-  top: 0;
-  height: 1px;
-  pointer-events: none;
-  z-index: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    var(--liquid-shell-specular) 50%,
-    transparent 100%
-  );
-  opacity: 0.8;
-}
-
-.liquid-glass-shell > * {
-  position: relative;
-  z-index: 1;
+  backdrop-filter: saturate(1.4) blur(24px);
+  -webkit-backdrop-filter: saturate(1.4) blur(24px);
 }
 
 .liquid-glass-header {
-  backdrop-filter: saturate(1.5) blur(22px);
-  -webkit-backdrop-filter: saturate(1.5) blur(22px);
+  backdrop-filter: saturate(1.4) blur(20px);
+  -webkit-backdrop-filter: saturate(1.4) blur(20px);
 }
 
 .liquid-glass-tabbar {
-  backdrop-filter: saturate(1.35) blur(26px);
-  -webkit-backdrop-filter: saturate(1.35) blur(26px);
+  backdrop-filter: saturate(1.4) blur(24px);
+  -webkit-backdrop-filter: saturate(1.4) blur(24px);
 }
 
 .liquid-glass-chat-shell {
-  backdrop-filter: saturate(1.4) blur(28px);
-  -webkit-backdrop-filter: saturate(1.4) blur(28px);
+  backdrop-filter: saturate(1.4) blur(24px);
+  -webkit-backdrop-filter: saturate(1.4) blur(24px);
 }
 
 .liquid-glass-chat-input {
   background-color: var(--liquid-chat-input-bg);
   border: 1px solid var(--liquid-chat-input-border);
-  box-shadow:
-    inset 0 1px 0 var(--liquid-chat-input-highlight),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: saturate(1.25) blur(14px);
-  -webkit-backdrop-filter: saturate(1.25) blur(14px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .liquid-glass-chat-input:focus-within {

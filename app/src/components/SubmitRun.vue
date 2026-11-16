@@ -1,16 +1,16 @@
 <template>
-  <div class="flex-1 flex flex-col min-h-0 relative w-full box-border">
-    <!-- 整体卡片 -->
-    <div class="rounded-xl w-full box-border mb-5" style="padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border)">
-      <!-- 板块一：完成情况 -->
-      <section class="rounded-xl p-4" style="background: var(--section-soft-bg)">
+  <div class="flex-1 flex flex-col min-h-0 relative w-full box-border gap-4 pb-2">
+    <!-- 板块一：完成情况 -->
+    <section class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
         <div class="flex justify-between items-center mb-4">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold theme-text-primary">完成情况</span>
           </div>
           <div class="text-xs theme-text-tertiary flex items-center gap-1.5">
-            <i class="ri-hourglass-line"></i>
-            <span>{{ stats.semesterEndDateText }}</span>
+            <template v-if="stats.semesterEndDateText">
+              <span>截止</span>
+              <span>{{ stats.semesterEndDateText }}</span>
+            </template>
           </div>
         </div>
         <div class="flex gap-3">
@@ -18,31 +18,28 @@
             v-for="card in summaryCards"
             :key="card.label"
             class="summary-card relative overflow-hidden rounded-lg flex-1 min-w-0"
-            style="padding: 14px 12px"
+            style="padding: 12px 8px"
             :class="[card.cardClass]"
           >
             <i
               :class="[card.icon, 'summary-card-bg-icon']"
               aria-hidden="true"
             ></i>
-            <div
-              class="relative z-[1] flex flex-col gap-0.5 items-center h-full cursor-pointer"
-              @click="toggleSummaryCard(card.label)"
-            >
+            <div class="relative z-[1] flex flex-col items-center justify-center gap-1 h-full">
               <span class="summary-card-label font-medium truncate">{{ card.label }}</span>
               <span
-                :class="['summary-card-value text-lg font-bold tabular-nums leading-none mt-auto', card.valueClass]"
-              >{{ summaryCardView[card.label] ? card.detail : card.value }}</span>
+                :class="['summary-card-value text-lg font-bold tabular-nums leading-none', card.valueClass]"
+              >{{ card.value }}</span>
+              <span class="summary-card-detail text-xs theme-text-tertiary tabular-nums leading-none truncate">
+                {{ card.detail }}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- 分割线 -->
-      <div class="my-5" style="border-top: 1px solid var(--card-divider)"></div>
-
-      <!-- 板块二：提交记录 -->
-      <form @submit.prevent="onFormSubmit" class="rounded-xl p-4" style="background: var(--section-soft-bg)">
+    <!-- 板块二：提交记录 -->
+    <form @submit.prevent="onFormSubmit" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold theme-text-primary">提交记录</span>
@@ -166,79 +163,79 @@
               </div>
             </div>
 
-            <div class="mb-3">
-              <TurnstileWidget
-                v-if="showTurnstile"
-                ref="turnstileRef"
-                @token="turnstileToken = $event"
-                @expired="turnstileToken = ''"
-              />
-            </div>
             <transition name="confirm-actions" mode="out-in">
               <div v-if="!awaitingSubmitConfirm">
-                <button
+                <Button
                   type="submit"
-                  class="w-full font-semibold rounded-xl py-3 submit-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="submitting || !isDistanceValid || (showTurnstile && !turnstileToken)"
+                  color="primary"
+                  size="lg"
+                  radius="md"
+                  full-width
+                  :is-loading="submitting"
+                  :disabled="submitting || !isDistanceValid"
                 >
                   提交记录
-                </button>
+                </Button>
               </div>
               <div v-else key="double-submit" class="flex w-full gap-3">
-                <button
+                <Button
                   type="button"
-                  class="flex-1 py-3 font-semibold rounded-xl theme-card-soft theme-text-secondary transition-all disabled:cursor-not-allowed disabled:opacity-50 hover:bg-[var(--action-hover-bg)]"
+                  variant="flat"
+                  color="default"
+                  size="lg"
+                  radius="md"
+                  class="flex-1"
                   :disabled="submitting || randomizing"
                   @click="cancelSubmitConfirm"
                 >
                   取消
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  class="flex-1 py-3 font-semibold rounded-xl submit-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="submitting || !isDistanceValid || (showTurnstile && !turnstileToken)"
+                  color="primary"
+                  size="lg"
+                  radius="md"
+                  class="flex-1"
+                  :is-loading="submitting"
+                  :disabled="submitting || !isDistanceValid"
                   @click="confirmSubmit"
                 >
-                  <i v-if="!submitting" class="ri-check-fill mr-1"></i>
-                  <span class="loader" v-else></span>
+                  <template #startContent v-if="!submitting">
+                    <i class="ri-check-fill mr-1"></i>
+                  </template>
                   {{ submitting ? '提交中...' : '确认' }}
-                </button>
+                </Button>
               </div>
             </transition>
       </form>
 
-      <Drawer v-model="showAutoConfig" title="校园跑定时任务">
-        <AutoConfig inline @saved="onAutoConfigSaved" />
-      </Drawer>
+    <Drawer v-model="showAutoConfig" title="校园跑定时任务">
+      <AutoConfig inline @saved="onAutoConfigSaved" />
+    </Drawer>
 
-      <!-- 分割线 -->
-      <div v-show="activeTab === 'submit'" class="my-5" style="border-top: 1px solid var(--card-divider)"></div>
-
-      <!-- 板块三：路线预览 -->
-      <div v-show="activeTab === 'submit'" class="rounded-xl p-4" style="background: var(--section-soft-bg)">
-
-        <div class="flex justify-between items-center mb-4">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold theme-text-primary">路线预览</span>
-          </div>
-          <button
-            type="button"
-            class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--action-hover-bg)] active:scale-95"
-            @click="openMapDrawer"
-            title="自定义路线"
-          >
-            <i class="ri-draw-line text-sm"></i>
-          </button>
+    <!-- 板块三：路线预览 -->
+    <div v-show="activeTab === 'submit'" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
+      <div class="flex justify-between items-center mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold theme-text-primary">路线预览</span>
         </div>
-        <div class="rounded-xl overflow-hidden">
-          <MapPreview
-            v-if="mapRenderUnlocked"
-            :track="displayTrack"
-            :ready="mapReady"
-            :map-style="isDark ? 'dark' : 'light'"
-            class="w-full transition-all duration-300"
-          />
-        </div>
+        <button
+          type="button"
+          class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--action-hover-bg)] active:scale-95"
+          @click="openMapDrawer"
+          title="自定义路线"
+        >
+          <i class="ri-draw-line text-sm"></i>
+        </button>
+      </div>
+      <div class="rounded-xl overflow-hidden">
+        <MapPreview
+          v-if="mapRenderUnlocked"
+          :track="displayTrack"
+          :ready="mapReady"
+          :map-style="isDark ? 'dark' : 'light'"
+          class="w-full transition-all duration-300"
+        />
       </div>
     </div>
 
@@ -258,7 +255,7 @@ import { useRouter } from 'vue-router';
 import { submitRun as submitRunApi, useRouteGenerator } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
 import { useThemeStore } from '@/composables/useTheme';
-import { waitForAutorunPingReady } from '@/sdk/autorun';
+import { waitForAutorunPingReady } from '@/sdk/app';
 import { deleteCustomMap, getCustomMapData, renameCustomMap, loadCustomMaps } from '@/utils/map';
 import Drawer from '@/components/ui/Drawer.vue';
 import RunRecords from '@/components/RunRecords.vue';
@@ -271,7 +268,7 @@ import {
   resolveRunBoundsFromStandard,
 } from '@/utils/run';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
-import TurnstileWidget from '@/components/TurnstileWidget.vue';
+import Button from '@/components/ui/Button.vue';
 import MapPreview from '@/components/MapPreview.vue';
 import AutoConfig from '@/components/AutoConfig.vue';
 
@@ -318,12 +315,9 @@ const awaitingSubmitConfirm = ref(false);
 const showRouteOptions = ref(false);
 const showAutoConfig = ref(false);
 const showRecords = ref(false);
-const turnstileToken = ref('');
-const turnstileRef = ref(null);
 
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
-const showTurnstile = computed(() => !!import.meta.env.VITE_TURNSTILE_SITE_KEY);
 
 const displayTrack = computed(() => {
   if (manualTrack.value) return manualTrack.value;
@@ -592,19 +586,6 @@ const stats = computed(() => {
 });
 
 const summaryCards = computed(() => stats.value.summaryCards);
-const summaryCardView = reactive(
-  Object.fromEntries(summaryCards.value.map((c) => [c.label, false])),
-);
-watch(summaryCards, (cards) => {
-  for (const c of cards) {
-    if (!(c.label in summaryCardView)) {
-      summaryCardView[c.label] = false;
-    }
-  }
-});
-function toggleSummaryCard(label) {
-  summaryCardView[label] = !summaryCardView[label];
-}
 
 function isCustomRoute(route) {
   return String(route || '').startsWith('custom_');
@@ -751,7 +732,6 @@ const handleSubmit = async () => {
       distance: form.value.distance,
       route: form.value.route || 'manual',
       runTime,
-      turnstileToken: turnstileToken.value,
     };
 
     if (manualTrack.value) {
@@ -775,8 +755,6 @@ const handleSubmit = async () => {
     }
 
     showMessage(res.data?.response?.resultDesc || '提交成功', 'success');
-    turnstileToken.value = '';
-    turnstileRef.value?.reset();
     emit('submitted');
   } finally {
     submitting.value = false;
@@ -936,10 +914,6 @@ loadMaps().then(async () => {
   transition: transform 0.15s ease;
 }
 
-.summary-card:active {
-  transform: scale(0.985);
-}
-
 .summary-card-bg-icon {
   position: absolute;
   right: -4px;
@@ -958,6 +932,13 @@ loadMaps().then(async () => {
 
 .summary-card-value {
   line-height: 1.2;
+}
+
+.summary-card-detail {
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--text-tertiary);
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
 }
 
 .summary-card-club {

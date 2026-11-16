@@ -4,9 +4,9 @@
       :href="githubUrl"
       target="_blank"
       rel="noopener noreferrer"
-      class="flex items-center gap-3 rounded-lg px-4 py-3 theme-card-soft transition-colors hover:opacity-80"
+      class="flex items-center gap-3 rounded-xl px-4 py-3 bg-transparent border border-[var(--card-border)] transition-colors hover:opacity-80"
     >
-      <span class="h-9 w-9 rounded-lg flex items-center justify-center theme-card">
+      <span class="h-9 w-9 rounded-lg flex items-center justify-center bg-transparent border border-[var(--card-border)]">
         <i class="ri-github-fill text-lg theme-text-primary"></i>
       </span>
       <span class="min-w-0 flex-1">

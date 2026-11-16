@@ -4,17 +4,27 @@
   "version": "26.3.24",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite --host 0.0.0.0",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "npm run typecheck && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "native:android": "cap open android",
+    "native:ios": "cap open ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
+    "@heroui/styles": "^3.2.7",
     "@tsparticles/vue3": "^4.4.0",
     "axios": "^1.20.0",
     "crypto-js": "^4.2.0",
+    "heroui-vue": "^0.0.19",
     "leaflet": "^1.9.4",
     "pinia": "^3.0.4",
     "pinia-plugin-persistedstate": "^4.7.1",
+    "skullet": "^0.0.3",
     "socket.io-client": "^4.8.4",
     "socket.io-parser": "^4.2.7",
     "tsparticles": "^4.4.0",
@@ -22,9 +32,15 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.2",
     "@tailwindcss/vite": "^4.3.3",
+    "@types/crypto-js": "^4.2.2",
+    "@types/leaflet": "^1.9.22",
+    "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.9",
     "tailwindcss": "^4.3.3",
-    "vite": "^8.3.3"
+    "typescript": "^5.9.3",
+    "vite": "^8.3.3",
+    "vue-tsc": "^2.2.12"
   }
 }

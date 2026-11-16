@@ -1,7 +1,12 @@
 <template>
   <div class="relative w-full box-border">
     <div class="relative flex flex-col">
-      <div v-if="records.length > 0" class="w-full" ref="scrollableListRef">
+      <!-- 骨架屏状态 (基于 Skullet) -->
+      <div v-if="loading" class="w-full py-2">
+        <RecordCardSkeleton :count="3" />
+      </div>
+
+      <div v-else-if="records.length > 0" class="w-full" ref="scrollableListRef">
           <template v-for="(item, idx) in timelineItems" :key="idx">
             <!-- 月份分隔徽标 -->
             <div v-if="item.type === 'month-badge'" class="flex justify-center py-3">
@@ -13,8 +18,8 @@
             <!-- 记录卡片 -->
             <div v-else>
               <div class="pb-4">
-                <div class="theme-card rounded-xl overflow-hidden transition-shadow p-0 flex flex-col">
-                  <div class="flex justify-between items-center px-4 py-3 bg-[var(--bg-primary)] border-b border-[var(--card-divider)] ">
+                <div class="rounded-xl overflow-hidden transition-shadow p-0 flex flex-col bg-transparent border border-[var(--card-border)]">
+                  <div class="flex justify-between items-center px-4 py-3 bg-transparent border-b border-[var(--card-divider)]">
                     <div class="flex items-center gap-2">
                       <span class="w-2 h-2 rounded-full inline-block shrink-0" :class="item.statusDotClass"></span>
                       <span class="theme-text-primary text-xs font-semibold">{{ item.dateTime }}</span>
@@ -45,15 +50,20 @@
             </div>
           </template>
 
-          <div class="py-1 text-center">
-            <button
-              class="w-full py-2.5 text-sm font-medium rounded-xl transition-all theme-text-secondary hover:bg-[var(--action-hover-bg)] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+          <div class="py-2 text-center">
+            <Button
+              variant="flat"
+              color="default"
+              radius="md"
+              full-width
+              :is-loading="isLoading"
               @click="loadMoreRecords"
-              :disabled="isLoading"
             >
-              <i :class="isLoading ? 'ri-loader-4-line animate-spin mr-1.5' : 'ri-arrow-down-s-line mr-1.5'"></i>
+              <template #startContent v-if="!isLoading">
+                <i class="ri-arrow-down-s-line"></i>
+              </template>
               {{ isLoading ? '加载中...' : '加载更多' }}
-            </button>
+            </Button>
         </div>
       </div>
 
@@ -73,12 +83,15 @@ import { computed, onActivated, onDeactivated, onMounted, ref, watch } from 'vue
 import { useRunRecords } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
+import Button from '@/components/ui/Button.vue';
+import RecordCardSkeleton from '@/components/ui/RecordCardSkeleton.vue';
 
 const { loading: profileLoading, token } = useDataStore();
 
 // 使用 composable 管理记录逻辑
 const {
   records,
+  loading,
   isLoading,
   fetchRecords,
   loadMoreRecords,

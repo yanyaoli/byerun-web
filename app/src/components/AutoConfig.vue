@@ -18,6 +18,9 @@
         <div class="min-w-0">
           <h3 class="text-sm font-semibold theme-text-primary">校园跑定时任务</h3>
           <p v-if="screen === 'ready'" class="mt-1 text-xs theme-text-secondary truncate">{{ mapNameText }}</p>
+          <div v-else-if="screen === 'loading'" class="mt-1.5">
+            <SkeletonBox width="90px" height="12px" radius="4px" />
+          </div>
         </div>
         <span
           v-if="screen === 'ready'"
@@ -26,13 +29,39 @@
         >
           <span class="truncate">{{ badgeText }}</span>
         </span>
+        <SkeletonBox
+          v-else-if="screen === 'loading'"
+          width="64px"
+          height="28px"
+          radius="9999px"
+        />
       </div>
 
-      <div v-if="screen === 'loading'" class="flex-1 flex flex-col items-center justify-center gap-3 py-14">
-        <i class="ri-cloud-line theme-text-primary text-3xl animate-bounce"></i>
-        <p class="text-[10px] theme-text-secondary font-black tracking-[0.3em] uppercase">
-          连接服务中
-        </p>
+      <div v-if="screen === 'loading'" class="mt-4 space-y-4">
+        <div>
+          <div class="mb-1.5"><SkeletonBox width="80px" height="12px" radius="4px" /></div>
+          <SkeletonBox width="100%" height="40px" radius="10px" />
+        </div>
+
+        <div>
+          <div class="mb-1.5"><SkeletonBox width="56px" height="12px" radius="4px" /></div>
+          <SkeletonBox width="100%" height="40px" radius="10px" />
+        </div>
+
+        <div class="flex items-center justify-between gap-3 py-1">
+          <SkeletonBox width="120px" height="16px" radius="4px" />
+          <SkeletonBox width="44px" height="24px" radius="12px" />
+        </div>
+
+        <div class="rounded-xl theme-card-soft p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <SkeletonBox width="80px" height="12px" radius="4px" />
+            <SkeletonBox width="60px" height="12px" radius="4px" />
+          </div>
+          <SkeletonBox width="100%" height="32px" radius="6px" />
+        </div>
+
+        <SkeletonBox width="100%" height="40px" radius="10px" />
       </div>
 
       <div v-else-if="screen === 'error'" class="flex-1 flex flex-col items-center justify-center gap-3 px-6 py-14">
@@ -191,8 +220,18 @@
 
           <!-- 历史流水列表（展开时显示） -->
           <div v-if="showHistory" class="mt-2.5 pt-2 border-t border-white/10 space-y-1.5">
-            <div v-if="loadingHistory" class="text-center py-2 text-[11px] theme-text-tertiary">
-              <i class="ri-loader-4-line animate-spin"></i> 加载记录中...
+            <div v-if="loadingHistory" class="space-y-1.5 py-1">
+              <div
+                v-for="idx in 3"
+                :key="`history-skel-${idx}`"
+                class="flex items-center justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5"
+              >
+                <div class="flex items-center gap-2 flex-1">
+                  <SkeletonBox width="6px" height="6px" radius="9999px" />
+                  <SkeletonBox width="80px" height="12px" radius="4px" />
+                </div>
+                <SkeletonBox width="46px" height="12px" radius="4px" />
+              </div>
             </div>
             <div v-else-if="historyRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
               暂无历史执行记录
@@ -234,14 +273,17 @@
           </div>
         </div>
 
-        <button
+        <Button
           type="button"
-          class="w-full h-9 rounded-xl text-xs font-semibold transition-colors save-btn"
-          :disabled="saving"
+          color="primary"
+          radius="md"
+          full-width
+          size="sm"
+          :is-loading="saving"
           @click="save"
         >
           {{ saving ? '保存中...' : '保存配置' }}
-        </button>
+        </Button>
       </div>
     </div>
   </div>
@@ -249,9 +291,11 @@
 
 <script setup>
 import { computed, reactive, ref, watch } from 'vue';
-import { getAutorunClient } from '@/sdk/autorun';
+import { SkeletonBox } from 'skullet/vue';
+import { getAutorunClient } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
+import Button from '@/components/ui/Button.vue';
 
 const props = defineProps({
   visible: { type: Boolean, default: false },

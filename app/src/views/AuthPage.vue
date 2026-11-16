@@ -136,19 +136,18 @@
               >忘记密码？</a
             >
           </div>
-          <div v-if="showTurnstile" ref="turnstileContainer" class="mb-4 flex justify-center"></div>
           <div class="flex gap-2">
-            <button
+            <Button
               type="submit"
-              :disabled="loading || (showTurnstile && !turnstileToken)"
-              class="w-full font-bold text-base rounded-full py-3 shadow-xl active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 theme-button-primary"
+              color="primary"
+              size="lg"
+              radius="full"
+              full-width
+              :is-loading="loading"
+              :disabled="loading"
             >
-              <span v-if="!loading">{{ mode === 'login' ? '立即登录' : '重置密码' }}</span>
-              <div
-                v-else
-                class="w-5 h-5 border-2 border-white/30 rounded-full border-t-white animate-spin mx-auto"
-              ></div>
-            </button>
+              {{ mode === 'login' ? '立即登录' : '重置密码' }}
+            </Button>
           </div>
           <div v-if="mode === 'reset'" class="text-center mt-4">
             <a href="#" @click.prevent="mode = 'login'" class="text-xs theme-link">返回登录</a>
@@ -160,9 +159,10 @@
 </template>
 
 <script setup>
-import { ref, inject, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
+import Button from '@/components/ui/Button.vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
@@ -181,50 +181,6 @@ const sending = ref(false);
 const keyboardInset = ref(0);
 const viewportBaseHeight = ref(0);
 
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
-const showTurnstile = computed(() => !!TURNSTILE_SITE_KEY);
-const turnstileContainer = ref(null);
-const turnstileWidgetId = ref(null);
-const turnstileToken = ref('');
-
-function loadTurnstileScript() {
-  return new Promise((resolve) => {
-    if (window.turnstile) {
-      resolve();
-      return;
-    }
-    window.__turnstileLoaded = resolve;
-    const s = document.createElement('script');
-    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__turnstileLoaded';
-    s.async = true;
-    s.defer = true;
-    document.head.appendChild(s);
-  });
-}
-
-function renderTurnstile() {
-  if (!showTurnstile.value || !window.turnstile || !turnstileContainer.value) return;
-  if (turnstileWidgetId.value) {
-    window.turnstile.remove(turnstileWidgetId.value);
-    turnstileWidgetId.value = null;
-  }
-  turnstileWidgetId.value = window.turnstile.render(turnstileContainer.value, {
-    sitekey: TURNSTILE_SITE_KEY,
-    callback: (token) => {
-      turnstileToken.value = token;
-    },
-    'expired-callback': () => {
-      turnstileToken.value = '';
-    },
-  });
-}
-
-function resetTurnstile() {
-  if (window.turnstile && turnstileWidgetId.value) {
-    window.turnstile.reset(turnstileWidgetId.value);
-    turnstileToken.value = '';
-  }
-}
 let keyboardWasVisible = false;
 let keyboardMeasureTimer = 0;
 
@@ -289,11 +245,6 @@ onMounted(async () => {
   window.addEventListener('orientationchange', scheduleKeyboardMeasure);
   window.visualViewport?.addEventListener('resize', scheduleKeyboardMeasure);
   window.visualViewport?.addEventListener('scroll', scheduleKeyboardMeasure);
-  if (showTurnstile.value) {
-    await loadTurnstileScript();
-    await nextTick();
-    renderTurnstile();
-  }
 });
 
 onUnmounted(() => {
@@ -338,8 +289,7 @@ const sendCode = async () => {
 const handleLogin = async () => {
   loading.value = true;
   try {
-    const turnstileTokenVal = turnstileToken.value;
-    const { data } = await api.login(phone.value, password.value, turnstileTokenVal);
+    const { data } = await api.login(phone.value, password.value);
     if (data.code === 10000) {
       if (rememberMe.value) {
         savedPhone.value = phone.value;
@@ -347,16 +297,13 @@ const handleLogin = async () => {
         savedPhone.value = '';
       }
       userInfo.value = data.response;
-      resetTurnstile();
       router.replace({ name: 'home' }).catch(() => {});
     } else {
       showMessage(data.msg, 'error');
-      resetTurnstile();
     }
   } catch (e) {
     console.error(e);
     showMessage('登录失败', 'error');
-    resetTurnstile();
   } finally {
     loading.value = false;
   }
