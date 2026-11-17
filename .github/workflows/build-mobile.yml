@@ -29,6 +29,11 @@ on:
         options:
           - debug
           - release
+      publish_release:
+        description: '发布到 GitHub Releases (Publish to Release)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -156,7 +161,7 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: [build-android, build-ios]
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -165,6 +170,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v26.3.24-build{0}', github.run_number) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('Byerun Mobile Build #{0}', github.run_number) }}
           files: |
             Byerun-Android-APK/**/*.apk
             Byerun-iOS-IPA/**/*.ipa

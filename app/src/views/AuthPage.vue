@@ -9,7 +9,13 @@
       class="absolute top-0 left-0 right-0 z-10"
     />
 
-    <div class="w-full flex-1 min-h-0 flex items-center justify-center">
+    <div
+      class="w-full flex-1 min-h-0 flex items-center justify-center overflow-y-auto"
+      :style="{
+        paddingTop: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px)',
+        paddingBottom: 'calc(var(--sab, env(safe-area-inset-bottom, 0px)) + 16px)',
+      }"
+    >
       <div class="w-full max-w-[480px] p-6">
         <div class="mb-4 text-center">
           <h1 class="text-3xl font-black theme-text-primary mb-4 tracking-tight">Byerun Web</h1>

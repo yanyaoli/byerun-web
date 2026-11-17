@@ -8,7 +8,7 @@
         ref="mainScrollRef"
         class="relative overflow-y-auto w-full box-border px-4 transition-[padding] duration-300"
         :style="{
-          paddingTop: `calc(${headerHeight}px + var(--notice-banner-height, 0px))`,
+          paddingTop: `calc(var(--sat, env(safe-area-inset-top, 0px)) + ${headerHeight}px + var(--notice-banner-height, 0px))`,
           paddingBottom: `${bottomBarOverlayHeight + BOTTOM_BAR_CLEARANCE_GAP}px`,
         }"
         @scroll.passive="handleMainScroll"

@@ -11,7 +11,7 @@
             : 'app-header--top',
       ]"
     >
-      <div class="w-full max-w-[540px] mx-auto h-11 px-7 sm:px-8 flex items-end justify-between pb-2">
+      <div class="w-full max-w-[540px] mx-auto h-11 px-7 sm:px-8 flex items-center justify-between">
         <slot name="content">
           <template v-if="props.iconsOnly">
             <div class="flex items-center justify-between w-full h-7 pointer-events-auto">
@@ -373,6 +373,8 @@ defineExpose({
 }
 
 .app-header {
+  padding-top: var(--sat, env(safe-area-inset-top, 0px));
+  box-sizing: border-box;
   border: none !important;
   border-bottom: none !important;
   transition:

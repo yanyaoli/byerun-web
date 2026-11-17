@@ -1,7 +1,16 @@
 <template>
-  <div class="min-h-full h-full flex flex-col bg-[var(--canvas)] text-[var(--text)] select-none theme-transition overflow-y-auto">
-    <!-- 顶部返回导航栏 -->
-    <header class="sticky top-0 z-30 h-12 w-full px-3 flex items-center justify-between border-b border-[var(--border)] bg-[var(--canvas)]/90 backdrop-blur-md shrink-0">
+  <div
+    class="min-h-full h-full flex flex-col bg-[var(--canvas)] text-[var(--text)] select-none theme-transition overflow-y-auto"
+    :style="{ paddingBottom: 'calc(var(--sab, env(safe-area-inset-bottom, 0px)) + 24px)' }"
+  >
+    <!-- 顶部返回导航栏（适配移动端状态栏安全区） -->
+    <header
+      class="sticky top-0 z-30 w-full px-3 flex items-center justify-between border-b border-[var(--border)] bg-[var(--canvas)]/90 backdrop-blur-md shrink-0"
+      :style="{
+        paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))',
+        height: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px)',
+      }"
+    >
       <div class="flex items-center gap-2">
         <button
           type="button"

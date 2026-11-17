@@ -5,18 +5,21 @@
     <div
       v-if="isBannerVisible"
       ref="bannerContainerRef"
-      class="fixed top-[44px] left-0 right-0 z-[999] w-full pointer-events-auto"
+      class="fixed left-0 right-0 z-[999] w-full pointer-events-auto"
+      :style="{ top: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 44px)' }"
     >
       <div class="max-w-[600px] mx-auto px-3 pt-1">
         <Alert
           :status="alertStatus"
-          class="shadow-md rounded-xl border border-[var(--border)]"
+          class="shadow-md rounded-xl border border-[var(--border)] items-start"
         >
-          <AlertIndicator />
-          <AlertContent class="flex-1 min-w-0">
-            <AlertDescription class="truncate text-xs font-medium">{{ currentNotice?.content }}</AlertDescription>
+          <AlertIndicator class="mt-0.5 shrink-0" />
+          <AlertContent class="flex-1 min-w-0 py-0.5">
+            <AlertDescription class="text-xs font-medium leading-relaxed break-words whitespace-pre-line select-text block">
+              {{ currentNotice?.content }}
+            </AlertDescription>
           </AlertContent>
-          <CloseButton @click="dismissNotice" />
+          <CloseButton class="shrink-0 cursor-pointer" @click="dismissNotice" />
         </Alert>
       </div>
     </div>
@@ -66,6 +69,8 @@ const setBannerHeight = (h) => {
   }
 };
 
+let bannerObserver = null;
+
 const updateBannerHeight = () => {
   nextTick(() => {
     if (isBannerVisible.value && bannerContainerRef.value) {
@@ -76,9 +81,25 @@ const updateBannerHeight = () => {
   });
 };
 
-watch(isBannerVisible, () => {
+watch([isBannerVisible, () => currentNotice.value?.content], () => {
   updateBannerHeight();
 });
+
+watch(
+  bannerContainerRef,
+  (el) => {
+    bannerObserver?.disconnect();
+    if (el && typeof ResizeObserver !== 'undefined') {
+      bannerObserver = new ResizeObserver(() => {
+        if (isBannerVisible.value && bannerContainerRef.value) {
+          setBannerHeight(bannerContainerRef.value.offsetHeight);
+        }
+      });
+      bannerObserver.observe(el);
+    }
+  },
+  { flush: 'post' }
+);
 
 const setViewportHeightVar = () => {
   const height = window.innerHeight || document.documentElement?.clientHeight || 0;
@@ -99,6 +120,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  bannerObserver?.disconnect();
   stopNotificationWatcher?.();
   setBannerHeight(0);
   window.removeEventListener('resize', setViewportHeightVar);
