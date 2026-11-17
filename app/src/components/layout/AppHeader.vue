@@ -26,12 +26,11 @@
               <div class="flex items-center gap-2.5 h-7">
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn"
-                  :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-                  @click="themeStore.toggle()"
+                  class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn cursor-pointer"
+                  title="系统设置"
+                  @click="goToSettings"
                 >
-                  <i v-if="isDark" class="ri-sun-fill text-[19px]"></i>
-                  <i v-else class="ri-moon-clear-fill text-[19px]"></i>
+                  <i class="ri-settings-3-line text-[19px]"></i>
                 </button>
               </div>
             </div>
@@ -71,7 +70,7 @@
                 type="button"
                 class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn cursor-pointer"
                 title="系统设置"
-                @click="openSettings"
+                @click="goToSettings"
               >
                 <i class="ri-settings-3-line text-[19px]"></i>
               </button>
@@ -127,7 +126,7 @@
                     <button
                       type="button"
                       class="w-full flex items-center gap-2 py-1.5 px-2.5 rounded-xl text-xs font-medium text-[var(--text)] transition-all hover:bg-[var(--surface-soft)] active:scale-95 cursor-pointer mb-1"
-                      @click="dropdownOpen = false; openSettings();"
+                      @click="dropdownOpen = false; goToSettings();"
                     >
                       <i class="ri-settings-3-line text-sm text-[var(--muted)]"></i>
                       <span>系统设置</span>
@@ -157,11 +156,11 @@
 
 <script setup>
 import { ref, computed, getCurrentInstance, watch, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
-import { useSettings } from '@/composables/useSettings';
 
 const props = defineProps({
   scrolled: { type: Boolean, default: false },
@@ -172,11 +171,16 @@ const props = defineProps({
 
 const emit = defineEmits(['logout']);
 
+const router = useRouter();
 const headerRef = ref(null);
 const confirmDialogRef = ref(null);
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
-const { openSettings } = useSettings();
+
+const goToSettings = () => {
+  router.push({ name: 'settings' });
+};
+
 const { userInfo, clearAllData } = useDataStore();
 const { clearChatData } = useChatStore();
 

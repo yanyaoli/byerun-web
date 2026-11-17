@@ -3,7 +3,7 @@
     <!-- 系统设置卡片入口 -->
     <Card
       class="p-3.5 rounded-2xl border border-[var(--border)] shadow-xs cursor-pointer hover:border-[var(--brand)] transition-all bg-[var(--surface)]"
-      @click="openSettings"
+      @click="goToSettings"
     >
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -34,13 +34,16 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { api, pingMeta } from '@/sdk/app';
-import { useSettings } from '@/composables/useSettings';
 import { Card } from '@/components/ui';
 import MessageCenter from '@/components/MessageCenter.vue';
 import ProjectInfo from '@/components/ProjectInfo.vue';
 
-const { openSettings } = useSettings();
+const router = useRouter();
+const goToSettings = () => {
+  router.push({ name: 'settings' });
+};
 const messages = ref([]);
 const loading = ref(true);
 

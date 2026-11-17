@@ -28,7 +28,6 @@
       </router-view>
     </div>
     <Message ref="messageRef" />
-    <SettingsModal />
   </div>
 </template>
 
@@ -37,7 +36,6 @@ import { ref, computed, provide, watch, nextTick, onMounted, onUnmounted } from 
 import { useRouter, useRoute } from 'vue-router';
 import { Alert, AlertIndicator, AlertContent, AlertDescription, CloseButton } from 'heroui-vue';
 import { Message } from '@/components/ui';
-import SettingsModal from '@/components/SettingsModal.vue';
 import { showMessage, setMessageHandler } from '@/composables/useMessage';
 import { currentNotice, dismissNotice, startNotificationWatcher } from '@/composables/useNotification';
 
@@ -46,7 +44,11 @@ const route = useRoute();
 const bannerContainerRef = ref(null);
 const messageRef = ref(null);
 
-const isBannerVisible = computed(() => Boolean(currentNotice.value) && route.name !== 'map-drawer');
+const isBannerVisible = computed(
+  () =>
+    Boolean(currentNotice.value) &&
+    !['map-drawer', 'settings', 'appearance-settings', 'server-settings'].includes(route.name)
+);
 
 const alertStatus = computed(() => {
   const t = currentNotice.value?.type;

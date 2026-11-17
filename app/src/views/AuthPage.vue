@@ -161,7 +161,7 @@
             <span v-else></span>
             <button
               type="button"
-              @click="openSettings"
+              @click="router.push({ name: 'server-settings' })"
               class="inline-flex items-center gap-1 text-[var(--muted)] hover:text-[var(--brand)] transition-colors cursor-pointer"
             >
               <i class="ri-server-line text-xs"></i>
@@ -182,9 +182,6 @@ import { Button } from 'heroui-vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
-import { useSettings } from '@/composables/useSettings';
-
-const { openSettings } = useSettings();
 
 const { userInfo, rememberLogin, savedPhone } = useDataStore();
 const router = useRouter();
