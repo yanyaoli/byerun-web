@@ -41,6 +41,7 @@ import { Alert, AlertIndicator, AlertContent, AlertDescription, CloseButton } fr
 import { Message } from '@/components/ui';
 import { showMessage, setMessageHandler } from '@/composables/useMessage';
 import { currentNotice, dismissNotice, startNotificationWatcher } from '@/composables/useNotification';
+import { useAppUpdate } from '@/composables/useAppUpdate';
 
 const router = useRouter();
 const route = useRoute();
@@ -107,6 +108,7 @@ const setViewportHeightVar = () => {
 };
 
 let stopNotificationWatcher = null;
+const { checkUpdate } = useAppUpdate();
 
 onMounted(() => {
   setMessageHandler((message, type, options) => {
@@ -117,6 +119,9 @@ onMounted(() => {
   setViewportHeightVar();
   window.addEventListener('resize', setViewportHeightVar);
   window.addEventListener('orientationchange', setViewportHeightVar);
+
+  // 进入 APP 自动获取更新
+  checkUpdate();
 });
 
 onUnmounted(() => {

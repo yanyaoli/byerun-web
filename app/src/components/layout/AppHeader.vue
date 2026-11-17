@@ -26,11 +26,15 @@
               <div class="flex items-center gap-2.5 h-7">
                 <button
                   type="button"
-                  class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn cursor-pointer"
+                  class="relative inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn cursor-pointer"
                   title="系统设置"
                   @click="goToSettings"
                 >
                   <i class="ri-settings-3-line text-[19px]"></i>
+                  <span
+                    v-if="hasUpdate"
+                    class="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[var(--canvas)]"
+                  ></span>
                 </button>
               </div>
             </div>
@@ -68,11 +72,15 @@
               <!-- 系统设置图标按钮（收纳主题与服务器配置） -->
               <button
                 type="button"
-                class="inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn cursor-pointer"
+                class="relative inline-flex items-center justify-center h-7 w-7 transition-colors rounded-lg header-action-btn cursor-pointer"
                 title="系统设置"
                 @click="goToSettings"
               >
                 <i class="ri-settings-3-line text-[19px]"></i>
+                <span
+                  v-if="hasUpdate"
+                  class="absolute top-1 right-1 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-[var(--canvas)]"
+                ></span>
               </button>
 
               <!-- 用户账号图标与下拉菜单（account-circle-fill） -->
@@ -122,20 +130,10 @@
 
                     <div class="my-1.5 border-t border-zinc-100 dark:border-zinc-800"></div>
 
-                    <!-- 系统设置入口 -->
-                    <button
-                      type="button"
-                      class="w-full flex items-center gap-2 py-1.5 px-2.5 rounded-xl text-xs font-medium text-[var(--text)] transition-all hover:bg-[var(--surface-soft)] active:scale-95 cursor-pointer mb-1"
-                      @click="dropdownOpen = false; goToSettings();"
-                    >
-                      <i class="ri-settings-3-line text-sm text-[var(--muted)]"></i>
-                      <span>系统设置</span>
-                    </button>
-
                     <!-- 退出登录按钮 -->
                     <button
                       type="button"
-                      class="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-semibold theme-danger transition-all hover:bg-[var(--danger-soft)] active:scale-95 cursor-pointer"
+                      class="w-full flex items-center gap-2 py-1.5 px-2.5 rounded-xl text-xs font-medium theme-danger transition-all hover:bg-[var(--danger-soft)] active:scale-95 cursor-pointer"
                       @click="dropdownOpen = false; onLogoutClick();"
                     >
                       <i class="ri-logout-box-r-line text-sm"></i>
@@ -161,6 +159,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import { useDataStore } from '@/composables/useDataStore';
 import { useChatStore } from '@/composables/useChatStore';
 import { useThemeStore } from '@/composables/useTheme';
+import { useAppUpdate } from '@/composables/useAppUpdate';
 
 const props = defineProps({
   scrolled: { type: Boolean, default: false },
@@ -176,6 +175,7 @@ const headerRef = ref(null);
 const confirmDialogRef = ref(null);
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
+const { hasUpdate } = useAppUpdate();
 
 const goToSettings = () => {
   router.push({ name: 'settings' });
