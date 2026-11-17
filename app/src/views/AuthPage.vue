@@ -155,24 +155,14 @@
               {{ mode === 'login' ? '立即登录' : '重置密码' }}
             </Button>
           </div>
-          <div class="flex items-center justify-between mt-4 px-1 text-xs">
+          <div v-if="mode === 'reset'" class="flex items-center justify-center mt-4 px-1 text-xs">
             <a
-              v-if="mode === 'reset'"
               href="#"
               @click.prevent="mode = 'login'"
               class="theme-link"
             >
               返回登录
             </a>
-            <span v-else></span>
-            <button
-              type="button"
-              @click="router.push({ name: 'server-settings' })"
-              class="inline-flex items-center gap-1 text-[var(--muted)] hover:text-[var(--brand)] transition-colors cursor-pointer"
-            >
-              <i class="ri-server-line text-xs"></i>
-              <span>服务器设置</span>
-            </button>
           </div>
         </form>
       </div>

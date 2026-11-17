@@ -158,20 +158,67 @@ jobs:
           path: app/ios/App/Byerun-unsigned.ipa
           retention-days: 14
 
+  update-version:
+    name: Bump Version on Build Success
+    needs: [build-android, build-ios]
+    if: github.ref_type != 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Bump Version & Record Beijing Time
+        id: bump
+        run: |
+          NEW_VER=$(node scripts/bump-version.js --bump)
+          echo "new_version=$NEW_VER" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Version Update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add version.json app/public/version.json app/src/version.json app/package.json
+          git commit -m "chore(release): bump version to v${{ steps.bump.outputs.new_version }} [skip ci]" || echo "No changes to commit"
+          git push origin ${{ github.ref_name }}
+
   release:
     name: Publish GitHub Release
     needs: [build-android, build-ios]
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.publish_release == true)
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Get Version
+        id: ver
+        run: |
+          CURR_VER=$(node scripts/bump-version.js --get)
+          echo "version=$CURR_VER" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v26.3.24-build.{0}', github.run_number) }}"
-          name: "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('Byerun Mobile v26.3.24 (Build {0})', github.run_number) }}"
+          tag_name: "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('v{0}', steps.ver.outputs.version) }}"
+          name: "${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('Byerun Mobile v{0}', steps.ver.outputs.version) }}"
           files: |
             Byerun-Android-APK/**/*.apk
             Byerun-iOS-IPA/**/*.ipa

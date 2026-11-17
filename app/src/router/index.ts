@@ -4,6 +4,7 @@ import MapDrawerPage from '@/views/MapDrawerPage.vue';
 import SettingsPage from '@/views/SettingsPage.vue';
 import AppearancePage from '@/views/AppearancePage.vue';
 import ServerSettingsPage from '@/views/ServerSettingsPage.vue';
+import GitHubProxyPage from '@/views/GitHubProxyPage.vue';
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'home', component: RootPage },
@@ -11,6 +12,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/settings', name: 'settings', component: SettingsPage },
   { path: '/settings/appearance', name: 'appearance-settings', component: AppearancePage },
   { path: '/settings/server', name: 'server-settings', component: ServerSettingsPage },
+  { path: '/settings/proxy', name: 'proxy-settings', component: GitHubProxyPage },
+  { path: '/settings/github-proxy', redirect: '/settings/proxy' },
 ];
 
 const router = createRouter({

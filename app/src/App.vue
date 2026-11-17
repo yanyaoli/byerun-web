@@ -50,7 +50,7 @@ const messageRef = ref(null);
 const isBannerVisible = computed(
   () =>
     Boolean(currentNotice.value) &&
-    !['map-drawer', 'settings', 'appearance-settings', 'server-settings'].includes(route.name)
+    !['map-drawer', 'settings', 'appearance-settings', 'server-settings', 'proxy-settings'].includes(route.name)
 );
 
 const alertStatus = computed(() => {
