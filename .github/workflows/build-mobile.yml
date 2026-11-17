@@ -93,6 +93,14 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleRelease
 
+      - name: Rename Android Package
+        run: |
+          VERSION=$(node scripts/bump-version.js --get)
+          find app/android/app/build/outputs/apk -type f -name "*.apk" | while read -r apk_file; do
+            dir=$(dirname "$apk_file")
+            mv "$apk_file" "$dir/Byerun_${VERSION}_universal.apk"
+          done
+
       - name: Upload Android APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -147,15 +155,16 @@ jobs:
       - name: Package Unsigned IPA
         working-directory: app/ios/App
         run: |
+          VERSION=$(node ../../scripts/bump-version.js --get)
           mkdir -p Payload
           cp -r build/Build/Products/Release-iphoneos/App.app Payload/
-          zip -r Byerun-unsigned.ipa Payload
+          zip -r "Byerun_${VERSION}_arm64.ipa" Payload
 
       - name: Upload iOS IPA Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Byerun-iOS-IPA
-          path: app/ios/App/Byerun-unsigned.ipa
+          path: app/ios/App/Byerun_*.ipa
           retention-days: 14
 
   update-version:
