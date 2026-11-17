@@ -404,7 +404,12 @@
               <label
                 class="w-7 h-7 inline-flex items-center justify-center rounded-full chat-toolbar-action cursor-pointer transition-colors"
               >
-                <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/*"
+                  class="hidden"
+                  @change="handleImageSelected"
+                />
                 <i class="ri-image-fill text-base"></i>
               </label>
             </div>
@@ -1065,76 +1070,113 @@ function saveRange() {
   }
 }
 
+const pendingUploadMap = new Map();
+let pendingUploadCounter = 0;
+
 /**
- * 将图片文件压缩/转换为 WebP，确保小于 maxBytes
+ * 将图片文件压缩/转换为轻量 WebP，彻底避免大图将手机 WebView 撑爆 (OOM 崩溃)
  */
-async function compressImageToWebP(file, maxBytes = 2 * 1024 * 1024, maxWidth = 1200) {
+async function compressImageToWebP(file, maxBytes = 1.5 * 1024 * 1024, maxWidth = 1200) {
   if (!file) throw new Error('file required');
 
-  const imgBitmap = await createImageBitmap(file);
-  const ratio = Math.min(1, maxWidth / imgBitmap.width);
-  const width = Math.max(1, Math.round(imgBitmap.width * ratio));
-  const height = Math.max(1, Math.round(imgBitmap.height * ratio));
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(imgBitmap, 0, 0, width, height);
-
-  // 二分法寻找质量，确保小于 maxBytes
-  let low = 0.45,
-    high = 0.95;
-  let lastGood = null;
-
-  for (let i = 0; i < 6; i++) {
-    const q = (low + high) / 2;
-    // eslint-disable-next-line no-await-in-loop
-    const blob = await new Promise((res) => canvas.toBlob(res, 'image/webp', q));
-    if (!blob) break;
-    if (blob.size <= maxBytes) {
-      lastGood = blob;
-      low = q;
-    } else {
-      high = q;
+  try {
+    let imgBitmap = null;
+    if (typeof createImageBitmap === 'function') {
+      try {
+        imgBitmap = await createImageBitmap(file);
+      } catch {
+        // createImageBitmap 在某些手机格式下可能失败，降级为 Image 元素
+      }
     }
-  }
 
-  if (!lastGood) {
-    const fallback = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.8));
-    if (fallback && fallback.size <= maxBytes) return fallback;
-    if (fallback) lastGood = fallback;
-  }
+    if (!imgBitmap) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+      URL.revokeObjectURL(url);
+      imgBitmap = img;
+    }
 
-  return lastGood;
+    const imgWidth = imgBitmap.width || imgBitmap.naturalWidth || 800;
+    const imgHeight = imgBitmap.height || imgBitmap.naturalHeight || 600;
+    const ratio = Math.min(1, maxWidth / imgWidth);
+    const width = Math.max(1, Math.round(imgWidth * ratio));
+    const height = Math.max(1, Math.round(imgHeight * ratio));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(imgBitmap, 0, 0, width, height);
+
+    // 尝试转成 WebP
+    let blob = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.8));
+    if (!blob) {
+      // 某些老旧浏览器不支持 toBlob WebP，降级为 JPEG
+      blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.8));
+    }
+
+    if (blob && blob.size <= maxBytes) {
+      return blob;
+    }
+
+    // 若依然偏大，降低质量再试一次
+    const lowQualityBlob = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.5));
+    return lowQualityBlob || blob || file;
+  } catch (err) {
+    console.warn('compressImageToWebP 压缩异常，降级使用原文件', err);
+    return file;
+  }
 }
 
-function handleImageSelected(ev) {
-  const files = ev.target.files;
-  if (!files || !files.length) return;
+async function handleImageSelected(ev) {
+  try {
+    const files = ev.target?.files;
+    if (!files || !files.length) return;
 
-  Array.from(files).forEach((f) => {
-    insertPendingUploadImage(f);
-  });
-
-  // 清空选择，允许重复选同一张图
-  ev.target.value = '';
+    for (const f of Array.from(files)) {
+      await insertPendingUploadImage(f);
+    }
+  } catch (err) {
+    console.error('handleImageSelected failed:', err);
+    showToast('图片选择失败', 'error');
+  } finally {
+    // 清空选择，允许重复选同一张图
+    if (ev.target) ev.target.value = '';
+  }
 }
 
-function insertPendingUploadImage(file) {
+async function insertPendingUploadImage(file) {
   if (!file || !messageInput.value) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    const base64 = reader.result;
-    if (!base64 || typeof base64 !== 'string') return;
-    const imgHtml = `<img src="${base64}" data-pending-upload="true" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle shadow-sm transition-transform hover:scale-105 cursor-pointer" />`;
+  if (file.size > 25 * 1024 * 1024) {
+    showToast('图片大小不能超过 25MB', 'warning');
+    return;
+  }
+
+  try {
+    // 立即对选中的原图进行尺寸缩放与轻量化压缩
+    // 手机拍摄的照片通常为 10MB~20MB，直接读入 Base64 放入 DOM 会触发 WebView OOM 崩溃
+    const compressedBlob = await compressImageToWebP(file, 1.5 * 1024 * 1024, 1200);
+    const pendingId = `pending_img_${Date.now()}_${++pendingUploadCounter}`;
+    const previewUrl = URL.createObjectURL(compressedBlob);
+
+    pendingUploadMap.set(pendingId, {
+      blob: compressedBlob,
+      previewUrl,
+    });
+
+    const imgHtml = `<img src="${previewUrl}" data-pending-id="${pendingId}" class="inline-block h-12 max-w-[100px] object-cover rounded mx-1 align-middle shadow-sm transition-transform hover:scale-105 cursor-pointer" />`;
 
     messageInput.value.focus();
 
     let range = lastRange.value;
     if (!range) {
-      // 兜底：尝试获取当前选区，如果仍在 input 内
       const sel = window.getSelection();
       if (sel.rangeCount > 0 && messageInput.value.contains(sel.anchorNode)) {
         range = sel.getRangeAt(0);
@@ -1143,7 +1185,6 @@ function insertPendingUploadImage(file) {
 
     if (range) {
       range.deleteContents();
-      // 创建 fragment 插入
       const el = document.createElement('div');
       el.innerHTML = imgHtml;
       const frag = document.createDocumentFragment();
@@ -1153,15 +1194,12 @@ function insertPendingUploadImage(file) {
       }
       range.insertNode(frag);
       range.collapse(false);
-      // 更新选区到插入内容之后
       const sel = window.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-      lastRange.value = range; // 更新保存的 range
+      lastRange.value = range;
     } else {
-      // 追加到末尾
       messageInput.value.insertAdjacentHTML('beforeend', imgHtml);
-      // 移动光标到末尾
       const range = document.createRange();
       range.selectNodeContents(messageInput.value);
       range.collapse(false);
@@ -1171,15 +1209,11 @@ function insertPendingUploadImage(file) {
       lastRange.value = range;
     }
 
-    // 手动触发 input handler 更新 text
     handleInput({ target: messageInput.value });
-  };
-
-  reader.onerror = () => {
-    showToast('图片读取失败', 'error');
-  };
-
-  reader.readAsDataURL(file);
+  } catch (err) {
+    console.error('Failed to process image:', err);
+    showToast('图片加载失败，请重试', 'error');
+  }
 }
 
 function handlePaste(ev) {
@@ -1283,6 +1317,15 @@ watch(
 function clearAuthState() {
   client.setToken(null, { reconnect: false });
   client.disconnectSocket();
+
+  for (const item of pendingUploadMap.values()) {
+    if (item.previewUrl) {
+      try {
+        URL.revokeObjectURL(item.previewUrl);
+      } catch {}
+    }
+  }
+  pendingUploadMap.clear();
   user.value = null;
   clearChatData();
 }
@@ -1407,9 +1450,24 @@ async function send() {
           if (val) parts.push({ type: 'text', value: val });
         } else if (node.nodeType === Node.ELEMENT_NODE) {
           if (node.tagName === 'IMG') {
+            const pendingId = node.getAttribute('data-pending-id');
             const src = node.getAttribute('src');
-            // 识别待上传图片
-            if (node.hasAttribute('data-pending-upload') && src && src.startsWith('data:')) {
+
+            if (pendingId && pendingUploadMap.has(pendingId)) {
+              const item = pendingUploadMap.get(pendingId);
+              try {
+                const uploadRes = await client.uploadImage(item.blob);
+                if (uploadRes && uploadRes.fileKey) {
+                  parts.push({ type: 'image', value: uploadRes.fileKey });
+                }
+              } catch (err) {
+                console.error('Image upload failed', err);
+                showToast('图片上传失败', 'error');
+              } finally {
+                if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
+                pendingUploadMap.delete(pendingId);
+              }
+            } else if (node.hasAttribute('data-pending-upload') && src && src.startsWith('data:')) {
               try {
                 const res = await fetch(src);
                 const blob = await res.blob();
@@ -1497,6 +1555,14 @@ function clearText() {
     messageInput.value.innerHTML = '';
   }
   showPreviewBubble.value = false;
+  for (const item of pendingUploadMap.values()) {
+    if (item.previewUrl) {
+      try {
+        URL.revokeObjectURL(item.previewUrl);
+      } catch {}
+    }
+  }
+  pendingUploadMap.clear();
 }
 
 function cancelReply() {
@@ -2081,6 +2147,15 @@ onUnmounted(() => {
   client.off('delete', onDelete);
   client.off('auth_error', onAuthError);
   client.disconnectSocket();
+
+  for (const item of pendingUploadMap.values()) {
+    if (item.previewUrl) {
+      try {
+        URL.revokeObjectURL(item.previewUrl);
+      } catch {}
+    }
+  }
+  pendingUploadMap.clear();
 });
 </script>
 
