@@ -26,6 +26,20 @@ function getBeijingTimeString() {
 }
 
 /**
+ * 根据语义化版本计算 Android versionCode 与 iOS build number
+ * 规则：major * 10000 + minor * 100 + patch
+ * 例如：1.0.0 -> 10000, 1.0.3 -> 10003, 1.2.5 -> 10205
+ */
+function getVersionCode(versionStr) {
+  const clean = String(versionStr || '1.0.0').trim().replace(/^v/, '');
+  const parts = clean.split('.').map((p) => parseInt(p, 10) || 0);
+  const major = parts[0] !== undefined ? parts[0] : 1;
+  const minor = parts[1] !== undefined ? parts[1] : 0;
+  const patch = parts[2] !== undefined ? parts[2] : 0;
+  return major * 10000 + minor * 100 + patch;
+}
+
+/**
  * 版本递增规则：
  * 每次成功打包递增末位，满 100 向前进位
  * 例如：1.0.0 -> 1.0.1, 1.0.99 -> 1.1.0, 1.99.99 -> 2.0.0
@@ -87,6 +101,36 @@ function saveVersionData(data) {
       fs.writeFileSync(packageJsonFile, JSON.stringify(pkg, null, 2) + '\n', 'utf-8');
     } catch (e) {
       console.error(`更新 package.json 失败:`, e);
+    }
+  }
+
+  // 1. 同步更新 Android build.gradle 中的 versionCode 与 versionName
+  const androidGradleFile = path.join(__dirname, '..', 'app', 'android', 'app', 'build.gradle');
+  if (fs.existsSync(androidGradleFile)) {
+    try {
+      let content = fs.readFileSync(androidGradleFile, 'utf-8');
+      const versionCode = getVersionCode(data.version);
+      content = content.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
+      content = content.replace(/versionName\s+["'][^"']+["']/, `versionName "${data.version}"`);
+      fs.writeFileSync(androidGradleFile, content, 'utf-8');
+      console.log(`[Android] 同步原生版本: versionCode ${versionCode}, versionName "${data.version}"`);
+    } catch (e) {
+      console.error('更新 Android build.gradle 失败:', e);
+    }
+  }
+
+  // 2. 同步更新 iOS project.pbxproj 中的 MARKETING_VERSION 与 CURRENT_PROJECT_VERSION
+  const iosPbxFile = path.join(__dirname, '..', 'app', 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+  if (fs.existsSync(iosPbxFile)) {
+    try {
+      let content = fs.readFileSync(iosPbxFile, 'utf-8');
+      const versionCode = getVersionCode(data.version);
+      content = content.replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${data.version};`);
+      content = content.replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${versionCode};`);
+      fs.writeFileSync(iosPbxFile, content, 'utf-8');
+      console.log(`[iOS] 同步原生版本: CURRENT_PROJECT_VERSION ${versionCode}, MARKETING_VERSION ${data.version}`);
+    } catch (e) {
+      console.error('更新 iOS project.pbxproj 失败:', e);
     }
   }
 }

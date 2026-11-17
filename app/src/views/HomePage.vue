@@ -2,7 +2,11 @@
   <div class="h-full min-h-0 flex flex-col overflow-hidden">
     <AppHeader v-show="activeKey !== 'chat'" :scrolled="headerCompact" />
 
-    <div class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative">
+    <div
+      class="flex-1 flex flex-col min-h-0 w-full mx-auto p-0 relative"
+      @touchstart.passive="handleSwipeStart"
+      @touchend.passive="handleSwipeEnd"
+    >
       <main
         v-show="activeKey !== 'chat'"
         ref="mainScrollRef"
@@ -144,6 +148,65 @@ async function initializePage() {
 
 async function handleRunSubmitted() {
   await refreshUserData({ background: true });
+}
+
+const TAB_ORDER = ['submit', 'club', 'chat', 'my'];
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeStartTime = 0;
+
+function handleSwipeStart(e) {
+  if (!e.touches || e.touches.length !== 1) return;
+  const t = e.touches[0];
+  swipeStartX = t.clientX;
+  swipeStartY = t.clientY;
+  swipeStartTime = Date.now();
+}
+
+function handleSwipeEnd(e) {
+  if (!e.changedTouches || e.changedTouches.length === 0) return;
+  const t = e.changedTouches[0];
+  const deltaX = t.clientX - swipeStartX;
+  const deltaY = t.clientY - swipeStartY;
+  const duration = Date.now() - swipeStartTime;
+
+  // 1. 若有抽屉打开，或目标元素为地图/输入框/选择器/按钮等，不触发 Tab 滑动切换
+  if (document.querySelector('.drawer-panel')) return;
+  const target = t.target;
+  if (
+    target &&
+    (target.closest?.('input, textarea, select, .leaflet-container, button, a, [contenteditable="true"]') ||
+      target.isContentEditable)
+  ) {
+    return;
+  }
+
+  // 2. 判断是否为清晰的水平快速划动手势（横向位移 > 50px，横向距离超过纵向 1.5 倍，耗时 < 500ms）
+  if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && duration < 500) {
+    if (activeKey.value === 'chat') {
+      // 消息页内避免与气泡滑动回复冲突，仅允许从左侧区域右滑返回上一 Tab
+      if (deltaX > 50 && swipeStartX <= 80) {
+        const idx = TAB_ORDER.indexOf(activeKey.value);
+        if (idx > 0) setActiveKey(TAB_ORDER[idx - 1]);
+      }
+      return;
+    }
+
+    const currentIndex = TAB_ORDER.indexOf(activeKey.value);
+    if (currentIndex === -1) return;
+
+    if (deltaX < -50) {
+      // 从右往左滑 -> 切换到下一个 Tab
+      if (currentIndex < TAB_ORDER.length - 1) {
+        setActiveKey(TAB_ORDER[currentIndex + 1]);
+      }
+    } else if (deltaX > 50) {
+      // 从左往右滑 -> 切换到上一个 Tab
+      if (currentIndex > 0) {
+        setActiveKey(TAB_ORDER[currentIndex - 1]);
+      }
+    }
+  }
 }
 
 function handleEdgeSwipeBack() {

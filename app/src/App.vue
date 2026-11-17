@@ -42,9 +42,13 @@ import { Message } from '@/components/ui';
 import { showMessage, setMessageHandler } from '@/composables/useMessage';
 import { currentNotice, dismissNotice, startNotificationWatcher } from '@/composables/useNotification';
 import { useAppUpdate } from '@/composables/useAppUpdate';
+import { useDataStore } from '@/composables/useDataStore';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 
 const router = useRouter();
 const route = useRoute();
+const { activeTab } = useDataStore();
 const bannerContainerRef = ref(null);
 const messageRef = ref(null);
 
@@ -110,6 +114,48 @@ const setViewportHeightVar = () => {
 let stopNotificationWatcher = null;
 const { checkUpdate } = useAppUpdate();
 
+// Capacitor 原生返回键与全面屏侧滑手势支持 (Android / iOS)
+let lastBackPressTime = 0;
+let backButtonListener = null;
+
+const initNativeBackButton = async () => {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    backButtonListener = await CapApp.addListener('backButton', () => {
+      // 1. 若当前存在打开中的抽屉面板，优先关闭抽屉
+      const closeBtn = document.querySelector('.drawer-close-btn, .drawer-back-btn');
+      if (closeBtn && closeBtn instanceof HTMLElement) {
+        closeBtn.click();
+        return;
+      }
+
+      // 2. 若当前不是主页，返回上一路由
+      if (route.name && route.name !== 'home' && route.path !== '/') {
+        router.back();
+        return;
+      }
+
+      // 3. 若在主页且不在校园跑首页 Tab，切回首页
+      const currentTab = activeTab.value || 'submit';
+      if (currentTab !== 'submit') {
+        window.dispatchEvent(new CustomEvent('app:edge-swipe-back'));
+        return;
+      }
+
+      // 4. 若已在首页校园跑顶层，连续按两次退出应用
+      const now = Date.now();
+      if (now - lastBackPressTime < 2000) {
+        CapApp.exitApp();
+      } else {
+        lastBackPressTime = now;
+        showMessage('再按一次退出应用', 'info');
+      }
+    });
+  } catch (err) {
+    console.debug('Failed to register Capacitor backButton listener:', err);
+  }
+};
+
 // 全局移动端手势：从左边缘向右滑返回
 let globalTouchStartX = 0;
 let globalTouchStartY = 0;
@@ -166,6 +212,8 @@ onMounted(() => {
   window.addEventListener('touchstart', handleGlobalTouchStart, { passive: true });
   window.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
 
+  initNativeBackButton();
+
   // 进入 APP 自动获取更新
   checkUpdate();
 });
@@ -178,6 +226,7 @@ onUnmounted(() => {
   window.removeEventListener('orientationchange', setViewportHeightVar);
   window.removeEventListener('touchstart', handleGlobalTouchStart);
   window.removeEventListener('touchend', handleGlobalTouchEnd);
+  backButtonListener?.remove?.();
 });
 </script>
 
