@@ -278,12 +278,12 @@
       <div
         ref="composerShellRef"
         :class="[
-          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2.5 border rounded-2xl transition-all duration-300 overflow-hidden backdrop-blur-2xl',
+          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_32px)] p-2.5 border rounded-2xl transition-all duration-300 overflow-hidden backdrop-blur-2xl',
           'theme-card-strong',
           'liquid-glass-shell liquid-glass-chat-shell',
           showEmojiPicker ? 'shadow-[0_16px_48px_rgba(0,0,0,0.2)]' : '',
         ]"
-        :style="{ bottom: `${composerBottomOffset}px` }"
+        :style="{ bottom: composerBottomOffset }"
       >
         <!-- QQ 表情展开面板（高度贴合顶部，如同输入区域向上展开） -->
         <Transition name="emoji-drawer">
@@ -814,11 +814,12 @@ const showSettings = ref(false);
 const showEmojiPicker = ref(false);
 const showPreviewBubble = ref(false);
 const SINGLE_MESSAGE_GAP_PX = 16;
-const COMPOSER_BASE_BOTTOM_PX = 16;
+const COMPOSER_BASE_BOTTOM_PX = 12;
+const COMPOSER_DEFAULT_BOTTOM = 'calc(12px + env(safe-area-inset-bottom, 0px))';
 const DEFAULT_MESSAGE_BOTTOM_INSET = 120;
 const messageListPaddingTop = ref(68);
 const messageBottomInset = ref(DEFAULT_MESSAGE_BOTTOM_INSET);
-const composerBottomOffset = ref(COMPOSER_BASE_BOTTOM_PX);
+const composerBottomOffset = ref(COMPOSER_DEFAULT_BOTTOM);
 
 // 输入相关
 const text = ref('');
@@ -893,7 +894,9 @@ function measureFloatingLayout() {
   const { visibleBottom, keyboardInset } = getViewportMetrics();
   const keyboardVisible = keyboardInset > 0;
 
-  composerBottomOffset.value = COMPOSER_BASE_BOTTOM_PX + keyboardInset;
+  composerBottomOffset.value = keyboardVisible
+    ? `${COMPOSER_BASE_BOTTOM_PX + keyboardInset}px`
+    : COMPOSER_DEFAULT_BOTTOM;
   if (keyboardWasVisible && !keyboardVisible) {
     restoreViewportPosition();
   }
@@ -960,7 +963,7 @@ function handleComposerBlur() {
 
     if (keyboardInset <= 0) {
       keyboardWasVisible = false;
-      composerBottomOffset.value = COMPOSER_BASE_BOTTOM_PX;
+      composerBottomOffset.value = COMPOSER_DEFAULT_BOTTOM;
       restoreViewportPosition();
     }
     scheduleFloatingLayoutMeasure();
