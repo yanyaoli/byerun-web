@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Byerun',
   webDir: 'dist',
   android: { allowMixedContent: true },
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;

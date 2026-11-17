@@ -522,8 +522,12 @@ export class AppApiClient {
     const reqHeaders: Record<string, string> = { ...headers };
     if (requestId) reqHeaders['X-Request-Id'] = requestId;
 
+    const isOfficial = this.baseURL.replace(/\/+$/, '') === this.officialURL.replace(/\/+$/, '');
+    const baseURL = isOfficial ? 'https://api.byerun.top' : this.baseURL;
+
     try {
       const resp = await this.http.request({
+        baseURL,
         url: path,
         method,
         data,

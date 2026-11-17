@@ -9,7 +9,8 @@
   >
     <div
       v-if="visible"
-      class="fixed top-2 left-0 right-0 z-[10002] flex justify-center pointer-events-none transition-all duration-300"
+      class="fixed left-0 right-0 z-[10002] flex justify-center pointer-events-none transition-all duration-300"
+      :style="{ top: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 12px)' }"
     >
       <div
         :class="[

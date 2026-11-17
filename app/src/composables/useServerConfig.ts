@@ -3,6 +3,7 @@ import axios from 'axios';
 
 export const OFFICIAL_SERVER_URL = 'https://run-lb.tanmasports.com/v1';
 export const PROXY_SERVER_URL = 'https://api.byerun.top';
+export const MESSAGE_SERVER_URL = 'https://chatserver.byerun.top';
 
 export type ServerSourceType = 'proxy' | 'official' | 'custom';
 
@@ -109,11 +110,28 @@ export const useServerConfig = () => {
       return { ok: true, latency, message: '服务连接正常' };
     } catch (e: any) {
       const latency = Date.now() - start;
-      // 401/403 或 code 10001 表示服务连通且网关正常响应拦截
-      if (e.response && (e.response.status === 401 || e.response.status === 403 || e.response.data?.code === 10001)) {
+      // 401/403 或 code 10001/40010 表示服务连通且网关正常响应拦截
+      if (e.response && (e.response.status === 401 || e.response.status === 403 || e.response.data?.code === 10001 || e.response.data?.code === 40010)) {
         return { ok: true, latency, message: '服务连接成功（网关正常）' };
       }
       const msg = e.response?.data?.msg || e.message || '连接失败';
+      return { ok: false, latency: -1, message: msg };
+    }
+  };
+
+  const testMessageServerConnection = async (targetUrl: string = MESSAGE_SERVER_URL): Promise<{ ok: boolean; latency: number; message: string }> => {
+    const url = (targetUrl || MESSAGE_SERVER_URL).trim().replace(/\/+$/, '');
+    const start = Date.now();
+    try {
+      await axios.get(`${url}/health`, { timeout: 6000 });
+      const latency = Date.now() - start;
+      return { ok: true, latency, message: '消息服务连接正常' };
+    } catch (e: any) {
+      const latency = Date.now() - start;
+      if (e.response && (e.response.status === 200 || e.response.data?.code === '20000')) {
+        return { ok: true, latency, message: '消息服务连接正常' };
+      }
+      const msg = e.response?.data?.message || e.message || '连接失败';
       return { ok: false, latency: -1, message: msg };
     }
   };
@@ -125,10 +143,12 @@ export const useServerConfig = () => {
     isFallbackActive,
     OFFICIAL_SERVER_URL,
     PROXY_SERVER_URL,
+    MESSAGE_SERVER_URL,
     setSourceType,
     setCustomUrl,
     setFallbackActive,
     resetToDefault,
     testConnection,
+    testMessageServerConnection,
   };
 };
