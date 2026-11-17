@@ -147,23 +147,29 @@ const close = () => {
   item?.onClose?.();
 };
 
-const resolveContent = (val: any): string => {
-  if (typeof val === 'string') return val;
-  if (!val) return '操作完成';
-  if (typeof val.message === 'string') return val.message;
-  if (typeof val.msg === 'string') return val.msg;
-  if (typeof val.resultDesc === 'string') return val.resultDesc;
-  if (typeof val.error === 'string') return val.error;
-  if (typeof val.reason === 'string') return val.reason;
+const resolveContent = (val: any, type: MessageType): string => {
+  if (typeof val === 'string' && val.trim()) return val;
+  if (!val) {
+    if (type === 'success') return '操作成功';
+    if (type === 'error') return '操作失败';
+    if (type === 'warning') return '请注意';
+    return '提示';
+  }
+  if (typeof val.message === 'string' && val.message.trim()) return val.message;
+  if (typeof val.msg === 'string' && val.msg.trim()) return val.msg;
+  if (typeof val.resultDesc === 'string' && val.resultDesc.trim()) return val.resultDesc;
+  if (typeof val.error === 'string' && val.error.trim()) return val.error;
+  if (typeof val.reason === 'string' && val.reason.trim()) return val.reason;
   try {
-    return JSON.stringify(val);
+    const s = JSON.stringify(val);
+    return s === '{}' ? (type === 'success' ? '操作成功' : '操作完成') : s;
   } catch {
     return String(val);
   }
 };
 
 const show = (msg: any, type: MessageType = 'info', options: MessageOptions = {}) => {
-  const text = resolveContent(msg);
+  const text = resolveContent(msg, type);
   const duration = options.duration ?? (type === 'error' ? 0 : props.duration);
   const item: MessageItem = {
     content: text,

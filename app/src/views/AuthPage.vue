@@ -149,8 +149,24 @@
               {{ mode === 'login' ? '立即登录' : '重置密码' }}
             </Button>
           </div>
-          <div v-if="mode === 'reset'" class="text-center mt-4">
-            <a href="#" @click.prevent="mode = 'login'" class="text-xs theme-link">返回登录</a>
+          <div class="flex items-center justify-between mt-4 px-1 text-xs">
+            <a
+              v-if="mode === 'reset'"
+              href="#"
+              @click.prevent="mode = 'login'"
+              class="theme-link"
+            >
+              返回登录
+            </a>
+            <span v-else></span>
+            <button
+              type="button"
+              @click="openSettings"
+              class="inline-flex items-center gap-1 text-[var(--muted)] hover:text-[var(--brand)] transition-colors cursor-pointer"
+            >
+              <i class="ri-server-line text-xs"></i>
+              <span>服务器设置</span>
+            </button>
           </div>
         </form>
       </div>
@@ -166,6 +182,9 @@ import { Button } from 'heroui-vue';
 import { api } from '@/sdk/app';
 import { useDataStore } from '@/composables/useDataStore';
 import { showMessage } from '@/composables/useMessage';
+import { useSettings } from '@/composables/useSettings';
+
+const { openSettings } = useSettings();
 
 const { userInfo, rememberLogin, savedPhone } = useDataStore();
 const router = useRouter();
@@ -299,11 +318,12 @@ const handleLogin = async () => {
       userInfo.value = data.response;
       router.replace({ name: 'home' }).catch(() => {});
     } else {
-      showMessage(data.msg, 'error');
+      showMessage(data.msg || data.message || '登录失败，请检查账号密码', 'error');
     }
   } catch (e) {
     console.error(e);
-    showMessage('登录失败', 'error');
+    const errText = e?.response?.data?.msg || e?.response?.data?.message || e?.message || '登录失败，请检查网络或切换服务器源';
+    showMessage(errText, 'error');
   } finally {
     loading.value = false;
   }

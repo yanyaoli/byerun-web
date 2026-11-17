@@ -1,17 +1,15 @@
 import { ref, type Ref } from 'vue';
 import { clearAuthSessionStorage, getSessionToken } from './session';
 import { AppApiClient, ApiBusinessError } from './client';
+import {
+  getActiveApiBaseUrl,
+  onServerChange,
+  OFFICIAL_SERVER_URL,
+  useServerConfig,
+} from '@/composables/useServerConfig';
+import { showMessage } from '@/composables/useMessage';
 
-// 清理历史可能残留的自定义接口缓存
-if (typeof window !== 'undefined') {
-  try {
-    window.localStorage.removeItem('byerun.api_base_url_override');
-    window.localStorage.removeItem('byerun.autorun_api_base_url_override');
-  } catch {}
-}
-
-const getDefaultApiBaseUrl = (): string =>
-  String(import.meta.env.VITE_API_BASE_URL || '/devproxy').trim().replace(/\/+$/, '');
+const getDefaultApiBaseUrl = (): string => getActiveApiBaseUrl();
 
 export const appConfig = {
   appVersion: '1.8.5',
@@ -48,6 +46,18 @@ export const api: AppApiClient = new AppApiClient({
   appSecret: appConfig.auth.appSecret,
   tokenProvider: getSessionToken,
   onAuthFailure: handleAuthFailure,
+});
+
+api.officialURL = OFFICIAL_SERVER_URL;
+api.onFallback = () => {
+  useServerConfig().setFallbackActive(true);
+  showMessage('服务器连接异常，已自动回退至官方源', 'warning');
+};
+
+onServerChange((newUrl) => {
+  appConfig.api.baseUrl = newUrl;
+  scheduledTaskConfig.apiBaseUrl = newUrl;
+  api.setBaseURL(newUrl);
 });
 
 export const getApiBaseUrlDefault = getDefaultApiBaseUrl;

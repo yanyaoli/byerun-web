@@ -140,6 +140,8 @@ export class AppApiClient {
   public tokenProvider: () => string | null;
   public onAuthFailure: () => void;
   public deviceResolver: () => DeviceInfo;
+  public officialURL: string = 'https://run-lb.tanmasports.com/v1';
+  public onFallback?: (toUrl: string) => void;
   private pendingGets: Map<string, Promise<any>>;
 
   constructor({
@@ -199,7 +201,34 @@ export class AppApiClient {
         }
         return response;
       },
-      (error) => {
+      async (error) => {
+        const config = error.config;
+        const status = error.response?.status;
+        const isNetworkOrServerError =
+          !error.response ||
+          status === 502 ||
+          status === 503 ||
+          status === 504 ||
+          error.code === 'ECONNABORTED' ||
+          String(error.message || '').includes('Network Error');
+
+        const currentBase = String(config?.baseURL || this.baseURL).replace(/\/+$/, '');
+        const officialBase = this.officialURL.replace(/\/+$/, '');
+
+        // 当主源不可用且尚未回退过时，自动回退官方源重试一次
+        if (
+          config &&
+          !(config as any)._fallbackRetried &&
+          isNetworkOrServerError &&
+          currentBase !== officialBase
+        ) {
+          (config as any)._fallbackRetried = true;
+          config.baseURL = officialBase;
+          this.setBaseURL(officialBase);
+          this.onFallback?.(officialBase);
+          return this.http.request(config);
+        }
+
         if (error.response && [401, 403].includes(error.response.status)) {
           this.onAuthFailure();
         }
@@ -207,6 +236,11 @@ export class AppApiClient {
         return Promise.reject(error);
       },
     );
+  }
+
+  setBaseURL(newUrl: string): void {
+    this.baseURL = newUrl.replace(/\/+$/, '');
+    this.http.defaults.baseURL = this.baseURL;
   }
 
   getCacheKey(url: string, params?: any): string {
