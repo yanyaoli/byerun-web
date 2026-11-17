@@ -1,4 +1,7 @@
+export const OFFICIAL_GITHUB_URL = 'https://github.com/';
+
 export const DEFAULT_GITHUB_PROXIES = [
+  OFFICIAL_GITHUB_URL,
   'https://ghproxy.net/',
   'https://github.akams.cn/',
   'https://proxy.pipers.cn/',
@@ -32,6 +35,14 @@ export function normalizeProxyUrl(rawUrl: string): string {
 }
 
 /**
+ * 判断是否为 GitHub 官方默认地址
+ */
+export function isOfficialProxy(rawUrl: string): boolean {
+  const clean = normalizeProxyUrl(rawUrl);
+  return clean === 'https://github.com/' || clean === 'http://github.com/';
+}
+
+/**
  * 广播代理配置变更通知
  */
 export function notifyProxyChange(): void {
@@ -49,7 +60,11 @@ export function getProxyList(): string[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed.map(normalizeProxyUrl).filter(Boolean);
+        const list = parsed.map(normalizeProxyUrl).filter(Boolean);
+        if (!list.some(isOfficialProxy)) {
+          list.unshift(OFFICIAL_GITHUB_URL);
+        }
+        return list;
       }
     }
   } catch {}
@@ -87,7 +102,7 @@ export function getActiveProxy(): string {
     if (active) return normalizeProxyUrl(active);
   } catch {}
   const list = getProxyList();
-  return list[0] || 'https://ghproxy.net/';
+  return list[0] || OFFICIAL_GITHUB_URL;
 }
 
 /**
@@ -132,7 +147,12 @@ export function setAutoProbeEnabled(enabled: boolean): void {
 export function getProxiedUrl(targetUrl: string, proxyUrl?: string): string {
   if (!targetUrl) return '';
   const proxy = proxyUrl || getActiveProxy();
-  const cleanProxy = proxy.endsWith('/') ? proxy : `${proxy}/`;
+  const cleanProxy = normalizeProxyUrl(proxy);
+
+  // 官方直连：无需添加代理前缀，直接返回原链接
+  if (isOfficialProxy(cleanProxy)) {
+    return targetUrl;
+  }
 
   // gitclone.com 特殊处理
   if (cleanProxy.includes('gitclone.com')) {
@@ -151,8 +171,11 @@ export function getProxiedUrl(targetUrl: string, proxyUrl?: string): string {
  */
 export async function probeProxy(proxyUrl: string, timeoutMs: number = 3500): Promise<ProxyProbeResult> {
   const cleanProxy = normalizeProxyUrl(proxyUrl);
+  const isOfficial = isOfficialProxy(cleanProxy);
   const probeTarget = 'https://raw.githubusercontent.com/yanyaoli/byerun-web/main/version.json';
-  const fullUrl = getProxiedUrl(probeTarget, cleanProxy);
+  const fullUrl = isOfficial
+    ? 'https://api.github.com/repos/yanyaoli/byerun-web/releases/latest'
+    : getProxiedUrl(probeTarget, cleanProxy);
 
   const start = performance.now();
   try {
@@ -161,7 +184,9 @@ export async function probeProxy(proxyUrl: string, timeoutMs: number = 3500): Pr
 
     const res = await fetch(fullUrl, {
       method: 'GET',
-      headers: { Range: 'bytes=0-64' },
+      headers: isOfficial
+        ? { Accept: 'application/vnd.github.v3+json' }
+        : { Range: 'bytes=0-64' },
       signal: controller.signal,
     });
     clearTimeout(timer);

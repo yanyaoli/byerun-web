@@ -22,13 +22,23 @@
         </button>
         <h1 class="text-sm font-bold text-[var(--text)]">GitHub 加速代理</h1>
       </div>
-      <button
-        type="button"
-        @click="handleReset"
-        class="text-xs text-[var(--muted)] hover:text-[var(--brand)] transition-colors cursor-pointer px-2 py-1 rounded-lg"
-      >
-        恢复默认
-      </button>
+      <div class="flex items-center gap-1">
+        <button
+          type="button"
+          @click="probeAll"
+          class="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--muted)] hover:text-[var(--brand)] hover:bg-[var(--surface-soft)] active:scale-95 transition-all cursor-pointer"
+          title="重新测速全部节点"
+        >
+          <i :class="['text-base', probingAll ? 'ri-loader-4-line animate-spin' : 'ri-refresh-line']"></i>
+        </button>
+        <button
+          type="button"
+          @click="handleReset"
+          class="text-xs text-[var(--muted)] hover:text-[var(--brand)] transition-colors cursor-pointer px-2 py-1 rounded-lg"
+        >
+          恢复默认
+        </button>
+      </div>
     </header>
 
     <!-- 主体内容（扁平化平铺） -->
@@ -44,90 +54,87 @@
         </p>
       </section>
 
-      <!-- 节点测速操作栏 -->
-      <div class="flex items-center justify-between px-1">
-        <span class="text-xs font-medium text-[var(--muted)]">代理节点列表 ({{ proxies.length }})</span>
-        <button
-          type="button"
-          :disabled="probingAll"
-          @click="handleProbeAll"
-          class="text-xs font-medium text-[var(--brand)] hover:opacity-80 active:scale-95 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
-        >
-          <i :class="['text-xs', probingAll ? 'ri-loader-4-line animate-spin' : 'ri-pulse-line']"></i>
-          <span>{{ probingAll ? '正在测速...' : '全部节点测速' }}</span>
-        </button>
-      </div>
+      <!-- 节点平铺列表 -->
+      <section>
+        <div class="text-xs font-medium text-[var(--muted)] px-3 mb-1.5">
+          加速节点 ({{ proxies.length }})
+        </div>
+        <div class="bg-[var(--surface-solid)] rounded-2xl border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden shadow-2xs">
+          <div
+            v-for="proxy in proxies"
+            :key="proxy"
+            @click="handleSelect(proxy)"
+            class="p-3.5 hover:bg-[var(--surface-soft)] active:bg-[var(--surface-soft)] transition-colors cursor-pointer"
+          >
+            <div class="flex items-start gap-3">
+              <!-- 前置单选圆点 -->
+              <div class="pt-0.5 shrink-0">
+                <span
+                  class="w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-200"
+                  :class="activeProxy === proxy ? 'border-[var(--brand)] bg-[var(--brand)] shadow-xs' : 'border-[var(--border)] bg-transparent'"
+                >
+                  <span v-if="activeProxy === proxy" class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                </span>
+              </div>
 
-      <!-- 代理节点平铺列表 -->
-      <div class="bg-[var(--surface-solid)] rounded-2xl border border-[var(--border)] divide-y divide-[var(--border)] overflow-hidden shadow-2xs">
-        <div
-          v-for="proxy in proxies"
-          :key="proxy"
-          @click="handleSelect(proxy)"
-          class="p-3.5 hover:bg-[var(--surface-soft)] active:bg-[var(--surface-soft)] transition-colors cursor-pointer flex items-center justify-between gap-3"
-        >
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-sm font-medium text-[var(--text)] font-mono">
-                {{ formatHost(proxy) }}
-              </span>
-              <!-- 延迟徽标 -->
-              <span
-                v-if="probeResults[proxy]"
-                class="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium"
-                :class="
-                  probeResults[proxy].ok
-                    ? probeResults[proxy].latency < 400
-                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'bg-rose-500/10 text-rose-500'
-                "
-              >
-                {{ probeResults[proxy].ok ? `${probeResults[proxy].latency}ms` : '超时' }}
-              </span>
-            </div>
-            <div class="text-[11px] text-[var(--muted)] font-mono truncate mt-0.5">
-              {{ proxy }}
-            </div>
-          </div>
+              <!-- 主体信息 -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                    <span class="text-sm font-medium text-[var(--text)] font-mono">
+                      {{ formatHost(proxy) }}
+                    </span>
+                    <!-- 官方节点徽标 -->
+                    <span
+                      v-if="isOfficialProxy(proxy)"
+                      class="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                    >
+                      官方
+                    </span>
+                    <!-- 自定义节点徽标 -->
+                    <span
+                      v-else-if="isCustomProxy(proxy)"
+                      class="px-1.5 py-0.5 rounded text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium"
+                    >
+                      自定义
+                    </span>
+                  </div>
 
-          <div class="flex items-center gap-2 shrink-0" @click.stop>
-            <!-- 单点测速 -->
-            <button
-              type="button"
-              @click="handleProbeSingle(proxy)"
-              :disabled="probingSingle[proxy]"
-              class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--muted)] hover:text-[var(--text)] hover:bg-[var(--surface-soft)] active:scale-95 transition-all cursor-pointer"
-              title="单独测速"
-            >
-              <i :class="['text-sm', probingSingle[proxy] ? 'ri-loader-4-line animate-spin' : 'ri-pulse-line']"></i>
-            </button>
+                  <!-- 最右侧操作区（删除按钮 + 耗时徽标） -->
+                  <div class="flex items-center gap-1.5 shrink-0 ml-1.5" @click.stop>
+                    <button
+                      v-if="isCustomProxy(proxy)"
+                      type="button"
+                      @click="handleDelete(proxy)"
+                      class="w-6 h-6 rounded-lg flex items-center justify-center text-rose-500 hover:bg-rose-500/10 active:scale-95 transition-all cursor-pointer"
+                      title="删除此节点"
+                    >
+                      <i class="ri-delete-bin-line text-xs"></i>
+                    </button>
 
-            <!-- 删除自定义节点（默认节点不展示删除） -->
-            <button
-              v-if="isCustomProxy(proxy)"
-              type="button"
-              @click="handleDelete(proxy)"
-              class="w-7 h-7 rounded-lg flex items-center justify-center text-rose-500 hover:bg-rose-500/10 active:scale-95 transition-all cursor-pointer"
-              title="删除此节点"
-            >
-              <i class="ri-delete-bin-line text-sm"></i>
-            </button>
+                    <!-- 最右侧耗时徽标 -->
+                    <span
+                      class="px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors"
+                      :class="getLatencyBadgeClass(probeStatus[proxy])"
+                    >
+                      {{ getLatencyBadgeText(probeStatus[proxy]) }}
+                    </span>
+                  </div>
+                </div>
 
-            <!-- 选中激活状态 -->
-            <div class="w-6 flex items-center justify-center">
-              <i
-                v-if="activeProxy === proxy"
-                class="ri-check-line text-xl text-[var(--brand)] font-bold"
-              ></i>
+                <!-- 完整 URL -->
+                <div class="text-[11px] text-[var(--muted)] font-mono truncate mt-0.5">
+                  {{ proxy }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
       <!-- 添加自定义节点 -->
       <section>
-        <div class="text-xs font-medium text-[var(--muted)] px-1 mb-1.5">新增代理节点</div>
+        <div class="text-xs font-medium text-[var(--muted)] px-3 mb-1.5">新增代理节点</div>
         <div class="bg-[var(--surface-solid)] rounded-2xl border border-[var(--border)] p-3 shadow-2xs">
           <div class="flex gap-2">
             <input
@@ -148,7 +155,7 @@
         </div>
       </section>
 
-      <p class="text-xs text-[var(--muted)] px-2 leading-relaxed">
+      <p class="text-xs text-[var(--muted)] px-3 leading-relaxed">
         提示：点击任意节点即可设为默认下载加速通道。若某节点访问受阻，可切换至其他低延迟镜像。
       </p>
     </main>
@@ -166,11 +173,16 @@ import {
   getActiveProxy,
   setActiveProxy,
   probeProxy,
-  probeAllProxies,
   normalizeProxyUrl,
-  type ProxyProbeResult,
+  isOfficialProxy,
 } from '@/services/githubProxy';
 import { useMessage } from '@/composables/useMessage';
+
+interface ProxyStatus {
+  loading: boolean;
+  latency?: number;
+  ok?: boolean;
+}
 
 const router = useRouter();
 const { showMessage } = useMessage();
@@ -179,8 +191,7 @@ const proxies = ref<string[]>([]);
 const activeProxy = ref<string>('');
 const customInput = ref('');
 const probingAll = ref(false);
-const probingSingle = ref<Record<string, boolean>>({});
-const probeResults = ref<Record<string, ProxyProbeResult>>({});
+const probeStatus = ref<Record<string, ProxyStatus>>({});
 
 const loadData = () => {
   proxies.value = getProxyList();
@@ -192,7 +203,60 @@ const formatHost = (url: string) => {
 };
 
 const isCustomProxy = (url: string) => {
-  return !DEFAULT_GITHUB_PROXIES.includes(url);
+  return !DEFAULT_GITHUB_PROXIES.includes(url) && !isOfficialProxy(url);
+};
+
+const getLatencyBadgeClass = (status?: ProxyStatus) => {
+  if (!status || status.loading) {
+    return 'bg-slate-500/10 text-slate-400 font-mono animate-pulse';
+  }
+  if (!status.ok) {
+    return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 font-mono font-medium';
+  }
+  if (status.latency !== undefined) {
+    if (status.latency < 300) {
+      return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-medium';
+    }
+    if (status.latency <= 800) {
+      return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-medium';
+    }
+    return 'bg-rose-500/10 text-rose-500 dark:text-rose-400 font-mono font-medium';
+  }
+  return 'bg-slate-500/10 text-slate-400 font-mono';
+};
+
+const getLatencyBadgeText = (status?: ProxyStatus) => {
+  if (!status || status.loading) return '测速中...';
+  if (!status.ok) return '超时/不可用';
+  return `${status.latency}ms`;
+};
+
+const probeSingle = async (proxy: string) => {
+  probeStatus.value[proxy] = { loading: true };
+  try {
+    const res = await probeProxy(proxy);
+    probeStatus.value[proxy] = {
+      loading: false,
+      ok: res.ok,
+      latency: res.latency,
+    };
+  } catch {
+    probeStatus.value[proxy] = {
+      loading: false,
+      ok: false,
+    };
+  }
+};
+
+const probeAll = async () => {
+  probingAll.value = true;
+  proxies.value.forEach((p) => {
+    probeStatus.value[p] = { loading: true };
+  });
+
+  const promises = proxies.value.map((p) => probeSingle(p));
+  await Promise.allSettled(promises);
+  probingAll.value = false;
 };
 
 const handleSelect = (proxy: string) => {
@@ -205,6 +269,7 @@ const handleReset = () => {
   resetProxyList();
   loadData();
   showMessage('已恢复默认 GitHub 代理列表', 'info');
+  probeAll();
 };
 
 const handleAddCustom = () => {
@@ -223,6 +288,7 @@ const handleAddCustom = () => {
   customInput.value = '';
   handleSelect(clean);
   showMessage('已添加并切换至新代理节点', 'success');
+  probeSingle(clean);
 };
 
 const handleDelete = (proxy: string) => {
@@ -235,32 +301,6 @@ const handleDelete = (proxy: string) => {
   showMessage('已删除该代理节点', 'info');
 };
 
-const handleProbeSingle = async (proxy: string) => {
-  probingSingle.value[proxy] = true;
-  try {
-    const res = await probeProxy(proxy);
-    probeResults.value[proxy] = res;
-    if (res.ok) {
-      showMessage(`${formatHost(proxy)} 延迟: ${res.latency}ms`, 'success');
-    } else {
-      showMessage(`${formatHost(proxy)} 连接超时`, 'warning');
-    }
-  } finally {
-    probingSingle.value[proxy] = false;
-  }
-};
-
-const handleProbeAll = async () => {
-  probingAll.value = true;
-  try {
-    const results = await probeAllProxies(proxies.value);
-    probeResults.value = results;
-    showMessage('全部节点测速完成', 'success');
-  } finally {
-    probingAll.value = false;
-  }
-};
-
 const goBack = () => {
   if (window.history.length > 1) {
     router.back();
@@ -271,5 +311,6 @@ const goBack = () => {
 
 onMounted(() => {
   loadData();
+  probeAll();
 });
 </script>

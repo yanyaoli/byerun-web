@@ -5,8 +5,10 @@ if (typeof window !== 'undefined') {
   } catch {}
 }
 
+export const MESSAGE_SERVER_DEFAULT_URL = 'https://chatserver.byerun.top';
+
 export const getChatApiBaseUrlDefault = (): string =>
-  String(import.meta.env.VITE_CHAT_SERVER_BASE_URL || '').trim().replace(/\/+$/, '');
+  String(import.meta.env.VITE_CHAT_SERVER_BASE_URL || MESSAGE_SERVER_DEFAULT_URL).trim().replace(/\/+$/, '');
 
 export const messageSdkConfig = {
   apiBaseUrl: getChatApiBaseUrlDefault(),
