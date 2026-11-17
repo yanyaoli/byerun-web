@@ -1,26 +1,21 @@
 <template>
   <div class="w-full max-w-3xl mx-auto py-2 px-1 space-y-3">
-    <!-- 系统设置卡片入口 -->
-    <Card
-      class="p-3.5 rounded-2xl border border-[var(--border)] shadow-xs cursor-pointer hover:border-[var(--brand)] transition-all bg-[var(--surface)]"
+    <!-- 系统设置平铺入口 -->
+    <div
+      class="flex items-center justify-between px-4 py-3.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-solid)] hover:bg-[var(--surface-soft)] active:bg-[var(--surface-soft)] transition-colors cursor-pointer shadow-2xs"
       @click="goToSettings"
     >
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-xl bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center">
-            <i class="ri-settings-3-line text-base"></i>
-          </div>
-          <div>
-            <div class="text-xs font-bold text-[var(--text)]">系统设置</div>
-            <div class="text-[11px] text-[var(--muted)]">外观主题切换 · 服务器源配置</div>
-          </div>
-        </div>
-        <div class="flex items-center gap-1 text-xs text-[var(--muted)]">
-          <span>管理</span>
-          <i class="ri-arrow-right-s-line text-base"></i>
+      <div class="flex items-center gap-3">
+        <i class="ri-settings-3-line text-lg text-[var(--muted)]"></i>
+        <div>
+          <div class="text-sm font-medium text-[var(--text)]">系统设置</div>
+          <div class="text-[11px] text-[var(--muted)]">外观主题 · 服务器源配置</div>
         </div>
       </div>
-    </Card>
+      <div class="flex items-center gap-1 text-xs text-[var(--muted)]">
+        <i class="ri-arrow-right-s-line text-base text-[var(--muted)]/60"></i>
+      </div>
+    </div>
 
     <MessageCenter :messages="messages" :loading="loading" />
 
