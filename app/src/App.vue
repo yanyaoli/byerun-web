@@ -110,6 +110,50 @@ const setViewportHeightVar = () => {
 let stopNotificationWatcher = null;
 const { checkUpdate } = useAppUpdate();
 
+// 全局移动端手势：从左边缘向右滑返回
+let globalTouchStartX = 0;
+let globalTouchStartY = 0;
+let globalTouchStartTime = 0;
+let isGlobalEdgeTouch = false;
+
+function handleGlobalTouchStart(e) {
+  if (!e.touches || e.touches.length !== 1) return;
+  const t = e.touches[0];
+  if (t.clientX <= 36) {
+    globalTouchStartX = t.clientX;
+    globalTouchStartY = t.clientY;
+    globalTouchStartTime = Date.now();
+    isGlobalEdgeTouch = true;
+  } else {
+    isGlobalEdgeTouch = false;
+  }
+}
+
+function handleGlobalTouchEnd(e) {
+  if (!isGlobalEdgeTouch || !e.changedTouches || e.changedTouches.length === 0) return;
+  const t = e.changedTouches[0];
+  const deltaX = t.clientX - globalTouchStartX;
+  const deltaY = t.clientY - globalTouchStartY;
+  const deltaTime = Date.now() - globalTouchStartTime;
+  isGlobalEdgeTouch = false;
+
+  if (deltaX > 60 && deltaX > Math.abs(deltaY) * 1.4 && deltaTime < 500) {
+    // 1. 若当前存在打开中的抽屉面板，由 Drawer 组件自身手势优先处理
+    if (document.querySelector('.drawer-panel')) {
+      return;
+    }
+
+    // 2. 若当前不是主页，返回上一路由
+    if (route.name && route.name !== 'home' && route.path !== '/') {
+      router.back();
+      return;
+    }
+
+    // 3. 若在主页且不在校园跑首页 Tab，分发事件切回首页
+    window.dispatchEvent(new CustomEvent('app:edge-swipe-back'));
+  }
+}
+
 onMounted(() => {
   setMessageHandler((message, type, options) => {
     messageRef.value?.show(message, type, options);
@@ -119,6 +163,8 @@ onMounted(() => {
   setViewportHeightVar();
   window.addEventListener('resize', setViewportHeightVar);
   window.addEventListener('orientationchange', setViewportHeightVar);
+  window.addEventListener('touchstart', handleGlobalTouchStart, { passive: true });
+  window.addEventListener('touchend', handleGlobalTouchEnd, { passive: true });
 
   // 进入 APP 自动获取更新
   checkUpdate();
@@ -130,6 +176,8 @@ onUnmounted(() => {
   setBannerHeight(0);
   window.removeEventListener('resize', setViewportHeightVar);
   window.removeEventListener('orientationchange', setViewportHeightVar);
+  window.removeEventListener('touchstart', handleGlobalTouchStart);
+  window.removeEventListener('touchend', handleGlobalTouchEnd);
 });
 </script>
 

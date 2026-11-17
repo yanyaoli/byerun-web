@@ -68,8 +68,8 @@ const isDark = computed(() => themeStore.isDark);
 const bottomBarRef = ref(null);
 const mainScrollRef = ref(null);
 const HEADER_RESERVED_SPACE = 54;
-const DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT = 96;
-const BOTTOM_BAR_CLEARANCE_GAP = 12;
+const DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT = 70;
+const BOTTOM_BAR_CLEARANCE_GAP = 8;
 const headerHeight = ref(HEADER_RESERVED_SPACE);
 const bottomBarOverlayHeight = ref(DEFAULT_BOTTOM_BAR_OVERLAY_HEIGHT);
 const headerCompact = ref(false);
@@ -146,6 +146,12 @@ async function handleRunSubmitted() {
   await refreshUserData({ background: true });
 }
 
+function handleEdgeSwipeBack() {
+  if (activeKey.value !== 'submit') {
+    setActiveKey('submit');
+  }
+}
+
 provide('goBack', () => setActiveKey('submit'));
 
 watch(
@@ -179,12 +185,15 @@ onMounted(() => {
   window.visualViewport?.addEventListener('resize', scheduleMeasureHeights);
   window.visualViewport?.addEventListener('scroll', scheduleMeasureHeights);
 
+  window.addEventListener('app:edge-swipe-back', handleEdgeSwipeBack);
+
   nextTick(() => {
     updateHeaderCompact(mainScrollRef.value?.scrollTop || 0);
   });
 });
 
 onUnmounted(() => {
+  window.removeEventListener('app:edge-swipe-back', handleEdgeSwipeBack);
   window.removeEventListener('resize', scheduleMeasureHeights);
   window.removeEventListener('orientationchange', scheduleMeasureHeights);
   window.visualViewport?.removeEventListener('resize', scheduleMeasureHeights);

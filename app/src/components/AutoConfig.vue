@@ -91,9 +91,9 @@
           </select>
         </div>
 
-        <div>
+        <div class="w-full min-w-0">
           <div class="field-label">任务定时</div>
-          <input v-model="prefTime" type="time" class="control" />
+          <input v-model="prefTime" type="time" class="control block w-full box-border" />
         </div>
 
         <button type="button" class="flex w-full items-center justify-between gap-3 text-left" @click="toggleEnabled">
@@ -370,13 +370,13 @@ const windowText = computed(() => {
 const ui = computed(() =>
   props.inline
     ? {
-        wrapper: 'w-full h-full flex flex-col',
-        panel: 'relative w-full h-full flex-1 flex flex-col p-4 overflow-y-auto',
+        wrapper: 'w-full h-full flex flex-col overflow-x-hidden',
+        panel: 'relative w-full h-full flex-1 flex flex-col p-4 overflow-y-auto overflow-x-hidden box-border max-w-full',
       }
     : {
         wrapper:
-          'fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm',
-        panel: 'relative w-full max-w-[360px] rounded-2xl theme-card p-5 shadow-2xl',
+          'fixed inset-0 z-[998] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm overflow-x-hidden',
+        panel: 'relative w-full max-w-[360px] rounded-2xl theme-card p-5 shadow-2xl overflow-x-hidden box-border',
       },
 );
 
@@ -559,7 +559,10 @@ watch(
 }
 
 .control {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: 38px;
   padding: 0 12px;
   font-size: 13px;
@@ -577,6 +580,11 @@ watch(
 
 input.control[type='time'] {
   color-scheme: light dark;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .switch {

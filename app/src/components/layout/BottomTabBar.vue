@@ -23,7 +23,7 @@
           :key="active === item.key ? 'active' : 'inactive'"
           class="tab-icon"
         >
-          <i :class="[item.icon, 'text-[19px] leading-none']"></i>
+          <i :class="[item.icon, 'text-[17px] leading-none']"></i>
           <span
             v-if="item.key === 'chat' && chatUnread && active !== 'chat'"
             class="tab-badge animate-pulse"
@@ -73,12 +73,12 @@ function handleClick(item) {
 .tabbar {
   position: fixed;
   z-index: 999;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
-  width: min(calc(100% - 32px), 420px);
-  height: 60px;
-  padding: 4px;
+  width: min(calc(100% - 24px), 420px);
+  height: 52px;
+  padding: 3px;
   display: grid;
   grid-template-columns: repeat(var(--tab-count, 4), 1fr);
   align-items: stretch;
@@ -105,10 +105,10 @@ function handleClick(item) {
 .tabbar::before {
   content: '';
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc((100% - 8px) / var(--tab-count));
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--tab-count));
   border-radius: 999px;
   background-color: var(--bottom-tab-active-bg);
   transform: translateX(calc(var(--active-tab-index) * 100%));
@@ -150,7 +150,7 @@ function handleClick(item) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   pointer-events: none;
 }
 
@@ -159,8 +159,8 @@ function handleClick(item) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   line-height: 1;
 }
 

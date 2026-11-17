@@ -104,6 +104,17 @@ if (arg === '--get') {
   process.stdout.write(nextVersion);
 } else if (arg === '--beijing-time') {
   process.stdout.write(beijingTime);
+} else if (arg === '--set') {
+  const targetVersion = process.argv[3] || '1.0.3';
+  const notes = process.argv[4] || currentData.releaseNotes || '移动端构建版本发布';
+  const updatedData = {
+    version: targetVersion,
+    buildTime: beijingTime,
+    releaseNotes: notes,
+  };
+  saveVersionData(updatedData);
+  console.log(`版本已设置为: ${targetVersion} (${beijingTime})`);
+  process.stdout.write(targetVersion);
 } else if (arg === '--bump') {
   const updatedData = {
     version: nextVersion,

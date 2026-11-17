@@ -181,8 +181,9 @@ function exportAndBack() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
-  padding: 0 16px;
+  height: calc(var(--sat, env(safe-area-inset-top, 0px)) + 52px);
+  padding: var(--sat, env(safe-area-inset-top, 0px)) 16px 0 16px;
+  box-sizing: border-box;
   background: #1e293b;
   border-bottom: 1px solid #334155;
   flex-shrink: 0;
@@ -361,8 +362,9 @@ function exportAndBack() {
 /* 响应式 */
 @media (max-width: 640px) {
   .header {
-    height: 48px;
-    padding: 0 12px;
+    height: calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px);
+    padding: var(--sat, env(safe-area-inset-top, 0px)) 12px 0 12px;
+    box-sizing: border-box;
     gap: 12px;
   }
 

@@ -113,27 +113,36 @@
     </section>
 
     <Drawer v-model="previewVisible" :title="previewQrLabel === '微信群' ? '微信群二维码' : '投喂码'">
-    <div class="px-5 pb-4 flex flex-col items-center">
-      <div v-if="previewQrUrl" class="rounded-lg overflow-hidden" style="padding: 8px; width: 200px">
-        <img :src="previewQrUrl" alt="二维码" referrerpolicy="no-referrer" class="w-full" style="display: block"
-          @error="onQrError" />
+      <div class="px-5 pb-4 flex flex-col items-center">
+        <div v-if="previewQrUrl" class="rounded-lg overflow-hidden bg-white p-2.5 shadow-sm" style="width: 220px">
+          <img
+            :src="previewQrUrl"
+            :alt="previewQrLabel || '二维码'"
+            referrerpolicy="no-referrer"
+            class="w-full h-auto object-contain block rounded"
+            @error="onQrError"
+          />
+        </div>
+        <p v-if="qrLoadFailed" class="text-xs text-center text-rose-500 mt-2">二维码加载失败，请检查网络或切换服务器源</p>
+        <a
+          v-if="appScheme"
+          :href="appScheme"
+          target="_blank"
+          class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.98] mt-3"
+          :style="{
+            background:
+              previewQrLabel === '支付宝' ? 'rgba(22, 119, 255, 0.06)' : 'rgba(7, 193, 96, 0.06)',
+            color: previewQrLabel === '支付宝' ? '#1677ff' : '#07c160',
+            border:
+              previewQrLabel === '支付宝'
+                ? '1px solid rgba(22, 119, 255, 0.15)'
+                : '1px solid rgba(7, 193, 96, 0.15)',
+          }"
+        >
+          <i :class="previewQrLabel === '支付宝' ? 'ri-alipay-fill' : 'ri-wechat-pay-line'" class="text-base"></i>
+          <span>打开{{ previewQrLabel === '微信群' ? '微信' : previewQrLabel }}</span>
+        </a>
       </div>
-      <p v-if="qrLoadFailed" class="text-xs text-center theme-text-tertiary mt-2">二维码加载失败</p>
-      <a v-if="appScheme" :href="appScheme" target="_blank"
-        class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-xs font-semibold transition-all active:scale-[0.98]"
-        :style="{
-          background:
-            previewQrLabel === '支付宝' ? 'rgba(22, 119, 255, 0.06)' : 'rgba(7, 193, 96, 0.06)',
-          color: previewQrLabel === '支付宝' ? '#1677ff' : '#07c160',
-          border:
-            previewQrLabel === '支付宝'
-              ? '1px solid rgba(22, 119, 255, 0.15)'
-              : '1px solid rgba(7, 193, 96, 0.15)',
-        }">
-        <i :class="previewQrLabel === '支付宝' ? 'ri-alipay-fill' : 'ri-wechat-pay-line'" class="text-base"></i>
-        <span>打开{{ previewQrLabel === '微信群' ? '微信' : previewQrLabel }}</span>
-      </a>
-    </div>
     </Drawer>
   </div>
 </template>
@@ -141,6 +150,25 @@
 <script setup>
 import { computed, ref } from 'vue';
 import Drawer from '@/components/ui/Drawer.vue';
+import { useServerConfig } from '@/composables/useServerConfig';
+
+const { activeBaseUrl } = useServerConfig();
+
+function resolveQrUrl(url) {
+  if (!url) return '';
+  let finalUrl = url;
+  if (/^https?:\/\//i.test(finalUrl)) {
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && finalUrl.startsWith('http://')) {
+      finalUrl = finalUrl.replace(/^http:\/\//i, 'https://');
+    }
+    return finalUrl;
+  }
+  if (finalUrl.startsWith('data:') || finalUrl.startsWith('blob:')) {
+    return finalUrl;
+  }
+  const base = (activeBaseUrl.value || 'https://api.byerun.top').replace(/\/+$/, '');
+  return `${base}/${finalUrl.replace(/^\/+/, '')}`;
+}
 
 const props = defineProps({
   sponsor: {
@@ -265,17 +293,11 @@ const appScheme = computed(() => {
   return '';
 });
 
-const openQrPreview = async (item) => {
+const openQrPreview = (item) => {
   if (!item?.url) return;
   qrLoadFailed.value = false;
   previewQrLabel.value = item.label;
-  try {
-    const res = await fetch(item.url);
-    const blob = await res.blob();
-    previewQrUrl.value = URL.createObjectURL(blob);
-  } catch {
-    previewQrUrl.value = item.url;
-  }
+  previewQrUrl.value = resolveQrUrl(item.url);
   previewVisible.value = true;
 };
 </script>

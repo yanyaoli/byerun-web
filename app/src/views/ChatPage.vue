@@ -278,7 +278,7 @@
       <div
         ref="composerShellRef"
         :class="[
-          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_32px)] p-2.5 border rounded-2xl transition-all duration-300 overflow-hidden backdrop-blur-2xl',
+          'fixed left-0 right-0 z-50 max-w-[600px] mx-auto w-[calc(100%_-_24px)] p-2 border rounded-2xl transition-all duration-300 overflow-hidden backdrop-blur-2xl',
           'theme-card-strong',
           'liquid-glass-shell liquid-glass-chat-shell',
           showEmojiPicker ? 'shadow-[0_16px_48px_rgba(0,0,0,0.2)]' : '',
@@ -390,46 +390,46 @@
 
         <div class="relative">
           <!-- 表情按钮等工具栏 -->
-          <div class="mb-3 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
+          <div class="mb-1.5 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
               <button
                 @click.stop="showEmojiPicker = !showEmojiPicker"
                 title="Emoji"
-                class="w-8 h-8 flex-shrink-0 grid place-items-center rounded-full chat-toolbar-action cursor-pointer transition-colors active:scale-90"
+                class="w-7 h-7 flex-shrink-0 grid place-items-center rounded-full chat-toolbar-action cursor-pointer transition-colors active:scale-90"
                 :class="showEmojiPicker ? '!text-blue-500 !bg-blue-500/15' : ''"
               >
-                <i class="ri-emotion-happy-fill text-lg"></i>
+                <i class="ri-emotion-happy-fill text-base"></i>
               </button>
 
               <label
-                class="w-8 h-8 inline-flex items-center justify-center rounded-full chat-toolbar-action cursor-pointer transition-colors"
+                class="w-7 h-7 inline-flex items-center justify-center rounded-full chat-toolbar-action cursor-pointer transition-colors"
               >
                 <input type="file" accept="image/*" class="hidden" @change="handleImageSelected" />
-                <i class="ri-image-fill text-lg"></i>
+                <i class="ri-image-fill text-base"></i>
               </label>
             </div>
 
             <button
               @click="openSettings"
               title="Profile Settings"
-              class="w-8 h-8 flex-shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer transition-colors"
+              class="w-7 h-7 flex-shrink-0 inline-flex items-center justify-center rounded-full cursor-pointer transition-colors"
             >
               <span
-                class="w-6 h-6 !rounded-full bg-[var(--surface-soft)] border border-[var(--border)] overflow-hidden flex items-center justify-center"
+                class="w-5 h-5 !rounded-full bg-[var(--surface-soft)] border border-[var(--border)] overflow-hidden flex items-center justify-center"
               >
                 <img
                   v-if="user?.avatar_url"
                   :src="normalizeAvatarUrl(user.avatar_url)"
                   class="w-full h-full object-cover !rounded-full"
                 />
-                <i v-else class="ri-user-3-fill text-[10px]"></i>
+                <i v-else class="ri-user-3-fill text-[9px]"></i>
               </span>
             </button>
           </div>
 
           <div ref="composerInputRowRef" class="flex items-center gap-2 max-w-5xl mx-auto min-w-0">
             <div
-              class="flex-1 min-w-0 h-10 flex items-center gap-1 rounded-2xl px-2 transition-all shadow-inner chat-composer-input liquid-glass-chat-input"
+              class="flex-1 min-w-0 h-9 flex items-center gap-1 rounded-xl px-2 transition-all shadow-inner chat-composer-input liquid-glass-chat-input"
             >
               <div
                 ref="messageInput"
@@ -443,7 +443,7 @@
                 @mouseup="saveRange"
                 @touchend="saveRange"
                 :class="[
-                  'flex-1 min-w-0 w-full h-full max-w-full bg-transparent border-none outline-none text-sm px-1 py-2 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-5 sticker-input',
+                  'flex-1 min-w-0 w-full h-full max-w-full bg-transparent border-none outline-none text-sm px-1 py-1.5 overflow-y-auto overflow-x-hidden whitespace-pre-wrap break-all leading-5 sticker-input',
                   !hasToken() ? 'pointer-events-none' : '',
                 ]"
               ></div>
@@ -451,16 +451,16 @@
               <button
                 v-if="text"
                 @click="clearText"
-                class="w-9 h-9 flex-shrink-0 grid place-items-center theme-text-secondary hover:text-rose-400 transition-colors"
+                class="w-8 h-8 flex-shrink-0 grid place-items-center theme-text-secondary hover:text-rose-400 transition-colors"
               >
-                <i class="ri-close-line text-lg"></i>
+                <i class="ri-close-line text-base"></i>
               </button>
             </div>
 
             <button
               @click="send"
               :disabled="!hasToken() || !text.trim() || isSending"
-              class="w-10 h-10 flex-shrink-0 grid place-items-center rounded-xl active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none theme-button-primary"
+              class="w-9 h-9 flex-shrink-0 grid place-items-center rounded-xl active:scale-90 transition-all disabled:opacity-50 disabled:shadow-none theme-button-primary"
             >
               <i v-if="isSending" class="ri-loader-4-line animate-spin text-sm"></i>
               <i v-else class="ri-send-plane-fill text-sm"></i>
@@ -814,9 +814,9 @@ const showSettings = ref(false);
 const showEmojiPicker = ref(false);
 const showPreviewBubble = ref(false);
 const SINGLE_MESSAGE_GAP_PX = 16;
-const COMPOSER_BASE_BOTTOM_PX = 12;
-const COMPOSER_DEFAULT_BOTTOM = 'calc(12px + env(safe-area-inset-bottom, 0px))';
-const DEFAULT_MESSAGE_BOTTOM_INSET = 120;
+const COMPOSER_BASE_BOTTOM_PX = 6;
+const COMPOSER_DEFAULT_BOTTOM = 'calc(6px + env(safe-area-inset-bottom, 0px))';
+const DEFAULT_MESSAGE_BOTTOM_INSET = 96;
 const messageListPaddingTop = ref(68);
 const messageBottomInset = ref(DEFAULT_MESSAGE_BOTTOM_INSET);
 const composerBottomOffset = ref(COMPOSER_DEFAULT_BOTTOM);
