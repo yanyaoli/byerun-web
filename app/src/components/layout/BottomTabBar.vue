@@ -23,7 +23,7 @@
           :key="active === item.key ? 'active' : 'inactive'"
           class="tab-icon"
         >
-          <i :class="[item.icon, 'text-[17px] leading-none']"></i>
+          <i :class="[item.icon, 'text-[20px] leading-none']"></i>
           <span
             v-if="item.key === 'chat' && chatUnread && active !== 'chat'"
             class="tab-badge animate-pulse"
@@ -73,12 +73,12 @@ function handleClick(item) {
 .tabbar {
   position: fixed;
   z-index: 999;
-  bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  bottom: clamp(10px, calc(6px + env(safe-area-inset-bottom, 0px) * 0.35), 20px);
   left: 50%;
   transform: translateX(-50%);
   width: min(calc(100% - 24px), 420px);
-  height: 52px;
-  padding: 3px;
+  height: 60px;
+  padding: 4px;
   display: grid;
   grid-template-columns: repeat(var(--tab-count, 4), 1fr);
   align-items: stretch;
@@ -105,10 +105,10 @@ function handleClick(item) {
 .tabbar::before {
   content: '';
   position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 3px;
-  width: calc((100% - 6px) / var(--tab-count));
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--tab-count));
   border-radius: 999px;
   background-color: var(--bottom-tab-active-bg);
   transform: translateX(calc(var(--active-tab-index) * 100%));
@@ -150,7 +150,7 @@ function handleClick(item) {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   pointer-events: none;
 }
 
@@ -159,8 +159,8 @@ function handleClick(item) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   line-height: 1;
 }
 
@@ -181,10 +181,10 @@ function handleClick(item) {
 }
 
 .tab-label {
-  font-size: 9px;
+  font-size: 10px;
   line-height: 1;
-  letter-spacing: 0.08em;
-  text-indent: 0.08em; /* 视觉补偿右侧字间距，确保文字水平精确居中 */
+  letter-spacing: 0.05em;
+  text-indent: 0.05em; /* 视觉补偿右侧字间距，确保文字水平精确居中 */
   font-weight: 500;
   white-space: nowrap;
 }
