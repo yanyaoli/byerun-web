@@ -113,7 +113,7 @@ function saveVersionData(data) {
       content = content.replace(/versionCode\s+\d+/, `versionCode ${versionCode}`);
       content = content.replace(/versionName\s+["'][^"']+["']/, `versionName "${data.version}"`);
       fs.writeFileSync(androidGradleFile, content, 'utf-8');
-      console.log(`[Android] 同步原生版本: versionCode ${versionCode}, versionName "${data.version}"`);
+      console.error(`[Android] 同步原生版本: versionCode ${versionCode}, versionName "${data.version}"`);
     } catch (e) {
       console.error('更新 Android build.gradle 失败:', e);
     }
@@ -128,7 +128,7 @@ function saveVersionData(data) {
       content = content.replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${data.version};`);
       content = content.replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${versionCode};`);
       fs.writeFileSync(iosPbxFile, content, 'utf-8');
-      console.log(`[iOS] 同步原生版本: CURRENT_PROJECT_VERSION ${versionCode}, MARKETING_VERSION ${data.version}`);
+      console.error(`[iOS] 同步原生版本: CURRENT_PROJECT_VERSION ${versionCode}, MARKETING_VERSION ${data.version}`);
     } catch (e) {
       console.error('更新 iOS project.pbxproj 失败:', e);
     }
@@ -157,7 +157,7 @@ if (arg === '--get') {
     releaseNotes: notes,
   };
   saveVersionData(updatedData);
-  console.log(`版本已设置为: ${targetVersion} (${beijingTime})`);
+  console.error(`版本已设置为: ${targetVersion} (${beijingTime})`);
   process.stdout.write(targetVersion);
 } else if (arg === '--bump') {
   const updatedData = {
@@ -166,7 +166,7 @@ if (arg === '--get') {
     releaseNotes: currentData.releaseNotes || '移动端构建版本发布',
   };
   saveVersionData(updatedData);
-  console.log(`版本已成功递增: ${currentVersion} -> ${nextVersion} (${beijingTime})`);
+  console.error(`版本已成功递增: ${currentVersion} -> ${nextVersion} (${beijingTime})`);
   process.stdout.write(nextVersion);
 } else {
   console.log(`当前版本: ${currentVersion}`);

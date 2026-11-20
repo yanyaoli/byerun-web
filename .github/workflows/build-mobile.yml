@@ -189,7 +189,7 @@ jobs:
       - name: Bump Version & Record Beijing Time
         id: bump
         run: |
-          NEW_VER=$(node scripts/bump-version.js --bump)
+          NEW_VER=$(node scripts/bump-version.js --bump | tail -n 1 | tr -d '[:space:]')
           echo "new_version=$NEW_VER" >> $GITHUB_OUTPUT
 
       - name: Commit and Push Version Update
