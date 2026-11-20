@@ -1,5 +1,5 @@
 {
   "version": "1.0.6",
   "buildTime": "2026-11-20 11:31:25",
-  "releaseNotes": "fix(chat): 修复移动端选图崩溃问题，添加媒体权限，采用轻量化预览与内存优化"
+  "releaseNotes": "fix(map): 修复高德底图样式与轨迹导入解析，优化移动端底部 TabBar 高度与安全距离"
 }
