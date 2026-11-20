@@ -195,7 +195,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'confirm', 'cancel']);
 
 const GAODE_TILE_URL =
-  'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}';
+  'https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}';
 const DEFAULT_CENTER = [30.572269, 104.066541];
 
 const mapContainer = ref(null);

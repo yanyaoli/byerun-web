@@ -37,7 +37,7 @@ const DEFAULT_CENTER = [30.572269, 104.066541];
 const DEFAULT_ZOOM = 12;
 const MAP_THEME_CONFIG = {
   light: {
-    styleCode: 7,
+    styleCode: 8,
     tileFilter: 'none',
     trackColor: '#0284c7',
     repeatSegmentColor: '#ea580c',
@@ -354,10 +354,10 @@ function fitToTrack(points) {
   const bounds = L.latLngBounds(points);
   if (!bounds.isValid()) return;
 
+  invalidateMapSize();
   map.fitBounds(bounds, {
     padding: [48, 48],
-    animate: true,
-    duration: 0.55,
+    animate: false,
     maxZoom: 18,
   });
 }
@@ -424,8 +424,8 @@ async function initMap() {
     zoomControl: false,
     attributionControl: false,
     preferCanvas: true,
-    zoomSnap: 0.5,
-    zoomDelta: 0.5,
+    zoomSnap: 1,
+    zoomDelta: 1,
   });
 
   map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
@@ -463,11 +463,12 @@ watch(
 
 watch(
   () => activeMapThemeKey.value,
-  async (nextTheme, prevTheme) => {
+  (nextTheme, prevTheme) => {
     if (!map || nextTheme === prevTheme) return;
-    applyGaodeBasemap(nextTheme);
+    if (getThemeConfig(nextTheme).styleCode !== getThemeConfig(prevTheme).styleCode) {
+      applyGaodeBasemap(nextTheme);
+    }
     applyTrackTheme();
-    await redrawTrack();
   },
 );
 
@@ -513,22 +514,13 @@ onBeforeUnmount(() => {
   box-shadow: var(--map-shadow);
   position: relative;
   z-index: 0;
+  isolation: isolate;
 }
 
 :deep(.leaflet-container) {
   width: 100%;
   height: 100%;
   background: var(--map-surface);
-}
-
-:deep(.leaflet-pane),
-:deep(.leaflet-map-pane),
-:deep(.leaflet-map-pane canvas) {
-  z-index: 1 !important;
-}
-
-:deep(.leaflet-control-container) {
-  z-index: 2 !important;
 }
 
 :deep(.leaflet-tile-pane) {

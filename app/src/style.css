@@ -61,7 +61,7 @@
   textarea,
   select,
   a,
-  img,
+  img:not(.leaflet-tile),
   [role='button'] {
     transition-property: background-color, border-color, box-shadow, opacity, transform;
     transition-duration: var(--theme-transition-duration);

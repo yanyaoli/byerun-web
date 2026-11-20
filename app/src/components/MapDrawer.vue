@@ -320,6 +320,8 @@ function updatePolyline() {
 function focusToTrack(trackPoints) {
   if (!map || !Array.isArray(trackPoints) || trackPoints.length === 0) return;
 
+  map.invalidateSize(false);
+
   if (trackPoints.length === 1) {
     map.setView(trackPoints[0], Math.max(map.getZoom(), 17), {
       animate: false,
@@ -564,13 +566,14 @@ async function onImportFileSelected(event) {
     }
 
     importFileName.value = file.name;
-    importMapName.value = importMapName.value || getFileBaseName(file.name);
+    importMapName.value = importMapName.value || result.mapName || getFileBaseName(file.name);
     importPreviewData.value = result.points.map(([lng, lat]) => `${lng},${lat}`);
 
     points.value = result.points.map(([lng, lat]) => [lat, lng]);
     updatePolyline();
+    focusToTrack(points.value);
     emit('track-changed', [...points.value]);
-    showToast('导入数据已核验并显示，请确认是否保存到本地地图', 'info');
+    showToast('导入数据已核验并定位到轨迹坐标，请确认是否保存到本地地图', 'info');
   } catch (error) {
     importPreviewData.value = [];
     importError.value = `读取文件失败：${error.message}`;
@@ -595,6 +598,7 @@ function confirmImport() {
     saveCustomMap('', mapName, importPreviewData.value);
     showToast('导入成功，已保存到本地地图', 'success');
     closeImportDialog();
+    focusToTrack(points.value);
   } catch (error) {
     importError.value = '保存失败：' + error.message;
   } finally {
@@ -683,15 +687,35 @@ function initMap() {
   map.on('mouseout', onMapMouseUp);
   bindTouchEvents();
 
-  // 加载初始轨迹
+  // 加载初始轨迹（统一按 [lng, lat] 解析并转换为 Leaflet 所需的 [lat, lng]）
   if (props.initialTrack && props.initialTrack.length > 0) {
-    points.value = props.initialTrack.map((p) => {
-      if (typeof p === 'string') {
-        const [lng, lat] = p.split(',').map(parseFloat);
+    points.value = props.initialTrack
+      .map((p) => {
+        let lngRaw;
+        let latRaw;
+        if (typeof p === 'string') {
+          const text = p.trim();
+          if (text.includes(',')) {
+            [lngRaw, latRaw] = text.split(',');
+          } else {
+            const matched = text.match(/^(-?\d+(?:\.\d+)?)\-(-?\d+(?:\.\d+)?)$/);
+            if (matched) {
+              lngRaw = matched[1];
+              latRaw = matched[2];
+            }
+          }
+        } else if (Array.isArray(p) && p.length >= 2) {
+          [lngRaw, latRaw] = p;
+        } else if (p && typeof p === 'object') {
+          lngRaw = p.lng ?? p.lon ?? p.longitude;
+          latRaw = p.lat ?? p.latitude;
+        }
+        const lng = Number(lngRaw);
+        const lat = Number(latRaw);
+        if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
         return [lat, lng];
-      }
-      return p;
-    });
+      })
+      .filter(Boolean);
     updatePolyline();
     focusToTrack(points.value);
   }

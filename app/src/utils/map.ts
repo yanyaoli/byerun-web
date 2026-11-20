@@ -179,6 +179,7 @@ export interface MapValidationResult {
   valid: boolean;
   error?: string;
   points?: [number, number][];
+  mapName?: string;
 }
 
 export function validateMapData(data: any): MapValidationResult {
@@ -193,8 +194,22 @@ export function validateMapData(data: any): MapValidationResult {
     }
   }
 
+  let extractedMapName: string | undefined;
+  if (parsed && !Array.isArray(parsed) && typeof parsed === 'object') {
+    if (typeof parsed.mapName === 'string' && parsed.mapName.trim()) {
+      extractedMapName = parsed.mapName.trim();
+    }
+    if (Array.isArray(parsed.mapData)) {
+      parsed = parsed.mapData;
+    } else if (Array.isArray(parsed.track)) {
+      parsed = parsed.track;
+    } else if (Array.isArray(parsed.points)) {
+      parsed = parsed.points;
+    }
+  }
+
   if (!Array.isArray(parsed)) {
-    return { valid: false, error: '数据必须是数组' };
+    return { valid: false, error: '数据必须是数组或包含 mapData 数组的对象' };
   }
 
   if (parsed.length < 2) {
@@ -203,15 +218,32 @@ export function validateMapData(data: any): MapValidationResult {
 
   const validPoints: [number, number][] = [];
   for (const item of parsed) {
-    let point = item;
-    if (typeof item === 'string') {
-      point = item.split(',');
-    }
-    if (!Array.isArray(point) || point.length < 2) continue;
+    let lngRaw: any;
+    let latRaw: any;
 
-    const lng = Number(point[0]);
-    const lat = Number(point[1]);
-    if (Number.isNaN(lng) || Number.isNaN(lat)) continue;
+    if (Array.isArray(item) && item.length >= 2) {
+      [lngRaw, latRaw] = item;
+    } else if (item && typeof item === 'object') {
+      lngRaw = item.lng ?? item.lon ?? item.longitude;
+      latRaw = item.lat ?? item.latitude;
+    } else if (typeof item === 'string') {
+      const text = item.trim();
+      if (!text) continue;
+      if (text.includes(',')) {
+        [lngRaw, latRaw] = text.split(',');
+      } else {
+        const matched = text.match(/^(-?\d+(?:\.\d+)?)\-(-?\d+(?:\.\d+)?)$/);
+        if (!matched) continue;
+        lngRaw = matched[1];
+        latRaw = matched[2];
+      }
+    } else {
+      continue;
+    }
+
+    const lng = Number(lngRaw);
+    const lat = Number(latRaw);
+    if (!Number.isFinite(lng) || !Number.isFinite(lat)) continue;
     if (lng < -180 || lng > 180 || lat < -90 || lat > 90) continue;
 
     validPoints.push([lng, lat]);
@@ -221,7 +253,7 @@ export function validateMapData(data: any): MapValidationResult {
     return { valid: false, error: '至少需要2个有效坐标点' };
   }
 
-  return { valid: true, points: validPoints };
+  return { valid: true, points: validPoints, mapName: extractedMapName };
 }
 
 export function getMapData(mapChoice = 'default'): string[] {
