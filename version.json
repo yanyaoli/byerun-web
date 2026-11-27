@@ -1,5 +1,5 @@
 {
-  "version": "1.0.7",
-  "buildTime": "2026-11-27 11:07:45",
+  "version": "1.0.8",
+  "buildTime": "2026-11-27 11:12:37",
   "releaseNotes": "fix(map): 修复高德底图样式与轨迹导入解析，优化移动端底部 TabBar 高度与安全距离"
 }
