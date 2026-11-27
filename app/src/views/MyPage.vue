@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-3xl mx-auto py-2 px-1 space-y-3">
+  <div class="w-full pb-4 space-y-3">
     <MessageCenter :messages="messages" :loading="loading" />
 
     <ProjectInfo

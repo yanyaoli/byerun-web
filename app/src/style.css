@@ -407,3 +407,9 @@ body::-webkit-scrollbar,
 .toast[data-type="info"], [data-sonner-toast][data-type="info"], [data-sonner-toast][data-type="default"] {
   border-left: 4px solid #3b82f6 !important;
 }
+
+.alert-root {
+  padding: 8px 10px !important;
+  gap: 8px !important;
+  align-items: center !important;
+}

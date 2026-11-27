@@ -8,18 +8,18 @@
       class="fixed left-0 right-0 z-[999] w-full pointer-events-auto"
       :style="{ top: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 44px)' }"
     >
-      <div class="max-w-[600px] mx-auto px-3 pt-1">
+      <div class="max-w-[600px] mx-auto px-4 pt-1">
         <Alert
           :status="alertStatus"
-          class="shadow-md rounded-xl border border-[var(--border)] items-start"
+          class="shadow-md rounded-xl border border-[var(--border)] !items-center !px-2.5 !py-2 !gap-2"
         >
-          <AlertIndicator class="mt-0.5 shrink-0" />
-          <AlertContent class="flex-1 min-w-0 py-0.5">
-            <AlertDescription class="text-xs font-medium leading-relaxed break-words whitespace-pre-line select-text block">
+          <AlertIndicator class="shrink-0 flex items-center" />
+          <AlertContent class="flex-1 min-w-0 flex items-center">
+            <AlertDescription class="text-xs font-medium leading-snug break-words whitespace-pre-line select-text block m-0">
               {{ currentNotice?.content }}
             </AlertDescription>
           </AlertContent>
-          <CloseButton class="shrink-0 cursor-pointer" @click="dismissNotice" />
+          <CloseButton class="shrink-0 cursor-pointer self-center" @click="dismissNotice" />
         </Alert>
       </div>
     </div>
