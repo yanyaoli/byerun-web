@@ -43,16 +43,14 @@
         <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold theme-text-primary">提交记录</span>
+            <span
+              v-if="autoRunEnabled"
+              class="h-4.5 px-1.5 rounded-full text-[10px] font-medium inline-flex items-center border theme-success-border theme-success-bg theme-success"
+            >
+              自动任务已启用
+            </span>
           </div>
           <div class="flex items-center gap-2">
-            <button
-              type="button"
-              class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--action-hover-bg)] active:scale-95"
-              @click="showAutoConfig = true"
-              title="定时任务"
-            >
-              <i class="ri-calendar-schedule-line text-sm"></i>
-            </button>
             <button
               type="button"
               class="w-8 h-8 flex items-center justify-center rounded-lg transition-all hover:bg-[var(--action-hover-bg)] active:scale-95"
@@ -164,12 +162,26 @@
             </div>
 
             <transition name="confirm-actions" mode="out-in">
-              <div v-if="!awaitingSubmitConfirm">
+              <div v-if="!awaitingSubmitConfirm" class="flex w-full gap-3">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="lg"
+                  class="flex-1"
+                  :disabled="submitting || autoRunSaving || autoRunLoading"
+                  @click="toggleAutoRun"
+                >
+                  <i
+                    :class="autoRunSaving ? 'ri-loader-4-line animate-spin' : 'ri-timer-line'"
+                    class="mr-1 shrink-0 text-base"
+                  ></i>
+                  {{ autoRunSaving ? (autoRunEnabled ? '停用中...' : '启用中...') : autoRunEnabled ? '停用自动任务' : '启用自动任务' }}
+                </Button>
                 <Button
                   type="submit"
                   variant="primary"
                   size="lg"
-                  full-width
+                  class="flex-1"
                   :is-pending="submitting"
                   :disabled="submitting || !isDistanceValid"
                 >
@@ -203,11 +215,162 @@
                 </Button>
               </div>
             </transition>
+
+            <p class="mt-2.5 text-[11px] theme-text-tertiary leading-relaxed">
+              每日非定时自动提交记录，跑步里程和时长使用随机值，可选固定地图
+            </p>
       </form>
 
-    <Drawer v-model="showAutoConfig" title="校园跑定时任务">
-      <AutoConfig inline @saved="onAutoConfigSaved" />
-    </Drawer>
+    <!-- 执行记录模块 -->
+    <section class="rounded-xl p-3.5 bg-transparent border border-[var(--card-border)]">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-xs font-semibold theme-text-primary flex items-center gap-1">
+            <i class="ri-history-line text-sm theme-text-tertiary"></i>
+            <span>执行记录</span>
+          </span>
+          <span
+            class="h-4.5 px-1.5 rounded-full text-[10px] font-medium inline-flex items-center border"
+            :class="
+              autoRunEnabled
+                ? 'theme-success-border theme-success-bg theme-success'
+                : 'bg-[var(--card-soft-bg)] theme-text-secondary border-[var(--card-border)]'
+            "
+          >
+            {{ autoRunEnabled ? '已启用' : '未启用' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span v-if="autoRunLastLabel" class="text-[10px] font-mono theme-text-tertiary">{{ autoRunLastLabel }}</span>
+          <button
+            type="button"
+            class="text-[11px] text-sky-500 hover:text-sky-400 inline-flex items-center gap-0.5 transition-colors cursor-pointer"
+            @click="toggleAutoRunHistory"
+          >
+            <span>{{ showAutoRunHistory ? '收起历史' : '查看历史' }}</span>
+            <i :class="showAutoRunHistory ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"></i>
+          </button>
+        </div>
+      </div>
+
+      <div v-if="autoRunLoading" class="space-y-1.5 py-1">
+        <SkeletonBox width="60%" height="13px" radius="4px" />
+        <SkeletonBox width="100%" height="28px" radius="6px" />
+      </div>
+
+      <div v-else class="space-y-2">
+        <div v-if="autoRuntime.todayExecuted" class="space-y-1.5">
+          <div class="flex items-center gap-1.5">
+            <i
+              :class="autoRuntime.todaySuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"
+              class="text-sm shrink-0"
+              :style="{ color: autoRuntime.todaySuccess ? 'var(--success-color, #22c55e)' : 'var(--danger-color, #ef4444)' }"
+            ></i>
+            <span class="text-xs font-medium theme-text-primary">
+              今日已于 <span class="font-mono">{{ autoRunExecutedTimeText }}</span>
+              {{ autoRuntime.todaySuccess ? '执行成功' : '执行失败' }}
+            </span>
+          </div>
+          <div
+            v-if="autoRuntime.msg"
+            class="rounded-lg p-2 bg-black/10 dark:bg-white/5 border border-white/10 text-xs flex items-start justify-between gap-2"
+          >
+            <div
+              class="font-mono text-[11px] break-all select-all leading-relaxed flex-1"
+              :class="autoRuntime.todaySuccess ? 'theme-success' : 'theme-danger'"
+            >
+              {{ autoRuntime.msg }}
+            </div>
+            <button
+              type="button"
+              class="shrink-0 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+              title="复制结果信息"
+              @click="copyAutoRunText(autoRuntime.msg)"
+            >
+              <i class="ri-file-copy-line text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div v-else-if="autoRunEnabled" class="space-y-1">
+          <div class="flex items-center gap-1.5 text-xs theme-text-secondary">
+            <i class="ri-time-line text-sm shrink-0 text-sky-500"></i>
+            <span>{{ autoRuntime.msg || '已启用每日自动任务，将在每日 07:00 ~ 24:00 顺序执行' }}</span>
+          </div>
+          <div class="text-[11px] theme-text-tertiary">
+            固定地图：{{ autoRunMapNameText }}
+          </div>
+        </div>
+
+        <div v-else class="space-y-1">
+          <p class="text-[11px] theme-text-tertiary">未启用自动任务</p>
+          <div
+            v-if="autoRuntime.msg && autoRuntime.msg !== '未启用自动任务' && autoRuntime.msg !== '未启用定时任务' && autoRuntime.msg !== '定时任务已停用'"
+            class="rounded-lg p-2 bg-black/5 dark:bg-white/5 text-[11px] font-mono theme-text-tertiary break-all select-all flex items-start justify-between gap-2"
+          >
+            <span>上次结果：{{ autoRuntime.msg }}</span>
+            <button
+              type="button"
+              class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+              title="复制"
+              @click="copyAutoRunText(autoRuntime.msg)"
+            >
+              <i class="ri-file-copy-line text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="showAutoRunHistory" class="mt-2 pt-2 border-t border-[var(--card-border)] space-y-1.5">
+          <div v-if="loadingAutoRunHistory" class="space-y-1.5 py-1">
+            <div
+              v-for="idx in 3"
+              :key="`run-history-skel-${idx}`"
+              class="flex items-center justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5"
+            >
+              <div class="flex items-center gap-2 flex-1">
+                <SkeletonBox width="6px" height="6px" radius="9999px" />
+                <SkeletonBox width="80px" height="12px" radius="4px" />
+              </div>
+              <SkeletonBox width="46px" height="12px" radius="4px" />
+            </div>
+          </div>
+          <div v-else-if="autoRunHistoryRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
+            暂无历史执行记录
+          </div>
+          <div
+            v-for="rec in autoRunHistoryRecords"
+            :key="`run-rec-${rec.id}-${rec.created_at}`"
+            class="flex items-start justify-between gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 text-[11px]"
+          >
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 text-[10px] mb-0.5">
+                <span
+                  class="w-1.5 h-1.5 rounded-full shrink-0"
+                  :class="rec.success ? 'bg-emerald-500' : 'bg-rose-500'"
+                ></span>
+                <span v-if="rec.map_id" class="theme-text-secondary truncate max-w-[140px]">
+                  {{ getRouteName(rec.map_id) || rec.map_id }}
+                </span>
+                <span class="theme-text-tertiary font-mono ml-auto shrink-0">
+                  {{ rec.created_at }}
+                </span>
+              </div>
+              <div class="font-mono text-[10px] theme-text-secondary break-all select-all">
+                {{ rec.message }}
+              </div>
+            </div>
+            <button
+              type="button"
+              class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+              title="复制"
+              @click="copyAutoRunText(rec.message)"
+            >
+              <i class="ri-file-copy-line text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- 板块三：路线预览 -->
     <div v-show="activeTab === 'submit'" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
@@ -251,7 +414,7 @@ import { useRouter } from 'vue-router';
 import { submitRun as submitRunApi, useRouteGenerator } from '@/composables/useRun';
 import { useDataStore } from '@/composables/useDataStore';
 import { useThemeStore } from '@/composables/useTheme';
-import { waitForAutorunPingReady } from '@/sdk/app';
+import { waitForAutorunPingReady, getAutorunClient } from '@/sdk/app';
 import { deleteCustomMap, getCustomMapData, renameCustomMap, loadCustomMaps } from '@/utils/map';
 import Drawer from '@/components/ui/Drawer.vue';
 import RunRecords from '@/components/RunRecords.vue';
@@ -265,35 +428,19 @@ import {
 } from '@/utils/run';
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 import { Button } from 'heroui-vue';
+import { SkeletonBox } from 'skullet/vue';
 import MapPreview from '@/components/MapPreview.vue';
-import AutoConfig from '@/components/AutoConfig.vue';
 
 import { showMessage } from '@/composables/useMessage';
 
 const router = useRouter();
 
-const { userInfo, runStandard, runInfo, activityInfo, submitRunDistance, submitRunRoute } =
+const { token, userInfo, runStandard, runInfo, activityInfo, submitRunDistance, submitRunRoute } =
   useDataStore();
 
 const emit = defineEmits(['submitted']);
 
-const tabs = [
-  { key: 'submit', label: '手动提交', icon: 'ri-add-line' },
-  { key: 'schedule', label: '自动提交', icon: 'ri-calendar-schedule-line' },
-];
-
 const activeTab = ref('submit');
-const schedulePanelMounted = ref(false);
-
-watch(
-  activeTab,
-  (tab) => {
-    if (tab === 'schedule') {
-      schedulePanelMounted.value = true;
-    }
-  },
-  { immediate: true },
-);
 
 // 提交记录相关
 const form = ref({
@@ -309,8 +456,22 @@ const submitting = ref(false);
 const randomizing = ref(false);
 const awaitingSubmitConfirm = ref(false);
 const showRouteOptions = ref(false);
-const showAutoConfig = ref(false);
 const showRecords = ref(false);
+
+// 自动任务与执行记录相关
+const autoRunEnabled = ref(false);
+const autoRunMapId = ref('');
+const autoRunLoading = ref(false);
+const autoRunSaving = ref(false);
+const autoRuntime = reactive({
+  todayExecuted: false,
+  todaySuccess: false,
+  msg: '',
+  lastRunAt: '',
+});
+const showAutoRunHistory = ref(false);
+const loadingAutoRunHistory = ref(false);
+const autoRunHistoryRecords = ref([]);
 
 const themeStore = useThemeStore();
 const isDark = computed(() => themeStore.isDark);
@@ -780,8 +941,121 @@ const onFormSubmit = () => {
   requestSubmitConfirm();
 };
 
-const onAutoConfigSaved = () => {
-  showMessage('保存成功', 'success');
+const autoRunLastLabel = computed(() => {
+  if (!autoRuntime.lastRunAt) return '';
+  const parts = String(autoRuntime.lastRunAt).split(' ');
+  return parts.length > 1 ? parts[1] : autoRuntime.lastRunAt;
+});
+
+const autoRunExecutedTimeText = computed(() => {
+  if (!autoRuntime.todayExecuted) return '';
+  const parts = String(autoRuntime.lastRunAt || '').split(' ');
+  if (parts.length === 2 && parts[1]) return parts[1].substring(0, 5);
+  return '今日';
+});
+
+const autoRunMapNameText = computed(() => {
+  const id = String(autoRunMapId.value || '').trim();
+  if (!id) return '未指定（默认地图）';
+  return getRouteName(id) || id;
+});
+
+const applyAutoRunStatus = (data = {}) => {
+  autoRunEnabled.value = Number(data.enabled) === 1 || data.enabled === true;
+  autoRunMapId.value = String(data.map_id || '').trim();
+  autoRuntime.todayExecuted = !!data.today_executed;
+  autoRuntime.todaySuccess = !!data.today_success;
+  autoRuntime.msg = String(data.msg || data.today_result || data.last_result || '');
+  autoRuntime.lastRunAt = String(data.last_run_at || '');
+};
+
+const loadAutoRunStatus = async (silent = false) => {
+  const client = getAutorunClient();
+  if (!client || !token.value) return;
+  if (!silent) autoRunLoading.value = true;
+  try {
+    const statusEnvelope = await client.getStatus(token.value);
+    applyAutoRunStatus(statusEnvelope?.data || {});
+  } catch (error) {
+    console.error('loadAutoRunStatus failed:', error);
+  } finally {
+    autoRunLoading.value = false;
+  }
+};
+
+const loadAutoRunHistory = async () => {
+  const client = getAutorunClient();
+  if (!client || !token.value || loadingAutoRunHistory.value) return;
+  loadingAutoRunHistory.value = true;
+  try {
+    const res = await client.getRunHistory(token.value, { limit: 15 });
+    autoRunHistoryRecords.value = Array.isArray(res?.data?.records) ? res.data.records : [];
+  } catch (error) {
+    console.error('getRunHistory failed:', error);
+  } finally {
+    loadingAutoRunHistory.value = false;
+  }
+};
+
+const toggleAutoRunHistory = () => {
+  showAutoRunHistory.value = !showAutoRunHistory.value;
+  if (showAutoRunHistory.value && autoRunHistoryRecords.value.length === 0) {
+    loadAutoRunHistory();
+  }
+};
+
+const toggleAutoRun = async () => {
+  const client = getAutorunClient();
+  if (!client || autoRunSaving.value) return;
+  if (!token.value) {
+    showMessage('请先登录', 'error');
+    return;
+  }
+
+  const nextEnabled = !autoRunEnabled.value;
+  const currentRoute = String(form.value.route || '').trim();
+  const payload = {
+    enabled: nextEnabled ? 1 : 0,
+  };
+  if (nextEnabled) {
+    payload.map_id = currentRoute && !isCustomRoute(currentRoute) ? currentRoute : '';
+  }
+
+  autoRunSaving.value = true;
+  try {
+    const statusEnvelope = await client.getStatus(token.value, payload);
+    applyAutoRunStatus(statusEnvelope?.data || {});
+    showMessage(autoRunEnabled.value ? '自动任务已启用' : '自动任务已停用', 'success');
+    if (showAutoRunHistory.value) {
+      loadAutoRunHistory();
+    }
+  } catch (error) {
+    showMessage(error?.message || '更新自动任务失败', 'error');
+  } finally {
+    autoRunSaving.value = false;
+  }
+};
+
+const copyAutoRunText = async (text) => {
+  if (!text) return;
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      showMessage('结果已复制到剪贴板', 'success');
+      return;
+    }
+  } catch (e) {
+    // fallback
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+  showMessage('结果已复制到剪贴板', 'success');
 };
 
 const unlockMapRender = async () => {
@@ -789,15 +1063,26 @@ const unlockMapRender = async () => {
   mapRenderUnlocked.value = true;
 };
 
+watch(
+  token,
+  (newToken) => {
+    if (newToken) {
+      loadAutoRunStatus(true);
+    }
+  },
+);
+
 onMounted(() => {
   checkMapDrawerResult();
   unlockMapRender();
+  loadAutoRunStatus();
 });
 
 onActivated(async () => {
   checkMapDrawerResult();
   loadCustomMaps(true);
   await loadMaps();
+  loadAutoRunStatus(true);
   if (
     pendingDrawerRoute.value &&
     Object.prototype.hasOwnProperty.call(routeOptions.value, pendingDrawerRoute.value)
