@@ -219,158 +219,147 @@
             <p class="mt-2.5 text-[11px] theme-text-tertiary leading-relaxed">
               每日非定时自动提交记录，跑步里程和时长使用随机值，可选固定地图
             </p>
+
+            <!-- 执行记录模块（置于提交记录卡片底部） -->
+            <div class="mt-3 p-2.5 rounded-lg bg-black/10 dark:bg-white/5 border border-white/10 text-xs">
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <span class="text-[11px] font-medium theme-text-tertiary flex items-center gap-1">
+                  <i class="ri-history-line"></i>
+                  <span>执行记录</span>
+                </span>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span v-if="autoRunLastLabel" class="text-[10px] font-mono theme-text-tertiary">{{ autoRunLastLabel }}</span>
+                  <button
+                    type="button"
+                    class="text-[10px] text-sky-500 hover:text-sky-400 inline-flex items-center gap-0.5 transition-colors cursor-pointer"
+                    @click="toggleAutoRunHistory"
+                  >
+                    <span>{{ showAutoRunHistory ? '收起历史' : '查看历史' }}</span>
+                    <i :class="showAutoRunHistory ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="autoRunLoading" class="space-y-1.5 py-0.5">
+                <SkeletonBox width="60%" height="13px" radius="4px" />
+                <SkeletonBox width="100%" height="24px" radius="6px" />
+              </div>
+
+              <div v-else class="space-y-2">
+                <div v-if="autoRuntime.todayExecuted" class="space-y-1.5">
+                  <div class="flex items-center gap-1.5">
+                    <i
+                      :class="autoRuntime.todaySuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"
+                      class="text-sm shrink-0"
+                      :style="{ color: autoRuntime.todaySuccess ? 'var(--success-color, #22c55e)' : 'var(--danger-color, #ef4444)' }"
+                    ></i>
+                    <span class="text-xs font-medium theme-text-primary">
+                      今日已于 <span class="font-mono">{{ autoRunExecutedTimeText }}</span>
+                      {{ autoRuntime.todaySuccess ? '执行成功' : '执行失败' }}
+                    </span>
+                  </div>
+                  <div
+                    v-if="autoRuntime.msg"
+                    class="rounded-md p-2 bg-black/10 dark:bg-white/5 border border-white/10 text-xs flex items-start justify-between gap-2"
+                  >
+                    <div
+                      class="font-mono text-[11px] break-all select-all leading-relaxed flex-1"
+                      :class="autoRuntime.todaySuccess ? 'theme-success' : 'theme-danger'"
+                    >
+                      {{ autoRuntime.msg }}
+                    </div>
+                    <button
+                      type="button"
+                      class="shrink-0 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+                      title="复制结果信息"
+                      @click="copyAutoRunText(autoRuntime.msg)"
+                    >
+                      <i class="ri-file-copy-line text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div v-else-if="autoRunEnabled" class="flex flex-wrap items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20">
+                    <i class="ri-time-line text-xs shrink-0"></i>
+                    <span>{{ autoRuntime.msg || '每日 07:00 ~ 24:00 顺序执行' }}</span>
+                  </span>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-[var(--card-soft-bg)] theme-text-secondary border-[var(--card-border)]">
+                    <i class="ri-map-pin-line text-xs shrink-0"></i>
+                    <span>{{ autoRunMapNameText }}</span>
+                  </span>
+                </div>
+
+                <div v-else class="space-y-1">
+                  <p class="text-[11px] theme-text-tertiary">未启用自动任务</p>
+                  <div
+                    v-if="autoRuntime.msg && autoRuntime.msg !== '未启用自动任务' && autoRuntime.msg !== '未启用定时任务' && autoRuntime.msg !== '定时任务已停用'"
+                    class="rounded-md p-1.5 bg-black/5 dark:bg-white/5 text-[11px] font-mono theme-text-tertiary break-all select-all flex items-start justify-between gap-2"
+                  >
+                    <span>上次结果：{{ autoRuntime.msg }}</span>
+                    <button
+                      type="button"
+                      class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+                      title="复制"
+                      @click="copyAutoRunText(autoRuntime.msg)"
+                    >
+                      <i class="ri-file-copy-line text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div v-if="showAutoRunHistory" class="mt-2 pt-2 border-t border-white/10 space-y-1.5">
+                  <div v-if="loadingAutoRunHistory" class="space-y-1.5 py-1">
+                    <div
+                      v-for="idx in 3"
+                      :key="`run-history-skel-${idx}`"
+                      class="flex items-center justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5"
+                    >
+                      <div class="flex items-center gap-2 flex-1">
+                        <SkeletonBox width="6px" height="6px" radius="9999px" />
+                        <SkeletonBox width="80px" height="12px" radius="4px" />
+                      </div>
+                      <SkeletonBox width="46px" height="12px" radius="4px" />
+                    </div>
+                  </div>
+                  <div v-else-if="autoRunHistoryRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
+                    暂无历史执行记录
+                  </div>
+                  <div
+                    v-for="rec in autoRunHistoryRecords"
+                    :key="`run-rec-${rec.id}-${rec.created_at}`"
+                    class="flex items-start justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5 text-[11px]"
+                  >
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center gap-1.5 text-[10px] mb-0.5">
+                        <span
+                          class="w-1.5 h-1.5 rounded-full shrink-0"
+                          :class="rec.success ? 'bg-emerald-500' : 'bg-rose-500'"
+                        ></span>
+                        <span v-if="rec.map_id" class="theme-text-secondary truncate max-w-[140px]">
+                          {{ getRouteName(rec.map_id) || rec.map_id }}
+                        </span>
+                        <span class="theme-text-tertiary font-mono ml-auto shrink-0">
+                          {{ rec.created_at }}
+                        </span>
+                      </div>
+                      <div class="font-mono text-[10px] theme-text-secondary break-all select-all">
+                        {{ rec.message }}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
+                      title="复制"
+                      @click="copyAutoRunText(rec.message)"
+                    >
+                      <i class="ri-file-copy-line text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
       </form>
-
-    <!-- 执行记录模块 -->
-    <section class="rounded-xl p-3.5 bg-transparent border border-[var(--card-border)]">
-      <div class="flex items-center justify-between gap-2 mb-2">
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span class="text-xs font-semibold theme-text-primary flex items-center gap-1">
-            <i class="ri-history-line text-sm theme-text-tertiary"></i>
-            <span>执行记录</span>
-          </span>
-          <span
-            class="h-4.5 px-1.5 rounded-full text-[10px] font-medium inline-flex items-center border"
-            :class="
-              autoRunEnabled
-                ? 'theme-success-border theme-success-bg theme-success'
-                : 'bg-[var(--card-soft-bg)] theme-text-secondary border-[var(--card-border)]'
-            "
-          >
-            {{ autoRunEnabled ? '已启用' : '未启用' }}
-          </span>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
-          <span v-if="autoRunLastLabel" class="text-[10px] font-mono theme-text-tertiary">{{ autoRunLastLabel }}</span>
-          <button
-            type="button"
-            class="text-[11px] text-sky-500 hover:text-sky-400 inline-flex items-center gap-0.5 transition-colors cursor-pointer"
-            @click="toggleAutoRunHistory"
-          >
-            <span>{{ showAutoRunHistory ? '收起历史' : '查看历史' }}</span>
-            <i :class="showAutoRunHistory ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"></i>
-          </button>
-        </div>
-      </div>
-
-      <div v-if="autoRunLoading" class="space-y-1.5 py-1">
-        <SkeletonBox width="60%" height="13px" radius="4px" />
-        <SkeletonBox width="100%" height="28px" radius="6px" />
-      </div>
-
-      <div v-else class="space-y-2">
-        <div v-if="autoRuntime.todayExecuted" class="space-y-1.5">
-          <div class="flex items-center gap-1.5">
-            <i
-              :class="autoRuntime.todaySuccess ? 'ri-checkbox-circle-line' : 'ri-error-warning-line'"
-              class="text-sm shrink-0"
-              :style="{ color: autoRuntime.todaySuccess ? 'var(--success-color, #22c55e)' : 'var(--danger-color, #ef4444)' }"
-            ></i>
-            <span class="text-xs font-medium theme-text-primary">
-              今日已于 <span class="font-mono">{{ autoRunExecutedTimeText }}</span>
-              {{ autoRuntime.todaySuccess ? '执行成功' : '执行失败' }}
-            </span>
-          </div>
-          <div
-            v-if="autoRuntime.msg"
-            class="rounded-lg p-2 bg-black/10 dark:bg-white/5 border border-white/10 text-xs flex items-start justify-between gap-2"
-          >
-            <div
-              class="font-mono text-[11px] break-all select-all leading-relaxed flex-1"
-              :class="autoRuntime.todaySuccess ? 'theme-success' : 'theme-danger'"
-            >
-              {{ autoRuntime.msg }}
-            </div>
-            <button
-              type="button"
-              class="shrink-0 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
-              title="复制结果信息"
-              @click="copyAutoRunText(autoRuntime.msg)"
-            >
-              <i class="ri-file-copy-line text-xs"></i>
-            </button>
-          </div>
-        </div>
-
-        <div v-else-if="autoRunEnabled" class="space-y-1">
-          <div class="flex items-center gap-1.5 text-xs theme-text-secondary">
-            <i class="ri-time-line text-sm shrink-0 text-sky-500"></i>
-            <span>{{ autoRuntime.msg || '已启用每日自动任务，将在每日 07:00 ~ 24:00 顺序执行' }}</span>
-          </div>
-          <div class="text-[11px] theme-text-tertiary">
-            固定地图：{{ autoRunMapNameText }}
-          </div>
-        </div>
-
-        <div v-else class="space-y-1">
-          <p class="text-[11px] theme-text-tertiary">未启用自动任务</p>
-          <div
-            v-if="autoRuntime.msg && autoRuntime.msg !== '未启用自动任务' && autoRuntime.msg !== '未启用定时任务' && autoRuntime.msg !== '定时任务已停用'"
-            class="rounded-lg p-2 bg-black/5 dark:bg-white/5 text-[11px] font-mono theme-text-tertiary break-all select-all flex items-start justify-between gap-2"
-          >
-            <span>上次结果：{{ autoRuntime.msg }}</span>
-            <button
-              type="button"
-              class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
-              title="复制"
-              @click="copyAutoRunText(autoRuntime.msg)"
-            >
-              <i class="ri-file-copy-line text-xs"></i>
-            </button>
-          </div>
-        </div>
-
-        <div v-if="showAutoRunHistory" class="mt-2 pt-2 border-t border-[var(--card-border)] space-y-1.5">
-          <div v-if="loadingAutoRunHistory" class="space-y-1.5 py-1">
-            <div
-              v-for="idx in 3"
-              :key="`run-history-skel-${idx}`"
-              class="flex items-center justify-between gap-2 p-1.5 rounded bg-black/5 dark:bg-white/5"
-            >
-              <div class="flex items-center gap-2 flex-1">
-                <SkeletonBox width="6px" height="6px" radius="9999px" />
-                <SkeletonBox width="80px" height="12px" radius="4px" />
-              </div>
-              <SkeletonBox width="46px" height="12px" radius="4px" />
-            </div>
-          </div>
-          <div v-else-if="autoRunHistoryRecords.length === 0" class="text-center py-2 text-[11px] theme-text-tertiary">
-            暂无历史执行记录
-          </div>
-          <div
-            v-for="rec in autoRunHistoryRecords"
-            :key="`run-rec-${rec.id}-${rec.created_at}`"
-            class="flex items-start justify-between gap-2 p-2 rounded-lg bg-black/5 dark:bg-white/5 text-[11px]"
-          >
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5 text-[10px] mb-0.5">
-                <span
-                  class="w-1.5 h-1.5 rounded-full shrink-0"
-                  :class="rec.success ? 'bg-emerald-500' : 'bg-rose-500'"
-                ></span>
-                <span v-if="rec.map_id" class="theme-text-secondary truncate max-w-[140px]">
-                  {{ getRouteName(rec.map_id) || rec.map_id }}
-                </span>
-                <span class="theme-text-tertiary font-mono ml-auto shrink-0">
-                  {{ rec.created_at }}
-                </span>
-              </div>
-              <div class="font-mono text-[10px] theme-text-secondary break-all select-all">
-                {{ rec.message }}
-              </div>
-            </div>
-            <button
-              type="button"
-              class="shrink-0 p-0.5 hover:opacity-80 transition-opacity"
-              title="复制"
-              @click="copyAutoRunText(rec.message)"
-            >
-              <i class="ri-file-copy-line text-xs"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- 板块三：路线预览 -->
     <div v-show="activeTab === 'submit'" class="rounded-xl p-4 bg-transparent border border-[var(--card-border)]">
