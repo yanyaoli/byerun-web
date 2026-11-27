@@ -102,19 +102,31 @@
             </div>
           </div>
 
-          <!-- 2. 官方源 -->
+          <!-- 2. 官方源（Web 端受 CORS 限制禁止选择） -->
           <div
             @click="handleSelectSource('official')"
-            class="p-3.5 hover:bg-[var(--surface-soft)] active:bg-[var(--surface-soft)] transition-colors cursor-pointer"
+            :aria-disabled="!isOfficialSupported"
+            :class="[
+              'p-3.5 transition-colors',
+              isOfficialSupported
+                ? 'hover:bg-[var(--surface-soft)] active:bg-[var(--surface-soft)] cursor-pointer'
+                : 'opacity-60 cursor-not-allowed bg-[var(--surface-soft)]/40',
+            ]"
           >
             <div class="flex items-start gap-3">
               <!-- 前置单选圆点 -->
               <div class="pt-0.5 shrink-0">
                 <span
                   class="w-4 h-4 rounded-full border flex items-center justify-center transition-all duration-200"
-                  :class="sourceType === 'official' ? 'border-[var(--brand)] bg-[var(--brand)] shadow-xs' : 'border-[var(--border)] bg-transparent'"
+                  :class="
+                    !isOfficialSupported
+                      ? 'border-[var(--border)] bg-[var(--surface-soft)]'
+                      : sourceType === 'official'
+                        ? 'border-[var(--brand)] bg-[var(--brand)] shadow-xs'
+                        : 'border-[var(--border)] bg-transparent'
+                  "
                 >
-                  <span v-if="sourceType === 'official'" class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                  <span v-if="isOfficialSupported && sourceType === 'official'" class="w-1.5 h-1.5 rounded-full bg-white"></span>
                 </span>
               </div>
 
@@ -127,14 +139,27 @@
                     <span class="px-1.5 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium">
                       原生接口
                     </span>
+                    <span
+                      v-if="!isOfficialSupported"
+                      class="px-1.5 py-0.5 rounded text-[10px] bg-slate-500/10 text-[var(--muted)] font-medium"
+                    >
+                      仅 APP 可用
+                    </span>
                   </div>
 
                   <!-- 最右侧耗时徽标 -->
                   <span
+                    v-if="isOfficialSupported"
                     class="px-1.5 py-0.5 rounded text-[10px] font-mono transition-colors shrink-0 ml-1.5"
                     :class="getLatencyBadgeClass(latencies.official)"
                   >
                     {{ getLatencyBadgeText(latencies.official) }}
+                  </span>
+                  <span
+                    v-else
+                    class="px-1.5 py-0.5 rounded text-[10px] font-mono shrink-0 ml-1.5 bg-slate-500/10 text-[var(--muted)]"
+                  >
+                    不可选
                   </span>
                 </div>
                 <div class="text-xs font-mono text-[var(--muted)] mt-1 truncate">
@@ -146,7 +171,7 @@
                   <span>网页端不支持（受浏览器跨域 CORS 策略限制，仅在 APP 移动端可用）</span>
                 </div>
                 <!-- 自动回退说明 -->
-                <div class="text-[11px] text-[var(--muted)] flex items-center gap-1 mt-1">
+                <div v-if="isOfficialSupported" class="text-[11px] text-[var(--muted)] flex items-center gap-1 mt-1">
                   <i class="ri-shield-check-line text-xs shrink-0 text-emerald-500"></i>
                   <span>代理源异常或不可用时，系统将自动无缝回退至官方源保障连通</span>
                 </div>
@@ -269,6 +294,7 @@ const {
   sourceType,
   customUrl,
   isFallbackActive,
+  isOfficialSupported,
   setSourceType,
   setCustomUrl,
   resetToDefault,
@@ -286,7 +312,7 @@ const latencies = ref<{
   message: LatencyInfo;
 }>({
   proxy: { loading: true },
-  official: { loading: true },
+  official: { loading: isOfficialSupported },
   custom: { loading: false },
   message: { loading: true },
 });
@@ -342,9 +368,12 @@ const testAllNodes = async () => {
   isTestingAny.value = true;
   const tasks: Promise<void>[] = [
     testSingleNode('proxy', () => testConnection(PROXY_SERVER_URL)),
-    testSingleNode('official', () => testConnection(OFFICIAL_SERVER_URL)),
     testSingleNode('message', () => testMessageServerConnection(MESSAGE_SERVER_URL)),
   ];
+
+  if (isOfficialSupported) {
+    tasks.push(testSingleNode('official', () => testConnection(OFFICIAL_SERVER_URL)));
+  }
 
   if (customUrl.value && customUrl.value.trim()) {
     tasks.push(testSingleNode('custom', () => testConnection(customUrl.value)));
@@ -355,6 +384,10 @@ const testAllNodes = async () => {
 };
 
 const handleSelectSource = (type: ServerSourceType) => {
+  if (type === 'official' && !isOfficialSupported) {
+    showMessage('网页端受 CORS 限制不支持官方源，请在 APP 移动端使用', 'warning');
+    return;
+  }
   setSourceType(type);
 };
 

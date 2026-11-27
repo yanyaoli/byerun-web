@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 import CryptoJS from 'crypto-js';
+import { Capacitor } from '@capacitor/core';
 import type { DeviceInfo, ApiResponse, SignParams } from '@/types/auth';
 
 export class ApiBusinessError extends Error {
@@ -215,8 +216,9 @@ export class AppApiClient {
         const currentBase = String(config?.baseURL || this.baseURL).replace(/\/+$/, '');
         const officialBase = this.officialURL.replace(/\/+$/, '');
 
-        // 当主源不可用且尚未回退过时，自动回退官方源重试一次
+        // 当主源不可用且尚未回退过时，仅原生 APP 端自动回退官方源重试一次（Web 端受 CORS 限制不可直连官方源）
         if (
+          Capacitor.isNativePlatform() &&
           config &&
           !(config as any)._fallbackRetried &&
           isNetworkOrServerError &&

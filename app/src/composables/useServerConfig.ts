@@ -1,11 +1,14 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 export const OFFICIAL_SERVER_URL = 'https://run-lb.tanmasports.com/v1';
 export const PROXY_SERVER_URL = 'https://api.byerun.top';
 export const MESSAGE_SERVER_URL = 'https://chatserver.byerun.top';
 
 export type ServerSourceType = 'proxy' | 'official' | 'custom';
+
+export const isOfficialSourceSupported = (): boolean => Capacitor.isNativePlatform();
 
 const SOURCE_STORAGE_KEY = 'byerun.server_source_type';
 const CUSTOM_URL_STORAGE_KEY = 'byerun.server_custom_url';
@@ -14,6 +17,9 @@ function getInitialSourceType(): ServerSourceType {
   if (typeof window === 'undefined') return 'proxy';
   try {
     const val = localStorage.getItem(SOURCE_STORAGE_KEY);
+    if (val === 'official' && !isOfficialSourceSupported()) {
+      return 'proxy';
+    }
     if (val === 'proxy' || val === 'official' || val === 'custom') return val;
   } catch {}
   return 'proxy';
@@ -41,8 +47,10 @@ export const onServerChange = (cb: ServerChangeCallback) => {
 };
 
 export const getActiveApiBaseUrl = (): string => {
-  if (isFallbackActive.value) return OFFICIAL_SERVER_URL;
-  if (sourceType.value === 'official') return OFFICIAL_SERVER_URL;
+  if (isFallbackActive.value && isOfficialSourceSupported()) return OFFICIAL_SERVER_URL;
+  if (sourceType.value === 'official') {
+    return isOfficialSourceSupported() ? OFFICIAL_SERVER_URL : PROXY_SERVER_URL;
+  }
   if (sourceType.value === 'custom') {
     const clean = customUrl.value.trim().replace(/\/+$/, '');
     return clean || PROXY_SERVER_URL;
@@ -52,6 +60,7 @@ export const getActiveApiBaseUrl = (): string => {
 
 export const useServerConfig = () => {
   const activeBaseUrl = computed(() => getActiveApiBaseUrl());
+  const isOfficialSupported = isOfficialSourceSupported();
 
   const notifyChange = () => {
     const current = getActiveApiBaseUrl();
@@ -64,13 +73,17 @@ export const useServerConfig = () => {
     });
   };
 
-  const setSourceType = (type: ServerSourceType) => {
+  const setSourceType = (type: ServerSourceType): boolean => {
+    if (type === 'official' && !isOfficialSourceSupported()) {
+      return false;
+    }
     sourceType.value = type;
     isFallbackActive.value = false;
     try {
       localStorage.setItem(SOURCE_STORAGE_KEY, type);
     } catch {}
     notifyChange();
+    return true;
   };
 
   const setCustomUrl = (url: string) => {
@@ -85,6 +98,7 @@ export const useServerConfig = () => {
   };
 
   const setFallbackActive = (active: boolean) => {
+    if (active && !isOfficialSourceSupported()) return;
     isFallbackActive.value = active;
     notifyChange();
   };
@@ -141,6 +155,7 @@ export const useServerConfig = () => {
     customUrl,
     activeBaseUrl,
     isFallbackActive,
+    isOfficialSupported,
     OFFICIAL_SERVER_URL,
     PROXY_SERVER_URL,
     MESSAGE_SERVER_URL,
