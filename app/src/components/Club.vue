@@ -1,153 +1,27 @@
 <template>
   <div class="club-page min-h-full pb-4">
-    <Card class="rounded-xl p-4 relative z-10 overflow-visible bg-transparent border border-[var(--card-border)] shadow-none">
-      <div class="flex items-center gap-2 mb-3 bg-[var(--card-soft-bg)] rounded-lg p-1">
-        <button
-          v-for="tab in MAIN_TABS"
-          :key="tab.key"
-          type="button"
-          :class="[
-            'flex-1 h-8 rounded-lg text-xs font-medium transition-all text-center inline-flex items-center justify-center gap-1.5',
-            activeMainTab === tab.key
-              ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary'
-              : 'theme-text-secondary',
-          ]"
-          @click="activeMainTab = tab.key"
-        >
-          <i :class="tab.icon" class="text-sm"></i>
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <div v-if="activeMainTab === 'activities'" class="flex items-center gap-2 mb-3 bg-[var(--card-soft-bg)] rounded-lg p-1">
-        <button
-          v-for="tab in ACTIVITY_SUB_TABS"
-          :key="tab.key"
-          type="button"
-          :class="[
-            'flex-1 h-7 rounded-lg text-[11px] font-medium transition-all text-center inline-flex items-center justify-center gap-1',
-            activeActivityTab === tab.key
-              ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary'
-              : 'theme-text-secondary',
-          ]"
-          @click="activeActivityTab = tab.key"
-        >
-          <i :class="tab.icon" class="text-xs"></i>
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <div v-if="activeMainTab === 'history'" class="flex items-center gap-2 mb-3 bg-[var(--card-soft-bg)] rounded-lg p-1">
-        <button
-          v-for="tab in HISTORY_SUB_TABS"
-          :key="tab.key"
-          type="button"
-          :class="[
-            'flex-1 h-7 rounded-lg text-[11px] font-medium transition-all text-center inline-flex items-center justify-center gap-1',
-            activeHistoryTab === tab.key
-              ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary'
-              : 'theme-text-secondary',
-          ]"
-          @click="activeHistoryTab = tab.key"
-        >
-          <i :class="tab.icon" class="text-xs"></i>
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <div class="flex items-start gap-2">
-        <div
-          v-if="activeMainTab === 'activities' && activeActivityTab === 'list'"
-          ref="datePickerRef"
-          class="relative flex-1"
-        >
-          <button
-            type="button"
-            class="w-full h-9 px-3 rounded-xl theme-card-soft text-xs theme-text-primary inline-flex items-center justify-between relative z-10 gap-2"
-            @click="showDateDropdown = !showDateDropdown"
-          >
-            <span class="flex items-center gap-1.5 truncate">
-              <i class="ri-calendar-line text-sm theme-text-tertiary"></i>
-              <span class="truncate">{{ selectedDateLabel }}</span>
-            </span>
-            <i
-              :class="showDateDropdown ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'"
-              class="text-sm shrink-0"
-            ></i>
-          </button>
-
-          <Drawer v-model="showDateDropdown" title="选择日期">
-            <div
-              v-for="day in dateOptions"
-              :key="day.value"
-              class="min-h-[58px] flex items-center justify-between px-5 py-4 cursor-pointer transition-all border-b border-[var(--card-divider)] last:border-b-0 relative overflow-hidden"
-              :class="selectedQueryDate === day.value ? 'option-selected' : 'hover:bg-[var(--action-hover-bg)]'"
-              @click="selectQueryDate(day.value)"
-            >
-              <i v-if="selectedQueryDate === day.value" class="ri-check-line option-selected-icon" aria-hidden="true"></i>
-              <div class="flex items-center gap-3.5 min-w-0 flex-1">
-                <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="selectedQueryDate === day.value ? 'option-dot-selected' : 'option-dot'"></span>
-                <span class="text-base truncate" :class="selectedQueryDate === day.value ? 'theme-text-primary font-semibold' : 'theme-text-secondary'">{{ day.label }}</span>
-              </div>
-              <span class="text-sm font-mono" :class="selectedQueryDate === day.value ? 'theme-text-primary font-medium' : 'theme-text-tertiary'">{{ day.value }}</span>
-            </div>
-          </Drawer>
-        </div>
-
-        <button
-          type="button"
-          class="h-9 px-3 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-colors"
-          :class="showFilters ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary' : 'theme-card-soft theme-text-primary'"
-          @click="showFilters = !showFilters"
-        >
-          <i :class="showFilters ? 'ri-equalizer-fill' : 'ri-equalizer-line'" class="text-sm"></i>
-          <span>筛选</span>
-        </button>
-      </div>
-
-      <transition name="fade-slide">
-        <div v-show="showFilters" class="mt-3 space-y-2">
-          <div class="flex items-center gap-2 overflow-x-auto pb-1">
-            <button
-              v-for="option in statusOptions"
-              :key="option.value"
-              type="button"
-              :class="[
-                'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors inline-flex items-center gap-1.5',
-                selectedStatus === option.value
-                  ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary border-[var(--card-border)]'
-                  : 'theme-card-soft theme-text-secondary',
-              ]"
-              @click="selectedStatus = option.value"
-            >
-              <i v-if="option.icon" :class="option.icon" class="text-[11px]"></i>
-              {{ option.label }}
-            </button>
-          </div>
-
-          <div
-            v-if="activeMainTab === 'activities'"
-            class="flex items-center gap-2 overflow-x-auto pb-1"
-          >
-            <button
-              v-for="item in itemFilterOptions"
-              :key="item.value"
-              type="button"
-              :class="[
-                'shrink-0 h-8 px-3 rounded-full border text-xs transition-colors inline-flex items-center gap-1.5',
-                selectedItemId === item.value
-                  ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary border-[var(--card-border)]'
-                  : 'theme-card-soft theme-text-secondary',
-              ]"
-              @click="selectedItemId = item.value"
-            >
-              <i class="ri-grid-fill text-[11px]"></i>
-              {{ item.label }}
-            </button>
-          </div>
-        </div>
-      </transition>
-    </Card>
+    <div
+      class="flex items-center gap-2 bg-[var(--card-soft-bg)] rounded-lg p-1"
+      role="tablist"
+    >
+      <button
+        v-for="tab in MAIN_TABS"
+        :key="tab.key"
+        type="button"
+        role="tab"
+        :aria-selected="activeMainTab === tab.key"
+        :class="[
+          'flex-1 h-8 rounded-lg text-xs font-medium transition-all text-center inline-flex items-center justify-center gap-1.5',
+          activeMainTab === tab.key
+            ? 'bg-[var(--card-bg)] shadow-sm theme-text-primary'
+            : 'theme-text-secondary',
+        ]"
+        @click="activeMainTab = tab.key"
+      >
+        <i :class="tab.icon" class="text-sm"></i>
+        {{ tab.label }}
+      </button>
+    </div>
 
     <div v-if="activeMainTab === 'history'" class="mt-3 grid grid-cols-2 gap-2">
       <Card class="rounded-xl px-3 py-2.5 bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/20 shadow-none">
@@ -160,15 +34,66 @@
       </Card>
     </div>
 
+    <template v-if="activeMainTab === 'history'">
+      <section class="mt-3 flex items-center justify-between text-xs theme-text-secondary px-1">
+        <span class="flex items-center gap-1.5">
+          <i class="ri-bar-chart-grouped-line text-[11px]"></i>
+          学期记录
+        </span>
+        <span class="flex items-center gap-1">
+          <i class="ri-file-copy-line text-[11px]"></i>
+          共 {{ semesterCards.length }} 条
+        </span>
+      </section>
 
+      <section class="mt-2 space-y-3">
+        <template v-if="loading">
+          <ClubCardSkeleton :count="2" />
+        </template>
+
+        <Card
+          v-else-if="semesterCards.length === 0"
+          class="rounded-xl p-6 text-center text-sm theme-text-secondary flex flex-col items-center gap-3 bg-transparent border border-[var(--card-border)] shadow-none"
+        >
+          <div class="w-12 h-12 rounded-full bg-[var(--card-soft-bg)] flex items-center justify-center">
+            <i class="ri-inbox-2-line text-xl theme-text-tertiary"></i>
+          </div>
+          暂无学期记录
+        </Card>
+
+        <Card
+          v-for="card in semesterCards"
+          :key="card.key"
+          class="rounded-xl p-4 bg-transparent border border-[var(--card-border)] shadow-none"
+        >
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="min-w-0 flex-1 text-sm font-semibold theme-text-primary truncate">
+              {{ card.title }}
+            </h3>
+            <span :class="card.badgeClass">{{ card.badgeText }}</span>
+          </div>
+          <div class="mt-1.5 flex items-center justify-between gap-2">
+            <span class="min-w-0 flex-1 text-xs theme-text-secondary truncate">{{
+              card.subTitle || card.metaTertiaryText || '--'
+            }}</span>
+            <span class="shrink-0 text-xs theme-text-tertiary">{{ card.timeText }}</span>
+          </div>
+        </Card>
+      </section>
+    </template>
 
     <ClubAutoConfig
       v-if="activeMainTab === 'activities'"
       ref="clubAutoConfigRef"
       class="mt-3"
       :action-pending="signPendingType"
+      :my-tasks="myTaskCards"
+      :my-tasks-loading="myTasksLoading"
       @updated="handleClubAutoConfigUpdated"
       @action="handleAutoCardAction"
+      @my-task-sign="handleSignTaskAction"
+      @my-task-action="handleCardAction"
+      @my-task-toggle-auto="handleToggleClubAuto"
     />
 
     <Card
@@ -216,11 +141,21 @@
     </Card>
 
     <section class="mt-3 flex items-center justify-between text-xs theme-text-secondary px-1">
-      <span class="flex items-center gap-1.5">
-        <i class="ri-list-check text-[11px]"></i>
-        {{ currentListTitle }}
-      </span>
-      <span class="flex items-center gap-1">
+      <div class="flex items-center gap-1.5 min-w-0">
+        <i class="ri-list-check text-[11px] shrink-0"></i>
+        <span class="shrink-0">{{ activeMainTab === 'activities' ? '活动列表' : '签到记录' }}</span>
+        <button
+          v-if="activeMainTab === 'activities'"
+          type="button"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg theme-card-soft text-xs font-medium theme-text-primary hover:opacity-85 active:scale-95 transition-all cursor-pointer truncate"
+          @click="showDateDropdown = true"
+        >
+          <i class="ri-calendar-line text-[11px] theme-text-tertiary shrink-0"></i>
+          <span class="truncate">{{ selectedDateLabel }}</span>
+          <i class="ri-arrow-down-s-line text-xs theme-text-tertiary shrink-0"></i>
+        </button>
+      </div>
+      <span class="flex items-center gap-1 shrink-0">
         <i class="ri-file-copy-line text-[11px]"></i>
         共 {{ filteredList.length }} 条
       </span>
@@ -348,7 +283,6 @@
       <div
         v-if="
           activeMainTab === 'history' &&
-          activeHistoryTab === 'record' &&
           cards.length > 0 &&
           historyHasMore
         "
@@ -366,6 +300,24 @@
         </button>
       </div>
     </section>
+
+    <!-- 日期选择底部抽屉（高度 80%） -->
+    <Drawer v-model="showDateDropdown" title="选择日期" max-height="80vh">
+      <div
+        v-for="day in dateOptions"
+        :key="day.value"
+        class="min-h-[58px] flex items-center justify-between px-5 py-4 cursor-pointer transition-all border-b border-[var(--card-divider)] last:border-b-0 relative overflow-hidden"
+        :class="selectedQueryDate === day.value ? 'option-selected' : 'hover:bg-[var(--action-hover-bg)]'"
+        @click="selectQueryDate(day.value)"
+      >
+        <i v-if="selectedQueryDate === day.value" class="ri-check-line option-selected-icon" aria-hidden="true"></i>
+        <div class="flex items-center gap-3.5 min-w-0 flex-1">
+          <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="selectedQueryDate === day.value ? 'option-dot-selected' : 'option-dot'"></span>
+          <span class="text-base truncate" :class="selectedQueryDate === day.value ? 'theme-text-primary font-semibold' : 'theme-text-secondary'">{{ day.label }}</span>
+        </div>
+        <span class="text-sm font-mono" :class="selectedQueryDate === day.value ? 'theme-text-primary font-medium' : 'theme-text-tertiary'">{{ day.value }}</span>
+      </div>
+    </Drawer>
 
     <!-- 坐标选择弹窗（活动缺少坐标时选点提交） -->
     <ClubCoordinatePickerModal
@@ -393,40 +345,8 @@ import ClubCoordinatePickerModal from './ClubCoordinatePickerModal.vue';
 
 const MAIN_TABS = [
   { key: 'activities', label: '活动列表', icon: 'ri-calendar-check-line' },
-  { key: 'history', label: '历史记录', icon: 'ri-history-line' },
+  { key: 'history', label: '签到记录', icon: 'ri-file-list-3-line' },
 ];
-
-const ACTIVITY_SUB_TABS = [
-  { key: 'list', label: '活动列表', icon: 'ri-list-check' },
-  { key: 'myTask', label: '我的任务', icon: 'ri-user-star-line' },
-];
-
-const HISTORY_SUB_TABS = [
-  { key: 'record', label: '签到记录', icon: 'ri-file-list-3-line' },
-  { key: 'semester', label: '学期记录', icon: 'ri-bar-chart-grouped-line' },
-];
-
-const STATUS_OPTIONS_MAP = {
-  pending: [
-    { value: 'all', label: '全部', icon: '' },
-    { value: 'joined', label: '已报名', icon: 'ri-checkbox-circle-line' },
-    { value: 'joinable', label: '可报名', icon: 'ri-add-circle-line' },
-    { value: 'full', label: '报名已满', icon: 'ri-close-circle-line' },
-    { value: 'blocked', label: '已报其他', icon: 'ri-forbid-2-line' },
-    { value: 'cancelled', label: '已取消', icon: 'ri-close-line' },
-  ],
-  semester: [
-    { value: 'all', label: '全部', icon: '' },
-    { value: 'completed', label: '已完成', icon: 'ri-check-line' },
-    { value: 'pending', label: '未完成', icon: 'ri-time-line' },
-  ],
-  history: [
-    { value: 'all', label: '全部', icon: '' },
-    { value: 'completed', label: '已完成', icon: 'ri-check-line' },
-    { value: 'unsigned', label: '未签到', icon: 'ri-question-line' },
-    { value: 'notSignOut', label: '未签退', icon: 'ri-logout-box-r-line' },
-  ],
-};
 
 const WEEKDAY_TEXT = {
   1: '一',
@@ -441,21 +361,14 @@ const WEEKDAY_TEXT = {
 const { userInfo, token, loading: userLoading, fetchUserData } = useDataStore();
 
 const activeMainTab = ref('activities');
-const activeActivityTab = ref('list');
-const activeHistoryTab = ref('record');
 const selectedQueryDate = ref(formatDate(new Date()));
-const selectedStatus = ref('all');
-const selectedItemId = ref('all');
-const showFilters = ref(false);
 const showDateDropdown = ref(false);
+const myTasksLoading = ref(false);
 
 const pendingActivities = ref([]);
 const myPendingActivities = ref([]);
 const semesterActivities = ref([]);
 const historyRecords = ref([]);
-const itemOptions = ref([]);
-const itemOptionsLoaded = ref(false);
-const itemOptionsLoading = ref(false);
 const summary = ref({ joinNum: 0, validNum: 0 });
 
 const HISTORY_PAGE_SIZE = 15;
@@ -466,6 +379,8 @@ const historyLoadingMore = ref(false);
 const signTask = ref(null);
 const signPendingType = ref('');
 const clubAutoConfigRef = ref(null);
+const clubAutoEnabled = ref(false);
+const clubAutoSubmitting = ref(false);
 const clubRushTasks = ref([]);
 
 const showCoordinatePicker = ref(false);
@@ -613,42 +528,14 @@ const selectedDateLabel = computed(() => {
   const now = new Date();
   return `周${WEEKDAY_TEXT[resolveWeekDayNumber(now)]} ${formatDate(now)}`;
 });
-const statusOptions = computed(() => {
-  if (activeMainTab.value === 'activities') return STATUS_OPTIONS_MAP.pending;
-  return activeHistoryTab.value === 'semester'
-    ? STATUS_OPTIONS_MAP.semester
-    : STATUS_OPTIONS_MAP.history;
-});
-
-const itemFilterOptions = computed(() => {
-  const options = [{ value: 'all', label: '全部项目' }];
-  itemOptions.value.forEach((item) => {
-    options.push({ value: String(item.itemId), label: item.itemName || `项目${item.itemId}` });
-  });
-  return options;
-});
-
 const sourceList = computed(() => {
   if (activeMainTab.value === 'activities') {
-    return activeActivityTab.value === 'myTask'
-      ? myPendingActivities.value
-      : pendingActivities.value;
+    return pendingActivities.value;
   }
-  return activeHistoryTab.value === 'semester' ? semesterActivities.value : historyRecords.value;
+  return historyRecords.value;
 });
 
-const filteredList = computed(() => {
-  let list = sourceList.value;
-  if (activeMainTab.value === 'activities' && selectedItemId.value !== 'all') {
-    list = list.filter((item) => String(item.activityItemId || '') === selectedItemId.value);
-  }
-
-  if (selectedStatus.value !== 'all') {
-    list = list.filter((item) => resolveStatusBucket(item) === selectedStatus.value);
-  }
-
-  return list;
-});
+const filteredList = computed(() => sourceList.value);
 
 const signTaskPhase = computed(() => resolveSignTaskPhase(signTask.value));
 const signTaskPanelStatus = computed(() => {
@@ -729,8 +616,7 @@ const cards = computed(() =>
       }
     }
     const key = String(activityId || item.configurationId || item.yymmdd || 'club') + '-' + index;
-    const isHistoryRecord =
-      activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
+    const isHistoryRecord = activeMainTab.value === 'history';
 
     const isCurrentSignTask =
       activeMainTab.value === 'activities' &&
@@ -773,48 +659,95 @@ const cards = computed(() =>
   }),
 );
 
+const myTaskCards = computed(() =>
+  myPendingActivities.value.map((item, index) => {
+    const activityId = resolveActivityId(item);
+    if (activityId > 0 && !hasActivityCoordinates(item)) {
+      const cached = getStoredClubCoordinates(activityId);
+      if (cached) {
+        item.latitude = cached.latitude;
+        item.longitude = cached.longitude;
+      }
+    }
+    const key = String(activityId || item.configurationId || item.yymmdd || 'my-task') + '-' + index;
+    const isCurrentSignTask =
+      Number.isFinite(activityId) &&
+      activityId > 0 &&
+      Number(signTask.value?.activityId) === activityId;
+    const badge = isCurrentSignTask ? signTaskPanelStatus.value : resolveMyTaskBadge(item);
+
+    const isEnded =
+      String(item.activityStatus) === '3' ||
+      String(item.signStatus) === '1' ||
+      isSignedStatus(item.signBackStatus);
+
+    return {
+      key,
+      item,
+      activityId,
+      isCurrentSignTask,
+      canToggleAuto: !isEnded,
+      signButtons: isCurrentSignTask ? signTaskButtons.value : null,
+      action:
+        Number.isFinite(activityId) && activityId > 0
+          ? resolveClubAction(item)
+          : null,
+      title: item.activityName || '活动 #' + (activityId || index + 1),
+      subTitle: item.teacherName ? item.teacherName : '',
+      badgeText: badge.text,
+      badgeClass: badge.className,
+      timeText: formatTimeRange(item),
+      metaSecondaryText: formatCapacity(item),
+      metaTertiaryText: item.addressDetail || item.address || '地点待定',
+    };
+  }),
+);
+
+const semesterCards = computed(() =>
+  semesterActivities.value.map((item, index) => {
+    const activityId = resolveActivityId(item);
+    const key = String(activityId || item.configurationId || item.yymmdd || 'semester') + '-' + index;
+    const badge =
+      String(item.signStatus) === '1'
+        ? createBadge('已完成', 'theme-success-bg theme-success-border theme-success')
+        : createBadge('未完成', 'badge-neutral');
+
+    return {
+      key,
+      title: item.activityName || '活动 #' + (activityId || index + 1),
+      subTitle: item.teacherName ? item.teacherName : '',
+      badgeText: badge.text,
+      badgeClass: badge.className,
+      timeText: formatTimeRange(item),
+      metaSecondaryText: formatCapacity(item),
+      metaTertiaryText: item.addressDetail || item.address || '地点待定',
+    };
+  }),
+);
+
 const currentListTitle = computed(() => {
   if (activeMainTab.value === 'activities') {
-    if (activeActivityTab.value === 'myTask') return '我的任务';
     return `活动列表（${currentQueryDate.value}）`;
   }
-  if (activeHistoryTab.value === 'semester') return '学期记录（queryMySemesterClubActivity）';
-  return '历史记录';
+  return '签到记录';
 });
 
 const emptyMessage = computed(() => {
   if (activeMainTab.value === 'activities') {
-    return activeActivityTab.value === 'myTask' ? '暂无我的任务数据' : '暂无活动列表数据';
+    return '暂无活动列表数据';
   }
-  if (activeHistoryTab.value === 'semester') return '暂无学期记录';
-  return '暂无历史记录';
+  return '暂无签到记录';
 });
 
 watch(activeMainTab, async () => {
-  selectedStatus.value = 'all';
-  showFilters.value = false;
   showDateDropdown.value = false;
 
   if (activeMainTab.value === 'activities') {
-    await Promise.all([loadCurrentList(), loadSignTask()]);
+    await Promise.all([loadCurrentList(), loadMyPendingActivities(), loadSignTask()]);
     return;
   }
 
-  selectedItemId.value = 'all';
   await Promise.all([loadCurrentList(), loadSummary()]);
-});
-
-watch(activeActivityTab, async () => {
-  if (activeMainTab.value !== 'activities') return;
-  selectedStatus.value = 'all';
-  selectedItemId.value = 'all';
-  await loadCurrentList();
-});
-
-watch(activeHistoryTab, async () => {
-  if (activeMainTab.value !== 'history') return;
-  selectedStatus.value = 'all';
-  await loadCurrentList();
 });
 
 watch(
@@ -828,7 +761,7 @@ watch(
 );
 
 watch(selectedQueryDate, async () => {
-  if (activeMainTab.value !== 'activities' || activeActivityTab.value !== 'list') return;
+  if (activeMainTab.value !== 'activities') return;
   await loadCurrentList();
 });
 
@@ -836,6 +769,7 @@ onMounted(async () => {
   document.addEventListener('click', handleDocumentClick);
   await Promise.all([
     loadCurrentList(),
+    loadMyPendingActivities(),
     loadSignTask(),
     loadClubRushStatus(),
   ]);
@@ -947,32 +881,6 @@ function resolveActivityId(item) {
   return null;
 }
 
-function resolveStatusBucket(item) {
-  if (activeMainTab.value === 'history') {
-    if (activeHistoryTab.value === 'semester') {
-      return String(item.signStatus) === '1' ? 'completed' : 'pending';
-    }
-
-    const signStatus = String(item.signStatus);
-    if (signStatus === '1') return 'completed';
-    if (signStatus === '3') return 'notSignOut';
-    return 'unsigned';
-  }
-
-  switch (resolveEffectiveOptionStatus(item)) {
-    case '1':
-      return 'joined';
-    case '6':
-      return 'joinable';
-    case '7':
-      return 'full';
-    case '3':
-      return 'blocked';
-    default:
-      return 'all';
-  }
-}
-
 function createBadge(text, className) {
   return {
     text,
@@ -980,13 +888,20 @@ function createBadge(text, className) {
   };
 }
 
-function resolveBadge(item) {
-  if (activeMainTab.value === 'history' && activeHistoryTab.value === 'semester') {
-    return String(item.signStatus) === '1'
-      ? createBadge('已完成', 'theme-success-bg theme-success-border theme-success')
-      : createBadge('未完成', 'badge-neutral');
+function resolveMyTaskBadge(item) {
+  switch (String(item.activityStatus)) {
+    case '1':
+      return createBadge('可报名', 'text-blue-600 bg-blue-500/10 border border-blue-500/20');
+    case '2':
+      return createBadge('进行中', 'text-blue-600 bg-blue-500/10 border border-blue-500/20');
+    case '3':
+      return createBadge('已结束', 'badge-neutral');
+    default:
+      return createBadge('待开放', 'badge-neutral');
   }
+}
 
+function resolveBadge(item) {
   if (activeMainTab.value === 'history') {
     const signStatus = String(item.signStatus);
     if (signStatus === '1')
@@ -994,19 +909,6 @@ function resolveBadge(item) {
     if (signStatus === '3')
       return createBadge('未签退', 'theme-warning-bg theme-warning-border theme-warning');
     return createBadge('未签到', 'badge-neutral');
-  }
-
-  if (activeMainTab.value === 'activities' && activeActivityTab.value === 'myTask') {
-    switch (String(item.activityStatus)) {
-      case '1':
-        return createBadge('可报名', 'text-blue-600 bg-blue-500/10 border border-blue-500/20');
-      case '2':
-        return createBadge('进行中', 'text-blue-600 bg-blue-500/10 border border-blue-500/20');
-      case '3':
-        return createBadge('已结束', 'badge-neutral');
-      default:
-        return createBadge('待开放', 'badge-neutral');
-    }
   }
 
   switch (resolveEffectiveOptionStatus(item)) {
@@ -1111,7 +1013,7 @@ function resolveCardSubTitle(item, isHistoryRecord) {
 function formatTimeRange(item) {
   const start = item.startTime || '--:--';
   const end = item.endTime || '--:--';
-  const hideDatePrefix = activeMainTab.value === 'history' && activeHistoryTab.value === 'record';
+  const hideDatePrefix = activeMainTab.value === 'history';
   const dateText = !hideDatePrefix && item.yymmdd ? item.yymmdd + ' ' : '';
   return dateText + start + ' - ' + end;
 }
@@ -1227,7 +1129,7 @@ async function handleRushCardAction(card, customCoords = null) {
     const rushResult = envelope?.data?.result || {};
     const message = String(rushResult.message || '').trim() || '抢报请求已提交';
     showMessage(message, rushResult.performed || rushResult.scheduled ? 'success' : 'error');
-    await Promise.all([loadCurrentList(), loadSignTask(), loadClubRushStatus()]);
+    await Promise.all([loadCurrentList(), loadMyPendingActivities(), loadSignTask(), loadClubRushStatus()]);
 
     if (rushResult.performed) {
       const hasCoords = hasActivityCoordinates(signTask.value) ||
@@ -1335,13 +1237,52 @@ async function loadMoreHistoryRecords() {
   }
 }
 
+async function loadMyPendingActivities() {
+  myTasksLoading.value = true;
+  try {
+    const authReady = await ensureAuthReady();
+    if (!authReady) {
+      myPendingActivities.value = [];
+      return;
+    }
+
+    const response = await api.queryMyPendingClub(studentId.value, 1, 15);
+    const data = response?.data;
+    if (!isApiSuccess(data)) {
+      myPendingActivities.value = [];
+      return;
+    }
+
+    myPendingActivities.value = extractList(data.response);
+  } catch (error) {
+    console.error('loadMyPendingActivities failed:', error);
+    myPendingActivities.value = [];
+  } finally {
+    myTasksLoading.value = false;
+  }
+}
+
+async function loadSemesterActivities() {
+  try {
+    const semesterResponse = await api.queryMyClubTask();
+    const semesterData = semesterResponse?.data;
+    if (!isApiSuccess(semesterData)) {
+      semesterActivities.value = [];
+      return;
+    }
+    semesterActivities.value = extractList(semesterData.response);
+  } catch (error) {
+    console.error('loadSemesterActivities failed:', error);
+    semesterActivities.value = [];
+  }
+}
+
 async function loadCurrentList() {
   loading.value = true;
   try {
     const authReady = await ensureAuthReady();
     if (!authReady) {
       pendingActivities.value = [];
-      myPendingActivities.value = [];
       semesterActivities.value = [];
       historyRecords.value = [];
       historyPageNo.value = 1;
@@ -1350,35 +1291,7 @@ async function loadCurrentList() {
     }
 
     if (activeMainTab.value === 'history') {
-      if (activeHistoryTab.value === 'semester') {
-        historyPageNo.value = 1;
-        historyHasMore.value = false;
-
-        const semesterResponse = await api.queryMyClubTask();
-        const semesterData = semesterResponse?.data;
-        if (!isApiSuccess(semesterData)) {
-          semesterActivities.value = [];
-          showMessage(semesterData?.msg || semesterData?.message || '加载学期记录失败', 'error');
-          return;
-        }
-        semesterActivities.value = extractList(semesterData.response);
-        return;
-      }
-
-      await loadHistoryRecords({ append: false });
-      return;
-    }
-
-    if (activeActivityTab.value === 'myTask') {
-      const response = await api.queryMyPendingClub(studentId.value, 1, 15);
-      const data = response?.data;
-      if (!isApiSuccess(data)) {
-        myPendingActivities.value = [];
-        showMessage(data?.msg || data?.message || '加载我的任务失败', 'error');
-        return;
-      }
-
-      myPendingActivities.value = extractList(data.response);
+      await Promise.all([loadHistoryRecords({ append: false }), loadSemesterActivities()]);
       return;
     }
 
@@ -1406,27 +1319,16 @@ async function loadCurrentList() {
   } catch (error) {
     console.error('loadCurrentList failed:', error);
     if (activeMainTab.value === 'history') {
-      if (activeHistoryTab.value === 'semester') {
-        semesterActivities.value = [];
-        historyPageNo.value = 1;
-        historyHasMore.value = false;
-        showMessage('加载学期记录异常', 'error');
-      } else {
-        historyRecords.value = [];
-        historyPageNo.value = 1;
-        historyHasMore.value = false;
-        showMessage('加载历史记录异常', 'error');
-      }
+      historyRecords.value = [];
+      semesterActivities.value = [];
+      historyPageNo.value = 1;
+      historyHasMore.value = false;
+      showMessage('加载签到记录异常', 'error');
       return;
     }
 
-    if (activeActivityTab.value === 'myTask') {
-      myPendingActivities.value = [];
-      showMessage('加载我的任务异常', 'error');
-    } else {
-      pendingActivities.value = [];
-      showMessage('加载活动列表异常', 'error');
-    }
+    pendingActivities.value = [];
+    showMessage('加载活动列表异常', 'error');
   } finally {
     loading.value = false;
   }
@@ -1459,65 +1361,15 @@ async function loadSummary() {
   }
 }
 
-async function loadItemOptions() {
-  if (itemOptionsLoading.value || itemOptionsLoaded.value) return;
-
-  itemOptionsLoading.value = true;
-  try {
-    const authReady = await ensureAuthReady();
-    if (!authReady || !schoolId.value) {
-      itemOptions.value = [];
-      selectedItemId.value = 'all';
-      return;
-    }
-
-    const normalResponse = await api.queryMyClubItemList({
-      schoolId: schoolId.value,
-      studentId: studentId.value,
-    });
-
-    let data = normalResponse?.data;
-    let list = isApiSuccess(data) ? extractList(data.response) : [];
-
-    if (list.length === 0) {
-      const fallbackResponse = await api.queryMyClubItemList({
-        schoolId: schoolId.value,
-        studentId: studentId.value,
-        type: 2,
-      });
-      data = fallbackResponse?.data;
-      list = isApiSuccess(data) ? extractList(data.response) : [];
-    }
-
-    itemOptions.value = list
-      .map((item) => ({
-        itemId: Number(item.itemId),
-        itemName: item.itemName || '',
-      }))
-      .filter((item) => Number.isFinite(item.itemId) && item.itemId > 0);
-
-    if (!itemOptions.value.some((item) => String(item.itemId) === selectedItemId.value)) {
-      selectedItemId.value = 'all';
-    }
-
-    itemOptionsLoaded.value = true;
-  } catch (error) {
-    console.error('loadItemOptions failed:', error);
-    itemOptions.value = [];
-    selectedItemId.value = 'all';
-  } finally {
-    itemOptionsLoading.value = false;
-  }
-}
-
 function normalizeSignTask(payload) {
   if (!payload || typeof payload !== 'object') return null;
 
-  const activityId = Number(payload.activityId);
+  const activityId = resolveActivityId(payload);
   if (!Number.isFinite(activityId) || activityId <= 0) return null;
 
-  let lat = String(payload.latitude || '').trim();
-  let lng = String(payload.longitude || '').trim();
+  const linked = findLinkedActivityById(activityId);
+  let lat = String(payload.latitude || linked?.latitude || '').trim();
+  let lng = String(payload.longitude || linked?.longitude || '').trim();
   if (!hasActivityCoordinates({ latitude: lat, longitude: lng })) {
     const cached = getStoredClubCoordinates(activityId);
     if (cached) {
@@ -1526,14 +1378,35 @@ function normalizeSignTask(payload) {
     }
   }
 
+  let signInStatus = payload.signInStatus ?? null;
+  let signBackStatus = payload.signBackStatus ?? null;
+  if (String(payload.signStatus ?? '') === '3') {
+    if (signInStatus === null || signInStatus === undefined || signInStatus === '') {
+      signInStatus = 1;
+    }
+    if (signBackStatus === null || signBackStatus === undefined || signBackStatus === '') {
+      signBackStatus = 0;
+    }
+  } else if (
+    (signInStatus === null || signInStatus === undefined || signInStatus === '') &&
+    String(payload.signInTime || '').trim() !== '' &&
+    String(payload.signBackTime || '').trim() === ''
+  ) {
+    signInStatus = 1;
+    if (signBackStatus === null || signBackStatus === undefined || signBackStatus === '') {
+      signBackStatus = 0;
+    }
+  }
+
   return {
+    ...(linked || {}),
     ...payload,
     activityId,
     latitude: lat,
     longitude: lng,
     signStatus: payload.signStatus ?? null,
-    signInStatus: payload.signInStatus ?? null,
-    signBackStatus: payload.signBackStatus ?? null,
+    signInStatus,
+    signBackStatus,
   };
 }
 
@@ -1675,6 +1548,75 @@ function resolveSignTaskPhase(task) {
   return resolveSignTaskOptionStatus(task) === '1' ? 'joined' : 'unsigned';
 }
 
+function isTodayClubItem(item) {
+  if (!item || typeof item !== 'object') return false;
+  const now = new Date();
+  const yyyy = String(now.getFullYear());
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const todayDash = `${yyyy}-${mm}-${dd}`;
+  const todaySlash = `${yyyy}/${mm}/${dd}`;
+
+  const dateCandidates = [item.yymmdd, item.startTime, item.endTime, item.signInTime, item.signBackLimitTime];
+  for (const raw of dateCandidates) {
+    const text = String(raw || '').trim();
+    if (!text) continue;
+    if (text.includes(todayDash) || text.includes(todaySlash)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isPendingSignOutCandidate(item, { requireToday = false } = {}) {
+  if (!item || typeof item !== 'object') return false;
+  const activityId = resolveActivityId(item);
+  if (!Number.isFinite(activityId) || activityId <= 0) return false;
+  if (isSignedStatus(item.signBackStatus) || String(item.signStatus ?? '') === '1') return false;
+  if (requireToday && !isTodayClubItem(item)) return false;
+
+  const signedIn =
+    isSignedStatus(item.signInStatus) ||
+    String(item.signStatus ?? '') === '3' ||
+    (String(item.signInTime || '').trim() !== '' && String(item.signBackTime || '').trim() === '');
+
+  return signedIn;
+}
+
+async function loadFallbackSignOutTask() {
+  // 活动过了 endTime 后，官方 getSignInTf 会返回空，但活动仍处于可签退窗口；
+  // 依次回退查询 queryMyActivityList（我的任务）与 getStudentClubRecord（当日未签退记录）。
+  try {
+    const myRes = await api.queryMyPendingClub(studentId.value, 1, 15);
+    const myData = myRes?.data;
+    if (isApiSuccess(myData)) {
+      const myList = extractList(myData.response);
+      const matched = myList.find((item) => isPendingSignOutCandidate(item));
+      if (matched) {
+        return normalizeSignTask(matched);
+      }
+    }
+  } catch (error) {
+    console.warn('loadFallbackSignOutTask(queryMyActivityList) failed:', error);
+  }
+
+  try {
+    const recRes = await api.queryMyClubRecord(studentId.value, 1, 10);
+    const recData = recRes?.data;
+    if (isApiSuccess(recData)) {
+      const recList = extractList(recData.response);
+      const matched = recList.find((item) => isPendingSignOutCandidate(item, { requireToday: true }));
+      if (matched) {
+        return normalizeSignTask(matched);
+      }
+    }
+  } catch (error) {
+    console.warn('loadFallbackSignOutTask(getStudentClubRecord) failed:', error);
+  }
+
+  return null;
+}
+
 let signTaskInFlightPromise = null;
 
 async function loadSignTask() {
@@ -1691,12 +1633,17 @@ async function loadSignTask() {
       const response = await api.queryClubSignStatus(studentId.value);
       const data = response?.data;
 
-      if (!isApiSuccess(data)) {
-        signTask.value = null;
-        return null;
+      if (isApiSuccess(data)) {
+        const directTask = normalizeSignTask(data.response);
+        if (directTask) {
+          signTask.value = directTask;
+          return signTask.value;
+        }
       }
 
-      signTask.value = normalizeSignTask(data.response);
+      // getSignInTf 返回为空时（常见于活动刚过 endTime 但仍可签退），尝试从我的任务/当日记录兜底恢复待签退任务
+      const fallbackTask = await loadFallbackSignOutTask();
+      signTask.value = fallbackTask;
       return signTask.value;
     } catch (error) {
       signTask.value = null;
@@ -1748,26 +1695,41 @@ async function handleAutoCardAction({ type, activityId, task }) {
       return;
     }
 
-    // 手动签到需要上游活动的坐标，且不能操作与卡片不同的活动。
+    // 优先刷新上游任务状态（含 endTime 后 queryMyActivityList / getStudentClubRecord 兜底）
     await loadSignTask();
-    if (Number(signTask.value?.activityId) !== id) {
+    let activeTask = Number(signTask.value?.activityId) === id ? signTask.value : null;
+
+    // 活动超过 endTime 后若上游列表均已隐藏，但后端定时任务卡片明确处于「已签到未签退」，
+    // 允许使用卡片任务信息直接执行签退（坐标不足时会自动引导选点）
+    if (
+      !activeTask &&
+      String(type) === '2' &&
+      task &&
+      Number(task.activityId) === id &&
+      isSignedStatus(task.signInStatus) &&
+      !isSignedStatus(task.signBackStatus)
+    ) {
+      activeTask = normalizeSignTask(task);
+    }
+
+    if (!activeTask) {
       showMessage('当前活动的签到信息暂不可用，请刷新后重试', 'warning');
       return;
     }
-    if ((type === '1' && isSignedStatus(signTask.value.signInStatus)) ||
-        (type === '2' && (!isSignedStatus(signTask.value.signInStatus) || isSignedStatus(signTask.value.signBackStatus)))) {
+    if ((type === '1' && isSignedStatus(activeTask.signInStatus)) ||
+        (type === '2' && (!isSignedStatus(activeTask.signInStatus) || isSignedStatus(activeTask.signBackStatus)))) {
       showMessage('活动签到状态已变化，请刷新后重试', 'warning');
       await clubAutoConfigRef.value?.refresh();
       return;
     }
-    await handleSignTask(type);
+    await handleSignTask(type, activeTask);
   } finally {
     signPendingType.value = '';
   }
 }
 
-async function handleSignTask(signType) {
-  const task = signTask.value;
+async function handleSignTask(signType, overrideTask = null) {
+  const task = overrideTask || signTask.value;
   const normalizedSignType = String(signType) === '2' ? '2' : String(signType) === '1' ? '1' : '';
 
   if (!task || !normalizedSignType) {
@@ -1814,7 +1776,7 @@ async function handleSignTask(signType) {
     }
 
     showMessage(resolveResponseMessage(data, `${actionText}成功`), 'success');
-    await Promise.all([loadSignTask(), loadCurrentList()]);
+    await Promise.all([loadSignTask(), loadMyPendingActivities(), loadCurrentList()]);
     clubAutoConfigRef.value?.refresh();
   } catch (error) {
     console.error('handleSignTask failed:', error);
@@ -1856,7 +1818,7 @@ async function handleClubAction(item, type, { clearAutoActivity = false, customC
     const fallback = actionType === 1 ? '报名成功' : '取消报名成功';
     showMessage(resolveResponseMessage(data, fallback), 'success');
 
-    const refreshTasks = [loadCurrentList(), loadSignTask()];
+    const refreshTasks = [loadCurrentList(), loadMyPendingActivities(), loadSignTask()];
     if (activeMainTab.value === 'history') refreshTasks.push(loadSummary());
 
     await Promise.all(refreshTasks);
@@ -1928,7 +1890,7 @@ async function handleClubAction(item, type, { clearAutoActivity = false, customC
 
       const payload = {
         activity_id: activityId,
-        activity_date: normalizeDateOnlyText(item.yymmdd || item.activityDate || (activeMainTab.value === 'activities' && activeActivityTab.value === 'list' ? currentQueryDate.value : '')),
+        activity_date: normalizeDateOnlyText(item.yymmdd || item.activityDate || (activeMainTab.value === 'activities' ? currentQueryDate.value : '')),
         activity_name: String(item.activityName || item.itemName || ''),
         start_time: String(item.startTime || ''),
         end_time: String(item.endTime || ''),
@@ -1993,7 +1955,7 @@ function resolveRushAction(item) {
 
 function isFutureActivityItem(item) {
   const fallbackDate =
-    activeMainTab.value === 'activities' && activeActivityTab.value === 'list'
+    activeMainTab.value === 'activities'
       ? currentQueryDate.value
       : '';
   const dateText = normalizeDateOnlyText(
@@ -2108,11 +2070,53 @@ async function cancelRushTask(task) {
 }
 
 function handleClubAutoConfigUpdated(data) {
+  clubAutoEnabled.value =
+    Number(data?.status?.enabled) === 1 || data?.status?.enabled === true;
   if (data?.task?.activityId && data?.task?.latitude && data?.task?.longitude) {
     saveClubActivityCoordinates(data.task.activityId, {
       latitude: data.task.latitude,
       longitude: data.task.longitude,
     });
+  }
+}
+
+async function handleToggleClubAuto(card) {
+  if (!clubAutoConfigRef.value?.toggleEnabled || clubAutoSubmitting.value) return;
+
+  const item = card?.item || {};
+  const activityId = Number(card?.activityId || resolveActivityId(item) || 0);
+  let extraPayload = null;
+
+  if (!clubAutoEnabled.value && activityId > 0) {
+    let lat = String(item.latitude || '').trim();
+    let lon = String(item.longitude || '').trim();
+    if (!hasActivityCoordinates({ latitude: lat, longitude: lon })) {
+      const cached = getStoredClubCoordinates(activityId);
+      if (cached) {
+        lat = String(cached.latitude);
+        lon = String(cached.longitude);
+      }
+    }
+    extraPayload = {
+      activity_id: activityId,
+      activity_date: normalizeDateOnlyText(
+        item.yymmdd ||
+          item.activityDate ||
+          (activeMainTab.value === 'activities' ? currentQueryDate.value : ''),
+      ),
+      activity_name: String(item.activityName || item.itemName || ''),
+      start_time: String(item.startTime || ''),
+      end_time: String(item.endTime || ''),
+      latitude: lat,
+      longitude: lon,
+    };
+  }
+
+  clubAutoSubmitting.value = true;
+  try {
+    await clubAutoConfigRef.value.toggleEnabled(extraPayload);
+  } finally {
+    clubAutoSubmitting.value = false;
   }
 }
 </script>
