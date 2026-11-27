@@ -80,7 +80,7 @@
             </button>
           </div>
 
-              <Drawer v-model="showRouteOptions" title="选择地图" v-if="mapsLoaded">
+              <Drawer v-model="showRouteOptions" title="选择地图" max-height="80vh" v-if="mapsLoaded">
                 <div
                   v-for="(name, value) in routeOptions"
                   :key="value"

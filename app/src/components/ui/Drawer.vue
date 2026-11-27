@@ -1,51 +1,72 @@
 <template>
   <teleport to="body">
-    <transition name="drawer">
+    <transition name="drawer" :duration="{ enter: 320, leave: 240 }">
       <div
         v-if="modelValue"
         class="fixed inset-0 z-[9999] flex flex-col justify-end"
         @click="close"
       >
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-md drawer-overlay"></div>
+        <div class="absolute inset-0 bg-black/35 backdrop-blur-[2px] drawer-overlay"></div>
         <div
-          class="relative flex flex-col drawer-panel w-full h-full max-w-[600px] mx-auto rounded-none shadow-2xl overflow-hidden"
-          style="background: var(--card-bg-strong); border-top: 1px solid var(--card-border);"
-          @click.stop
-          @touchstart="handleTouchStart"
-          @touchend="handleTouchEnd"
+          class="relative w-full max-w-[600px] mx-auto"
+          :class="isBottomSheet ? 'px-4' : 'h-full'"
         >
           <div
-            class="flex items-center justify-between px-4 shrink-0 border-b border-[var(--card-border)]"
+            class="relative flex flex-col drawer-panel w-full shadow-2xl overflow-hidden"
+            :class="isBottomSheet ? 'rounded-t-2xl' : 'h-full rounded-none'"
             :style="{
-              paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))',
-              height: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px)',
-              background: 'var(--bg-soft, rgba(255,255,255,0.02))',
+              background: 'var(--card-bg-strong)',
+              borderTop: '1px solid var(--card-border)',
+              ...(isBottomSheet ? { height: maxHeight, maxHeight } : {}),
             }"
+            @click.stop
+            @touchstart="handleTouchStart"
+            @touchend="handleTouchEnd"
           >
-            <div class="flex items-center gap-2 min-w-0">
+            <div v-if="isBottomSheet" class="flex justify-center pt-2 pb-1 shrink-0">
+              <span class="w-9 h-1 rounded-full bg-[var(--card-border)]"></span>
+            </div>
+            <div
+              class="flex items-center justify-between px-4 shrink-0 border-b border-[var(--card-border)]"
+              :style="
+                isBottomSheet
+                  ? {
+                      height: '44px',
+                      background: 'var(--bg-soft, rgba(255,255,255,0.02))',
+                    }
+                  : {
+                      paddingTop: 'var(--sat, env(safe-area-inset-top, 0px))',
+                      height: 'calc(var(--sat, env(safe-area-inset-top, 0px)) + 48px)',
+                      background: 'var(--bg-soft, rgba(255,255,255,0.02))',
+                    }
+              "
+            >
+              <div class="flex items-center gap-2 min-w-0">
+                <button
+                  v-if="!isBottomSheet"
+                  type="button"
+                  @click="close"
+                  class="w-8 h-8 rounded-full flex items-center justify-center theme-text-secondary hover:theme-text-primary hover:bg-[var(--action-hover-bg)] active:scale-95 transition-all cursor-pointer drawer-back-btn"
+                  title="返回"
+                  aria-label="返回"
+                >
+                  <i class="ri-arrow-left-line text-base"></i>
+                </button>
+                <span class="text-sm font-bold theme-text-primary truncate">{{ title }}</span>
+              </div>
               <button
                 type="button"
                 @click="close"
-                class="w-8 h-8 rounded-full flex items-center justify-center theme-text-secondary hover:theme-text-primary hover:bg-[var(--action-hover-bg)] active:scale-95 transition-all cursor-pointer drawer-back-btn"
-                title="返回"
-                aria-label="返回"
+                class="w-8 h-8 rounded-full flex items-center justify-center theme-text-tertiary hover:theme-text-primary hover:bg-[var(--action-hover-bg)] active:scale-95 transition-all cursor-pointer drawer-close-btn"
+                title="关闭"
+                aria-label="关闭"
               >
-                <i class="ri-arrow-left-line text-base"></i>
+                <i class="ri-close-line text-lg"></i>
               </button>
-              <span class="text-sm font-bold theme-text-primary truncate">{{ title }}</span>
             </div>
-            <button
-              type="button"
-              @click="close"
-              class="w-8 h-8 rounded-full flex items-center justify-center theme-text-tertiary hover:theme-text-primary hover:bg-[var(--action-hover-bg)] active:scale-95 transition-all cursor-pointer drawer-close-btn"
-              title="关闭"
-              aria-label="关闭"
-            >
-              <i class="ri-close-line text-lg"></i>
-            </button>
-          </div>
-          <div class="flex-1 overflow-y-auto overflow-x-hidden pb-6 flex flex-col w-full max-w-full box-border">
-            <slot />
+            <div class="flex-1 overflow-y-auto overflow-x-hidden pb-6 flex flex-col w-full max-w-full box-border">
+              <slot />
+            </div>
           </div>
         </div>
       </div>
@@ -54,12 +75,15 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { Button } from 'heroui-vue';
-defineProps({
+const props = defineProps({
   modelValue: { type: Boolean, default: false },
   title: { type: String, default: '' },
   maxHeight: { type: String, default: '100vh' },
 });
+
+const isBottomSheet = computed(() => props.maxHeight !== '100vh' && props.maxHeight !== '100%');
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -94,53 +118,35 @@ function handleTouchEnd(e) {
     close();
   }
 }
-
-function beforeEnter(el) {
-  el.style.opacity = '0';
-  const panel = el.querySelector('.drawer-panel');
-  const overlay = el.querySelector('.drawer-overlay');
-  if (panel) panel.style.transform = 'translateY(100%)';
-  if (overlay) overlay.style.opacity = '0';
-}
-
-function enter(el, done) {
-  el.offsetHeight;
-  el.style.opacity = '1';
-  const panel = el.querySelector('.drawer-panel');
-  const overlay = el.querySelector('.drawer-overlay');
-  if (panel) panel.style.transform = 'translateY(0)';
-  if (overlay) overlay.style.opacity = '1';
-  setTimeout(done, 350);
-}
-
-function beforeLeave(el) {
-  const panel = el.querySelector('.drawer-panel');
-  const overlay = el.querySelector('.drawer-overlay');
-  if (panel) panel.style.transform = 'translateY(100%)';
-  if (overlay) overlay.style.opacity = '0';
-  el.style.opacity = '0';
-}
-
-function leave(el, done) {
-  setTimeout(done, 250);
-}
-
-function afterLeave(el) {
-  el.style.opacity = '';
-  const panel = el.querySelector('.drawer-panel');
-  const overlay = el.querySelector('.drawer-overlay');
-  if (panel) panel.style.transform = '';
-  if (overlay) overlay.style.opacity = '';
-}
 </script>
 
 <style scoped>
-.drawer-overlay {
-  transition: opacity 0.2s ease;
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: opacity 0.24s ease;
 }
 
-.drawer-panel {
-  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+.drawer-enter-active .drawer-overlay,
+.drawer-leave-active .drawer-overlay {
+  transition: opacity 0.24s ease;
+}
+
+.drawer-enter-active .drawer-panel {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.drawer-leave-active .drawer-panel {
+  transition: transform 0.24s cubic-bezier(0.4, 0, 1, 1);
+}
+
+.drawer-enter-from .drawer-overlay,
+.drawer-leave-to .drawer-overlay {
+  opacity: 0;
+}
+
+.drawer-enter-from .drawer-panel,
+.drawer-leave-to .drawer-panel {
+  transform: translateY(100%);
 }
 </style>
 
